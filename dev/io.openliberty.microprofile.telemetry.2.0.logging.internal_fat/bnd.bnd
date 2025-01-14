@@ -61,7 +61,11 @@ tested.features=mpTelemetry-2.0,\
   pages-3.0,\
   jsp-2.3,\
   jsp-2.2,\
-  el-3.0
+  el-3.0,\
+  appsecurity-6.0,\
+  appsecurity-5.0,\
+  appsecurity-4.0,\
+  appsecurity-3.0
 
 -buildpath: \
 	com.ibm.ws.componenttest.2.0,\

@@ -53,6 +53,7 @@ import com.ibm.ws.http.netty.pipeline.RemoteIpHandler;
 import com.ibm.ws.netty.upgrade.NettyServletUpgradeHandler;
 import com.ibm.ws.transport.access.TransportConnectionAccess;
 import com.ibm.ws.transport.access.TransportConstants;
+import com.ibm.wsspi.bytebuffer.WsByteBuffer;
 import com.ibm.wsspi.channelfw.ConnectionLink;
 import com.ibm.wsspi.channelfw.VirtualConnection;
 import com.ibm.wsspi.channelfw.base.InboundApplicationLink;
@@ -316,24 +317,22 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
     public void close(VirtualConnection conn, Exception e) {
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "Close called , vc ->" + this.vc + " hc: " + this.hashCode());
+            Tr.debug(tc, "close ENTER, vc ->" + this.vc + " hc: " + this.hashCode());
         }
 
         if (this.vc == null) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.debug(tc, "Connection must be already closed since vc is null");
+                Tr.debug(tc, "close, Connection must be already closed since vc is null");
             }
-           // if (!usingNetty) {
-                // closeCompleted check is for the close, destroy, close order scenario.
-                // Without this check, this second close (after the destroy) would decrement the connection again and produce a quiesce error.
-                if (this.decrementNeeded.compareAndSet(true, false) & !closeCompleted.get()) {
-                    //  ^ set back to false in case close is called more than once after destroy is called (highly unlikely)
-                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                        Tr.debug(tc, "decrementNeeded is true: decrement active connection");
-                    }
-                    this.myChannel.decrementActiveConns();
+            // closeCompleted check is for the close, destroy, close order scenario.
+            // Without this check, this second close (after the destroy) would decrement the connection again and produce a quiesce error.
+            if (this.decrementNeeded.compareAndSet(true, false) & !closeCompleted.get()) {
+                //  ^ set back to false in case close is called more than once after destroy is called (highly unlikely)
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(tc, "close, decrementNeeded is true: decrement active connection");
                 }
-           // }
+                this.myChannel.decrementActiveConns();
+            }
 
             return;
         }
@@ -343,24 +342,43 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
         // so we will have to use close API from SRTConnectionContext31 and call closeStreams.
         String closeNonUpgraded = (String) (this.vc.getStateMap().get(TransportConstants.CLOSE_NON_UPGRADED_STREAMS));
         if (closeNonUpgraded != null && closeNonUpgraded.equalsIgnoreCase("true")) {
-
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.debug(tc, "close streams from HttpDispatcherLink.close");
+                Tr.debug(tc, "close, CLOSE_NON_UPGRADED_STREAMS");
+            }
+
+            // Save the remaining unread data into a VC's stateMap which will be consumed in the UpgradeInputByteBufferUtil.initialRead
+            if (this.isc.isReadDataAvailable()) {
+                WsByteBuffer currentBuffer = this.isc.getReadBuffer();
+                WsByteBuffer newBuffer = HttpDispatcher.getBufferManager().allocate(currentBuffer.remaining());
+                newBuffer.put(currentBuffer);
+                newBuffer.flip();
+
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(tc, "close, saved [" + newBuffer.remaining() + "] unread data from isc buffer [" + currentBuffer + "] to vc statemap [" + newBuffer + "]");
+                }
+
+                currentBuffer = null;
+                vc.getStateMap().put(TransportConstants.NOT_UPGRADED_UNREAD_DATA, newBuffer);
             }
 
             Exception errorinClosing = this.closeStreams();
 
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.debug(tc, "Error closing in streams" + errorinClosing);
+                Tr.debug(tc, "close, Error closing in streams" + errorinClosing);
             }
 
             vc.getStateMap().put(TransportConstants.CLOSE_NON_UPGRADED_STREAMS, "CLOSED_NON_UPGRADED_STREAMS");
+
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "close EXIT");
+            }
+
             return;
         }
 
         String upgradedListener = (String) (this.vc.getStateMap().get(TransportConstants.UPGRADED_LISTENER));
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "upgradedListener ->" + upgradedListener);
+            Tr.debug(tc, "close, upgradedListener ->" + upgradedListener);
         }
         if (upgradedListener != null && upgradedListener.equalsIgnoreCase("true")) {
             boolean closeCalledFromWebConnection = false;
@@ -387,7 +405,7 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
                 // but we don't want to manipulate existing logic so a separate constant in the state map will be used for that below
 
                 if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(tc, "Connection Not to be closed here because Servlet Upgrade.");
+                    Tr.debug(tc, "close EXIT, Connection Not to be closed here because Servlet Upgrade.");
                 }
                 return;
             }
@@ -403,11 +421,11 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
                             // want to call close outside of the sync to avoid deadlocks.
                             WebConnCanClose = false;
                             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                                Tr.debug(tc, "Upgraded Web Connection closing Dispatcher Link");
+                                Tr.debug(tc, "close, Upgraded Web Connection closing Dispatcher Link");
                             }
                         } else {
                             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                                Tr.debug(tc, "Upgraded Web Connection already called close; returning");
+                                Tr.debug(tc, "close EXIT, Upgraded Web Connection already called close; returning");
                             }
                             return;
                         }
@@ -428,11 +446,15 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
                 super.close(conn, e);
             } finally {
                 if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(tc, "decrement active connection count");
+                    Tr.debug(tc, "close, decrement active connection count");
                 }
                 this.myChannel.decrementActiveConns();
             }
             closeCompleted.compareAndSet(false, true);
+        }
+
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "close EXIT");
         }
     }
 

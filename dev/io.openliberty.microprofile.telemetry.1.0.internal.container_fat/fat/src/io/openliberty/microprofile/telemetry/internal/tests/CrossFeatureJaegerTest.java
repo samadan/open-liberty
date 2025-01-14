@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023, 2024 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -65,7 +65,7 @@ public class CrossFeatureJaegerTest {
     private static final String APP_NAME = "crossFeature";
     private static final Class<?> c = CrossFeatureJaegerTest.class;
     private static final AttributeKey<String> JAEGER_VERSION = AttributeKey.stringKey("jaeger.version");
-    public static RepeatTests repeat = TelemetryActions.allMPRepeats(CROSS_FEATURE_TELEMETRY_SERVER);
+    public static RepeatTests repeat = TelemetryActions.latestTelemetryRepeats(CROSS_FEATURE_TELEMETRY_SERVER);
 
     public static JaegerQueryClient client;
 

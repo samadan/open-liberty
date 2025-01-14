@@ -71,6 +71,7 @@ import io.openliberty.jpa.data.tests.models.Reciept;
 import io.openliberty.jpa.data.tests.models.Segment;
 import io.openliberty.jpa.data.tests.models.Store;
 import io.openliberty.jpa.data.tests.models.Triangle;
+import io.openliberty.jpa.data.tests.models.Vehicle;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -1669,6 +1670,38 @@ public class JakartaDataRecreateServlet extends FATServlet {
         if (!errors.isEmpty()) {
             throw new AssertionError("Executing the same query returned incorrect results " + errors.size() + " out of 10 executions", errors.get(0));
         }
+    }
+
+    @Test
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/29893
+    public void testOLGH29893() throws Exception {
+        String vehicleId = "V1234";
+        Vehicle vehicle = new Vehicle();
+        vehicle.setId(vehicleId);
+        vehicle.setModel("Toyota Corolla");
+        vehicle.setColor("Blue");
+
+        tx.begin();
+        em.persist(vehicle);
+        tx.commit();
+
+        Vehicle result;
+
+        tx.begin();
+        try {
+            result = em.createQuery("FROM Vehicle WHERE LOWER(ID(THIS)) = ?1", Vehicle.class)
+                            .setParameter(1, vehicleId.toLowerCase())
+                            .getSingleResult();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw e;
+        }
+
+        assertNotNull(result);
+        assertEquals(vehicleId, result.getId());
+        assertEquals("Toyota Corolla", result.getModel());
+        assertEquals("Blue", result.getColor());
     }
 
     @Test

@@ -16,7 +16,7 @@ bVersion=1.0
 -include= jar:${fileuri;${repo;org.jboss.weld:weld-osgi-bundle;[4.0.3,4.1.0)}}!/META-INF/MANIFEST.MF,bnd.overrides
 
 -includeresource: \
-  @${repo;org.jboss.weld:weld-osgi-bundle;[4.0.3,4.1.0)}
+  @${repo;org.jboss.weld:weld-osgi-bundle;[4.0.3,4.1.0)}!/!META-INF/client/*
 
 Bundle-SymbolicName: io.openliberty.org.jboss.weld4; singleton:=true
 

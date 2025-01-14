@@ -785,9 +785,9 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testCountPagesWithNullValues() {
-        Page<String> page1 = primes.romanNumerals(30L, 49L,
-                                                  4000L, 4009L,
-                                                  PageRequest.ofSize(3));
+        Page<String> page1 = primes.romanNumeralsWithin(30L, 49L,
+                                                        4000L, 4009L,
+                                                        PageRequest.ofSize(3));
 
         assertEquals(8, page1.totalElements());
         assertEquals(3, page1.totalPages());
@@ -795,9 +795,9 @@ public class DataTestServlet extends FATServlet {
         assertEquals(List.of("XXXI", "XXXVII", "XLI"),
                      page1.content());
 
-        Page<String> page2 = primes.romanNumerals(30L, 49L,
-                                                  4000L, 4009L,
-                                                  page1.nextPageRequest());
+        Page<String> page2 = primes.romanNumeralsWithin(30L, 49L,
+                                                        4000L, 4009L,
+                                                        page1.nextPageRequest());
 
         assertEquals(8, page2.totalElements());
         assertEquals(3, page2.totalPages());
@@ -805,9 +805,9 @@ public class DataTestServlet extends FATServlet {
         assertEquals(Arrays.asList("XLIII", "XLVII", null),
                      page2.content());
 
-        Page<String> page3 = primes.romanNumerals(30L, 49L,
-                                                  4000L, 4009L,
-                                                  page2.nextPageRequest());
+        Page<String> page3 = primes.romanNumeralsWithin(30L, 49L,
+                                                        4000L, 4009L,
+                                                        page2.nextPageRequest());
 
         assertEquals(8, page3.totalElements());
         assertEquals(3, page3.totalPages());
@@ -1982,6 +1982,7 @@ public class DataTestServlet extends FATServlet {
      * OrderBy annotation.
      */
     @Test
+    @SkipIfSysProp(DB_Oracle) //TODO Eclipse link SQL Generation bug on Oracle: https://github.com/OpenLiberty/open-liberty/issues/30444
     public void testFindAndDeleteWithOrderBy() {
         String testName = "TestFindAndDeleteWithOrderByKeyword";
         //                        id   length   width   height  description
@@ -4352,6 +4353,26 @@ public class DataTestServlet extends FATServlet {
         assertEquals(false, vehicles.existsAny());
         assertEquals(0L, vehicles.findAll().count());
         assertEquals(List.of(), vehicles.findAllOrderByPriceDescVinIdAsc());
+    }
+
+    /**
+     * Use a Repository method that has the Query annotation and has a return type
+     * that uses a Java record indicating to select a subset of entity attributes.
+     */
+    @Test
+    public void testQueryWithRecordResult() {
+        assertEquals(List.of("eleven XI ( X I )",
+                             "five V ( V )",
+                             "nineteen XIX ( X I X )",
+                             "seven VII ( V I I )",
+                             "seventeen XVII ( X V I I )",
+                             "thirteen XIII ( X I I I )",
+                             "three III ( I I I )",
+                             "two II ( I I )"),
+                     primes.romanNumeralsLessThanEq(20)
+                                     .stream()
+                                     .map(RomanNumeral::toString)
+                                     .collect(Collectors.toList()));
     }
 
     /**

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2022 IBM Corporation and others.
+ * Copyright (c) 2015, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -58,7 +58,6 @@ import com.ibm.ws.cdi.internal.interfaces.CDIUtils;
 import com.ibm.ws.cdi.internal.interfaces.TransactionService;
 import com.ibm.ws.cdi.internal.interfaces.WebSphereBeanDeploymentArchive;
 import com.ibm.ws.cdi.internal.interfaces.WebSphereCDIDeployment;
-import com.ibm.ws.cdi.internal.interfaces.WeldDevelopmentMode;
 import com.ibm.ws.cdi.liberty.ExtensionMetaData;
 import com.ibm.ws.classloading.LibertyClassLoadingService;
 import com.ibm.ws.kernel.service.util.ServiceCaller;
@@ -518,13 +517,6 @@ public class WebSphereCDIDeploymentImpl implements WebSphereCDIDeployment {
                 if (oldCL != null) {
                     CDIUtils.getAndSetLoader(oldCL);
                 }
-            }
-            //if the probe is enabled, add the probe extension
-            WeldDevelopmentMode devMode = this.cdiRuntime.getWeldDevelopmentMode();
-            if (devMode != null) {
-                extensionSet.add(devMode.getProbeExtension());
-                WebSphereBeanDeploymentArchive bda = devMode.getProbeBDA(this);
-                extensionBDAs.put(bda.getId(), bda);
             }
 
             //Now add the extensions from the SPI.
