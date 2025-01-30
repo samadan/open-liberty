@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2022 IBM Corporation and others.
+ * Copyright (c) 2004, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -139,7 +139,7 @@ public class AccessLogger extends LoggerOffThread implements AccessLog {
 
     private boolean isLogRolloverScheduled = false;
 
-    private volatile Timer timedLogRollover_Timer = new Timer();
+    private volatile Timer timedLogRollover_Timer = null;
 
     /**
      * Constructor of this NCSA access log file.
@@ -164,9 +164,14 @@ public class AccessLogger extends LoggerOffThread implements AccessLog {
     @Deactivate
     protected void deactivate(ComponentContext ctx) {
         if (this.isLogRolloverScheduled) {
-            timedLogRollover_Timer.cancel();
-            timedLogRollover_Timer.purge();
-            this.isLogRolloverScheduled = false;
+            if (timedLogRollover_Timer != null) {
+                timedLogRollover_Timer.cancel();
+                timedLogRollover_Timer.purge();
+                this.isLogRolloverScheduled = false;
+                timedLogRollover_Timer = null;
+
+            }
+
         }
         stop();
     }
@@ -693,9 +698,12 @@ public class AccessLogger extends LoggerOffThread implements AccessLog {
             if (this.rolloverStartTime.equals(rolloverStartTime) && this.rolloverInterval == rolloverInterval && !isFilePathChanged) {
                 return;
             } else {
-                timedLogRollover_Timer.cancel();
-                timedLogRollover_Timer.purge();
-                this.isLogRolloverScheduled = false;
+                if (timedLogRollover_Timer != null) {
+                    timedLogRollover_Timer.cancel();
+                    timedLogRollover_Timer.purge();
+                    this.isLogRolloverScheduled = false;
+                }
+
             }
         }
 
@@ -779,13 +787,14 @@ public class AccessLogger extends LoggerOffThread implements AccessLog {
         TimedLogRoller tlr = new TimedLogRoller(this.getWorkerThread());
         timedLogRollover_Timer.scheduleAtFixedRate(tlr, firstRollover, rolloverInterval * 60000);
         this.isLogRolloverScheduled = true;
+
     }
 
     /**
      * LogRoller task to be run/scheduled in timed log rollover.
      */
     private class TimedLogRoller extends TimerTask {
-        private final WorkerThread wt;
+        private WorkerThread wt;
 
         TimedLogRoller(WorkerThread wt) {
             this.wt = wt;

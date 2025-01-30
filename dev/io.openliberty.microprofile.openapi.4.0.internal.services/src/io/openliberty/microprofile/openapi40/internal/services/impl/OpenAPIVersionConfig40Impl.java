@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@ package io.openliberty.microprofile.openapi40.internal.services.impl;
 
 import org.osgi.service.component.annotations.Component;
 
+import io.openliberty.microprofile.openapi20.internal.OpenAPIVersion;
 import io.openliberty.microprofile.openapi20.internal.OpenAPIVersionConfigImpl;
 import io.openliberty.microprofile.openapi20.internal.services.OpenAPIVersionConfig;
 
@@ -30,14 +31,14 @@ public class OpenAPIVersionConfig40Impl extends OpenAPIVersionConfigImpl {
     }
 
     @Override
-    protected String getReplacementVersion() {
+    protected OpenAPIVersion getReplacementVersion() {
         // If the user has configured a two-digit version, convert to the corresponding three-digit version
         if (configuredVersion.equals(VERSION_30)) {
-            return VERSION_303.toString();
+            return VERSION_303;
         } else if (configuredVersion.equals(VERSION_31)) {
-            return VERSION_310.toString();
+            return VERSION_310;
         } else {
-            return configuredVersion.toString();
+            return configuredVersion;
         }
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023,2024 IBM Corporation and others.
+ * Copyright (c) 2023,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@
 package io.openliberty.data.internal.persistence.service;
 
 import static io.openliberty.data.internal.persistence.cdi.DataExtension.exc;
+import static io.openliberty.data.internal.persistence.Util.EOLN;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -83,7 +84,6 @@ import jakarta.persistence.Table;
  * It creates entity managers from a PersistenceServiceUnit from the persistence service.
  */
 public class DBStoreEMBuilder extends EntityManagerBuilder implements DDLGenerationParticipant {
-    static final String EOLN = String.format("%n");
     private static final long MAX_WAIT_FOR_SERVICE_NS = TimeUnit.SECONDS.toNanos(60);
     private static final Entry<String, String> ID_AND_VERSION_NOT_SPECIFIED = //
                     new SimpleImmutableEntry<>(null, null);

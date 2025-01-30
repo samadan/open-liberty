@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -38,6 +38,14 @@ public class PathItem31Validator extends TypeValidator<PathItem> {
             String ref = t.getRef();
             if (ref != null && !ref.isEmpty()) {
                 helper.validateReference(context, key, ref, PathItem.class);
+                return;
+            }
+
+            if (key == null) {
+                // Path can be null if user has put it within a schema, don't validate in this case.
+                if (LoggingUtils.isDebugEnabled(tc)) {
+                    Tr.debug(tc, "Path is null. Skip validation.");
+                }
                 return;
             }
 

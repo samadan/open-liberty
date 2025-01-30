@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2024 IBM Corporation and others.
+ * Copyright (c) 2015, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -9,7 +9,11 @@
  *******************************************************************************/
 package com.ibm.ws.jsf22.fat.tests;
 
+import static componenttest.annotation.SkipForRepeat.EE8_FEATURES;
+import static componenttest.annotation.SkipForRepeat.EE10_FEATURES;
 import static componenttest.annotation.SkipForRepeat.EE10_OR_LATER_FEATURES;
+import static componenttest.annotation.SkipForRepeat.NO_MODIFICATION;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -71,6 +75,8 @@ public class JSF22MiscellaneousTests {
     private static final String APP_NAME_OLGH22397 = "OLGH22397";
     private static final String APP_NAME_FACES_CONFIX_MISSING_XMLNS = "FacesConfigMissingXmlns";
     private static final String APP_NAME_MYFACES_4512 = "MYFACES-4512";
+    private static final String APP_NAME_XML_VALIDATION_GOOD = "XMLValidationGood";
+    private static final String APP_NAME_XML_VALIDATION_BAD = "XMLValidationBad";
 
     protected static final Class<?> c = JSF22MiscellaneousTests.class;
 
@@ -656,5 +662,44 @@ public class JSF22MiscellaneousTests {
 
             assertTrue("The MyFaces4512ViewHandler was not invoked!", !jsf22MiscellaneousServer.waitForStringInLog("MyFaces4512ViewHandler was invoked!").isEmpty());
         }
+    }
+    /*
+     * All the XML should be valid by default. 
+     */
+    @SkipForRepeat({NO_MODIFICATION,EE8_FEATURES,EE10_FEATURES})
+    @Test
+    public void testXMLValidationGoodCase() throws Exception {
+
+        jsf22MiscellaneousServer.setMarkToEndOfLog();
+
+        ShrinkHelper.defaultDropinApp(jsf22MiscellaneousServer, APP_NAME_XML_VALIDATION_GOOD + ".war");
+
+        assertTrue("XML Validation Error found erronously.", jsf22MiscellaneousServer.findStringsInLogsAndTraceUsingMark(".*cvc-complex-type.2.4.a: Invalid content was found starting with element.*").isEmpty()); 
+
+        assertTrue("XML Validation Error found erronously.", jsf22MiscellaneousServer.findStringsInLogsAndTraceUsingMark(".*org.xml.sax.SAXParseException.*").isEmpty());
+
+        jsf22MiscellaneousServer.resetLogMarks();
+
+        jsf22MiscellaneousServer.removeAndStopDropinsApplications(APP_NAME_XML_VALIDATION_GOOD  + ".war");
+    }
+
+    /*
+     * The bad case involves the faces-config.xml including an unexpected element. Validation should fail with following exception:
+     * [ERROR   ] cvc-complex-type.2.4.a: Invalid content was found starting with element '{"http://xmlns.jcp.org/xml/ns/javaee":wrong-element}'.
+     */
+    @SkipForRepeat({NO_MODIFICATION,EE8_FEATURES})
+    @Test
+    public void testXMLValidationBadCase() throws Exception {
+
+        jsf22MiscellaneousServer.setMarkToEndOfLog();
+
+        ShrinkHelper.defaultDropinApp(jsf22MiscellaneousServer, APP_NAME_XML_VALIDATION_BAD + ".war");
+
+        assertTrue("XML Validation Error not found!.", jsf22MiscellaneousServer.findStringsInLogsAndTraceUsingMark(".*cvc-complex-type.2.4.a: Invalid content was found starting with element.*").size() >= 1); 
+
+        jsf22MiscellaneousServer.resetLogMarks();
+
+        jsf22MiscellaneousServer.removeAndStopDropinsApplications(APP_NAME_XML_VALIDATION_BAD  + ".war");
+
     }
 }

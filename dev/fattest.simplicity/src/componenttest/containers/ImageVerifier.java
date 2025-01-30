@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2024 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -55,11 +55,9 @@ public final class ImageVerifier {
             _expectedImages.add(DockerImageName.parse(image));
         }
 
-        //TODO remove once WebSphere Liberty is updated
-        _expectedImages.add(DockerImageName.parse("gvenzl/oracle-free:23.3-full-faststart"));
-
         //Add images from the testcontainers project (tracked in fattest.simplicity/bnd.bnd)
-        for (String image : Arrays.asList("testcontainers/ryuk:0.9.0", "testcontainers/sshd:1.2.0", "testcontainers/vnc-recorder:1.3.0", "alpine:3.17")) {
+        for (String image : Arrays.asList("testcontainers/ryuk:0.9.0", "testcontainers/sshd:1.2.0", "testcontainers/vnc-recorder:1.3.0",
+                                          "public.ecr.aws/docker/library/alpine:3.17")) {
             _expectedImages.add(DockerImageName.parse(image));
         }
 

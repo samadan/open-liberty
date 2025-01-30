@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -32,8 +32,8 @@ public class ArtifactoryMirrorSubstitutor extends ImageNameSubstitutor {
         REGISTRY_MAP.put("NONE", "wasliberty-infrastructure-docker");
         REGISTRY_MAP.put("docker.io", "wasliberty-docker-remote"); //Only for verified images
         REGISTRY_MAP.put("ghcr.io", "wasliberty-ghcr-docker-remote");
-//        REGISTRY_MAP.put("icr.io", "TODO");
-//        REGISTRY_MAP.put("mcr.microsoft.com", "TODO");
+        REGISTRY_MAP.put("icr.io", "wasliberty-icr-docker-remote");
+        REGISTRY_MAP.put("mcr.microsoft.com", "wasliberty-mcr-docker-remote");
         REGISTRY_MAP.put("public.ecr.aws", "wasliberty-aws-docker-remote");
     }
 

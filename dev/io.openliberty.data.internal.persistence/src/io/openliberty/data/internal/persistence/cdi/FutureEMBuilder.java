@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ package io.openliberty.data.internal.persistence.cdi;
 import static io.openliberty.data.internal.persistence.EntityManagerBuilder.getClassNames;
 import static io.openliberty.data.internal.persistence.cdi.DataExtension.exc;
 
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.HashSet;
 import java.util.List;
@@ -84,7 +85,7 @@ public class FutureEMBuilder extends CompletableFuture<EntityManagerBuilder> imp
      * Module name in which the repository interface is defined.
      * If not defined in a module, only the application name part is included.
      */
-    private final J2EEName moduleName;
+    final J2EEName moduleName;
 
     /**
      * Namespace prefix (such as java:module) of the Repository dataStore.
@@ -660,6 +661,53 @@ public class FutureEMBuilder extends CompletableFuture<EntityManagerBuilder> imp
         return dataStore.hashCode() +
                (application == null ? 0 : application.hashCode()) +
                (module == null ? 0 : module.hashCode());
+    }
+
+    /**
+     * Write information about this instance to the introspection file for
+     * Jakarta Data.
+     *
+     * @param writer writes to the introspection file.
+     * @param indent indentation for lines.
+     */
+    @FFDCIgnore(Throwable.class)
+    @Trivial
+    public void introspect(PrintWriter writer, String indent) {
+        writer.println(indent + "FutureEMBuilder@" + Integer.toHexString(hashCode()));
+        writer.println(indent + "  dataStore: " + dataStore);
+        writer.println(indent + "  namespace: " + namespace);
+        writer.println(indent + "    application: " + application);
+        writer.println(indent + "    module: " + module);
+        writer.println(indent + "  defining artifact: " + moduleName);
+        writer.println(indent + "  repository class loader: " + repositoryClassLoader);
+
+        repositoryInterfaces.forEach(r -> {
+            writer.println(indent + "  repository: " + (r == null ? null : r.getName()));
+        });
+
+        entityTypes.forEach(e -> {
+            writer.println(indent + "  entity: " + (e == null ? null : e.getName()));
+        });
+
+        EntityManagerBuilder builder = null;
+        writer.print(indent + "  state: ");
+        if (isCancelled())
+            writer.println("cancelled");
+        else if (isDone())
+            try {
+                builder = join();
+                writer.println("completed");
+            } catch (Throwable x) {
+                writer.println("failed");
+                x.printStackTrace(writer);
+            }
+        else
+            writer.println("not completed");
+
+        if (builder != null) {
+            writer.println(indent + "  builder: " + builder);
+            // TODO more information from builder
+        }
     }
 
     @Override

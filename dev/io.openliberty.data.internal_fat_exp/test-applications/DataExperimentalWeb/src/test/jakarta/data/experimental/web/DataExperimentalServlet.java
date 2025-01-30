@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022,2024 IBM Corporation and others.
+ * Copyright (c) 2022,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -52,6 +52,7 @@ import org.junit.Test;
 
 import componenttest.app.FATServlet;
 import junit.framework.AssertionFailedError;
+import test.jakarta.data.experimental.web.Shipment.Instructions;
 
 @SuppressWarnings("serial")
 @WebServlet("/*")
@@ -1378,6 +1379,44 @@ public class DataExperimentalServlet extends FATServlet {
     }
 
     /**
+     * Find operation that returns an entity attribute that is a record.
+     */
+    @Test
+    public void testReturnRecordAttribute() {
+        shipments.removeEverything();
+
+        Shipment s1 = new Shipment();
+        s1.setDestination("2800 37th St NW, Rochester, MN 55901");
+        s1.setLocation("44.006349, -92.4665299");
+        s1.setId(10);
+        s1.setInstructions(new Instructions(//
+                        "Handle with care", //
+                        "Leave at door, send text alert", //
+                        false));
+        s1.setOrderedAt(OffsetDateTime.now());
+        s1.setStatus("SHIPPED");
+        shipments.save(s1);
+
+        Shipment s2 = new Shipment();
+        s2.setDestination("2800 37th St NW, Rochester, MN 55901");
+        s2.setLocation("44.006349,-92.4665299");
+        s2.setId(20);
+        s2.setOrderedAt(OffsetDateTime.now());
+        s2.setStatus("ORDER_RECEIVED");
+        shipments.save(s2);
+
+        // TODO enable once #29460 is fixed
+        //Instructions inst1 = shipments.getInstructions(10).orElseThrow();
+        //assertEquals("Handle with care", inst1.handlingRequirements());
+        //assertEquals("Leave at door, send text alert", inst1.deliveryRequirements());
+        //assertEquals(false, inst1.needsSignature());
+
+        //assertEquals(false, shipments.getInstructions(20).isPresent());
+
+        shipments.removeEverything();
+    }
+
+    /**
      * Use repository methods with annotations for rounding.
      */
     @Test
@@ -1529,14 +1568,16 @@ public class DataExperimentalServlet extends FATServlet {
         assertEquals(40.0f, item.price, 0.01f);
         assertEquals("Item 2 halved", item.description);
 
-        // subtract from price and append to description via Update method with property names inferred from parameters
+        // subtract from price and append to description via Update method
+        // with entity attribute names inferred from parameters
         assertEquals(true, items.shorten(item2.pk, 1.0f, " and reduced $1"));
 
         item = items.get(item2.pk);
         assertEquals(39.0f, item.price, 0.01f);
         assertEquals("Item 2 halved and reduced $1", item.description);
 
-        // subtract from price and append to description via Update method with annotatively specified property names
+        // subtract from price and append to description via Update method
+        // with annotatively specified entity attribute names
         items.shortenBy(2, " and then another $2", item2.pk);
 
         item = items.get(item2.pk);

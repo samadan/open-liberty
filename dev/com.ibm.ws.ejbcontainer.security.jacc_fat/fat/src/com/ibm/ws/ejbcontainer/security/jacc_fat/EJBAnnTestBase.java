@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -177,6 +179,7 @@ public class EJBAnnTestBase {
         mustContain(response, getCallerPrincipal);
         mustContain(response, isCallerInRoleManager);
         mustContain(response, isCallerInRoleEmployee);
+        verifyPolicyContextHandlers(response);
     }
 
     protected void verifyResponse(String response, String getCallerPrincipal, String getCallerIdentity, String isCallerInRoleManager, String isCallerInRoleEmployee) {
@@ -192,11 +195,91 @@ public class EJBAnnTestBase {
             mustContain(response, getCallerIdentity);
             mustContain(response, isCallerInRoleManager);
             mustContain(response, isCallerInRoleEmployee);
+            verifyPolicyContextHandlers(response);
+        }
+    }
+
+    private static final Map<String, Set<String>> expectedHandlers = new HashMap<>();
+    private static final Map<String, Set<String>> notExpectedHandlers = new HashMap<>();
+    private static final String EE7_8 = "EE7_8";
+    private static final String EE9_10 = "EE9_10";
+    private static final String EE11 = "EE11";
+    static {
+        Set<String> ee7_8expectedHandlers = new HashSet<>();
+        Set<String> ee7_8notExpectedHandlers = new HashSet<>();
+        Set<String> ee9_10expectedHandlers = new HashSet<>();
+        Set<String> ee9_10notExpectedHandlers = new HashSet<>();
+        Set<String> ee11expectedHandlers = new HashSet<>();
+        Set<String> ee11notExpectedHandlers = new HashSet<>();
+
+        String commonPolicyContextHandler = "javax.security.auth.Subject.container";
+        String principalMapperContextHandler = "jakarta.security.jacc.PrincipalMapper";
+        String[] soapMessagePolicyContextHandlers = new String[] { "javax.xml.soap.SOAPMessage", "jakarta.xml.soap.SOAPMessage" };
+        String[] httpServletRequestPolicyContextHandlers = new String[] { "javax.servlet.http.HttpServletRequest", "jakarta.servlet.http.HttpServletRequest" };
+        String[] ejbPolicyContextHandlers = new String[] { "javax.ejb.EnterpriseBean", "jakarta.ejb.EnterpriseBean" };
+        String[] ejbArgumentsPolicyContextHandlers = new String[] { "javax.ejb.arguments", "jakarta.ejb.arguments" };
+        int JAVAX_INDEX = 0;
+        int JAKARTA_INDEX = 1;
+
+        // javax.security.auth.Subject.container is expected in all of versions
+        ee7_8expectedHandlers.add(commonPolicyContextHandler);
+        ee9_10expectedHandlers.add(commonPolicyContextHandler);
+        ee11expectedHandlers.add(commonPolicyContextHandler);
+
+        // jakarta.security.jacc.PrincipalMapper is only expected with EE 11
+        ee7_8notExpectedHandlers.add(principalMapperContextHandler);
+        ee9_10notExpectedHandlers.add(principalMapperContextHandler);
+        ee11expectedHandlers.add(principalMapperContextHandler);
+
+        // For ejb.arguments handlers, the jakarta is expected for all versions, but the javax is expected for everything except EE 11
+        ee7_8expectedHandlers.add(ejbArgumentsPolicyContextHandlers[JAVAX_INDEX]);
+        ee9_10expectedHandlers.add(ejbArgumentsPolicyContextHandlers[JAVAX_INDEX]);
+        ee11notExpectedHandlers.add(ejbArgumentsPolicyContextHandlers[JAVAX_INDEX]);
+
+        ee7_8expectedHandlers.add(ejbArgumentsPolicyContextHandlers[JAKARTA_INDEX]);
+        ee9_10expectedHandlers.add(ejbArgumentsPolicyContextHandlers[JAKARTA_INDEX]);
+        ee11expectedHandlers.add(ejbArgumentsPolicyContextHandlers[JAKARTA_INDEX]);
+
+        // For all other handlers, the jakarta is expected for all versions and the javax one is only expected for EE 7_8
+        String[][] remainingContextHandlers = { soapMessagePolicyContextHandlers, httpServletRequestPolicyContextHandlers, ejbPolicyContextHandlers };
+        for (String[] handlers : remainingContextHandlers) {
+            ee7_8expectedHandlers.add(handlers[JAVAX_INDEX]);
+            ee9_10notExpectedHandlers.add(handlers[JAVAX_INDEX]);
+            ee11notExpectedHandlers.add(handlers[JAVAX_INDEX]);
+
+            ee7_8expectedHandlers.add(handlers[JAKARTA_INDEX]);
+            ee9_10expectedHandlers.add(handlers[JAKARTA_INDEX]);
+            ee11expectedHandlers.add(handlers[JAKARTA_INDEX]);
+        }
+
+        expectedHandlers.put(EE7_8, ee7_8expectedHandlers);
+        expectedHandlers.put(EE9_10, ee9_10expectedHandlers);
+        expectedHandlers.put(EE11, ee11expectedHandlers);
+
+        notExpectedHandlers.put(EE7_8, ee7_8notExpectedHandlers);
+        notExpectedHandlers.put(EE9_10, ee9_10notExpectedHandlers);
+        notExpectedHandlers.put(EE11, ee11notExpectedHandlers);
+    }
+
+    private void verifyPolicyContextHandlers(String response) {
+        String key = JakartaEEAction.isEE11OrLaterActive() ? EE11 : JakartaEEAction.isEE9OrLaterActive() ? EE9_10 : EE7_8;
+        Set<String> expected = expectedHandlers.get(key);
+        Set<String> notExpected = notExpectedHandlers.get(key);
+
+        for (String exp : expected) {
+            mustContain(response, "handlerKey(" + exp + ")=true");
+        }
+        for (String notExp : notExpected) {
+            mustNotContain(response, "handlerKey(" + notExp + ")=true");
         }
     }
 
     private void mustContain(String response, String target) {
         assertTrue(target + " not found in response", response.contains(target));
+    }
+
+    private void mustNotContain(String response, String target) {
+        assertTrue(target + " found in response", !response.contains(target));
     }
 
     protected void verifyResponse(String response, String getCallerPrincipal, String getCallerIdentity, String isCallerInRoleManager, String isCallerInRoleEmployee,

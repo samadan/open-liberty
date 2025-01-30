@@ -46,6 +46,8 @@ public class JaegerContainer extends GenericContainer<JaegerContainer> {
     public static final int HTTP_QUERY_PORT = 16686;
     public static final int GRPC_QUERY_PORT = 16685;
 
+    //TODO switch to use quay.io/jaegertracing/all-in-one:1.54
+    //TODO remove withDockerfileFromBuilder and instead create a dockerfile
     public JaegerContainer(File tlsCert, File tlsKey) {
         super(new ImageFromDockerfile().withDockerfileFromBuilder(builder -> builder.from(
                                                                                           ImageNameSubstitutor.instance()
@@ -71,6 +73,8 @@ public class JaegerContainer extends GenericContainer<JaegerContainer> {
         withEnv("QUERY_GRPC_TLS_KEY", "/etc/private.key");
     }
 
+    //TODO switch to use quay.io/jaegertracing/all-in-one:1.54
+    //TODO remove withDockerfileFromBuilder and instead create a dockerfile
     public JaegerContainer(File otelCollectorTlsCert, File otelCollectorTlsKey, File jaegerQueryTlsCert, File jaegerQueryTlsKey) {
         super(new ImageFromDockerfile().withDockerfileFromBuilder(builder -> builder.from(
                                                                                           ImageNameSubstitutor.instance()

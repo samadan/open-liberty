@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2024 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,6 @@ import static test.jakarta.data.jpa.web.Assertions.assertIterableEquals;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -135,6 +134,9 @@ public class DataJPATestServlet extends FATServlet {
 
     @Inject
     Drivers drivers;
+
+    @Inject
+    ECRepo ecRepo;
 
     @Inject
     Employees employees;
@@ -451,7 +453,7 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
-     * Comparison ignoring case on an entity property of type char.
+     * Comparison ignoring case on an entity attribute of type char.
      */
     @Test
     public void testCharIgnoreCase() {
@@ -740,6 +742,146 @@ public class DataJPATestServlet extends FATServlet {
                                      .collect(Collectors.toList()));
 
         assertEquals(false, page2.hasNext());
+    }
+
+    /**
+     * Demonstrates inconsistency and wrong behavior in how EclipseLink returns an
+     * entity attribute that is an ElementCollection vs an entity attribute of the
+     * same type that is not an ElementCollection. Note that the former is not
+     * supported by Jakarta Persistence, and it would be fine if EclipseLink would
+     * reject it, but EclipseLink should not be running the query and producing
+     * wrong data.
+     */
+    @Test
+    public void testElementCollection() throws Exception {
+        ECEntity e1 = new ECEntity();
+        e1.setId("EC1");
+        e1.setIntArray(new int[] { 14, 12, 1 });
+        e1.setLongList(new ArrayList<>(List.of(14L, 12L, 1L)));
+        e1.setLongListEC(new ArrayList<>(List.of(14L, 12L, 1L)));
+        e1.setStringSet(Set.of("fourteen", "twelve", "one"));
+        e1.setStringSetEC(Set.of("fourteen", "twelve", "one"));
+        ecRepo.insert(e1);
+
+        ECEntity e2 = new ECEntity();
+        e2.setId("EC2");
+        e2.setIntArray(new int[] { 14, 12, 2 });
+        e2.setLongList(new ArrayList<>(List.of(14L, 12L, 2L)));
+        e2.setLongListEC(new ArrayList<>(List.of(14L, 12L, 2L)));
+        e2.setStringSet(Set.of("fourteen", "twelve", "two"));
+        e2.setStringSetEC(Set.of("fourteen", "twelve", "two"));
+        ecRepo.insert(e2);
+
+        try (EntityManager em = ecRepo.getEntityManager()) {
+            String jpql;
+            jakarta.persistence.Query q;
+            List<?> results;
+
+            jpql = "SELECT intArray FROM ECEntity WHERE id=?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC1");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            // Vector of int[] needs special handling to print:
+            StringBuilder s = new StringBuilder();
+            boolean first = true;
+            for (Object element : results) {
+                if (first)
+                    first = false;
+                else
+                    s.append(", ");
+                if (element instanceof int[])
+                    s.append(Arrays.toString((int[]) element));
+                else
+                    s.append(element);
+            }
+            System.out.println("            contents are [" + s.toString() + "]");
+
+            jpql = "SELECT longList FROM ECEntity WHERE id=?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC1");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            System.out.println("            contents are " + results);
+
+            jpql = "SELECT longListEC FROM ECEntity WHERE id=?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC1");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            System.out.println("            contents are " + results);
+
+            jpql = "SELECT stringSet FROM ECEntity WHERE id=?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC1");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            System.out.println("            contents are " + results);
+
+            jpql = "SELECT stringSetEC FROM ECEntity WHERE id=?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC1");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            System.out.println("            contents are " + results);
+
+            // with multiple results (that ElementCollection wrongly combines into one!),
+
+            jpql = "SELECT longList FROM ECEntity WHERE id LIKE ?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC%");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            System.out.println("            contents are " + results);
+
+            jpql = "SELECT longListEC FROM ECEntity WHERE id LIKE ?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC%");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            System.out.println("            contents are " + results);
+
+            jpql = "SELECT stringSet FROM ECEntity WHERE id LIKE ?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC%");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            System.out.println("            contents are " + results);
+
+            jpql = "SELECT stringSetEC FROM ECEntity WHERE id LIKE ?1";
+            q = em.createQuery(jpql);
+            q.setParameter(1, "EC%");
+            results = q.getResultList();
+            System.out.println();
+            System.out.println(jpql);
+            System.out.println("getResultList returned a " + results.getClass().getTypeName());
+            System.out.println("    elements are of type " + results.iterator().next().getClass().getTypeName());
+            System.out.println("            contents are " + results);
+        }
     }
 
     /**
@@ -1198,21 +1340,34 @@ public class DataJPATestServlet extends FATServlet {
                                              .sorted()
                                              .collect(Collectors.toList()));
 
-        List<Set<AccountId>> list = taxpayers.findBankAccountsByFilingStatus(TaxPayer.FilingStatus.HeadOfHousehold);
-        // TODO EclipseLink bug where
-        // SELECT o.bankAccounts FROM TaxPayer o WHERE (o.filingStatus=?1) ORDER BY o.numDependents, o.ssn
-        // combines the two Set<AccountId> values that ought to be the result into a single combined list of AccountId.
-        //assertEquals(list.toString(), 2, list.size());
-        //assertEquals(Set.of("AccountId:43014400:410224"),
-        //             list.get(0)
-        //                             .stream()
-        //                             .map(AccountId::toString)
-        //                             .collect(Collectors.toSet()));
-        //assertEquals(Set.of("AccountId:10105600:560237", "AccountId:15561600:391588"),
-        //             list.get(1)
-        //                             .stream()
-        //                             .map(AccountId::toString)
-        //                             .collect(Collectors.toSet()));
+        List<Set<AccountId>> list;
+        try {
+            list = taxpayers.findBankAccountsByFilingStatus(TaxPayer.FilingStatus.HeadOfHousehold);
+            assertEquals(list.toString(), 2, list.size());
+            assertEquals(Set.of("AccountId:43014400:410224"),
+                         list.get(0)
+                                         .stream()
+                                         .map(AccountId::toString)
+                                         .collect(Collectors.toSet()));
+            assertEquals(Set.of("AccountId:10105600:560237",
+                                "AccountId:15561600:391588"),
+                         list.get(1)
+                                         .stream()
+                                         .map(AccountId::toString)
+                                         .collect(Collectors.toSet()));
+        } catch (UnsupportedOperationException x) {
+            if (x.getMessage() != null &&
+                x.getMessage().startsWith("CWWKD1103E:"))
+                // Works around bad behavior from EclipseLink (see #30575)
+                // for ElementCollection:
+                // SELECT o.bankAccounts FROM TaxPayer o WHERE (o.filingStatus=?1)
+                //  ORDER BY o.numDependents, o.ssn
+                // combines the two Set<AccountId> values that ought to be the result
+                // into a single combined list of AccountId.
+                ;
+            else
+                throw x;
+        }
 
         // TODO report EclipseLink bug that occurs on the following
         if (false)
@@ -1574,7 +1729,7 @@ public class DataJPATestServlet extends FATServlet {
         o5 = orders.create(o5);
         int o5_v1 = o5.versionNum;
 
-        // delete even though a property doesn't match
+        // delete even though an entity attribute doesn't match
         o4.total = 44.99f;
         orders.delete(o4);
 
@@ -3985,7 +4140,7 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
-     * Use the JPQL version(entityVar) function as the sort property to perform
+     * Use the JPQL version(entityVar) function as the sort attribute to perform
      * an ascending sort.
      */
     @Test
@@ -4120,7 +4275,8 @@ public class DataJPATestServlet extends FATServlet {
         of = Sort.of("population", Direction.DESC, true);
         try {
             cities.allSorted(of);
-            fail("Should not be able to applay a Sort with ignoreCase=true on a non-string property");
+            fail("Should not be able to applay a Sort with ignoreCase=true on a" +
+                 " non-string entity attribute");
         } catch (UnsupportedOperationException x) {
             // expected
         }
@@ -4129,15 +4285,15 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
-     * Use an Entity which has a version attribute of type Timestamp.
+     * Use an Entity which has a version attribute of type LocalDateTime.
      */
     @Test
-    public void testTimestampAsVersion(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void testTimeAsVersion() throws Exception {
         /*
          * Reference Issue: https://github.com/eclipse-ee4j/eclipselink/issues/205
          * Without using the Eclipselink Oracle plugin the precision of Timestamp is 1 second
          * Therefore, we need to ensure 1 second has passed between queries where we expect
-         * the timestamp/version to be different.
+         * the LocalDateTime/version to be different.
          */
         String jdbcJarName = System.getenv().getOrDefault("DB_DRIVER", "UNKNOWN");
         boolean secondPercision = jdbcJarName.startsWith("ojdbc");
@@ -4145,10 +4301,18 @@ public class DataJPATestServlet extends FATServlet {
         assertEquals(0, counties.deleteByNameIn(List.of("Dodge", "Mower")));
 
         int[] dodgeZipCodes = new int[] { 55924, 55927, 55940, 55944, 55955, 55985 };
-        int[] mowerZipCodes = new int[] { 55912, 55917, 55918, 55926, 55933, 55936, 55950, 55951, 55961, 55953, 55967, 55970, 55973, 55975, 55982 };
+        int[] mowerZipCodes = new int[] { 55912, 55917, 55918, 55926, 55933, 55936, //
+                                          55950, 55951, 55961, 55953, 55967, 55970, //
+                                          55973, 55975, 55982 };
 
-        County dodge = new County("Dodge", "Minnesota", 20867, dodgeZipCodes, "Mantorville", "Blooming Prairie", "Claremont", "Dodge Center", "Hayfield", "Kasson", "West Concord");
-        County mower = new County("Mower", "Minnesota", 49671, mowerZipCodes, "Austin", "Adams", "Brownsdale", "Dexter", "Elkton", "Grand Meadow", "Le Roy", "Lyle", "Mapleview", "Racine", "Rose Creek", "Sargeant", "Taopi", "Waltham");
+        County dodge = new County("Dodge", "Minnesota", 20867, dodgeZipCodes, //
+                        "Mantorville", "Blooming Prairie", "Claremont", //
+                        "Dodge Center", "Hayfield", "Kasson", "West Concord");
+
+        County mower = new County("Mower", "Minnesota", 49671, mowerZipCodes, //
+                        "Austin", "Adams", "Brownsdale", "Dexter", "Elkton", //
+                        "Grand Meadow", "Le Roy", "Lyle", "Mapleview", "Racine", //
+                        "Rose Creek", "Sargeant", "Taopi", "Waltham");
 
         counties.save(dodge, mower);
 
@@ -4157,10 +4321,10 @@ public class DataJPATestServlet extends FATServlet {
         if (secondPercision)
             Thread.sleep(Duration.ofSeconds(1).toMillis());
 
-        assertEquals(true, counties.updateByNameSetZipCodes("Dodge",
-                                                            dodgeZipCodes = new int[] { 55917, 55924, 55927, 55940, 55944, 55955, 55963, 55985 }));
+        dodgeZipCodes = new int[] { 55917, 55924, 55927, 55940, 55944, 55955, 55963, 55985 };
+        assertEquals(true, counties.updateByNameSetZipCodes("Dodge", dodgeZipCodes));
 
-        // Try to update with outdated version/timestamp:
+        // Try to update with outdated version/LocalDateTime:
         try {
             dodge.population = 20873;
             counties.save(dodge);
@@ -4169,8 +4333,11 @@ public class DataJPATestServlet extends FATServlet {
             // expected
         }
 
-        // Update the version/timestamp and retry:
-        Timestamp timestamp = dodge.lastUpdated = counties.findLastUpdatedByName("Dodge");
+        // Update the version/LocalDateTime and retry:
+        Long lastUpdate;
+        // TODO switch to the following once EclipseLink bug #30534 is fixed
+        //LocalDateTime lastUpdate;
+        lastUpdate = dodge.lastUpdated = counties.findLastUpdatedByName("Dodge");
         dodge.population = 20981;
 
         if (secondPercision)
@@ -4178,15 +4345,15 @@ public class DataJPATestServlet extends FATServlet {
 
         counties.save(dodge);
 
-        // Try to delete by previous version/timestamp,
-        assertEquals(false, counties.deleteByNameAndLastUpdated("Dodge", timestamp));
+        // Try to delete by previous version/LocalDateTime,
+        assertEquals(false, counties.deleteByNameAndLastUpdated("Dodge", lastUpdate));
 
-        // Should be able to delete with latest version/timestamp,
-        timestamp = counties.findLastUpdatedByName("Dodge");
-        assertEquals(true, counties.deleteByNameAndLastUpdated("Dodge", timestamp));
+        // Should be able to delete with latest version/LocalDateTime,
+        lastUpdate = counties.findLastUpdatedByName("Dodge");
+        assertEquals(true, counties.deleteByNameAndLastUpdated("Dodge", lastUpdate));
 
-        // Try to delete with wrong version/timestamp (from other entity),
-        mower.lastUpdated = timestamp;
+        // Try to delete with wrong version/LocalDateTime (from other entity),
+        mower.lastUpdated = lastUpdate;
         try {
             counties.remove(mower);
             fail("Deletion attempt with wrong version did not raise OptimisticLockingFailureException.");
@@ -4194,7 +4361,7 @@ public class DataJPATestServlet extends FATServlet {
             // pass
         }
 
-        // Use correct version/timestamp,
+        // Use correct version/LocalDateTime,
         mower = counties.findByName("Mower").orElseThrow();
         counties.remove(mower);
     }

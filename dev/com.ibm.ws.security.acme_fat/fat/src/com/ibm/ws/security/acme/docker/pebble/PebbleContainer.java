@@ -99,6 +99,8 @@ public class PebbleContainer extends CAContainer {
 	 *            Address of the DNS server to use to make DNS lookups for
 	 *            domains.
 	 */
+	    //TODO switch to use ghcr.io/letsencrypt/pebble:2.6.0
+	    //TODO remove withDockerfileFromBuilder and instead create a dockerfile
 	public PebbleContainer() {
 		super(new ImageFromDockerfile()
 				.withDockerfileFromBuilder(builder -> builder.from(

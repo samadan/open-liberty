@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019, 2024 IBM Corporation and others.
+ * Copyright (c) 2019, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -38,18 +38,38 @@ import com.ibm.websphere.simplicity.log.Log;
  */
 @SuppressWarnings("rawtypes")
 public enum DatabaseContainerType {
-    DB2("jcc.jar", Db2Container.class.getCanonicalName(), Properties_db2_jcc.class, //
-        DockerImageName.parse("icr.io/db2_community/db2:11.5.9.0")),
-    Derby("derby.jar", DerbyNoopContainer.class.getCanonicalName(), Properties_derby_embedded.class, DockerImageName.parse(""), //
+    DB2("jcc.jar", //
+        Db2Container.class.getCanonicalName(), //
+        Properties_db2_jcc.class, //
+        DockerImageName.parse("icr.io/db2_community/db2:11.5.9.0")//
+                        .asCompatibleSubstituteFor("icr.io/db2_community/db2")),
+    Derby("derby.jar", //
+          DerbyNoopContainer.class.getCanonicalName(), //
+          Properties_derby_embedded.class, //
+          DockerImageName.parse(""), //
           "DerbyEmbedded"),
-    DerbyClient("derbyclient.jar", DerbyClientContainer.class.getCanonicalName(), Properties_derby_client.class, //
+    DerbyClient("derbyclient.jar", //
+                DerbyClientContainer.class.getCanonicalName(), //
+                Properties_derby_client.class, //
                 DockerImageName.parse("")),
-    Oracle("ojdbc8.jar", OracleContainer.class.getCanonicalName(), Properties_oracle.class, //
-           DockerImageName.parse("ghcr.io/gvenzl/oracle-free:23.5-full-faststart").asCompatibleSubstituteFor("gvenzl/oracle-free"), "OracleDB"),
-    Postgres("postgresql.jar", PostgreSQLContainer.class.getCanonicalName(), Properties_postgresql.class, //
-             DockerImageName.parse("public.ecr.aws/docker/library/postgres:17.0-alpine").asCompatibleSubstituteFor("postgres"), "Postgre", "PostgreSQL"),
-    SQLServer("mssql-jdbc.jar", MSSQLServerContainer.class.getCanonicalName(), Properties_microsoft_sqlserver.class, //
-              DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-CU28-ubuntu-20.04"), "MSSQLServer");
+    Oracle("ojdbc8.jar", //
+           OracleContainer.class.getCanonicalName(), //
+           Properties_oracle.class, //
+           DockerImageName.parse("ghcr.io/gvenzl/oracle-free:23.5-full-faststart")//
+                           .asCompatibleSubstituteFor("gvenzl/oracle-free"), //
+           "OracleDB"),
+    Postgres("postgresql.jar", //
+             PostgreSQLContainer.class.getCanonicalName(), //
+             Properties_postgresql.class, //
+             DockerImageName.parse("public.ecr.aws/docker/library/postgres:17.0-alpine")//
+                             .asCompatibleSubstituteFor("postgres"), //
+             "Postgre", "PostgreSQL"),
+    SQLServer("mssql-jdbc.jar", //
+              MSSQLServerContainer.class.getCanonicalName(), //
+              Properties_microsoft_sqlserver.class, //
+              DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-CU28-ubuntu-20.04")//
+                              .asCompatibleSubstituteFor("mcr.microsoft.com/mssql/server"), //
+              "MSSQLServer");
 
     private final String driverName;
     private final Class<DataSourceProperties> dsPropsClass;

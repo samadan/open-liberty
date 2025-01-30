@@ -725,6 +725,10 @@
 			<arg value="-Dbasedir=${basedir}" />
 			<arg value="-Ddir.log.html=${dir.log.html}" />
 			<arg value="-Ddir.log.xml=${dir.log.xml}" />
+			<!-- In Java 24, the default for 'jdk.xml.enableExtensionFunctions' was changed to false
+				 This broke our JUnit XML to HTML transformations for FAT output in junit.html
+				 Forcing value back to true - https://bugs.openjdk.org/browse/JDK-8343024 -->
+			<jvmarg line="-Djdk.xml.enableExtensionFunctions=true" />
 		</java>
 
 		<iff>

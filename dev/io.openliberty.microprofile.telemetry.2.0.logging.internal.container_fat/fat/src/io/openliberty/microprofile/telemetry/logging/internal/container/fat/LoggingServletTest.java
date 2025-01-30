@@ -52,6 +52,8 @@ public class LoggingServletTest {
 
     public static final int WAIT_TIMEOUT = 5; // 5 seconds
 
+    //TODO switch to use ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.117.0
+    //TODO remove withDockerfileFromBuilder and instead create a dockerfile
     @ClassRule
     public static GenericContainer<?> container = new GenericContainer<>(new ImageFromDockerfile()
                     .withDockerfileFromBuilder(builder -> builder.from(TestUtils.IMAGE_NAME)
@@ -179,8 +181,7 @@ public class LoggingServletTest {
         assertTrue("Thread ID message could not be found.", TestUtils.assertLogContains("testFFDCLogs", logs, "thread.id: Int"));
 
         //These older repeats cause the class name and object details to display different class names.
-        if (RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP50_MPTEL20_JAVA8_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP50_MPTEL20_ID)
-            || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP41_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP14_MPTEL20_ID)) {
+        if (TelemetryActions.mpTelemetry20BelowEE10IsActive()) {
             assertTrue("Class name could not be found.", TestUtils.assertLogContains("testFFDCLogs", logs, "io.openliberty.class_name"));
             assertTrue("Object details could not be found.", TestUtils.assertLogContains("testFFDCLogs", logs, "io.openliberty.object_details"));
         } else {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2023 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -66,7 +66,7 @@ public class PasswordUtilsTest extends FATServletClient {
             // set the env for AUTO_USER_NAME and AUTO_USER_PASSWORD
             Map<String, String> envMap = new HashMap<>();
             envMap.put("AUTH_USER_NAME", "testUser");
-            envMap.put("AUTH_USER_PASSWORD", "testPassword");
+            envMap.put("AUTH_USER_PASSWORD", "{aes}ARCHov5Vfq7P9gus4lCT6rxK4kaQVJRkb4A7yuXUCylWinncR8zkPwHQrQ/6PTb2DTi6AHEUaYHu3sWqRZoUOUy7v7tvfRTWGrXaa3z96yyMmQQyrcMP9yiDCexZ3XMmHUrkYBdpYTyH59JcVxcr"); //testPassword
             try {
                 FATSuite.configureEnvVariable(s, envMap);
             } catch (Exception e) {

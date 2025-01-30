@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -245,6 +246,10 @@ public interface Primes {
     @OrderBy("name")
     Page<Prime> findByRomanNumeralStartsWithAndNumberIdLessThan(String prefix, long max, PageRequest pagination);
 
+    @OrderBy(ID)
+    Stream<Prime> findByRomanNumeralSymbolsContainsAndNumberIdLessThan(String symbol,
+                                                                       long max);
+
     @Find
     Prime findFirst(Sort<Prime> sort, Limit limitOf1);
 
@@ -426,6 +431,20 @@ public interface Primes {
     Page<String> romanNumeralsWithin(long min1, long max1,
                                      long min2, long max2,
                                      PageRequest pageRequest);
+
+    @Query("SELECT romanNumeralSymbols WHERE numberId = ?1")
+    Optional<ArrayList<String>> romanNumeralSymbolsAsArrayList(long num);
+
+    @Query("SELECT romanNumeralSymbols WHERE numberId = ?1")
+    Optional<Collection<String>> romanNumeralSymbolsAsCollection(long num);
+
+    @Query("SELECT romanNumeralSymbols WHERE romanNumeral LIKE ?1")
+    @OrderBy(ID)
+    List<ArrayList<String>> romanNumeralSymbolsAsListOfArrayList(String pattern);
+
+    @Query("SELECT romanNumeralSymbols WHERE romanNumeral LIKE ?1")
+    @OrderBy(ID)
+    LinkedHashSet<ArrayList<String>> romanNumeralSymbolsAsSetOfArrayList(String pattern);
 
     @Query("SELECT hex WHERE numberId=:id")
     Optional<Character> singleHexDigit(long id);

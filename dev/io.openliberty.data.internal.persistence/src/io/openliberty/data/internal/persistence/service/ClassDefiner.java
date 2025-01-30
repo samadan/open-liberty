@@ -12,6 +12,8 @@
  *******************************************************************************/
 package io.openliberty.data.internal.persistence.service;
 
+import static io.openliberty.data.internal.persistence.Util.EOLN;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -192,27 +194,27 @@ class ClassDefiner {
      * @return textual representation.
      */
     @Trivial
-    private String toString(Class<?> c) {
-        StringBuilder s = new StringBuilder(500).append(DBStoreEMBuilder.EOLN);
-        s.append(c.toGenericString()).append(" {").append(DBStoreEMBuilder.EOLN);
+    private static String toString(Class<?> c) {
+        StringBuilder s = new StringBuilder(500).append(EOLN);
+        s.append(c.toGenericString()).append(" {").append(EOLN);
 
         // fields
         TreeMap<String, Field> fields = new TreeMap<>();
         for (Field f : c.getFields())
             fields.put(f.getName(), f);
         for (Field f : fields.values())
-            s.append("  ").append(f.toGenericString()).append(';').append(DBStoreEMBuilder.EOLN);
+            s.append("  ").append(f.toGenericString()).append(';').append(EOLN);
 
-        s.append(DBStoreEMBuilder.EOLN);
+        s.append(EOLN);
 
         // constructors
         TreeMap<String, Constructor<?>> ctors = new TreeMap<>();
         for (Constructor<?> ctor : c.getConstructors())
             ctors.put(ctor.getName(), ctor);
         for (Constructor<?> ctor : ctors.values())
-            s.append("  ").append(ctor.toGenericString()).append(DBStoreEMBuilder.EOLN);
+            s.append("  ").append(ctor.toGenericString()).append(EOLN);
 
-        s.append(DBStoreEMBuilder.EOLN);
+        s.append(EOLN);
 
         // methods
         TreeMap<String, Method> methods = new TreeMap<>();
@@ -220,7 +222,7 @@ class ClassDefiner {
             if (!Object.class.equals(m.getDeclaringClass()))
                 methods.put(m.getName(), m);
         for (Method m : methods.values())
-            s.append("  ").append(m.toGenericString()).append(DBStoreEMBuilder.EOLN);
+            s.append("  ").append(m.toGenericString()).append(EOLN);
 
         s.append('}');
         return s.toString();

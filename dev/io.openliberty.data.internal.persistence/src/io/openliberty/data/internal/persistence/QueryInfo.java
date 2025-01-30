@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022,2024 IBM Corporation and others.
+ * Copyright (c) 2022,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -90,6 +90,12 @@ public class QueryInfo {
         RESOURCE_ACCESS,
         UPDATE, UPDATE_WITH_ENTITY_PARAM, UPDATE_WITH_ENTITY_PARAM_AND_RESULT
     }
+
+    /**
+     * Placeholder that indicates the entity class needs to be determined
+     * based on the content of the Query value.
+     */
+    public static final Class<?> ENTITY_TBD = Query.class;
 
     /**
      * Indicates the repository method has no Sort, Sort[], or Order parameters
@@ -221,10 +227,21 @@ public class QueryInfo {
     final Class<?> returnArrayType;
 
     /**
-     * The type of a single result obtained by the query.
-     * For example, a single result of a query that returns List<MyEntity> is of the type MyEntity.
+     * The type of a single result obtained by the query. For example,
+     * A query that returns List<MyEntity> has singleType MyEntity.
+     * A query that returns List<ArrayList<String>> has singleType ArrayList<String>.
+     * A query that returns Optional<String[]> has singleType String[].
      */
     final Class<?> singleType;
+
+    /**
+     * Element type of singleType when singleType is an array or collection.
+     * Null if singleType is not an array or collection. For example,
+     * A query that returns List<MyEntity> has singleTypeElementType null.
+     * A query that returns List<ArrayList<String>> has singleTypeElementType String.
+     * A query that returns Optional<String[]> has singleTypeElementType String.
+     */
+    final Class<?> singleTypeElementType;
 
     /**
      * Positions of Sort, Sort[], and Order parameters.
@@ -264,25 +281,6 @@ public class QueryInfo {
      * Indicates whether or not to validate method results, if Jakarta Validation is available.
      */
     boolean validateResult;
-
-    /**
-     * Constructor for the withJPQL method.
-     */
-    private QueryInfo(Class<?> repositoryInterface,
-                      Method method,
-                      Class<?> entityParamType,
-                      boolean isOptional,
-                      Class<?> multiType,
-                      Class<?> returnArrayType,
-                      Class<?> singleType) {
-        this.method = method;
-        this.entityParamType = entityParamType;
-        this.isOptional = isOptional;
-        this.multiType = multiType;
-        this.repositoryInterface = repositoryInterface;
-        this.returnArrayType = returnArrayType;
-        this.singleType = singleType;
-    }
 
     /**
      * Construct partially complete query information.
@@ -374,11 +372,18 @@ public class QueryInfo {
 
         singleType = type;
 
+        if ((singleType.isArray() || Iterable.class.isAssignableFrom(singleType)) &&
+            ++d < depth)
+            singleTypeElementType = returnTypeAtDepth.get(d);
+        else
+            singleTypeElementType = null;
+
         if (trace && tc.isEntryEnabled())
             Tr.exit(this, tc, "<init>", new Object[] { this,
                                                        "result isOptional? " + isOptional,
                                                        "result multiType:  " + multiType,
-                                                       "result singleType: " + singleType });
+                                                       "result singleType: " + singleType,
+                                                       "          element: " + singleTypeElementType });
     }
 
     /**
@@ -392,7 +397,41 @@ public class QueryInfo {
         this.repositoryInterface = repositoryInterface;
         this.returnArrayType = null;
         this.singleType = null;
+        this.singleTypeElementType = null;
         this.type = type;
+    }
+
+    /**
+     * Construct a copy of a source QueryInfo, but with different JPQL and sorts.
+     *
+     * @param source QueryInfo from which to copy.
+     * @param jpql   JPQL to use instead of the JPQL from source.
+     * @param sorts  Sorts to use instead of the sorts from source.
+     */
+    QueryInfo(QueryInfo source, String jpql, List<Sort<Object>> sorts) {
+        entityInfo = source.entityInfo;
+        entityParamType = source.entityParamType;
+        entityVar = source.entityVar;
+        entityVar_ = source.entityVar_;
+        hasWhere = source.hasWhere;
+        isOptional = source.isOptional;
+        this.jpql = jpql;
+        jpqlAfterCursor = source.jpqlAfterCursor;
+        jpqlBeforeCursor = source.jpqlBeforeCursor;
+        jpqlCount = source.jpqlCount;
+        jpqlDelete = source.jpqlDelete;
+        jpqlParamCount = source.jpqlParamCount;
+        jpqlParamNames = source.jpqlParamNames;
+        maxResults = source.maxResults;
+        method = source.method;
+        multiType = source.multiType;
+        repositoryInterface = source.repositoryInterface;
+        returnArrayType = source.returnArrayType;
+        singleType = source.singleType;
+        singleTypeElementType = source.singleTypeElementType;
+        this.sorts = sorts;
+        type = source.type;
+        validateParams = source.validateParams;
     }
 
     /**
@@ -578,7 +617,7 @@ public class QueryInfo {
      * return type.
      *
      * @param value              value to convert.
-     * @param type               type to convert to.
+     * @param toType             type to convert to.
      * @param failIfNotConverted whether or not to fail if unable to convert.
      * @return converted value.
      */
@@ -752,6 +791,12 @@ public class QueryInfo {
                 else if ("false".equalsIgnoreCase(str))
                     return false;
             }
+        } else if (value instanceof List &&
+                   Iterable.class.isAssignableFrom(toType)) {
+            return convertToIterable((List<?>) value,
+                                     toType,
+                                     singleTypeElementType,
+                                     null);
         }
 
         if (failIfNotConverted) {
@@ -796,15 +841,26 @@ public class QueryInfo {
      * Convert the results list into an Iterable of the specified type.
      *
      * @param results      results of a find or save operation.
-     * @param elementType  the type of each element if a find operation.
-     *                         Can be NULL if a save operation.
      * @param iterableType the desired type of Iterable.
+     * @param elementType  the type of each element, or null.
+     *                         Always null if not a find operation.
+     * @param query        the query if available.
+     *                         Always null if not a find operation.
      * @return results converted to an Iterable of the specified type.
      */
     @Trivial
     final Iterable<?> convertToIterable(List<?> results,
+                                        Class<?> iterableType,
                                         Class<?> elementType,
-                                        Class<?> iterableType) {
+                                        jakarta.persistence.Query query) {
+        final boolean trace = TraceComponent.isAnyTracingEnabled();
+        if (trace && tc.isEntryEnabled())
+            Tr.entry(this, tc, "convertToIterable",
+                     loggable(results),
+                     "to " + iterableType.getName(),
+                     elementType == null ? "of ?" : ("of " + elementType.getName()),
+                     query);
+
         Collection<Object> list;
         if (iterableType.isInterface()) {
             if (iterableType.isAssignableFrom(ArrayList.class))
@@ -856,13 +912,26 @@ public class QueryInfo {
             Object[] a = (Object[]) results.get(0);
             for (int i = 0; i < a.length; i++) {
                 Object element = a[i];
-                if (!elementType.isInstance(element))
+                if (elementType != null && !elementType.isInstance(element))
                     element = convert(element, elementType, true);
                 list.add(element);
             }
         } else {
-            list.addAll(results);
+            for (Object element : results) {
+                if (elementType != null && !elementType.isInstance(element)) {
+                    Object converted = convert(element, elementType, false);
+                    // EclipseLink returns wrong values when selecting
+                    // ElementCollection attributes instead of rejecting it as
+                    // unsupported. Raise an error instead.
+                    if (converted == element)
+                        throw excIncompatibleQueryResult(results, query);
+                }
+                list.add(element);
+            }
         }
+
+        if (trace && tc.isEntryEnabled())
+            Tr.exit(this, tc, "convertToIterable", loggable(list));
         return list;
     }
 
@@ -1043,6 +1112,40 @@ public class QueryInfo {
                        extraParamNames,
                        qlParamNames,
                        method.getAnnotation(Query.class).value());
+    }
+
+    /**
+     * Constructs an UnsupportedOperationException for an error where the
+     * repository method return type does not match the query results.
+     * On reason this might happen is when EclipseLink returns wrong values
+     * when selecting ElementCollection attributes instead of rejecting
+     * it as unsupported.
+     *
+     * @param results list of at least 1 result.
+     * @param query   jakarta.persistence.Query, a String, or null.
+     * @return UnsupportedOperationException.
+     */
+    @Trivial
+    UnsupportedOperationException excIncompatibleQueryResult(List<?> results,
+                                                             Object query) {
+        String r = results.getClass().getName() +
+                   "<" + results.get(0).getClass().getName() + ">";
+
+        if (query == null)
+            return exc(UnsupportedOperationException.class,
+                       "CWWKD1102.incompat.query.result",
+                       method.getName(),
+                       repositoryInterface.getName(),
+                       method.getGenericReturnType().getTypeName(),
+                       r);
+        else
+            return exc(UnsupportedOperationException.class,
+                       "CWWKD1103.incompat.query.result",
+                       method.getName(),
+                       repositoryInterface.getName(),
+                       method.getGenericReturnType().getTypeName(),
+                       query instanceof String ? query : query.getClass().getName(),
+                       r);
     }
 
     /**
@@ -1275,7 +1378,7 @@ public class QueryInfo {
             else if (Stream.class.equals(multiType))
                 returnValue = results.stream();
             else if (Iterable.class.isAssignableFrom(multiType))
-                returnValue = convertToIterable(results, null, multiType);
+                returnValue = convertToIterable(results, multiType, null, null);
             else if (Iterator.class.equals(multiType))
                 returnValue = results.iterator();
             else
@@ -1991,7 +2094,7 @@ public class QueryInfo {
                                     attribute = params[p].getName();
                                 else
                                     throw exc(MappingException.class,
-                                              "CWWKD1027.anno.missing.prop.name",
+                                              "CWWKD1027.anno.missing.attr.name",
                                               p + 1,
                                               method.getName(),
                                               repositoryInterface.getName(),
@@ -2135,6 +2238,7 @@ public class QueryInfo {
      *
      * @return the SELECT clause.
      */
+    @FFDCIgnore(RuntimeException.class) // caught to switch to better error
     private StringBuilder generateSelectClause() {
         StringBuilder q = new StringBuilder(200);
         String o = entityVar;
@@ -2150,7 +2254,7 @@ public class QueryInfo {
             ("The " + method.getName() + " method of the " +
              repositoryInterface.getName() + " repository has a " +
              method.getGenericReturnType().getTypeName() + " return type and" +
-             " specifies to return the " + selections + " entity properties," +
+             " specifies to return the " + selections + " entity attributes," +
              " but delete operations can only return void, a deletion count," +
              " a boolean deletion indicator, or the removed entities.");
         } else {
@@ -2184,65 +2288,91 @@ public class QueryInfo {
                 // Whole entity
                 if (!"this".equals(o))
                     q.append("SELECT ").append(o);
-            } else {
-                // Look for single entity attribute with the desired type:
-                String singleAttributeName = null;
-                for (Map.Entry<String, Class<?>> entry : entityInfo.attributeTypes.entrySet()) {
-                    Class<?> attributeType = entry.getValue();
-                    if (attributeType.isPrimitive())
-                        attributeType = Util.wrapperClassIfPrimitive(attributeType);
-                    if (singleType.isAssignableFrom(attributeType))
-                        if (singleAttributeName == null)
-                            singleAttributeName = entry.getKey();
-                        else
-                            throw exc(MappingException.class,
-                                      "CWWKD1008.ambig.rtrn.err",
-                                      method.getGenericReturnType().getTypeName(),
-                                      method.getName(),
-                                      repositoryInterface.getName(),
-                                      List.of(singleAttributeName, entry.getKey()));
+            } else if (entityInfo.idClassAttributeAccessors != null &&
+                       singleType.equals(entityInfo.idType)) {
+                // IdClass
+                // TODO remove once #29073 is fixed
+                // The following guess of alphabetic order is not valid in most cases, but this
+                // whole code block will be removed before GA, so there is no reason to correct it.
+                q.append("SELECT NEW ").append(singleType.getName()).append('(');
+                boolean first = true;
+                for (String idClassAttributeName : entityInfo.idClassAttributeAccessors.keySet()) {
+                    String name = getAttributeName(idClassAttributeName, true);
+                    q.append(first ? "" : ", ").append(o_).append(name);
+                    first = false;
                 }
-
-                if (singleAttributeName == null) {
-                    // TODO enable this once #29073 is fixed
-                    //if (entityInfo.idClassAttributeAccessors != null && singleType.equals(entityInfo.idType)) {
-                    //    // IdClass
-                    //    q.append("SELECT ID(").append(entityVar).append(')');
-                    // } else
-                    {
-                        // Construct new instance for record
-                        q.append("SELECT NEW ").append(singleType.getName()).append('(');
-                        RecordComponent[] recordComponents;
-                        boolean first = true;
-                        if ((recordComponents = singleType.getRecordComponents()) != null)
-                            for (RecordComponent component : recordComponents) {
-                                String name = component.getName();
-                                q.append(first ? "" : ", ").append(o_).append(name);
-                                first = false;
-                            }
-                        // TODO remove else block once #29073 is fixed
-                        else if (entityInfo.idClassAttributeAccessors != null && singleType.equals(entityInfo.idType))
-                            // The following guess of alphabetic order is not valid in most cases, but the
-                            // whole code block that will be removed before GA, so there is no reason to correct it.
-                            for (String idClassAttributeName : entityInfo.idClassAttributeAccessors.keySet()) {
-                                String name = getAttributeName(idClassAttributeName, true);
-                                q.append(first ? "" : ", ").append(o_).append(name);
-                                first = false;
-                            }
-                        else
-                            throw exc(MappingException.class,
-                                      "CWWKD1005.find.rtrn.err",
-                                      method.getName(),
-                                      repositoryInterface.getName(),
-                                      method.getGenericReturnType().getTypeName(),
-                                      entityInfo.entityClass.getName(),
-                                      List.of("List", "Optional",
-                                              "Page", "CursoredPage",
-                                              "Stream"));
-                        q.append(')');
+                q.append(')');
+                // TODO enable this once #29073 is fixed
+                // q.append("SELECT ID(").append(entityVar).append(')');
+            } else {
+                // Is the result type a record or a single attribute?
+                RecordComponent[] recordComponents = singleType.getRecordComponents();
+                if (recordComponents == null) {
+                    // Look for single entity attribute with the desired type:
+                    String singleAttributeName = null;
+                    for (Map.Entry<String, Class<?>> entry : entityInfo.attributeTypes.entrySet()) {
+                        Class<?> attributeType = entry.getValue();
+                        if (attributeType.isPrimitive())
+                            attributeType = Util.wrapperClassIfPrimitive(attributeType);
+                        if (singleType.isAssignableFrom(attributeType))
+                            if (singleAttributeName == null)
+                                singleAttributeName = entry.getKey();
+                            else
+                                throw exc(MappingException.class,
+                                          "CWWKD1008.ambig.rtrn.err",
+                                          method.getGenericReturnType().getTypeName(),
+                                          method.getName(),
+                                          repositoryInterface.getName(),
+                                          List.of(singleAttributeName, entry.getKey()));
                     }
+
+                    if (singleAttributeName == null)
+                        throw exc(MappingException.class,
+                                  "CWWKD1005.find.rtrn.err",
+                                  method.getName(),
+                                  repositoryInterface.getName(),
+                                  method.getGenericReturnType().getTypeName(),
+                                  entityInfo.entityClass.getName(),
+                                  List.of("List", "Optional",
+                                          "Page", "CursoredPage",
+                                          "Stream"));
+
+                    else
+                        q.append("SELECT ").append(o_).append(singleAttributeName);
                 } else {
-                    q.append("SELECT ").append(o_).append(singleAttributeName);
+                    // Construct new instance for record
+                    q.append("SELECT NEW ").append(singleType.getName()).append('(');
+
+                    String[] names = new String[recordComponents.length];
+                    for (int i = 0; i < recordComponents.length; i++) {
+                        // 1.1 TODO first check for Select annotation on record component
+                        names[i] = recordComponents[i].getName();
+                    }
+
+                    try {
+                        boolean first = true;
+                        for (String name : names) {
+                            name = getAttributeName(name, true);
+                            q.append(first ? "" : ", ");
+                            appendAttributeName(name, q);
+                            first = false;
+                        }
+                    } catch (RuntimeException x) {
+                        // Raise a more precise error that relates to using records
+                        // for a subset of entity attributes
+                        MappingException mx;
+                        mx = exc(MappingException.class,
+                                 "CWWKD1101.attr.subset.mismatch",
+                                 method.getGenericReturnType().getTypeName(),
+                                 method.getName(),
+                                 repositoryInterface.getName(),
+                                 singleType.getName(),
+                                 Arrays.toString(names),
+                                 entityInfo.getType().getName(),
+                                 entityInfo.getAttributeNames());
+                        throw (MappingException) mx.initCause(x);
+                    }
+                    q.append(')');
                 }
             }
         } else { // Individual columns are requested by @Select
@@ -2283,7 +2413,7 @@ public class QueryInfo {
 
     /**
      * Generates and appends JQPL to sort based on the specified entity attribute.
-     * For most properties, this will be of a form such as o.name or LOWER(o.name) DESC or ...
+     * For most attributes, this will be of a form such as o.name or LOWER(o.name) DESC or ...
      *
      * @param q             builder for the JPQL query.
      * @param Sort          sort criteria for a single attribute (name must already
@@ -2468,14 +2598,21 @@ public class QueryInfo {
     }
 
     /**
-     * Generates the JPQL WHERE clause for all findBy, deleteBy, or updateBy conditions such as MyColumn[IgnoreCase][Not]Like
+     * Generates the JPQL WHERE clause for all find/delete/count/exists/By
+     * conditions such as MyColumn[IgnoreCase][Not]Like
      */
-    private void generateWhereClause(String methodName, int start, int endBefore, StringBuilder q) {
+    private void generateWhereClause(String methodName,
+                                     int start,
+                                     int endBefore,
+                                     StringBuilder q) {
         hasWhere = true;
         q.append(" WHERE (");
-        for (int and = start, or = start, iNext = start, i = start; hasWhere && i >= start && iNext < endBefore; i = iNext) {
-            // The extra character (+1) below allows for entity property names that begin with Or or And.
-            // For example, findByOrg and findByPriceBetweenAndOrderNumber
+        for (int and = start, or = start, iNext = start, i = start; //
+             hasWhere && i >= start && iNext < endBefore; //
+             i = iNext) {
+            // The extra character (+1) below allows for entity attribute names
+            // that begin with Or or And. For example,
+            // findByOrg and findByPriceBetweenAndOrderNumber
             and = and == -1 || and > i + 1 ? and : methodName.indexOf("And", i + 1);
             or = or == -1 || or > i + 1 ? or : methodName.indexOf("Or", i + 1);
             iNext = Math.min(and, or);
@@ -2518,7 +2655,7 @@ public class QueryInfo {
                     value = ((Field) accessor).get(value);
             } else {
                 throw exc(MappingException.class,
-                          "CWWKD1059.prop.cast.err",
+                          "CWWKD1059.attr.cast.err",
                           method.getName(),
                           repositoryInterface.getName(),
                           attributeName,
@@ -2579,7 +2716,7 @@ public class QueryInfo {
                 }
             else
                 throw exc(MappingException.class,
-                          "CWWKD1010.unknown.entity.prop",
+                          "CWWKD1010.unknown.entity.attr",
                           name,
                           entityInfo.getType().getName(),
                           method.getName(),
@@ -2591,7 +2728,7 @@ public class QueryInfo {
             if (attributeName == null)
                 if (name.length() == 0) {
                     throw exc(MappingException.class,
-                              "CWWKD1024.missing.entity.prop",
+                              "CWWKD1024.missing.entity.attr",
                               method.getName(),
                               repositoryInterface.getName(),
                               entityInfo.getType().getName(),
@@ -2607,7 +2744,7 @@ public class QueryInfo {
                         if (attributeName == null && failIfNotFound) {
                             if (Util.hasOperationAnno(method))
                                 throw exc(MappingException.class,
-                                          "CWWKD1010.unknown.entity.prop",
+                                          "CWWKD1010.unknown.entity.attr",
                                           name,
                                           entityInfo.getType().getName(),
                                           method.getName(),
@@ -3729,7 +3866,7 @@ public class QueryInfo {
                 else if (Stream.class.equals(multiType))
                     returnValue = results.stream();
                 else if (Iterable.class.isAssignableFrom(multiType))
-                    returnValue = convertToIterable(results, null, multiType);
+                    returnValue = convertToIterable(results, multiType, null, null);
                 else if (Iterator.class.equals(multiType))
                     returnValue = results.iterator();
                 else
@@ -4229,7 +4366,7 @@ public class QueryInfo {
                 else if (Stream.class.equals(multiType))
                     returnValue = results.stream();
                 else if (Iterable.class.isAssignableFrom(multiType))
-                    returnValue = convertToIterable(results, null, multiType);
+                    returnValue = convertToIterable(results, multiType, null, null);
                 else if (Iterator.class.equals(multiType))
                     returnValue = results.iterator();
                 else
@@ -4982,7 +5119,8 @@ public class QueryInfo {
     }
 
     /**
-     * Validates that ignoreCase is only true if the type of the property being sort on is a String.
+     * Validates that ignoreCase is only true if the type of the attribute being
+     * sorted on is a String.
      *
      * @param sort the Jakarta Data Sort object being evaluated
      */
@@ -5007,36 +5145,5 @@ public class QueryInfo {
                           method.getName(),
                           repositoryInterface.getName());
         }
-    }
-
-    /**
-     * Copy of query information, but with updated JPQL and sort criteria.
-     */
-    QueryInfo withJPQL(String jpql, List<Sort<Object>> sorts) {
-        QueryInfo q = new QueryInfo( //
-                        repositoryInterface, //
-                        method, //
-                        entityParamType, //
-                        isOptional, //
-                        multiType, //
-                        returnArrayType, //
-                        singleType);
-        q.entityInfo = entityInfo;
-        q.entityVar = entityVar;
-        q.entityVar_ = entityVar_;
-        q.hasWhere = hasWhere;
-        q.jpql = jpql;
-        q.jpqlAfterCursor = jpqlAfterCursor;
-        q.jpqlBeforeCursor = jpqlBeforeCursor;
-        q.jpqlCount = jpqlCount;
-        q.jpqlDelete = jpqlDelete;
-        q.maxResults = maxResults;
-        q.jpqlParamCount = jpqlParamCount;
-        q.jpqlParamNames = jpqlParamNames;
-        q.sorts = sorts;
-        q.type = type;
-        q.validateParams = validateParams;
-        q.validateParams = validateResult;
-        return q;
     }
 }

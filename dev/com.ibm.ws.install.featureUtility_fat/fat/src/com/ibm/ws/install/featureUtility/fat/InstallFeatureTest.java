@@ -53,6 +53,7 @@ public class InstallFeatureTest extends FeatureUtilityToolTest {
 	 * "Started Sonatype Nexus.*" to make sure repository is up and running.
 	 * Disabling due to intermittent time out
 	 */
+	// TODO publish Dockerfile for this custom image
 //	public static GenericContainer<?> nexusContainer = new GenericContainer<>("jiwoo/nexus:1.0")
 //		.withStartupTimeout(Duration.of(5, ChronoUnit.MINUTES))
 //        .waitingFor(Wait.forLogMessage("Started Sonatype Nexus.*", 1))
@@ -65,6 +66,7 @@ public class InstallFeatureTest extends FeatureUtilityToolTest {
 		.withLogConsumer(new SimpleLogConsumer(InstallFeatureTest.class, "keyserver")).withNetwork(network)
 		.withNetworkAliases("keyserver");
 
+	//TODO publish Dockerfile for this custom image
 	@ClassRule
 	public static GenericContainer<?> proxyContainer = new GenericContainer<>("jiwoo/squid-proxy:1.0")
 		.withExposedPorts(3128).withNetwork(network);

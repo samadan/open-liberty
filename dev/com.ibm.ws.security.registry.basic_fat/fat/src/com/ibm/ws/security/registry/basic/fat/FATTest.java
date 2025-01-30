@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2024 IBM Corporation and others.
+ * Copyright (c) 2011, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assume.assumeTrue;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -27,12 +26,16 @@ import com.ibm.websphere.simplicity.log.Log;
 import com.ibm.ws.security.registry.SearchResult;
 import com.ibm.ws.security.registry.test.UserRegistryServletConnection;
 
+import componenttest.annotation.CheckpointTest;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.rules.repeater.CheckpointRule;
+import componenttest.rules.repeater.CheckpointRule.ServerMode;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.impl.LibertyServerFactory;
 import componenttest.vulnerability.LeakedPasswordChecker;
 
 @RunWith(FATRunner.class)
+@CheckpointTest(alwaysRun = true)
 public class FATTest {
     private static final String DEFAULT_CONFIG_FILE = "basic.server.xml.orig";
     private static final String ALTERNATE_BASIC_REGISTRY_CONFIG = "alternateBasicRegistry.xml";
@@ -40,23 +43,33 @@ public class FATTest {
     private static final String CUSTOM_AES_CONFIG_FILE = "customAESBasicRegistry.xml";
     private static final String DEFAULT_HASH_CONFIG_FILE = "defaultHashBasicRegistry.xml";
     private static String serverConfigurationFile = DEFAULT_CONFIG_FILE;
-    private static LibertyServer server = LibertyServerFactory.getLibertyServer("com.ibm.ws.security.registry.basic.fat");
+    private static LibertyServer server;
     private static final Class<?> c = FATTest.class;
     private static UserRegistryServletConnection servlet;
     private final LeakedPasswordChecker passwordChecker = new LeakedPasswordChecker(server);
+
+    @ClassRule
+    public static CheckpointRule checkpointRule = new CheckpointRule()
+                    .setConsoleLogName(FATTest.class.getSimpleName() + ".log")
+                    .setServerSetup(FATTest::serverSetUp)
+                    .setServerStart(FATTest::serverStart)
+                    .setServerTearDown(FATTest::serverTearDown);
 
     /**
      * Updates the sample, which is expected to be at the hard-coded path.
      * If this test is failing, check this path is correct.
      */
-    @BeforeClass
-    public static void setUp() throws Exception {
+    public static LibertyServer serverSetUp(ServerMode mode) throws Exception {
+        server = LibertyServerFactory.getLibertyServer("com.ibm.ws.security.registry.basic.fat");
         server.copyFileToLibertyInstallRoot("lib/features", "basicRegistryInternals-1.0.mf");
-
-        Log.info(c, "setUp", "Starting the server... (will wait for userRegistry servlet to start)");
+        Log.info(c, "serverSetUp", "Starting the server... (will wait for userRegistry servlet to start)");
         server.addInstalledAppForValidation("userRegistry");
+        return server;
+    }
+
+    public static void serverStart(ServerMode mode, LibertyServer server) throws Exception {
         startServer();
-        Log.info(c, "setUp", "Creating servlet connection the server");
+        Log.info(c, "serverStart", "Creating servlet connection the server");
         servlet = new UserRegistryServletConnection(server.getHostname(), server.getHttpDefaultPort());
     }
 
@@ -65,16 +78,15 @@ public class FATTest {
      */
     private static void startServer() throws Exception {
         Log.info(c, "startServer", "Starting the server...");
-        server.startServer(c.getName() + ".log");
+        server.startServer();
         assertNotNull("Security service did not report it was ready",
                       server.waitForStringInLog("CWWKS0008I"));
         assertNotNull("The application did not report is was started",
                       server.waitForStringInLog("CWWKZ0001I"));
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        Log.info(c, "tearDown", "Stopping the server...");
+    public static void serverTearDown(ServerMode mode, LibertyServer server) throws Exception {
+        Log.info(c, "serverTearDown", "Stopping the server...");
         server.stopServer();
     }
 
@@ -249,7 +261,11 @@ public class FATTest {
             Log.info(c, "setServerConfiguration", "setServerConfigurationFile to : " + serverXML);
             server.stopServer();
             server.setServerConfigurationFile(serverXML);
-            startServer();
+            if (CheckpointRule.isActive()) {
+                server.checkpointRestore();
+            } else {
+                startServer();
+            }
             serverConfigurationFile = serverXML;
         }
     }

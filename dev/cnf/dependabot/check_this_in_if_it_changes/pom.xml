@@ -1189,7 +1189,7 @@
     <dependency>
       <groupId>io.smallrye</groupId>
       <artifactId>jandex</artifactId>
-      <version>3.2.0</version>
+      <version>3.2.3</version>
     </dependency>
     <dependency>
       <groupId>io.smallrye</groupId>
@@ -1244,7 +1244,7 @@
     <dependency>
       <groupId>io.smallrye</groupId>
       <artifactId>smallrye-open-api-core</artifactId>
-      <version>4.0.2</version>
+      <version>4.0.6</version>
     </dependency>
     <dependency>
       <groupId>io.smallrye</groupId>
@@ -1254,12 +1254,12 @@
     <dependency>
       <groupId>io.smallrye</groupId>
       <artifactId>smallrye-open-api-jaxrs</artifactId>
-      <version>4.0.2</version>
+      <version>4.0.6</version>
     </dependency>
     <dependency>
       <groupId>io.smallrye</groupId>
       <artifactId>smallrye-open-api-model</artifactId>
-      <version>4.0.2</version>
+      <version>4.0.6</version>
     </dependency>
     <dependency>
       <groupId>io.zipkin.reporter2</groupId>
@@ -2484,7 +2484,7 @@
     <dependency>
       <groupId>org.apache.tomcat</groupId>
       <artifactId>tomcat-el-api</artifactId>
-      <version>11.0.1</version>
+      <version>11.0.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
@@ -2499,7 +2499,7 @@
     <dependency>
       <groupId>org.apache.tomcat</groupId>
       <artifactId>tomcat-jasper-el</artifactId>
-      <version>11.0.1</version>
+      <version>11.0.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.wink</groupId>
@@ -2600,26 +2600,6 @@
       <groupId>org.checkerframework</groupId>
       <artifactId>checker-compat-qual</artifactId>
       <version>2.5.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-      <version>1.6.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-jaxrs</artifactId>
-      <version>1.6.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.6.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-xc</artifactId>
-      <version>1.6.2</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>

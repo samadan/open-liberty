@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -1004,6 +1004,80 @@ public class DataErrPathsTestServlet extends FATServlet {
     }
 
     /**
+     * Attempt to supply a single NULL Sort to a repository method that retrieves
+     * results as CursoredPage.
+     */
+    @Test
+    public void testNullSortForCursoredPage() {
+        CursoredPage<Voter> page;
+        Cursor ssn0 = Cursor.forKey(0);
+        try {
+            page = voters.selectByAddress("4051 E River Rd NE, Rochester, MN 55906",
+                                          PageRequest.ofSize(5).afterCursor(ssn0),
+                                          new Sort<?>[] { null });
+            fail("Obtained a cursored page sorted by NULL: " + page);
+        } catch (IllegalArgumentException x) {
+            // expected
+        }
+    }
+
+    /**
+     * Attempt to supply a single NULL Sort to a repository method that retrieves
+     * results as a Page.
+     */
+    @Test
+    public void testNullSortForPage() {
+        Page<Voter> page;
+        try {
+            page = voters.selectAll(PageRequest.ofSize(6),
+                                    new Sort<?>[] { null });
+            fail("Obtained a page sorted by NULL: " + page);
+        } catch (IllegalArgumentException x) {
+            // expected
+        }
+    }
+
+    /**
+     * Attempt to supply multiple Sorts, with one of them NULL, to a
+     * repository method that retrieves results as CursoredPage.
+     */
+    @Test
+    public void testNullSortWithOtherSortsValidForCursoredPage() {
+        CursoredPage<Voter> page;
+        Cursor ssn0 = Cursor.forKey(0,
+                                    "Val",
+                                    "4051 E River Rd NE, Rochester, MN 55906");
+        try {
+            page = voters.selectByAddress("4051 E River Rd NE, Rochester, MN 55906",
+                                          PageRequest.ofSize(4).afterCursor(ssn0),
+                                          Sort.asc(ID),
+                                          null,
+                                          Sort.desc("address"));
+            fail("Obtained a cursored page sorted by NULL: " + page);
+        } catch (IllegalArgumentException x) {
+            // expected
+        }
+    }
+
+    /**
+     * Attempt to supply multiple Sorts, with one of them NULL, to a
+     * repository method that retrieves results as a Page.
+     */
+    @Test
+    public void testNullSortWithOtherSortsValidForPage() {
+        Page<Voter> page;
+        try {
+            page = voters.selectAll(PageRequest.ofSize(7),
+                                    Sort.asc(ID),
+                                    null,
+                                    Sort.desc("name"));
+            fail("Obtained a page sorted by NULL: " + page);
+        } catch (IllegalArgumentException x) {
+            // expected
+        }
+    }
+
+    /**
      * Supply a PageRequest that has a Cursor to a repository method that returns
      * an offset-based Page rather than a CursoredPage. Expect an error.
      */
@@ -1280,6 +1354,12 @@ public class DataErrPathsTestServlet extends FATServlet {
                  " component names that do not all match entity attributes: " +
                  result);
         } catch (MappingException x) {
+            if (x.getMessage() != null &&
+                x.getMessage().startsWith("CWWKD1101E") &&
+                x.getMessage().contains("Voters$NameAndZipCode"))
+                ; // expected
+            else
+                throw x;
         }
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -16,15 +16,20 @@ package com.ibm.ws.security.audit.encryption;
  *
  */
 import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
@@ -34,6 +39,7 @@ import java.util.Random;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
@@ -42,16 +48,22 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
+import com.ibm.ws.common.crypto.CryptoUtils;
 
 final class AuditCrypto {
 
     private static TraceComponent tc = Tr.register(AuditCrypto.class, null, "com.ibm.ejs.resources.security");
-    private static final String CRYPTO_ALGORITHM = "RSA";
-    private static final String ENCRYPT_ALGORITHM = "DESede";
-    private static final String CIPHER = "DESede/ECB/PKCS5Padding";
     private static IvParameterSpec ivs8 = null;
     private static IvParameterSpec ivs16 = null;
-    private static SecureRandom random = null;
+    private static boolean fips140_3Enabled = CryptoUtils.isFips140_3Enabled();
+    private static final String encryptAlgorithm = CryptoUtils.getEncryptionAlgorithm();
+
+    private static final String provider = CryptoUtils.getProvider();
+
+    /**
+     * @param provider
+     */
+    public AuditCrypto() {}
 
     static final boolean cmp(byte[] b1, int off1, byte[] b2, int off2, int n) {
         while (--n >= 0)
@@ -116,6 +128,7 @@ final class AuditCrypto {
     }
 
     private static double[] ETB = new double[16];
+
     static {
         double d = ETB[0] = 0.001;
         double log2d = Math.log(2 * d);
@@ -1055,7 +1068,7 @@ final class AuditCrypto {
             if (off != 0)
                 hashcode *= off;
 
-            if (useJCE) {
+            if (fips140_3Enabled || useJCE) {
                 hashcode *= 2;
             }
         }
@@ -1196,7 +1209,7 @@ final class AuditCrypto {
         }
 
         byte[] sig = null;
-        if (useJCE) {
+        if (fips140_3Enabled || useJCE) {
             try {
                 BigInteger n = new BigInteger(key[0]);
                 BigInteger e = new BigInteger(key[2]);
@@ -1204,12 +1217,23 @@ final class AuditCrypto {
                 BigInteger q = new BigInteger(key[4]);
                 BigInteger d = e.modInverse((p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE)));
                 KeyFactory kFact = null;
-                kFact = KeyFactory.getInstance(CRYPTO_ALGORITHM);
-
+                if (fips140_3Enabled)
+                    kFact = KeyFactory.getInstance(CryptoUtils.CRYPTO_ALGORITHM_RSA, CryptoUtils.getProvider());
+                else
+                    kFact = KeyFactory.getInstance(CryptoUtils.CRYPTO_ALGORITHM_RSA);
+                if (tc.isDebugEnabled())
+                    Tr.debug(tc, "kFact FIPS140-3 enabled: " + fips140_3Enabled + " Provider: " + kFact.getProvider() + " Algorithm: " + kFact.getAlgorithm());
                 RSAPrivateKeySpec privKeySpec = new RSAPrivateKeySpec(n, d);
                 PrivateKey privKey = kFact.generatePrivate(privKeySpec);
                 Signature rsaSig = null;
-                rsaSig = Signature.getInstance("SHA256withRSA");
+                if (fips140_3Enabled)
+                    rsaSig = Signature.getInstance(CryptoUtils.SIGNATURE_ALGORITHM_SHA256WITHRSA, provider);
+                else
+                    rsaSig = Signature.getInstance(CryptoUtils.SIGNATURE_ALGORITHM_SHA256WITHRSA);
+
+                if (tc.isDebugEnabled())
+                    Tr.debug(tc, "rsaSig FIPS140-3 enabled: " + fips140_3Enabled + " Provider: " + rsaSig.getProvider() + " Algorithm: " + rsaSig.getAlgorithm());
+
                 rsaSig.initSign(privKey);
                 rsaSig.update(data, off, len);
                 sig = rsaSig.sign();
@@ -1228,6 +1252,10 @@ final class AuditCrypto {
                 Tr.debug(tc, "Error: Signature operation failed");
                 Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
                 com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCryptoCrypto", "1312");
+            } catch (NoSuchProviderException e1) {
+                Tr.debug(tc, "Error: No Such Provider");
+                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e1 });
+                com.ibm.ws.ffdc.FFDCFilter.processException(e1, "com.ibm.ws.security.audit.AuditCryptoCrypto", "1314");
             }
 
         } else {
@@ -1250,6 +1278,7 @@ final class AuditCrypto {
 
     protected static final HashMap verifyKeysMap = new HashMap();
 
+    //@Trivial
     static class CachingVerifyKey {
 
         boolean reused = false;
@@ -1305,7 +1334,7 @@ final class AuditCrypto {
             if (off != 0)
                 hashcode *= off;
 
-            if (useJCE) {
+            if (fips140_3Enabled || useJCE) {
                 hashcode *= 2;
             }
         }
@@ -1475,7 +1504,6 @@ final class AuditCrypto {
 
         CachingVerifyKey ck = new CachingVerifyKey(key, data, off, len, sig, sigOff, sigLen, useJCE);
         CachingVerifyKey result = (CachingVerifyKey) verifyKeysMap.get(ck);
-
         if (tc.isDebugEnabled())
             Tr.debug(tc, "v.size:" + verifyKeysMap.size());
 
@@ -1514,16 +1542,29 @@ final class AuditCrypto {
         }
 
         boolean verified = false;
-        if (useJCE) {
+        if (fips140_3Enabled || useJCE) {
             try {
                 BigInteger n = new BigInteger(key[0]);
                 BigInteger e = new BigInteger(key[1]);
                 KeyFactory kFact = null;
-                kFact = KeyFactory.getInstance(CRYPTO_ALGORITHM, "IBMJCE");
+                if (fips140_3Enabled)
+                    kFact = KeyFactory.getInstance(CryptoUtils.CRYPTO_ALGORITHM_RSA, provider);
+                else
+                    kFact = KeyFactory.getInstance(CryptoUtils.CRYPTO_ALGORITHM_RSA, CryptoUtils.IBMJCE_NAME);
+                if (tc.isDebugEnabled())
+                    Tr.debug(tc, "kFact FIPS140-3 enabled: " + fips140_3Enabled + " Provider: " + kFact.getProvider() + " Algorithm: " + kFact.getAlgorithm());
+
                 RSAPublicKeySpec pubKeySpec = new RSAPublicKeySpec(n, e);
                 PublicKey pubKey = kFact.generatePublic(pubKeySpec);
                 Signature rsaSig = null;
-                rsaSig = Signature.getInstance("SHA256withRSA");
+                if (fips140_3Enabled)
+                    rsaSig = Signature.getInstance(CryptoUtils.SIGNATURE_ALGORITHM_SHA256WITHRSA, provider);
+                else
+                    rsaSig = Signature.getInstance(CryptoUtils.SIGNATURE_ALGORITHM_SHA256WITHRSA);
+
+                if (tc.isDebugEnabled())
+                    Tr.debug(tc, "rsaSig FIPS140-3 enabled: " + fips140_3Enabled + " Provider: " + rsaSig.getProvider() + " Algorithm: " + rsaSig.getAlgorithm());
+
                 rsaSig.initVerify(pubKey);
                 rsaSig.update(data, off, len);
                 verified = rsaSig.verify(sig);
@@ -1567,7 +1608,7 @@ final class AuditCrypto {
 
     static final byte[] padISO9796(byte[] data, int off, int len, int sigbits, boolean useJCE) {
         byte[] pad = null;
-        if (useJCE) {
+        if (fips140_3Enabled || useJCE) {
             // ISO9796 Padding is not supported by IBMJCEFIPS and is not FIPS approvable
         } else {
             sigbits--;
@@ -1630,7 +1671,11 @@ final class AuditCrypto {
         KeyPairGenerator keyGen = null;
 
         try {
-            keyGen = KeyPairGenerator.getInstance(CRYPTO_ALGORITHM);
+            if (fips140_3Enabled)
+                keyGen = KeyPairGenerator.getInstance(CryptoUtils.CRYPTO_ALGORITHM_RSA, provider);
+            else
+                keyGen = KeyPairGenerator.getInstance(CryptoUtils.CRYPTO_ALGORITHM_RSA);
+
             keyGen.initialize(len * 8, new SecureRandom());
             pair = keyGen.generateKeyPair();
             RSAPublicKey rsaPubKey = (RSAPublicKey) pair.getPublic();
@@ -1658,6 +1703,12 @@ final class AuditCrypto {
         } catch (java.security.NoSuchAlgorithmException e) {
             Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
             com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "1796");
+        } catch (NoSuchProviderException e1) {
+            if (tc.isDebugEnabled()) {
+                Tr.debug(tc, "No Such Provider");
+            }
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e1 });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e1, "com.ibm.ws.security.audit.AuditCrypto", "1713");
         }
 
         return key;
@@ -1734,6 +1785,7 @@ final class AuditCrypto {
         return v.equals(p[4]);
     }
 
+    //@Trivial
     static final byte getBits(String s, int pos, int len) {
         int i, j;
         byte a = (byte) (s.charAt((i = pos / 7)));
@@ -1745,6 +1797,7 @@ final class AuditCrypto {
         return a;
     }
 
+    //@Trivial
     static final void printBytes(String name, byte[] b, int off, int len) {
         System.out.println(name);
         StringBuffer buf = new StringBuffer();
@@ -1774,6 +1827,7 @@ final class AuditCrypto {
         System.out.println();
     }
 
+    //@Trivial
     static final boolean verifyBuf(byte[] b, int N, String alg) {
         for (int i = 0; i < 1024 * N; i++)
             if (b[i] != (byte) (i % 128)) {
@@ -1811,6 +1865,7 @@ final class AuditCrypto {
         return false;
     }
 
+    //@Trivial
     static final boolean testDSAKeys(byte[] b, byte[][] privKey, byte[][] pubKey) {
         int l = privKey[0].length;
         if (privKey[0][0] == 0)
@@ -1872,14 +1927,20 @@ final class AuditCrypto {
         return new SecureRandom().getSeed(length);
     }
 
-    static final byte[] generate3DESKey() {
+    static final byte[] generateSharedKey() {
         byte[] rndSeed = null;
         try {
-            KeyGenerator keyGen = null;
-            keyGen = KeyGenerator.getInstance(ENCRYPT_ALGORITHM);
-            keyGen.init(new SecureRandom());
-            SecretKey key = keyGen.generateKey();
-            rndSeed = key.getEncoded();
+            if (fips140_3Enabled) {
+                int len = 32;
+                rndSeed = new byte[len];
+                random(rndSeed, 0, len);
+            } else {
+                KeyGenerator keyGen = null;
+                keyGen = KeyGenerator.getInstance(CryptoUtils.ENCRYPT_ALGORITHM_DESEDE);
+                keyGen.init(new SecureRandom());
+                SecretKey key = keyGen.generateKey();
+                rndSeed = key.getEncoded();
+            }
         } catch (java.security.NoSuchAlgorithmException e) {
             Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
             com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2157");
@@ -1889,10 +1950,10 @@ final class AuditCrypto {
     }
 
     static final byte[] encrypt(byte[] data, byte[] key) {
-        return encrypt(data, key, CIPHER, true);
+        return encrypt(data, key, CryptoUtils.getCipherForAudit());
     }
 
-    static final byte[] encrypt(byte[] data, byte[] key, String cipher, boolean useJCE) {
+    static final byte[] encrypt(byte[] data, byte[] key, String cipher) {
         // determine key length from the key which specifies whether it is 3DES or DES
         long start_time = 0;
 
@@ -1903,90 +1964,47 @@ final class AuditCrypto {
             Tr.debug(tc, "Key size: " + key.length);
         }
 
+        if (null == data) {
+            if (tc.isDebugEnabled())
+                Tr.debug(tc, "Array was null");
+            return null;
+        }
+
         byte[] mesg = null;
-        if (useJCE) {
-            try {
-                if (null == data) {
-                    if (tc.isDebugEnabled())
-                        Tr.debug(tc, "Array was null");
-                    return null;
-                }
+        try {
 
-                SecretKey sKey = null;
+            SecretKey sKey = constructSecretKey(key, cipher);
 
-                if (cipher.indexOf("AES") != -1) {
-                    // 16 bytes = 128 bit key
-                    sKey = new SecretKeySpec(key, 0, 16, "AES");
-                } else {
-                    DESedeKeySpec kSpec = new DESedeKeySpec(key);
-                    SecretKeyFactory kFact = null;
-                    kFact = SecretKeyFactory.getInstance(ENCRYPT_ALGORITHM);
-                    sKey = kFact.generateSecret(kSpec);
-                }
+            Cipher ci = createCipher(Cipher.ENCRYPT_MODE, key, cipher, sKey);
+            if (tc.isDebugEnabled())
+                Tr.debug(tc, "encrypt() Cipher.doFinal()\n   data: " + new String(data));
+            mesg = ci.doFinal(data);
 
-                Cipher ci = null;
-                ci = Cipher.getInstance(cipher);
-
-                if (tc.isDebugEnabled()) {
-                    Tr.debug(tc, "The Provider Cipher used to encrypt: " + ci.getProvider());
-                    Tr.debug(tc, "The Algorithm Cipher used to encrypt: " + ci.getAlgorithm());
-                }
-                if (cipher.indexOf("ECB") == -1) {
-                    if (cipher.indexOf("AES") != -1) {
-                        if (ivs16 == null) {
-                            setIVS16(key);
-                        }
-                        ci.init(Cipher.ENCRYPT_MODE, sKey, ivs16);
-                    } else {
-                        if (ivs8 == null) {
-                            setIVS8(key);
-                        }
-                        ci.init(Cipher.ENCRYPT_MODE, sKey, ivs8);
-                    }
-                } else {
-                    ci.init(Cipher.ENCRYPT_MODE, sKey);
-                }
-
-                if (tc.isDebugEnabled())
-                    Tr.debug(tc, "encrypt() Cipher.doFinal()\n   data: " + new String(data));
-                mesg = ci.doFinal(data);
-
-            } catch (java.security.NoSuchAlgorithmException e) {
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2256");
-            } catch (java.security.InvalidKeyException e) {
-                Tr.debug(tc, "Error: Key invalid");
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2264");
-            } catch (java.security.spec.InvalidKeySpecException e) {
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2267");
-            } catch (javax.crypto.NoSuchPaddingException e) {
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2270");
-            } catch (javax.crypto.IllegalBlockSizeException e) {
-                // we get this exception when validating other token types
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2273");
-            } catch (javax.crypto.BadPaddingException e) {
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2276");
-            } catch (java.security.InvalidAlgorithmParameterException e) {
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2279");
-            }
-
-        } else {
-            int len = key.length;
-            int[] encrInternalKey = desKey(true, key, 0, len);
-
-            // REMINDER: pad message to be multiple of 8
-            mesg = padPKCS5(data);
-            if (null == mesg) {
-                if (tc.isDebugEnabled())
-                    Tr.debug(tc, "Array was null");
-                return null;
-            }
-            des(true, encrInternalKey, null, mesg, 0, mesg.length, mesg, 0);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2256");
+        } catch (java.security.InvalidKeyException e) {
+            Tr.debug(tc, "Error: Key invalid");
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2264");
+        } catch (java.security.spec.InvalidKeySpecException e) {
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2267");
+        } catch (javax.crypto.NoSuchPaddingException e) {
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2270");
+        } catch (javax.crypto.IllegalBlockSizeException e) {
+            // we get this exception when validating other token types
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2273");
+        } catch (javax.crypto.BadPaddingException e) {
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2276");
+        } catch (java.security.InvalidAlgorithmParameterException e) {
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2279");
+        } catch (NoSuchProviderException e) {
+            Tr.error(tc, "security.ltpa.noprovider", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2282");
         }
 
         if (tc.isDebugEnabled()) {
@@ -1998,10 +2016,10 @@ final class AuditCrypto {
     }
 
     static final byte[] decrypt(byte[] mesg, byte[] key) {
-        return decrypt(mesg, key, CIPHER, true);
+        return decrypt(mesg, key, CryptoUtils.getCipherForAudit());
     }
 
-    static final byte[] decrypt(byte[] mesg, byte[] key, String cipher, boolean useJCE) {
+    static final byte[] decrypt(byte[] mesg, byte[] key, String cipher) {
 
         long start_time = 0;
 
@@ -2012,93 +2030,42 @@ final class AuditCrypto {
         }
 
         byte[] tmpMesg = null;
-        if (useJCE) {
-            try {
-                if (null == mesg) {
-                    if (tc.isDebugEnabled())
-                        Tr.debug(tc, "Array was null");
-                    return null;
-                }
+        try {
 
-                SecretKey sKey = null;
+            SecretKey sKey = constructSecretKey(key, cipher);
 
-                if (cipher.indexOf("AES") != -1) {
-                    // 16 bytes = 128 bit key
-                    sKey = new SecretKeySpec(key, 0, 16, "AES");
-                } else {
-                    DESedeKeySpec kSpec = new DESedeKeySpec(key);
-                    SecretKeyFactory kFact = null;
-                    kFact = SecretKeyFactory.getInstance(ENCRYPT_ALGORITHM);
-                    sKey = kFact.generateSecret(kSpec);
-                }
+            Cipher ci = createCipher(Cipher.DECRYPT_MODE, key, cipher, sKey);
 
-                Cipher ci = null;
-                ci = Cipher.getInstance(cipher);
+            tmpMesg = ci.doFinal(mesg);
 
-                if (tc.isDebugEnabled()) {
-                    Tr.debug(tc, "The Provider Cipher used to decrypt: " + ci.getProvider());
-                    Tr.debug(tc, "The Algorithm Cipher used to decrypt: " + ci.getAlgorithm());
-                }
+            if (tc.isDebugEnabled())
+                Tr.debug(tc, "decrypt() Cipher.doFinal()\n   tmpMesg: " + new String(tmpMesg));
 
-                if (cipher.indexOf("ECB") == -1) {
-                    if (cipher.indexOf("AES") != -1) {
-
-                        if (ivs16 == null) {
-                            setIVS16(key);
-                        }
-                        ci.init(Cipher.DECRYPT_MODE, sKey, ivs16);
-                    } else {
-
-                        if (ivs8 == null) {
-                            setIVS8(key);
-                        }
-                        ci.init(Cipher.DECRYPT_MODE, sKey, ivs8);
-                    }
-                } else {
-                    ci.init(Cipher.DECRYPT_MODE, sKey);
-                }
-
-                tmpMesg = ci.doFinal(mesg);
-
-                if (tc.isDebugEnabled())
-                    Tr.debug(tc, "decrypt() Cipher.doFinal()\n   tmpMesg: " + new String(tmpMesg));
-
-            } catch (java.security.NoSuchAlgorithmException e) {
-                Tr.error(tc, "no such algorithm exception", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2385");
-            } catch (java.security.InvalidKeyException e) {
-                Tr.debug(tc, "Error: Key invalid");
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2393");
-            } catch (java.security.spec.InvalidKeySpecException e) {
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2396");
-            } catch (javax.crypto.NoSuchPaddingException e) {
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2399");
-            } catch (javax.crypto.IllegalBlockSizeException e) {
-                // we get this exception when validating other token types
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2402");
-            } catch (javax.crypto.BadPaddingException e) {
-                Tr.debug(tc, "BadPaddingException validating token, normal when token generated from other factory.", new Object[] { e.getMessage() });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2405");
-            } catch (java.security.InvalidAlgorithmParameterException e) {
-                Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
-                com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.auditAuditCrypto", "2408");
-            }
-        } else {
-            int len = key.length;
-            int[] decrInternalKey = desKey(false, key, 0, len);
-
-            // REMINDER: pad message to be multiple of 8
-
-            des(false, decrInternalKey, null, mesg, 0, mesg.length, mesg, 0);
-            tmpMesg = unpadPKCS5(mesg);
-            if (null == tmpMesg) {
-                if (tc.isDebugEnabled())
-                    Tr.debug(tc, "Array was not properly paded");
-                return null;
-            }
+        } catch (java.security.NoSuchAlgorithmException e) {
+            Tr.error(tc, "no such algorithm exception", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2385");
+        } catch (java.security.InvalidKeyException e) {
+            Tr.debug(tc, "Error: Key invalid");
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2393");
+        } catch (java.security.spec.InvalidKeySpecException e) {
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2396");
+        } catch (javax.crypto.NoSuchPaddingException e) {
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2399");
+        } catch (javax.crypto.IllegalBlockSizeException e) {
+            // we get this exception when validating other token types
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2402");
+        } catch (javax.crypto.BadPaddingException e) {
+            Tr.debug(tc, "BadPaddingException validating token, normal when token generated from other factory.", new Object[] { e.getMessage() });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.audit.AuditCrypto", "2405");
+        } catch (java.security.InvalidAlgorithmParameterException e) {
+            Tr.error(tc, "security.ltpa.noalgorithm", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.auditAuditCrypto", "2408");
+        } catch (NoSuchProviderException e) {
+            Tr.error(tc, "security.ltpa.noprovider", new Object[] { e });
+            com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ws.security.auditAuditCrypto", "2412");
         }
 
         if (tc.isDebugEnabled()) {
@@ -2107,6 +2074,64 @@ final class AuditCrypto {
         }
 
         return tmpMesg;
+    }
+
+    /**
+     * @param key
+     * @param cipher
+     * @return
+     * @throws InvalidKeyException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeySpecException
+     */
+    private static SecretKey constructSecretKey(byte[] key, String cipher) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
+        SecretKey sKey = null;
+        if (cipher.indexOf("AES") != -1) { //This code for FIPS 140-3
+            // 16 bytes = 128 bit key
+            sKey = new SecretKeySpec(key, 0, 16, "AES");
+        } else {
+            DESedeKeySpec kSpec = new DESedeKeySpec(key);
+            SecretKeyFactory kFact = null;
+
+            kFact = SecretKeyFactory.getInstance(encryptAlgorithm);
+
+            sKey = kFact.generateSecret(kSpec);
+        }
+        return sKey;
+    }
+
+    /**
+     * @param key
+     * @param cipher
+     * @param sKey
+     * @return
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchPaddingException
+     * @throws InvalidKeyException
+     * @throws InvalidAlgorithmParameterException
+     */
+    private static Cipher createCipher(int cipherMode, byte[] key, String cipher,
+                                       SecretKey sKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchProviderException {
+
+        Cipher ci = null;
+        ci = (provider == null) ? Cipher.getInstance(cipher) : Cipher.getInstance(cipher, provider);
+
+        if (cipher.indexOf("ECB") == -1) {
+            if (cipher.indexOf("AES") != -1) {
+                if (ivs16 == null) {
+                    setIVS16(key);
+                }
+                ci.init(cipherMode, sKey, ivs16);
+            } else {
+                if (ivs8 == null) {
+                    setIVS8(key);
+                }
+                ci.init(cipherMode, sKey, ivs8);
+            }
+        } else {
+            ci.init(cipherMode, sKey);
+        }
+        return ci;
     }
 
     /**

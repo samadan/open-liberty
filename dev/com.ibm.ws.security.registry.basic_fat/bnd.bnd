@@ -19,6 +19,8 @@ src: \
 
 fat.project: true
 
+tested.features: checkpoint
+
 # Dependencies may be local bundles (e.g. com.ibm.websphere.javaee.servlet.3.1)
 #      or binaries from Artifactory (e.g. commons-logging:commons-logging)
 # For all project names that match the pattern "*_fat*", dependencies for junit,

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2024 IBM Corporation and others.
+ * Copyright (c) 2011, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.Charset;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.security.AccessController;
 import java.security.KeyStore;
 import java.security.PrivilegedAction;
@@ -62,6 +65,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
@@ -1711,25 +1715,31 @@ public class LibertyServer implements LogMonitorClient {
 
             startedWithJavaSecurity = bootstrapHasJava2SecProps;
             if (bootstrapHasJava2SecProps) {
-                if (info.majorVersion() >= 18) {
-                    // If we are running on Java 18+, then we need to explicitly enable the security manager
+                if (info.majorVersion() >= 18 && info.majorVersion() <= 23) {
+                    // If we are running on Java 18 through 23, then we need to explicitly enable the security manager
                     Log.info(c, "startServerWithArgs", "Java 18 + Java2Sec requested, setting -Djava.security.manager=allow");
                     JVM_ARGS += " -Djava.security.manager=allow";
+                } else if (info.majorVersion() >= 24) {
+                    // Security manager not available in Java 24+
+                    LOG.severe("The server is configured to run with Java 2 security enabled, but the security manager is permanently disabled in Java versions 24 and later.  The security manager cannot be set!");
+                    throw new RuntimeException("The security manager is permanently disabled in Java versions 24 and later.  When running FATs, use @MaximumJavaLevel(javaLevel = 23) or disable Java 2 security to prevent this server from failing to start when running in Java 24 or later.");
                 }
             }
         }
 
         //FIPS 140-3
         // if we have FIPS 140-3 enabled, and the matched java/platform, add JVM Arg
-        if (isFIPS140_3EnabledAndSupported()) {
-            Log.info(c, "startServerWithArgs", "Liberty server is running JDK version: " + info.majorVersion() + " and vendor: " + info.VENDOR);
-            Log.info(c, "startServerWithArgs", "FIPS 140-3 global build properties is set for server " + getServerName()
-                                               + " with IBM Java 8, adding JVM arguments -Xenablefips140-3, ...,  to run with FIPS 140-3 enabled");
-
-            JVM_ARGS += " -Xenablefips140-3";
-            JVM_ARGS += " -Dcom.ibm.jsse2.usefipsprovider=true";
-            JVM_ARGS += " -Dcom.ibm.jsse2.usefipsProviderName=IBMJCEPlusFIPS";
-            // JVM_ARGS += " -Djavax.net.debug=all";  // Uncomment as needed for additional debugging
+        if (isFIPS140_3EnabledAndSupported(info)) {
+            Map<String, String> fipsOpts = getFipsJvmOptions(info, false);
+            StringJoiner joiner = new StringJoiner(" ", " ", "");
+            for (String key : fipsOpts.keySet()) {
+                if (fipsOpts.get(key) != null) {
+                    joiner.add(String.format("%s=%s", key, fipsOpts.get(key)));
+                } else {
+                    joiner.add(key);
+                }
+            }
+            JVM_ARGS += joiner.toString();
         }
 
         Properties bootstrapProperties = getBootstrapProperties();
@@ -1805,6 +1815,8 @@ public class LibertyServer implements LogMonitorClient {
         Log.info(c, method, "Using additional env props: " + useEnvVars);
 
         Log.finer(c, method, "Starting Server with command: " + cmd);
+
+        configureLTPAKeys(info);
 
         // Create a marker file to indicate that we're trying to start a server
         createServerMarkerFile();
@@ -7801,24 +7813,35 @@ public class LibertyServer implements LogMonitorClient {
         return false;
     }
 
-    //FIPS 140-3
-    public boolean isFIPS140_3EnabledAndSupported() throws Exception {
+    // FIPS 140-3
+    public boolean isFIPS140_3EnabledAndSupported(JavaInfo serverJavaInfo, boolean logOutput) throws IOException {
         String methodName = "isFIPS140_3EnabledAndSupported";
-        JavaInfo serverJavaInfo = JavaInfo.forServer(this);
         boolean isIBMJVM8 = (serverJavaInfo.majorVersion() == 8) && (serverJavaInfo.VENDOR == Vendor.IBM);
-        if (GLOBAL_FIPS_140_3) {
-            Log.info(c, methodName, "Liberty server is running JDK version: " + serverJavaInfo.majorVersion() + " and vendor: " + serverJavaInfo.VENDOR);
+        boolean isIBMJVM17 = (serverJavaInfo.majorVersion() == 17) && (serverJavaInfo.VENDOR == Vendor.IBM);
+        if (logOutput && GLOBAL_FIPS_140_3) {
+            Log.info(c, methodName, "Liberty server is running JDK version: " + serverJavaInfo.majorVersion()
+                    + " and vendor: " + serverJavaInfo.VENDOR);
             if (isIBMJVM8) {
                 Log.info(c, methodName, "global build properties FIPS_140_3 is set for server " + getServerName() +
-                                        " and IBM java 8 is available to run with FIPS 140-3 enabled.");
+                        " and IBM java 8 is available to run with FIPS 140-3 enabled.");
+            } else if (isIBMJVM17) {
+                Log.info(c, methodName, "global build properties FIPS_140_3 is set for server " + getServerName() +
+                        " and IBM java 17 is available to run with FIPS 140-3 enabled.");
             } else {
                 Log.info(c, methodName, "The global build properties FIPS_140_3 is set for server " + getServerName() +
-                                        ",  but no IBM java 8 on liberty server to run with FIPS 140-3 enabled.");
+                        ",  but no IBM java 8 or java 17 on liberty server to run with FIPS 140-3 enabled.");
             }
         }
-        return GLOBAL_FIPS_140_3 && isIBMJVM8;
+        return GLOBAL_FIPS_140_3 && (isIBMJVM8 || isIBMJVM17);
     }
 
+    public boolean isFIPS140_3EnabledAndSupported() throws IOException {
+        return isFIPS140_3EnabledAndSupported(JavaInfo.forServer(this), true);
+    }
+ 
+     public boolean isFIPS140_3EnabledAndSupported(JavaInfo info) throws IOException {
+        return isFIPS140_3EnabledAndSupported(info, true);
+    }
     /**
      * No longer using bootstrap properties to update server config for database rotation.
      * Instead look at using the fattest.databases module
@@ -8013,5 +8036,87 @@ public class LibertyServer implements LogMonitorClient {
 
     public String getEnvVar(String var) {
         return envVars.get(var);
+    }
+
+    public void configureLTPAKeys(JavaInfo info) throws IOException, InterruptedException {
+
+        if (isFIPS140_3EnabledAndSupported()) {
+            String serverSecurityDir = serverRoot + File.separator + "resources" + File.separator + "security";
+            File ltpaFIPSKeys = new File(serverSecurityDir, "ltpaFIPS.keys");
+            File ltpaKeys = new File(serverSecurityDir, "ltpa.keys");
+            String serverName = getServerName();
+            boolean fipsKeyExists = ltpaFIPSKeys.exists();
+
+            if (!ltpaKeys.exists() && !fipsKeyExists) {
+                Log.info(this.getClass(), "configureLTPAKeys",
+                        "FIPS 140-3 global build properties are set for server " + serverName
+                                + ", but neither ltpa.keys nor ltpaFIPS.keys is found in " + serverSecurityDir);
+            } else {
+                Log.info(this.getClass(), "configureLTPAKeys",
+                        "FIPS 140-3 global build properties are set for server " + serverName
+                                + ", swapping ltpaFIPS.keys into ltpa.keys");
+            }
+            
+            if (fipsKeyExists) {
+                Files.move(ltpaFIPSKeys.toPath(), ltpaKeys.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                // Log.info(this.getClass(), "configureLTPAKeys",
+                //         "Waiting for 2 seconds after updating ltpa.keys ...");
+                // Thread.sleep(2000);
+            }
+            if (ltpaKeys.exists()) {
+                // Log the content of ltpa.keys
+                String content = FileUtils.readFile(ltpaKeys.getAbsolutePath());
+                Log.info(this.getClass(), "configureLTPAKeys", "Content of ltpa.keys: " + content);
+            }
+        }
+    }
+
+    
+    private void configureLTPAKeys() throws IOException, InterruptedException {
+        configureLTPAKeys(JavaInfo.forServer(this));
+    }
+
+    private Map<String, String> getFipsJvmOptions(JavaInfo info, boolean includeGlobalArgs) throws IOException {
+        Map<String, String> opts = new HashMap<>();
+        if (isFIPS140_3EnabledAndSupported(info, false)) {
+            if (info.majorVersion() == 17) {
+                Log.info(c, "getFipsJvmOptions",
+                        "FIPS 140-3 global build properties is set for server " + getServerName()
+                                + " with IBM Java 17, adding required JVM arguments to run with FIPS 140-3 enabled");
+                opts.put("-Dsemeru.fips", "true");
+                opts.put("-Dsemeru.customprofile", "OpenJCEPlusFIPS.FIPS140-3-withPKCS12");
+                opts.put("-Dcom.ibm.fips.mode", "140-3");
+            } else if (info.majorVersion() == 8) {
+                Log.info(c, "getFipsJvmOptions", "FIPS 140-3 global build properties is set for server "
+                        + getServerName()
+                        + " with IBM Java 8, adding JVM arguments -Xenablefips140-3, ...,  to run with FIPS 140-3 enabled");
+                opts.put("-Xenablefips140-3", null);
+                opts.put("-Dcom.ibm.jsse2.usefipsprovider", "true");
+                opts.put("-Dcom.ibm.jsse2.usefipsProviderName", "IBMJCEPlusFIPS");
+                opts.put("-Dcom.ibm.fips.mode", "140-3");
+
+            }
+            if (includeGlobalArgs) {
+                opts.put("-Dglobal.fips_140-3", "true");
+                opts.put("-Dcom.ibm.ws.beta.edition", "true");
+            }
+        }
+        return opts;
+    }
+
+    public void setKeysAndJVMOptsForFips() throws Exception
+    {
+        // Enable FIPS on members via jvm.options file. This way when the controller starts / joins members
+        // the appropriate FIPS jvm arguments will be configured. 
+        JavaInfo info = JavaInfo.forServer(this);
+        if(isFIPS140_3EnabledAndSupported(info)){
+            this.configureLTPAKeys(info);
+            Map<String, String> jvm_opts = this.getJvmOptionsAsMap();
+            Map<String, String> combined = new HashMap(jvm_opts);
+            combined.putAll(this.getFipsJvmOptions(info, true));
+            if (!combined.isEmpty() && !combined.equals(jvm_opts)) {
+                this.setJvmOptions(combined);
+            }
+        }
     }
 }

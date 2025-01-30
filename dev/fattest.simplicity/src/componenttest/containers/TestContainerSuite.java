@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2024 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -165,6 +165,8 @@ public class TestContainerSuite {
                 // NOTE: if we want to increase this timeout in the future, we also need to increase the timeout of
                 // the ExternalDockerClientFilter which tests the connection to the docker host prior.
                 tcProps.setProperty("client.ping.timeout", FATRunner.FAT_TEST_LOCALRUN ? "5" : "10");
+
+                tcProps.setProperty("tinyimage.container.image", "public.ecr.aws/docker/library/alpine:3.17");
             } else {
                 Log.warning(c, "Unable to find valid External Docker Client");
             }
@@ -174,6 +176,7 @@ public class TestContainerSuite {
             tcProps.remove("docker.tls.verify");
             tcProps.remove("docker.cert.path");
             tcProps.remove("client.ping.timeout");
+            tcProps.remove("tinyimage.container.image");
         }
 
         //Always use ArtifactoryImageNameSubstitutor

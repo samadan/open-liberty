@@ -2994,10 +2994,8 @@ public class SQLMultiScopeRecoveryLog implements LogCursorCallback, MultiScopeLo
     private void markFailed(Throwable t, boolean report, boolean peerServerLostLogOwnership) {
         boolean newFailure = false;
         synchronized (this) {
-            if (tc.isDebugEnabled() && _failed)
-                Tr.debug(tc, "markFailed: RecoveryLog has been marked as failed. [" + this + "]");
-
             if (!_failed) {
+                if (tc.isDebugEnabled()) Tr.debug(tc, "markFailed: RecoveryLog has been marked as failed. [" + this + "]");
                 newFailure = true;
                 _failed = true;
             }

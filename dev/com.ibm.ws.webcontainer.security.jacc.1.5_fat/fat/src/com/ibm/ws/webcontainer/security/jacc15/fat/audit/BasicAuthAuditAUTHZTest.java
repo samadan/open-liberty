@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -16,15 +16,12 @@ package com.ibm.ws.webcontainer.security.jacc15.fat.audit;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.ClassRule;
-import componenttest.rules.repeater.RepeatTests;
-import componenttest.rules.repeater.FeatureReplacementAction;
-
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -46,6 +43,8 @@ import com.ibm.ws.webcontainer.security.test.servlets.TestConfiguration;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.custom.junit.runner.Mode;
 import componenttest.custom.junit.runner.Mode.TestMode;
+import componenttest.rules.repeater.FeatureReplacementAction;
+import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.impl.LibertyServerFactory;
 
@@ -91,8 +90,7 @@ public class BasicAuthAuditAUTHZTest {
      * Need the first repeat to make sure that audit-2.0 from a previous repeat gets put back to audit-1.0
      */
     @ClassRule
-    public static RepeatTests auditRepeat = RepeatTests.with(new FeatureReplacementAction("audit-2.0", "audit-1.0").forServers("com.ibm.ws.webcontainer.security.fat.basicauth.audit").fullFATOnly())
-                    .andWith(new FeatureReplacementAction("audit-1.0", "audit-2.0").forServers("com.ibm.ws.webcontainer.security.fat.basicauth.audit"));
+    public static RepeatTests auditRepeat = RepeatTests.with(new FeatureReplacementAction("audit-2.0", "audit-1.0").forServers("com.ibm.ws.webcontainer.security.fat.basicauth.audit").fullFATOnly()).andWith(new FeatureReplacementAction("audit-1.0", "audit-2.0").forServers("com.ibm.ws.webcontainer.security.fat.basicauth.audit"));
 
     @Rule
     public TestName name = _name;
@@ -138,6 +136,8 @@ public class BasicAuthAuditAUTHZTest {
 
         myClient = new BasicAuthClient(myServer);
         mySSLClient = new SSLBasicAuthClient(myServer);
+        myClient.setJaccValidation(true);
+        mySSLClient.setJaccValidation(true);
         urlBase = "http://" + myServer.getHostname() + ":" + myServer.getHttpDefaultPort();
     }
 

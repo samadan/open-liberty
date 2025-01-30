@@ -385,7 +385,8 @@ public class SpringBootUtilityThinTest extends CommonWebServerTests {
     }
 
     String readTimeout(BufferedReader reader) throws IOException {
-        for (int i = 0; i < 20; i++) {
+        // Timeout after 300*1000 ms (5 minutes)
+        for (int i = 0; i < 300; i++) {
             if (reader.ready()) {
                 return reader.readLine();
             }

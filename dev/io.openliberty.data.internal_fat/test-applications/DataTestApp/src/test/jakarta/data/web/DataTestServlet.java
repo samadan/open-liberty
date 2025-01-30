@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2024 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,7 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -146,6 +147,9 @@ public class DataTestServlet extends FATServlet {
 
     @Inject
     Products products;
+
+    @Inject
+    Purchases purchases;
 
     @Inject
     Ratings ratings;
@@ -1220,6 +1224,19 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
+     * Query-by-Method-Name query with a Contains restriction applied to an
+     * ElementCollection.
+     */
+    @Test
+    public void testElementCollectionContains() {
+        assertEquals(List.of(5L, 7L, 17L, 37L, 47L),
+                     primes.findByRomanNumeralSymbolsContainsAndNumberIdLessThan("V",
+                                                                                 50)
+                                     .map(prime -> prime.numberId)
+                                     .collect(Collectors.toList()));
+    }
+
+    /**
      * Unannotated entity with an attribute that is an embeddable type.
      */
     @SkipIfSysProp(DB_Postgres) //Failing on Postgres due to eclipselink issue.  https://github.com/OpenLiberty/open-liberty/issues/28380
@@ -2045,6 +2062,12 @@ public class DataTestServlet extends FATServlet {
         assertEquals(1, foxSquirrel.version());
 
         // TODO enable once #29460 is fixed
+        //assertEquals(List.of("Sciurus carolinensis",
+        //                     "Sciurus niger"),
+        //             animals.ofGenus("Sciurus")
+        //                             .map(n -> n.genus() + ' ' + n.species())
+        //                             .collect(Collectors.toList()));
+
         //ScientificName grayFoxId = new ScientificName("Urocyon", "cinereoargenteus");
         //grayFox = animals.findById(grayFoxId).orElseThrow();
         //assertEquals("gray fox", grayFox.commonName());
@@ -4356,6 +4379,71 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
+     * Repository Query method that selects and returns a single ArrayList attribute
+     */
+    @Test
+    public void testQueryReturnsArrayListAttribute() {
+        assertEquals(new ArrayList<String>(List.of("X", "L", "I")),
+                     primes.romanNumeralSymbolsAsArrayList(41).orElseThrow());
+    }
+
+    /**
+     * Repository Query method that selects a single attribute of type ArrayList
+     * and returns it as a Collection.
+     */
+    @Test
+    public void testQueryReturnsArrayListAttributeAsCollection() {
+        assertEquals(List.of("X", "X", "X", "V", "I", "I"),
+                     primes.romanNumeralSymbolsAsCollection(37).orElseThrow());
+    }
+
+    /**
+     * Repository Query method that selects and returns a multiple results of an
+     * ArrayList attribute
+     */
+    @Test
+    public void testQueryReturnsArrayListAttributeAsListOfArrayList() {
+        List<ArrayList<String>> results;
+        try {
+            results = primes.romanNumeralSymbolsAsListOfArrayList("XL%");
+        } catch (UnsupportedOperationException x) {
+            if (x.getMessage().startsWith("CWWKD1103E"))
+                // work around for bad behavior from EclipseLink when selecting
+                // ElementCollection attributes (see #30575)
+                return;
+            else
+                throw x;
+        }
+        assertEquals(List.of(new ArrayList<String>(List.of("X", "L", "I")),
+                             new ArrayList<String>(List.of("X", "L", "I", "I", "I")),
+                             new ArrayList<String>(List.of("X", "L", "V", "I", "I"))),
+                     results);
+    }
+
+    /**
+     * Repository Query method that selects and returns a multiple results of an
+     * ArrayList attribute as a Set.
+     */
+    @Test
+    public void testQueryReturnsArrayListAttributeAsSetOfArrayList() {
+        LinkedHashSet<ArrayList<String>> results;
+        try {
+            results = primes.romanNumeralSymbolsAsSetOfArrayList("XL%");
+        } catch (UnsupportedOperationException x) {
+            if (x.getMessage().startsWith("CWWKD1103E"))
+                // work around for bad behavior from EclipseLink when selecting
+                // ElementCollection attributes (see #30575)
+                return;
+            else
+                throw x;
+        }
+        assertEquals(Set.of(new ArrayList<String>(List.of("X", "L", "I")),
+                            new ArrayList<String>(List.of("X", "L", "I", "I", "I")),
+                            new ArrayList<String>(List.of("X", "L", "V", "I", "I"))),
+                     results);
+    }
+
+    /**
      * Use a Repository method that has the Query annotation and has a return type
      * that uses a Java record indicating to select a subset of entity attributes.
      */
@@ -4566,6 +4654,10 @@ public class DataTestServlet extends FATServlet {
         assertEquals("Simon", participants.getFirstName(3).orElseThrow());
 
         // TODO enable once #29460 is fixed
+        //assertEquals(new Participant.Name("Samantha", "TestRecordAsEmbeddable"),
+        //             participants.findNameById(4).orElseThrow());
+
+        // TODO enable once #29460 is fixed
         //assertEquals(List.of("Samantha", "Sarah", "Simon", "Steve"),
         //             participants.withSurname("TestRecordAsEmbeddable")
         //                             .map(p -> p.name.first())
@@ -4592,6 +4684,31 @@ public class DataTestServlet extends FATServlet {
         assertEquals(17.29f, receipts.totalOf(2001L), 0.001f);
 
         assertEquals(2, receipts.removeIfTotalUnder(2000.0f));
+    }
+
+    /**
+     * Verify that a record return type (per spec) takes precedence over an
+     * entity attribute that is a record.
+     */
+    @Test
+    public void testRecordReturnTypePrecedence() {
+        purchases.clearAll();
+
+        Purchase p1 = new Purchase();
+        p1.total = 105.19f;
+        p1.customer = "TestRecordReturnTypePrecedence";
+        p1.purchaseId = 1L;
+        // the following does not match on purpose
+        p1.receipt = new Receipt(1001L, "Customer1", 1.99f);
+
+        purchases.buy(p1);
+
+        Receipt r1 = purchases.receiptFor(1L).orElseThrow();
+        assertEquals("TestRecordReturnTypePrecedence", r1.customer());
+        assertEquals(1L, r1.purchaseId());
+        assertEquals(105.19f, r1.total(), 0.001f);
+
+        purchases.clearAll();
     }
 
     /**
@@ -4885,10 +5002,10 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
-     * Experiment with reserved keywords in entity property names.
+     * Experiment with reserved keywords in entity attribute names.
      */
     @Test
-    public void testReservedKeywordsInEntityPropertyNames() {
+    public void testReservedKeywordsInEntityAttributeNames() {
         // clear out old data before test
         things.deleteAll();
 
@@ -4902,7 +5019,7 @@ public class DataTestServlet extends FATServlet {
         Thing thing = things.findById(2);
         assertEquals("Haralson", thing.brand);
 
-        // "like" is allowed at end of entity property name because the capitalization differs.
+        // "like" is allowed at end of entity attribute name because the capitalization differs.
         assertIterableEquals(List.of("Fireside", "Haralson", "Honeycrisp", "Honeygold"),
                              things.findByAlike(true)
                                              .map(o -> o.brand)
@@ -4915,43 +5032,51 @@ public class DataTestServlet extends FATServlet {
                                              .map(o -> o.a)
                                              .collect(Collectors.toList()));
 
-        // "Or" in middle of entity property name is possible to to use of @Query.
+        // "Or" in middle of entity attribute name is possible when using @Query.
         assertIterableEquals(List.of("Honeycrisp"),
                              things.forPurchaseOrder(20)
                                              .map(o -> o.brand)
                                              .collect(Collectors.toList()));
 
-        // "Or" is allowed at the beginning of an entity property name because "find...By" immediately precedes it.
+        // "Or" is allowed at the beginning of an entity attribute name
+        // because "find...By" immediately precedes it.
         assertIterableEquals(List.of("Honeygold"),
                              things.findByOrderNumber(100201L)
                                              .map(o -> o.brand)
                                              .collect(Collectors.toList()));
 
-        // "And" is allowed at the beginning of an entity property name because "find...By" immediately precedes it.
+        // "And" is allowed at the beginning of an entity attribute name
+        // because "find...By" immediately precedes it.
         assertIterableEquals(List.of("android"),
                              things.findByAndroid(true)
                                              .map(o -> o.a)
                                              .collect(Collectors.toList()));
 
-        // "and" is allowed at end of entity property name "brand" because the capitalization differs.
-        // "Not" is allowed at the beginning of an entity property name "Notes" because the reserved word "Not" never appears prior to the property name.
-        // "And" is allowed at the beginning of an entity property name because "And" or "Or" immediately precedes it.
+        // "and" is allowed at end of entity attribute name "brand"
+        // because the capitalization differs.
+        // "Not" is allowed at the beginning of an entity attribute name "Notes"
+        // because the reserved word "Not" never appears prior to the attribute name.
+        // "And" is allowed at the beginning of an entity attribute name
+        // because "And" or "Or" immediately precedes it.
         assertIterableEquals(List.of(2L, 3L, 5L, 6L),
                              things.findByBrandOrNotesContainsOrAndroid("IBM", "October", true)
                                              .map(o -> o.thingId)
                                              .sorted()
                                              .collect(Collectors.toList()));
 
-        // "or" is allowed at end of entity property name "floor" because the capitalization differs.
-        // "In" is allowed at the beginning of an entity property name "Info" because the reserved word "In" never appears prior to the property name.
-        // "Or" is allowed at the beginning of an entity property name because "And" or "Or" immediately precedes it.
+        // "or" is allowed at end of entity attribute name "floor"
+        // because the capitalization differs.
+        // "In" is allowed at the beginning of an entity attribute name "Info"
+        // because the reserved word "In" never appears prior to the attribute name.
+        // "Or" is allowed at the beginning of an entity attribute name
+        // because "And" or "Or" immediately precedes it.
         assertIterableEquals(List.of("2nd floor conference room", "Golden Delicious x Haralson"),
                              things.findByFloorNotAndInfoLikeAndOrderNumberLessThan(3, "%o%", 300000L)
                                              .map(o -> o.info)
                                              .sorted()
                                              .collect(Collectors.toList()));
 
-        // TODO is "Desc" allowed in an entity property name in the OrderBy clause?
+        // TODO is "Desc" allowed in an entity attribute name in the OrderBy clause?
         assertIterableEquals(List.of("A101", "android", "apple"),
                              things.findByThingIdGreaterThan(3L)
                                              .map(o -> o.a)
@@ -5432,7 +5557,7 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
-     * Use the JDQL id(entityVar) function as the sort property to perform a
+     * Use the JDQL id(entityVar) function as the sort attribute to perform a
      * descending sort.
      */
     @Test

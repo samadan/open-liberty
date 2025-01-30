@@ -49,6 +49,8 @@ public class ConnectionPoolMetricsTest extends BaseTestClass {
     @ClassRule
     public static RepeatTests rt = FATSuite.testRepeatMPTel20(SERVER_NAME);
 	
+    //TODO switch to use ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.117.0
+    //TODO remove withDockerfileFromBuilder and instead create a dockerfile
 	@ClassRule
 	public static GenericContainer<?> container = new GenericContainer<>(new ImageFromDockerfile()
 			.withDockerfileFromBuilder(builder -> builder.from(IMAGE_NAME).copy("/etc/otelcol-contrib/config.yaml",

@@ -189,6 +189,8 @@ public abstract class LogstashCollectorTest {
         return APP_URL;
     }
 
+    //TODO switch to use public.ecr.aws/elastic/logstash:7.16.3
+    //TODO remove withDockerfileFromBuilder and instead create a dockerfile
     private static final String IMAGE_NAME = ImageNameSubstitutor.instance() //
                     .apply(DockerImageName.parse("elastic/logstash:7.16.3")).asCanonicalNameString();
 

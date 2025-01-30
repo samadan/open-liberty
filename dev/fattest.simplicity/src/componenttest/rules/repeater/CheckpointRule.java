@@ -167,6 +167,7 @@ public class CheckpointRule implements TestRule {
     private Consumer<LibertyServer> postCheckpointLambda;
     private final Set<String> unsupportedRepeatIDs = new HashSet<>(Arrays.asList(EE6FeatureReplacementAction.ID, EE7FeatureReplacementAction.ID));
     private String[] checkpointIgnoreMessages;
+    private boolean runNormalTests = true;
 
     /**
      * Sets the optional function to do class setup before running the normal and checkpoint mode for the test
@@ -248,9 +249,7 @@ public class CheckpointRule implements TestRule {
      * @return
      */
     public CheckpointRule addUnsupportedRepeatIDs(String... unsupportedRepeatIDs) {
-        if (unsupportedRepeatIDs != null) {
-            this.unsupportedRepeatIDs.addAll(Arrays.asList(unsupportedRepeatIDs));
-        }
+        this.unsupportedRepeatIDs.addAll(Arrays.asList(unsupportedRepeatIDs));
         return this;
     }
 
@@ -289,8 +288,25 @@ public class CheckpointRule implements TestRule {
         return this;
     }
 
+    /**
+     * Adds regular expressions to match messages to ignore from the server
+     *
+     * @param  regExs regular expression to match server messages
+     * @return
+     */
     public CheckpointRule addCheckpointRegexIgnoreMessages(String... regExs) {
         this.checkpointIgnoreMessages = regExs;
+        return this;
+    }
+
+    /**
+     * Sets if the tests should be run on a normal server which has no checkpoint done.
+     *
+     * @param  runNormalTests
+     * @return
+     */
+    public CheckpointRule setRunNormalTests(boolean runNormalTests) {
+        this.runNormalTests = runNormalTests;
         return this;
     }
 
@@ -335,7 +351,9 @@ public class CheckpointRule implements TestRule {
                 classSetup.call();
             }
             try {
-                evaluate(ServerMode.NORMAL);
+                if (runNormalTests) {
+                    evaluate(ServerMode.NORMAL);
+                }
                 evaluate(ServerMode.CHECKPOINT);
             } finally {
                 if (classTearDown != null) {
@@ -387,9 +405,6 @@ public class CheckpointRule implements TestRule {
 
         private boolean isCheckpointSupported() {
             if (JavaInfo.forCurrentVM().isCriuSupported()) {
-                if (unsupportedRepeatIDs == null) {
-                    return true;
-                }
                 return !RepeatTestFilter.isAnyRepeatActionActive(unsupportedRepeatIDs.toArray(new String[0]));
             }
             return false;

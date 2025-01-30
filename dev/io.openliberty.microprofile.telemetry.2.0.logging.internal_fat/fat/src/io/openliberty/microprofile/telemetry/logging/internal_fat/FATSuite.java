@@ -36,7 +36,8 @@ import componenttest.topology.utils.HttpUtils;
                 TelemetrySourcesTest.class,
                 TelemetryApplicationConfigTest.class,
                 TelemetryDropinsTest.class,
-                TelemetryAuditTest.class
+                TelemetryAuditTest.class,
+                TelemetryAuditCheckpointTest.class
 })
 
 public class FATSuite {

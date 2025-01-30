@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022,2024 IBM Corporation and others.
+ * Copyright (c) 2022,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -124,6 +123,7 @@ public class EntityInfo {
         validate();
     }
 
+    @Trivial
     Collection<String> getAttributeNames() {
         return attributeNames.values();
     }
@@ -224,18 +224,12 @@ public class EntityInfo {
     @Trivial
     private void validate() {
         for (Entry<String, Class<?>> attrType : attributeTypes.entrySet())
-            // ZonedDateTime is not one of the supported Temporal types
-            // Jakarta Data and Jakarta Persistence and does not behave
-            // correctly in EclipseLink where we have observed reading back
-            // a different value from the database than was persisted.
-            // If proper support is added for it in the future, then this
-            // can be removed.
-            if (ZonedDateTime.class.equals(attrType.getValue()))
+            if (Util.UNSUPPORTED_ATTR_TYPES.contains(attrType.getValue()))
                 throw exc(MappingException.class,
-                          "CWWKD1055.unsupported.entity.prop",
+                          "CWWKD1055.unsupported.entity.attr",
                           attrType.getKey(),
                           entityClass.getName(),
-                          attrType.getValue(),
+                          attrType.getValue().getName(),
                           List.of(Instant.class.getSimpleName(),
                                   LocalDate.class.getSimpleName(),
                                   LocalDateTime.class.getSimpleName(),

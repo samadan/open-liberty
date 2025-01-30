@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -13,11 +13,11 @@
 package test.jakarta.data.web;
 
 /**
- * For testing entity property names with reserved keywords in them.
+ * For testing entity attribute names with reserved keywords in them.
  */
 public class Thing {
 
-    // single character property name, for testing the difference between findByALike and findByAlike
+    // single character attribute name, for testing the difference between findByALike and findByAlike
     public String a;
 
     // ending with "like" does not conflict with reserved word "Like" due to case difference.
@@ -41,7 +41,7 @@ public class Thing {
     // starting with reserved word "Not" is okay
     public String notes;
 
-    // Due to reserved word "Or" within property name, this cannot be used in query by method name.
+    // Due to reserved word "Or" within attribute name, this cannot be used in query by method name.
     // Test with @Query instead.
     public int purchaseOrder;
 

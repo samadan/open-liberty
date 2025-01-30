@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023, 2024 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -227,30 +227,6 @@ public class ArtifactoryImageNameSubstitutorTest {
             //expected
         } catch (Exception e) {
             fail("Incorrect exception was thrown by ArtifactoryImageNameSubstitutor: " + e.getMessage());
-        }
-    }
-
-    // Priority 4: Always use Artifactory if using remote docker host.
-    // Verify workaround behavior that should be removed in the future.
-    @Test //TODO remove once all existing supported registries have corresponding Artifactory mirrors
-    public void testRegistryAppendErrorSkip() throws Exception {
-        //Using our remote docker host
-        setArtifactoryRegistryAvailable(true);
-        setDockerClientStrategy(new EnvironmentAndSystemPropertyClientProviderStrategy());
-
-        DockerImageName db2 = DockerImageName.parse("icr.io/db2_community/db2:11.5.9.0");
-        DockerImageName sqlserver = DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-CU28-ubuntu-20.04");
-
-        try {
-            assertEquals(db2, new ArtifactoryImageNameSubstitutor().apply(db2));
-        } catch (RuntimeException e) {
-            fail("icr.io should not have caused a failure from ArtifactoryImageNameSubstitutor: " + e.getMessage());
-        }
-
-        try {
-            assertEquals(sqlserver, new ArtifactoryImageNameSubstitutor().apply(sqlserver));
-        } catch (RuntimeException e) {
-            fail("mcr.microsoft.com should not have caused a failure from ArtifactoryImageNameSubstitutor" + e.getMessage());
         }
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2024 IBM Corporation and others.
+ * Copyright (c) 2014, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.ibm.ws.ejbcontainer.v32.fat.tests.JavaGlobalInjectIntoServletTest;
-//import com.ibm.ws.ejbcontainer.v32.fat.tests.PassivationTest;
+import com.ibm.ws.ejbcontainer.v32.fat.tests.PassivationTest;
 import com.ibm.ws.ejbcontainer.v32.fat.tests.SingletonLifecycleTxTest;
 import com.ibm.ws.ejbcontainer.v32.fat.tests.StatefulLifecycleTxTest;
 
@@ -27,8 +27,7 @@ import componenttest.custom.junit.runner.AlwaysPassesTest;
 @SuiteClasses({
                 AlwaysPassesTest.class,
                 JavaGlobalInjectIntoServletTest.class,
-//                TODO: enable these once tests are ported to Liberty
-//                PassivationTest.class,
+                PassivationTest.class,
                 SingletonLifecycleTxTest.class,
                 StatefulLifecycleTxTest.class
 })

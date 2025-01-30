@@ -103,7 +103,7 @@ public class AgentConfigTest {
             server.copyFileToLibertyServerRoot("agent-129/opentelemetry-javaagent.jar");
         }
         else {
-            server.copyFileToLibertyServerRoot("agent-210/opentelemetry-javaagent.jar");
+            server.copyFileToLibertyServerRoot("agent-250/opentelemetry-javaagent.jar");
         }
 
         // Construct the test application
@@ -128,10 +128,14 @@ public class AgentConfigTest {
         // Env vars are cleared when the server starts, so we need to set the core ones up again
         server.addEnvVar(TestConstants.ENV_OTEL_TRACES_EXPORTER, "otlp");
         server.addEnvVar(TestConstants.ENV_OTEL_EXPORTER_OTLP_ENDPOINT, jaegerContainer.getOtlpGrpcUrl());
-        //The default OTLP protocol has been changed from grpc to http/protobuf in the Java Agent v2.1.0
+        //The default OTLP protocol has been changed from grpc to http/protobuf in the Java Agent v2.5.0
         server.addEnvVar(TestConstants.ENV_OTEL_EXPORTER_OTLP_PROTOCOL, "grpc");
         server.addEnvVar("OTEL_METRICS_EXPORTER", "none");
         server.addEnvVar("OTEL_LOGS_EXPORTER", "none");
+
+        //Required for Java Agent 2.0.0+ to create Jax-Rs spans
+        server.addEnvVar("OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED", "true"); //otel.instrumentation.common.experimental.controller-telemetry.enabled=true)
+
         server.addEnvVar(TestConstants.ENV_OTEL_BSP_SCHEDULE_DELAY, "100"); // Wait no more than 100ms to send traces to the server
         server.addEnvVar(TestConstants.ENV_OTEL_SDK_DISABLED, "false"); //Enable tracing
     }

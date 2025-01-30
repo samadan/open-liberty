@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import io.openliberty.microprofile.openapi40.fat.validation.ValidationTestMissin
 import io.openliberty.microprofile.openapi40.fat.validation.ValidationTestNoErrors;
 import io.openliberty.microprofile.openapi40.fat.validation.ValidationTestOne;
 import io.openliberty.microprofile.openapi40.fat.validation.ValidationTestTwo;
+import io.openliberty.microprofile.openapi40.fat.versionwarning.VersionWarningTest;
 
 @SuiteClasses({
                 ValidationTestOne.class,
@@ -28,7 +29,8 @@ import io.openliberty.microprofile.openapi40.fat.validation.ValidationTestTwo;
                 ValidationTestFour.class,
                 ValidationTestFive.class,
                 ValidationTestNoErrors.class,
-                ValidationTestCrossVersion.class
+                ValidationTestCrossVersion.class,
+                VersionWarningTest.class,
 })
 @RunWith(Suite.class)
 public class FATSuite {}

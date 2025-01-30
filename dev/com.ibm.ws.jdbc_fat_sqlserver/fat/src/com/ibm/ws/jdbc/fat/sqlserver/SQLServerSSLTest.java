@@ -78,6 +78,11 @@ public class SQLServerSSLTest extends FATServletClient {
         // Create a normal Java EE application and export to server
         ShrinkHelper.defaultApp(server, APP_NAME, "web.ssl");
 
+        // TODO extract security files from container prior to server start
+        // TODO delete security files from git
+
+//        sqlserver.copyFileFromContainer("/truststore.p12", server.getServerRoot() + "/security/truststore.p12");
+
         server.startServer();
     }
 

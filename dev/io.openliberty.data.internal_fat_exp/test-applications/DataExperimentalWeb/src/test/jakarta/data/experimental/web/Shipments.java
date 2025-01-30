@@ -13,8 +13,10 @@
 package test.jakarta.data.experimental.web;
 
 import static io.openliberty.data.repository.Is.Op.In;
+import static jakarta.data.repository.By.ID;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -29,6 +31,7 @@ import jakarta.data.repository.Update;
 import io.openliberty.data.repository.Is;
 import io.openliberty.data.repository.Select;
 import io.openliberty.data.repository.update.Assign;
+import test.jakarta.data.experimental.web.Shipment.Instructions;
 
 /**
  *
@@ -59,6 +62,10 @@ public interface Shipments {
     @OrderBy("status")
     @OrderBy(value = "orderedAt", descending = true)
     Shipment[] getAll();
+
+    @Find
+    @Select("instructions")
+    Optional<Instructions> getInstructions(@By(ID) long id);
 
     @Find
     @Select("status")

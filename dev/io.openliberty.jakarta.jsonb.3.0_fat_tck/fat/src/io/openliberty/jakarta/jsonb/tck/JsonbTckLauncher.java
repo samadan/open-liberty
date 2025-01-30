@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2024 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package io.openliberty.jakarta.jsonb.tck;
+
+import static componenttest.annotation.SkipIfSysProp.OS_ZOS;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +27,7 @@ import componenttest.annotation.AllowedFFDC;
 import componenttest.annotation.MaximumJavaLevel;
 import componenttest.annotation.MinimumJavaLevel;
 import componenttest.annotation.Server;
+import componenttest.annotation.SkipIfSysProp;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.PrivHelper;
@@ -41,6 +44,15 @@ import componenttest.topology.utils.tck.TCKRunner;
 @RunWith(FATRunner.class)
 @MinimumJavaLevel(javaLevel = 11)
 @MaximumJavaLevel(javaLevel = 21) //Fails on Java 23 due to updates to CLDR https://jdk.java.net/23/release-notes#JDK-8319990
+/*
+ * Tests run on client JVM and each test requires a new JVM fork because the TCK itself has a provider
+ * which needs to be discovered in some tests, and ignored in other tests. When this fork is created on
+ * z/OS the maven-surefire-plugin fails with:
+ * - Corrupted channel by directly writing to native stream in forked JVM 1.
+ * - The forked VM terminated without properly saying goodbye. VM crash or System.exit called?
+ * This seems to be a bug in the maven-surefire-plugin, which will hopefully be fixed in a future release
+ */
+@SkipIfSysProp(OS_ZOS)
 public class JsonbTckLauncher {
 
     final static Map<String, String> additionalProps = new HashMap<>();
