@@ -94,6 +94,7 @@ public class NettyResponseMessage extends NettyBaseMessage implements HttpRespon
         }
 
         super.init(response, context, config);
+        setMessageType(MessageType.RESPONSE);
 
     }
 
