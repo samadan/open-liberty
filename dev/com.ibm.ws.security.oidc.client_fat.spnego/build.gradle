@@ -43,6 +43,15 @@ dependencies {
 autoFVT.dependsOn ':com.ibm.ws.security.fat.common:assemble'
 autoFVT.dependsOn ':com.ibm.ws.security.oauth.oidc_fat.common:assemble'
 autoFVT.dependsOn ':com.ibm.ws.webcontainer.security_test.servlets:assemble'
+
+// Apply macro from the shared Gradle script
+apply from: "${rootProject.projectDir}/com.ibm.ws.security.fat.common/publish/shared/config/common.gradle"
+
+// Use the macro to copy the keys
+autoFVT.doFirst {
+    defaultCopyLTPAFIPSKeys("${projectDir}/publish")
+}
+
 autoFVT.doLast {
 
   /****************************************************************
@@ -212,4 +221,9 @@ autoFVT.doLast {
     into new File(autoFvtDir, 'lib/LibertyFATTestFiles/')
     include 'kerberos/**'
   }
+}
+
+runfat.doLast {
+  // Use the macro to delete the keys
+  defaultDeleteLTPAFIPSKeys("${projectDir}/publish")
 }

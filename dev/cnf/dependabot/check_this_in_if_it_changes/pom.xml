@@ -474,47 +474,47 @@
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-api</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-census</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-context</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-core</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-netty</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-okhttp</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-protobuf-lite</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-protobuf</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-stub</artifactId>
-      <version>1.57.2</version>
+      <version>1.69.0</version>
     </dependency>
     <dependency>
       <groupId>io.jaegertracing</groupId>
@@ -564,57 +564,57 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-buffer</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-http2</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-http</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-socks</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-common</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler-proxy</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-resolver</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-unix-common</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport</artifactId>
-      <version>4.1.109.Final</version>
+      <version>4.1.116.Final</version>
     </dependency>
     <dependency>
       <groupId>io.openliberty.arquillian</groupId>
@@ -1383,6 +1383,11 @@
     </dependency>
     <dependency>
       <groupId>jakarta.enterprise</groupId>
+      <artifactId>cdi-tck-api</artifactId>
+      <version>4.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.enterprise</groupId>
       <artifactId>jakarta.enterprise.cdi-api</artifactId>
       <version>3.0.1</version>
     </dependency>
@@ -1770,6 +1775,16 @@
       <groupId>jtidy</groupId>
       <artifactId>jtidy</artifactId>
       <version>4aug2000r7-dev</version>
+    </dependency>
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy-agent</artifactId>
+      <version>1.16.1</version>
+    </dependency>
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy</artifactId>
+      <version>1.16.1</version>
     </dependency>
     <dependency>
       <groupId>net.java.dev.jna</groupId>
@@ -3977,6 +3992,11 @@
       <version>6.0.0.CR1</version>
     </dependency>
     <dependency>
+      <groupId>org.jboss.weld</groupId>
+      <artifactId>weld-porting-package-tck</artifactId>
+      <version>6.0.0.Final</version>
+    </dependency>
+    <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib-common</artifactId>
       <version>1.9.0</version>
@@ -4082,6 +4102,16 @@
       <version>1.9.5</version>
     </dependency>
     <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>4.11.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>4.11.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.mongodb</groupId>
       <artifactId>bson</artifactId>
       <version>4.8.2</version>
@@ -4120,6 +4150,11 @@
       <groupId>org.objenesis</groupId>
       <artifactId>objenesis</artifactId>
       <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.objenesis</groupId>
+      <artifactId>objenesis</artifactId>
+      <version>3.4</version>
     </dependency>
     <dependency>
       <groupId>org.opensaml</groupId>

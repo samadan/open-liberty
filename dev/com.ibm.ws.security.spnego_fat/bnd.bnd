@@ -39,6 +39,7 @@ tested.features: pages-3.0, appsecurity-4.0, cdi-3.0, spnego-1.0, expressionlang
     com.ibm.ws.security.spnego.fat.common;version=latest,\
     com.ibm.ws.security.token;version=latest,\
     com.ibm.ws.security.token.s4u2;version=latest,\
+    com.ibm.ws.security.fat.common;version=latest,\
     com.ibm.ws.webcontainer.security;version=latest,\
     com.ibm.ws.webcontainer.security_test.servlets;version=latest,\
 	com.ibm.ws.security.wim.adapter.ldap_fat.krb5.1;version=latest, \

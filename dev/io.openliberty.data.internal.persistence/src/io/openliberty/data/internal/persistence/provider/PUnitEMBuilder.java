@@ -14,6 +14,7 @@ package io.openliberty.data.internal.persistence.provider;
 
 import static io.openliberty.data.internal.persistence.cdi.DataExtension.exc;
 
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -87,6 +88,20 @@ public class PUnitEMBuilder extends EntityManagerBuilder {
                           DataSource.class.getName());
             }
         }
+    }
+
+    /**
+     * Write information about this instance to the introspection file for
+     * Jakarta Data.
+     *
+     * @param writer writes to the introspection file.
+     * @param indent indentation for lines.
+     */
+    @Override
+    @Trivial
+    public void introspect(PrintWriter writer, String indent) {
+        super.introspect(writer, indent);
+        writer.println(indent + "  EntityManagerFactory: " + emf);
     }
 
     @Override

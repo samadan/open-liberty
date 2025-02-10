@@ -32,4 +32,5 @@ tested.features: \
     com.ibm.ws.webcontainer.security_test.servlets;version=latest,\
     fattest.simplicity;version=latest,\
     io.openliberty.org.apache.commons.logging;version=latest,\
+    com.ibm.ws.security.fat.common;version=latest,\
     io.openliberty.org.apache.commons.codec;version=latest

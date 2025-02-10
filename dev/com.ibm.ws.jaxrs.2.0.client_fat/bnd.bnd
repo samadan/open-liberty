@@ -83,4 +83,5 @@ tested.features: \
 	org.mock-server:mockserver-core;version='5.11.2',\
 	org.mock-server:mockserver-netty;version='5.11.2',\
 	com.ibm.json4j;version=latest,\
+  com.ibm.ws.security.fat.common;version=latest,\
 	io.openliberty.com.fasterxml.jackson;verison=latest

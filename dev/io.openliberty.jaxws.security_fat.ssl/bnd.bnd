@@ -64,6 +64,7 @@ tested.features: jaxws-2.3, \
 	com.ibm.ws.org.apache.cxf.cxf.rt.management.3.2;version=latest,\
 	com.ibm.ws.org.apache.cxf.cxf.rt.transports.http.3.2;version=latest,\
 	com.ibm.ws.org.apache.cxf.cxf.rt.ws.policy.3.2;version=latest,\
+	com.ibm.ws.security.fat.common;version=latest,\
 	org.apache.cxf.xjcplugins:cxf-xjc-boolean;version=2.6.0,\
 	org.apache.cxf.xjcplugins:cxf-xjc-bug671;version=2.6.0,\
 	org.apache.cxf.xjcplugins:cxf-xjc-dv;version=2.6.0,\

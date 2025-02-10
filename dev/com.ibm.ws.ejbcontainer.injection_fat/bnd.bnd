@@ -80,4 +80,5 @@ tested.features: \
 	com.ibm.ws.jca.cm;version=latest, \
 	com.ibm.ws.org.apache.yoko.rmi.spec.1.5;version=latest,\
 	com.ibm.ws.security.jaas.common;version=latest,\
+	com.ibm.ws.security.fat.common;version=latest,\
 	io.openliberty.ejbcontainer.jakarta.fat_tools; version=latest

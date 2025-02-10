@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021,2024 IBM Corporation and others.
+ * Copyright (c) 2021,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -61,8 +61,11 @@ public class AsyncInterceptor implements Serializable {
         if (schedules.length > 0) {
             // Identify requested inline execution for scheduled executions other than the first,
             CompletableFuture<?> future = ScheduledAsyncMethod.inlineExecutionFuture.get();
-            if (future != null)
+            if (future != null) {
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
+                    Tr.debug(this, tc, "inline subsequent execution of scheduled async method");
                 return invoke(invocation, future);
+            }
         }
 
         validateTransactional(method);
@@ -138,14 +141,34 @@ public class AsyncInterceptor implements Serializable {
      * @throws CompletionException if the asynchronous method invocation raises an exception or error.
      */
     @FFDCIgnore(Throwable.class) // errors raised by an @Asynchronous method implementation
-    public <T> CompletionStage<T> invoke(InvocationContext invocation, CompletableFuture<T> future) {
+    @Trivial
+    public <T> CompletionStage<T> invoke(InvocationContext invocation,
+                                         CompletableFuture<T> future) {
+        final boolean trace = TraceComponent.isAnyTracingEnabled();
+        if (trace && tc.isEntryEnabled())
+            Tr.entry(this, tc,
+                     "invoke " + invocation.getMethod().getName(),
+                     invocation,
+                     future);
         Asynchronous.Result.setFuture(future);
         try {
             @SuppressWarnings("unchecked")
-            CompletionStage<T> asyncMethodResultStage = (CompletionStage<T>) invocation.proceed();
+            CompletionStage<T> asyncMethodResultStage = //
+                            (CompletionStage<T>) invocation.proceed();
+
+            if (trace && tc.isEntryEnabled())
+                Tr.exit(this, tc,
+                        "invoke " + invocation.getMethod().getName(),
+                        asyncMethodResultStage);
             return asyncMethodResultStage;
         } catch (Throwable x) {
-            throw (x instanceof CompletionException ? (CompletionException) x : new CompletionException(x));
+            if (trace && tc.isEntryEnabled())
+                Tr.exit(this, tc,
+                        "invoke " + invocation.getMethod().getName(),
+                        x);
+            throw x instanceof CompletionException //
+                            ? (CompletionException) x //
+                            : new CompletionException(x);
         } finally {
             Asynchronous.Result.setFuture(null);
         }

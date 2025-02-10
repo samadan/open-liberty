@@ -14,6 +14,8 @@
 package com.ibm.websphere.crypto;
 
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -22,6 +24,7 @@ import java.util.logging.Logger;
 import com.ibm.ws.common.encoder.Base64Coder;
 import com.ibm.ws.crypto.util.InvalidPasswordCipherException;
 import com.ibm.ws.crypto.util.PasswordCipherUtil;
+import com.ibm.ws.crypto.util.MessageUtils;
 import com.ibm.ws.crypto.util.PasswordHashGenerator;
 import com.ibm.wsspi.security.crypto.EncryptedInfo;
 
@@ -637,13 +640,20 @@ public class PasswordUtil {
                     try {
                         decrypted_bytes = PasswordCipherUtil.decipher(encrypted_bytes, crypto_algorithm);
                     } catch (InvalidPasswordCipherException e) {
-                        logger.logp(Level.SEVERE, PasswordUtil.class.getName(), "decode_password", "PASSWORDUTIL_CYPHER_EXCEPTION", e);
+                        String message = e.getMessage();
+                        if (message != null && message.contains("FIPS 140-3")) {
+                            logger.logp(Level.SEVERE, PasswordUtil.class.getName(), "decode_password", MessageUtils.getMessage("PASSWORDUTIL_EXCEPTION_FIPS130_AES128_UNAVAILABLE_ALGORITHM"), e);
+                        } else {
+                            logger.logp(Level.SEVERE, PasswordUtil.class.getName(), "decode_password", "PASSWORDUTIL_CYPHER_EXCEPTION", e);
+                        }
                         return null;
                     } catch (UnsupportedCryptoAlgorithmException e) {
                         logger.logp(Level.SEVERE, PasswordUtil.class.getName(), "decode_password", "PASSWORDUTIL_UNKNOWN_ALGORITHM_EXCEPTION", e);
                         return null;
+                    } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+                        logger.logp(Level.SEVERE, PasswordUtil.class.getName(), "decode_password", MessageUtils.getMessage("PASSWORDUTIL_UNAVAILABLE_DECRYPTION_ALGORITHM_EXCEPTION"), e);
+                        return null;
                     }
-
                     if ((decrypted_bytes != null) && (decrypted_bytes.length > 0)) {
                         // convert decrypted password byte[] to string
                         decoded_string = convert_to_string(decrypted_bytes);
@@ -714,6 +724,9 @@ public class PasswordUtil {
                         } catch (UnsupportedCryptoAlgorithmException e) {
                             logger.logp(Level.SEVERE, PasswordUtil.class.getName(), "encode_password", "PASSWORDUTIL_UNKNOWN_ALGORITHM_EXCEPTION", e);
                             return null;
+                        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+                            logger.logp(Level.SEVERE, PasswordUtil.class.getName(), "decode_password", MessageUtils.getMessage("PASSWORDUTIL_UNAVAILABLE_ENCRYPTION_ALGORITHM_EXCEPTION"), e);
+                            return null;
                         }
                     }
                     if ((encrypted_bytes != null) && (encrypted_bytes.length > 0)) {
@@ -744,5 +757,4 @@ public class PasswordUtil {
 
         return buffer.toString();
     }
-
 }

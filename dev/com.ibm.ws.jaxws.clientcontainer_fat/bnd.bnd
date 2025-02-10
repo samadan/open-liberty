@@ -58,4 +58,5 @@ tested.features: \
 	com.ibm.websphere.javaee.jaxws.2.2;version=latest,\
 	com.ibm.websphere.javaee.jws.1.0;version=latest,\
 	com.ibm.websphere.javaee.ejb.3.2;version=latest,\
+  com.ibm.ws.security.fat.common;version=latest,\
 	io.openliberty.org.apache.commons.logging;version=latest
