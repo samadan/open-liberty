@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -27,6 +27,8 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http2.HttpConversionUtil;
+import io.openliberty.http.netty.channel.utils.HeaderValidator;
+import io.openliberty.http.netty.channel.utils.HeaderValidator.FieldType;
 
 /**
  *
@@ -95,22 +97,31 @@ public class HeaderHandler {
 
         if (config.useHeadersConfiguration()) {
             //Add all headers configured through the ADD configuration option
+            String name;
+            String value;
+
             for (List<Map.Entry<String, String>> headersToAdd : config.getConfiguredHeadersToAdd().values()) {
                 for (Entry<String, String> header : headersToAdd) {
-                    headers.add(header.getKey(), header.getValue());
+                    name = HeaderValidator.process(header.getKey(), FieldType.NAME, config);
+                    value = HeaderValidator.process(header.getValue(), FieldType.VALUE, config);
+                    headers.add(name, value);
                 }
             }
 
             //Set all headers configured through the SET configuration option
             for (Entry<String, String> header : config.getConfiguredHeadersToSet().values()) {
-                headers.set(header.getKey(), header.getValue());
+                name = HeaderValidator.process(header.getKey(), FieldType.NAME, config);
+                value = HeaderValidator.process(header.getValue(), FieldType.VALUE, config);
+                headers.set(name, value);
             }
 
             //Set all headers configured through the SET_IF_MISSING configuration option
             for (Entry<String, String> header : config.getConfiguredHeadersToSetIfMissing().values()) {
                 //Only set if not present
                 if (!headers.contains(header.getKey())) {
-                    headers.set(header.getKey(), header.getValue());
+                    name = HeaderValidator.process(header.getKey(), FieldType.NAME, config);
+                    value = HeaderValidator.process(header.getValue(), FieldType.VALUE, config);
+                    headers.set(name, value);
                 }
             }
 
@@ -122,10 +133,6 @@ public class HeaderHandler {
             }
 
         }
-
-//        if (HttpUtil.isKeepAlive(response) && config.isKeepAliveEnabled()) {
-//            headers.remove(HttpHeaderKeys.HDR_CONNECTION.getName());
-//        }
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             Tr.exit(tc, method);

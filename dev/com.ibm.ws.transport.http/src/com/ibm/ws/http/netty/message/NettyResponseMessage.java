@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -45,6 +45,7 @@ import com.ibm.wsspi.http.channel.values.TransferEncodingValues;
 import com.ibm.wsspi.http.channel.values.VersionValues;
 
 import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -55,6 +56,8 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http2.HttpConversionUtil;
+import io.openliberty.http.netty.channel.utils.HeaderValidator;
+import io.openliberty.http.netty.channel.utils.HeaderValidator.FieldType;
 import io.openliberty.http.netty.cookie.CookieEncoder;
 
 /**
@@ -407,7 +410,10 @@ public class NettyResponseMessage extends NettyBaseMessage implements HttpRespon
 
     @Override
     public void appendHeader(String header, String value) {
-        headers.add(header, value);
+        String normalizedName = HeaderValidator.process(header, FieldType.NAME, config);
+        String normalizedValue = HeaderValidator.process(value, FieldType.VALUE, config);
+
+        headers.add(normalizedName, normalizedValue);
 
     }
 
