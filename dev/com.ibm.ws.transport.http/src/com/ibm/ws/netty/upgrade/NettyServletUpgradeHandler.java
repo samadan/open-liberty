@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -170,24 +170,26 @@ public class NettyServletUpgradeHandler extends ChannelInboundHandlerAdapter {
             return 0;
         }
         
-        
-
         if (queuedDataSize()>=minBytesToRead) { 
             
-            int readTotal = queuedDataSize()>=readContext.getBuffer().remaining() ? readContext.getBuffer().remaining(): queuedDataSize();
+            int readTotal = queuedDataSize()>=readContext.getBuffer().remaining() 
+                            ? readContext.getBuffer().remaining()
+                            : queuedDataSize();
 
-            byte[] bytes = ByteBufUtil.getBytes(read(readTotal, null));
-            readContext.getBuffer().put(bytes);
+            ByteBuf buffer = read(readTotal, null);
+            try{
+                byte[] bytes = ByteBufUtil.getBytes(buffer);
+                readContext.getBuffer().put(bytes);
+                // Reset totalBytesRead after fulfilling the read
+                totalBytesRead -= bytes.length; // Adjust totalBytesRead
+                return bytes.length;
 
-            // Reset totalBytesRead after fulfilling the read
-            totalBytesRead -= bytes.length; // Adjust totalBytesRead
-            return bytes.length;
+            } finally {
+                buffer.release();
+            }
         }
         return 0;
     }
-
-
-
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
