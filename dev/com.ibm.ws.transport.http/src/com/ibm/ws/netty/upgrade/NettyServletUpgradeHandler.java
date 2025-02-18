@@ -246,11 +246,14 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
             int readTotal = currentQueuedDataSize >= remainingBufferSize ? remainingBufferSize : currentQueuedDataSize;
             ByteBuf buffer = read(readTotal, null);
             try{
-              byte[] bytes = ByteBufUtil.getBytes(buffer);
-              if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                  Tr.debug(this, tc, "NettyServletUpgradeHandler setToBuffer queue bigger than min bytes. Reading total of: " + readTotal);
-              }
-              readContext.getBuffer().put(bytes);
+                byte[] bytes = ByteBufUtil.getBytes(buffer);
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc, "NettyServletUpgradeHandler setToBuffer queue bigger than min bytes. Reading total of: " + readTotal);
+                }
+                readContext.getBuffer().put(bytes);
+                // Reset totalBytesRead after fulfilling the read
+                totalBytesRead -= bytes.length; // Adjust totalBytesRead
+                return bytes.length;
             } catch (RuntimeException e) {
                 // TODO: See how best to handle this exception
                 // Assume this is async and if we get a runtime exception we can
@@ -261,12 +264,7 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                 Thread.currentThread().interrupt();
             } finally {
               buffer.release();
-            }
-            
-
-            // Reset totalBytesRead after fulfilling the read
-            totalBytesRead -= bytes.length; // Adjust totalBytesRead
-            return bytes.length;
+            } 
         }
         return 0;
     }
