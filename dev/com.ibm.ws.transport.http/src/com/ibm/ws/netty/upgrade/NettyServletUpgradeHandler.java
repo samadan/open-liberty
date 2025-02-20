@@ -236,6 +236,7 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
         if (!containsQueuedData()) {
             return 0;
         }
+
         int currentQueuedDataSize = queuedDataSize();
         int remainingBufferSize = readContext.getBuffer().remaining();
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
@@ -243,12 +244,16 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
         }
         if (currentQueuedDataSize >= minBytesToRead) {
             int readTotal = currentQueuedDataSize >= remainingBufferSize ? remainingBufferSize : currentQueuedDataSize;
-            byte[] bytes = ByteBufUtil.getBytes(read(readTotal, null));
-            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.debug(this, tc, "NettyServletUpgradeHandler setToBuffer queue bigger than min bytes. Reading total of: " + readTotal);
-            }
-            try {
+            ByteBuf buffer = read(readTotal, null);
+            try{
+                byte[] bytes = ByteBufUtil.getBytes(buffer);
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc, "NettyServletUpgradeHandler setToBuffer queue bigger than min bytes. Reading total of: " + readTotal);
+                }
                 readContext.getBuffer().put(bytes);
+                // Reset totalBytesRead after fulfilling the read
+                totalBytesRead -= bytes.length; // Adjust totalBytesRead
+                return bytes.length;
             } catch (RuntimeException e) {
                 // TODO: See how best to handle this exception
                 // Assume this is async and if we get a runtime exception we can
@@ -257,12 +262,9 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                     Tr.debug(this, tc, "NettyServletUpgradeHandler setToBuffer hit RuntimeException when adding bytes. We assume the buffer was already released so stop thread run.");
                 }
                 Thread.currentThread().interrupt();
-            }
-            
-
-            // Reset totalBytesRead after fulfilling the read
-            totalBytesRead -= bytes.length; // Adjust totalBytesRead
-            return bytes.length;
+            } finally {
+              buffer.release();
+            } 
         }
         return 0;
     }
@@ -303,7 +305,7 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
         }
         super.close(ctx, promise);
     }
-
+  
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         super.channelWritabilityChanged(ctx);
