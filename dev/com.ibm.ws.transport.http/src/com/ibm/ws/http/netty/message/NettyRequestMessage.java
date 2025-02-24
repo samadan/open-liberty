@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -139,6 +139,7 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
 
         super.init(request, isc, config);
         setAndGetIsGrpc();
+        setMessageType(MessageType.REQUEST);
         
     }
 
@@ -988,29 +989,6 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
             }
 
         }
-    }
-
-    @Override
-    public List<HttpCookie> getAllCookies() {
-        List<HttpCookie> list = new LinkedList<HttpCookie>();
-        List<String> cookieHeaders = headers.getAll(HttpHeaderNames.COOKIE);
-        for(String cookie: cookieHeaders){
-            list.addAll(CookieDecoder.decode(cookie));
-        }
-        return list;
-
-    }
-
-    @Override
-    public HttpCookie getCookie(String name) {
-        if (null == name) {
-            return null;
-        }
-        HttpCookie cookie = getCookie(name, HttpHeaderKeys.HDR_COOKIE);
-        if (null == cookie) {
-            cookie = getCookie(name, HttpHeaderKeys.HDR_COOKIE2);
-        }
-        return (null == cookie) ? null : cookie.clone();
     }
 
 }

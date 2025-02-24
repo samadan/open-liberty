@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,8 @@
  *******************************************************************************/
 package com.ibm.ws.http.netty.message;
 
+import static com.ibm.ws.http.netty.message.NettyBaseMessage.MessageType.REQUEST;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -16,6 +18,7 @@ import java.io.ObjectOutput;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -56,6 +59,8 @@ import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http2.HttpConversionUtil;
 import io.openliberty.http.constants.HttpGenerics;
+import io.openliberty.http.netty.cookie.CookieDecoder;
+import io.openliberty.http.netty.cookie.CookieEncoder;
 
 /**
  *
@@ -85,10 +90,7 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
     protected long endTime = 0;
 
     /** Cookie Caches */
-    protected transient CookieCacheData cookieCache;
-    protected transient CookieCacheData cookie2Cache;
-    protected transient CookieCacheData setCookieCache;
-    protected transient CookieCacheData setCookie2Cache;
+    private final Map<HttpHeaderKeys, CookieCacheData> cookieCacheMap = new HashMap<>();
     /** Reference to the cookie parser */
     private transient CookieHeaderByteParser cookieParser;
 
@@ -98,6 +100,11 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
     private int limitOfTokenSize;
 
     private Map<String, String> headersMap = new HashMap<>();
+
+    public enum MessageType {REQUEST, RESPONSE;}
+
+    private MessageType messageType;
+    
 
     public NettyBaseMessage() {
     }
@@ -115,6 +122,14 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
             this.limitOfTokenSize = config.getLimitOfFieldSize();
 
         }
+    }
+
+    public MessageType messageType(){
+        return this.messageType;
+    }
+
+    public MessageType setMessageType(MessageType messageType){
+        return this.messageType = messageType;
     }
 
     @Override
@@ -178,10 +193,10 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
     public void writeExternal(ObjectOutput output) throws IOException {
 
         // convert any temporary Cookies into header storage
-        marshallCookieCache(this.cookieCache);
-        marshallCookieCache(this.cookie2Cache);
-        marshallCookieCache(this.setCookieCache);
-        marshallCookieCache(this.setCookie2Cache);
+        marshallCookieCache(cookieCacheMap.get(HttpHeaderKeys.HDR_COOKIE));
+        marshallCookieCache(cookieCacheMap.get(HttpHeaderKeys.HDR_COOKIE2));
+        marshallCookieCache(cookieCacheMap.get(HttpHeaderKeys.HDR_SET_COOKIE));
+        marshallCookieCache(cookieCacheMap.get(HttpHeaderKeys.HDR_SET_COOKIE2));
 
         output.writeInt(SERIALIZATION_V2);
         output.writeInt(this.headersMap.size());
@@ -491,61 +506,81 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
 
     @Override
     public byte[] getCookieValue(String name) {
-        // TODO Auto-generated method stub
-        return null;
+        if (name == null) { return null;}
+
+        HttpCookie cookie = getCookie(name);
+        if(cookie == null){ return null;}
+
+        String value = cookie.getValue();
+        if(value == null || value.isEmpty()){
+            return null;
+        }
+        return value.getBytes(StandardCharsets.UTF_8);
     }
 
+    /**
+     * Populates the provided {@code list} with all values associated to the 
+     * given cookie {@code name} for the specific {@code header}.
+     * 
+     * This method checks the local cache for the specified header. If the header 
+     * has not been parsed yet, the {@link #parseAllCookies(CookieCacheData, HttpHeaderKeys)}
+     * is used to decode cookie values for that header. All matching cookie values
+     * are returned and added to the provided list. 
+     * 
+     * @param name the name of the cookie whose value should be retrieved
+     * @param header the {@link HttpHeaderKeys} indicating desired header name
+     * @param list a modifiable {@link List} where matching cookie values will be added
+     */
     protected void getAllCookieValues(String name, HttpHeaderKeys header, List<String> list) {
         if (!cookieCacheExists(header) && !containsHeader(header)) {
             return;
         }
         CookieCacheData cache = getCookieCache(header);
-        parseAllCookies(cache, header);
+        if(cache.isDirty()){
+            parseAllCookies(cache, header);
+        }
+        
         cache.getAllCookieValues(name, list);
     }
 
+
     @Override
     public HttpCookie getCookie(String name) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+        if (name == null) {
+            return null;
+        }
+        HttpCookie cookie = null;
 
-    protected HttpCookie getCookie(String name, HttpHeaderKeys header) {
-        if (cookieCacheExists(header) || containsHeader(header)) {
-            CookieCacheData cache = getCookieCache(header);
-            HttpCookie cookie = cache.getCookie(name);
-            if (null != cookie) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(tc, "Found " + name + " in cache");
-                }
-                return cookie;
+        if (messageType == MessageType.REQUEST) {
+            cookie = getCookie(name, HttpHeaderKeys.HDR_COOKIE);
+            if (cookie == null) {
+                cookie = getCookie(name, HttpHeaderKeys.HDR_COOKIE2);
             }
-
-            // Now search the cookie header instances in storage and add them
-            // to the parsed list
-            List<HeaderField> vals = getHeaders(header);
-            int size = vals.size();
-            if (size != 0) {
-                for (int i = cache.getHeaderIndex(); i < size; i++) {
-                    List<HttpCookie> list = getCookieParser().parse(vals.get(i).asBytes(), header);
-                    cache.addParsedCookies(list);
-                    cache.incrementHeaderIndex();
-                    // search the list of new cookies from this header instance
-                    Iterator<HttpCookie> it = list.iterator();
-                    while (it.hasNext()) {
-                        cookie = it.next();
-                        // cookie names are case-sensitive
-                        if (cookie.getName().equals(name)) {
-                            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                                Tr.debug(tc, "Found parsed Cookie-->" + name);
-                            }
-                            return cookie;
-                        }
-                    }
-                }
+        } else if (messageType == MessageType.RESPONSE){
+            cookie = getCookie(name, HttpHeaderKeys.HDR_SET_COOKIE);
+            if (cookie == null) {
+                cookie = getCookie(name, HttpHeaderKeys.HDR_SET_COOKIE2);
             }
         }
 
+        return cookie;
+    }
+
+
+    protected HttpCookie getCookie(String name, HttpHeaderKeys header) {
+        
+        if(name == null) { return null;}
+
+        if(!isValidCookieHeader(header) && !containsHeader(header)){
+            return null;
+        }
+
+        CookieCacheData cache = getCookieCache(header);
+        HttpCookie cookie = cache.getCookie(name);
+        if(cookie != null){
+            return cookie;
+        }
+        
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "getCookie --> " + name + " of type " + header.getName() + " not found");
         }
@@ -555,75 +590,51 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
     @Override
     public List<HttpCookie> getAllCookies() {
         List<HttpCookie> list = new LinkedList<HttpCookie>();
-        getAllCookies(HttpHeaderKeys.HDR_SET_COOKIE, list);
-        getAllCookies(HttpHeaderKeys.HDR_SET_COOKIE2, list);
+
+        if(messageType == MessageType.REQUEST){
+            addAllCookies(HttpHeaderKeys.HDR_COOKIE, list);
+            addAllCookies(HttpHeaderKeys.HDR_COOKIE2, list);
+        }else if(messageType == MessageType.RESPONSE){
+            addAllCookies(HttpHeaderKeys.HDR_SET_COOKIE, list);
+            addAllCookies(HttpHeaderKeys.HDR_SET_COOKIE2, list);
+        }
+        
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "getAllCookies: Found " + list.size() + " instances");
+            Tr.debug(tc, "getAllCookies: Found " + list.size() + " cookie(s). Is incoming: "+isIncoming());
         }
         return list;
     }
 
     @Override
     public List<HttpCookie> getAllCookies(String name) {
+        if(name==null) return Collections.emptyList();
 
-        List<HttpCookie> list = new LinkedList<HttpCookie>();
-        if (null != name) {
-            getAllCookies(name, HttpHeaderKeys.HDR_SET_COOKIE, list);
-            getAllCookies(name, HttpHeaderKeys.HDR_SET_COOKIE2, list);
+        List<HttpCookie> results = new LinkedList<>();
+        if(messageType == MessageType.REQUEST){
+            addAllCookies(name, HttpHeaderKeys.HDR_COOKIE, results);
+            addAllCookies(name, HttpHeaderKeys.HDR_COOKIE2, results);
+        } else {
+            addAllCookies(name, HttpHeaderKeys.HDR_SET_COOKIE, results);
+            addAllCookies(name, HttpHeaderKeys.HDR_SET_COOKIE2, results);
         }
+
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "getAllCookies: Found " + list.size() + " instances of " + name);
+            Tr.debug(tc, "getAllCookies: Found " + results.size() + 
+                " cookie(s) matching [" + name + "]. Is incoming: "+ isIncoming());
         }
-        return list;
-    }
-
-    /**
-     * Add all cookies from this message under the input header into the input
-     * list.
-     *
-     * @param header
-     * @param list
-     */
-    protected void getAllCookies(HttpHeaderKeys header, List<HttpCookie> list) {
-        if (!cookieCacheExists(header) && !containsHeader(header)) {
-            return;
-        }
-        CookieCacheData cache = getCookieCache(header);
-        parseAllCookies(cache, header);
-        cache.getAllCookies(list);
-    }
-
-    /**
-     * Find all instances of a cookie under the given header with the input name
-     * and place a clone of that object into the input list.
-     *
-     * @param name
-     * @param header
-     * @param list
-     */
-    protected void getAllCookies(String name, HttpHeaderKeys header, List<HttpCookie> list) {
-        if (!cookieCacheExists(header) && !containsHeader(header)) {
-            return;
-        }
-        CookieCacheData cache = getCookieCache(header);
-        parseAllCookies(cache, header);
-        cache.getAllCookies(name, list);
+        return results;
     }
 
     @Override
     public boolean setCookie(HttpCookie cookie, HttpHeaderKeys cookieType) {
-
-        boolean result = Boolean.FALSE;
         if (isCommitted()) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(tc, "Not adding cookie to committed message: " + cookie.getName() + " " + cookieType.getName());
             }
-
-        } else {
-            getCookieCache(cookieType).addNewCookie(cookie.clone());
-            result = Boolean.TRUE;
+            return false;
         }
-        return result;
+        getCookieCache(cookieType).addNewCookie(cookie.clone());
+        return true;
     }
 
     @Override
@@ -636,23 +647,19 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             Tr.entry(tc, "removeCookie: " + name);
         }
-        boolean rc = Boolean.FALSE;
         if (isCommitted()) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(tc, "Not removing committed cookie: " + name);
             }
-        } else {
-            // call getCookie in case we need to still parse anything
-            HttpCookie cookie = getCookie(name, cookieHeader);
-            if (null != cookie) {
-                rc = getCookieCache(cookieHeader).removeCookie(cookie);
-            }
+            return false;
+        }
+        
+        HttpCookie cookie = getCookie(name, cookieHeader);
+        if(cookie == null){
+            return false;
         }
 
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-            Tr.exit(tc, "deleteCookie: " + rc);
-        }
-        return rc;
+        return getCookieCache(cookieHeader).removeCookie(cookie);
     }
 
     @Override
@@ -666,97 +673,55 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
         return result;
     }
 
-    /**
-     * Return the set of objects for effectively caching Cookies as they
-     * are processed.
-     *
-     * @param header
-     * @return the caching data for the particular set of Cookies.
-     * @throws IllegalArgumentException
-     *                                      if the header is not a cookie header
-     */
-    private CookieCacheData getCookieCache(HttpHeaderKeys header) {
-        // 347066 - removed sync because we only allow 1 thread to be working
-        // on a message a time anyways
+    
+    protected CookieCacheData getCookieCache(HttpHeaderKeys header) {
 
-        // For outgoing messages, parse the cookies out immediately so that we
-        // don't have to worry about people changing header storage in the
-        // middle (which throws off the parse cookie logic)
-        if (header.equals(HttpHeaderKeys.HDR_COOKIE)) {
-            if (null == this.cookieCache) {
-
-                this.cookieCache = new CookieCacheData(header);
-                if (!isIncoming()) {
-                    parseAllCookies(this.cookieCache, header);
-                }
-            }
-            return this.cookieCache;
-
-        } else if (header.equals(HttpHeaderKeys.HDR_COOKIE2)) {
-            if (null == this.cookie2Cache) {
-                this.cookie2Cache = new CookieCacheData(header);
-                if (!isIncoming()) {
-                    parseAllCookies(this.cookie2Cache, header);
-                }
-            }
-            return this.cookie2Cache;
-
-        } else if (header.equals(HttpHeaderKeys.HDR_SET_COOKIE)) {
-            if (null == this.setCookieCache) {
-                this.setCookieCache = new CookieCacheData(header);
-                if (!isIncoming()) {
-                    parseAllCookies(this.setCookieCache, header);
-                }
-            }
-            return this.setCookieCache;
-
-        } else if (header.equals(HttpHeaderKeys.HDR_SET_COOKIE2)) {
-            if (null == this.setCookie2Cache) {
-                this.setCookie2Cache = new CookieCacheData(header);
-                if (!isIncoming()) {
-                    parseAllCookies(this.setCookie2Cache, header);
-                }
-            }
-            return this.setCookie2Cache;
+        if(!isValidCookieHeader(header)){
+            throw new IllegalArgumentException("Not a recognized cookie header: " + header.getName());
         }
-        throw new IllegalArgumentException(header.getName());
+
+        CookieCacheData cache = cookieCacheMap.computeIfAbsent(header, h -> new CookieCacheData(h));
+        parseNewCookieLinesIfNeeded(cache);
+        return cache;
     }
 
-    /**
-     * Method to parse all of the unparsed header instances for the given input
-     * type into Cookie objects to store in the cache.
-     *
-     * @param cache
-     * @param header
-     */
+
+    private boolean isValidCookieHeader(HttpHeaderKeys header){
+        return (header == HttpHeaderKeys.HDR_COOKIE || 
+                header == HttpHeaderKeys.HDR_COOKIE2||
+                header == HttpHeaderKeys.HDR_SET_COOKIE|| 
+                header == HttpHeaderKeys.HDR_SET_COOKIE2);
+    }
+
+  
     private void parseAllCookies(CookieCacheData cache, HttpHeaderKeys header) {
+
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "Parsing all cookies for " + header.getName());
         }
 
         // Iterate through the unparsed cookie header instances
         // in storage and add them to the list to be returned
-        List<HeaderField> vals = getHeaders(header);
-        int size = vals.size();
-        if (size != 0) {
-            for (int i = cache.getHeaderIndex(); i < size; i++) {
-                cache.addParsedCookies(getCookieParser().parse(vals.get(i).asBytes(), header));
-                cache.incrementHeaderIndex();
-            }
+        List<HeaderField> headerList = getHeaders(header);
+        int size = headerList.size();
+
+        if(size == 0) {return;}
+
+        for (int i = cache.getHeaderIndex(); i < size; i++) {
+            String headerValue = headerList.get(i).asString();
+
+            cache.addParsedCookies(CookieDecoder.decode(headerValue, header));
+            cache.incrementHeaderIndex();
         }
     }
 
-    /**
-     * Get access to the cookie parser for this message.
-     *
-     * @return An instance of the Cookie header parser
-     */
-    private CookieHeaderByteParser getCookieParser() {
-        if (null == this.cookieParser) {
-            this.cookieParser = new CookieHeaderByteParser();
-        }
-        return this.cookieParser;
+    @Override
+    public List<String> getAllCookieValues(String name) {
+        // TODO Auto-generated method stub
+        return null;
     }
+
+    
 
     @Override
     public boolean isIncoming() {
@@ -785,10 +750,7 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
     @Override
     public void clear() {
 
-        this.cookieCache = null;
-        this.cookie2Cache = null;
-        this.setCookieCache = null;
-        this.setCookie2Cache = null;
+        cookieCacheMap.clear();
         this.committed = false;
 
     }
@@ -1004,63 +966,59 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
         return null;
     }
 
-    protected boolean cookieCacheExists(HttpHeaderKeys header) {
-        if (header == HttpHeaderKeys.HDR_COOKIE) {
-            return (Objects.nonNull(cookieCache));
-        }
-//        if (header == HttpHeaderKeys.HDR_COOKIE2) {
-//            return (Objects.nonNull(cookie2Cache));
-//        }
-        if (header == HttpHeaderKeys.HDR_SET_COOKIE) {
-            return (Objects.nonNull(setCookieCache));
-        }
-//        if (header == HttpHeaderKeys.HDR_SET_COOKIE2) {
-//            return (Objects.nonNull(setCookie2Cache));
-//        }
-        return Boolean.FALSE;
-    }
+    
 
     public void processCookies() {
 
-        marshallCookieCache(this.cookieCache);
-        marshallCookieCache(this.cookie2Cache);
-
-        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "Checking to see if we should mark the cookie cache as dirty - samesite is " + config.useSameSiteConfig()
-                         + " doNotAllowDuplicateSetCookie is " + config.doNotAllowDuplicateSetCookies());
+        if(MessageType.REQUEST == messageType){
+            marshallCookieCache(cookieCacheMap.get(HttpHeaderKeys.HDR_COOKIE));
+            marshallCookieCache(cookieCacheMap.get(HttpHeaderKeys.HDR_COOKIE2));
         }
-        if (config.useSameSiteConfig() || config.doNotAllowDuplicateSetCookies()) {
-            //If there are set-cookie and set-cookie2 headers and the respective cache hasn't been initialized,
-            //do so and set it as dirty so the cookie parsing logic is run.
-            if (this.containsHeader(HttpHeaderKeys.HDR_SET_COOKIE)) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(tc, "Marking set-cookie cache dirty");
-                }
-                getCookieCache(HttpHeaderKeys.HDR_SET_COOKIE).setIsDirty(true);
-            }
 
-            if (this.containsHeader(HttpHeaderKeys.HDR_SET_COOKIE2)) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(tc, "Marking set-cookie2 cache dirty");
-                }
-                getCookieCache(HttpHeaderKeys.HDR_SET_COOKIE2).setIsDirty(true);
+        else if(MessageType.RESPONSE == messageType){
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Checking to see if we should mark the cookie cache as dirty - samesite is " + config.useSameSiteConfig()
+                             + " doNotAllowDuplicateSetCookie is " + config.doNotAllowDuplicateSetCookies());
             }
+            if (config.useSameSiteConfig() || config.doNotAllowDuplicateSetCookies()) {
+                //If there are set-cookie and set-cookie2 headers and the respective cache hasn't been initialized,
+                //do so and set it as dirty so the cookie parsing logic is run.
+                if (this.containsHeader(HttpHeaderKeys.HDR_SET_COOKIE)) {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(tc, "Marking set-cookie cache dirty");
+                    }
+                    getCookieCache(HttpHeaderKeys.HDR_SET_COOKIE).setIsDirty(true);
+                }
+
+                if (this.containsHeader(HttpHeaderKeys.HDR_SET_COOKIE2)) {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(tc, "Marking set-cookie2 cache dirty");
+                    }
+                    getCookieCache(HttpHeaderKeys.HDR_SET_COOKIE2).setIsDirty(true);
+                }
+
+            }
+            marshallCookieCache(cookieCacheMap.get(HttpHeaderKeys.HDR_SET_COOKIE));
+            marshallCookieCache(cookieCacheMap.get(HttpHeaderKeys.HDR_SET_COOKIE2));
 
         }
-        marshallCookieCache(this.setCookieCache);
-        marshallCookieCache(this.setCookie2Cache);
+        
+
+        
 
     }
 
-    private void marshallCookieCache(CookieCacheData cache) {
+    protected void marshallCookieCache(CookieCacheData cache) {
 
-        if (null != cache && cache.isDirty()) {
-            HttpHeaderKeys type = cache.getHeaderType();
-            parseAllCookies(cache, type);
-            removeHeader(type);
-            marshallCookies(cache.getParsedList(), type);
-            cache.setIsDirty(false);
+        if (cache == null || !cache.isDirty()){
+            return;
         }
+
+        HttpHeaderKeys type = cache.getHeaderType();
+        parseNewCookieLinesIfNeeded(cache);
+        removeHeader(type);
+        marshallCookies(cache.getParsedList(), type);
+        cache.setIsDirty(false);
     }
 
     private void marshallCookies(List<HttpCookie> list, HeaderKeys header) {
@@ -1069,134 +1027,37 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
             Tr.entry(tc, "marshallCookies");
         }
 
-        HashMap<String, String> setCookieNames = new HashMap<String,String>();
+        HashMap<String, String> setCookieNames = null;
+        boolean filterDuplicates = config.doNotAllowDuplicateSetCookies() && 
+            (header == HttpHeaderKeys.HDR_SET_COOKIE || header == HttpHeaderKeys.HDR_SET_COOKIE2);
 
-        // convert each individual cookie into it's own header for clarity
-        // Note: Set-Cookie header has comma separated cookies instead of semi-
-        // colon separation (if cookies were to go into one single header instead
-        // of multiple)
+        if(filterDuplicates){
+            setCookieNames = new HashMap<String, String>();
+        }
+
+        String userAgent = null;
+        if(getServiceContext() != null && getServiceContext().getRequest() != null){
+            userAgent = getServiceContext().getRequest().getHeader(HttpHeaderKeys.HDR_USER_AGENT).asString();
+        }
+
         for (HttpCookie cookie : list) {
-            //Add Samesite default config
-            if (config.useSameSiteConfig() && cookie.getAttribute("samesite") == null) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(tc, "No SameSite value has been added for [" + cookie.getName() + "], checking configuration for a match");
-                }
-                String sameSiteAttributeValue = null;
-                Matcher m = null;
-
-                //First attempt to match the name explicitly.
-                if (config.getSameSiteCookies().containsKey(cookie.getName())) {
-                    sameSiteAttributeValue = config.getSameSiteCookies().get(cookie.getName());
-                }
-                //If the only pattern is a standalone '*' avoid regex cost
-                else if (config.onlySameSiteStar()) {
-                    sameSiteAttributeValue = config.getSameSiteCookies().get(HttpConfigConstants.WILDCARD_CHAR);
-                }
-
-                else {
-                    //Attempt to find a match amongst the configured SameSite patterns
-                    for (Pattern p : config.getSameSitePatterns().keySet()) {
-                        m = p.matcher(cookie.getName());
-                        if (m.matches()) {
-                            sameSiteAttributeValue = config.getSameSitePatterns().get(p);
-                            break;
-                        }
-                    }
-
-                }
-
-                if (sameSiteAttributeValue != null) {
-                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                        Tr.debug(tc, "SameSite configuration found, value set to: " + sameSiteAttributeValue);
-                    }
-                    cookie.setAttribute("samesite", sameSiteAttributeValue);
-                    //If SameSite has been defined, and it's value is set to 'none', ensure the cookie is set to secure
-                    if (!cookie.isSecure() && sameSiteAttributeValue.equalsIgnoreCase(HttpConfigConstants.SameSite.NONE.getName())) {
-                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                            Tr.debug(tc, "Setting the Secure attribute for SameSite=None");
-                        }
-                        cookie.setSecure(true);
-                    }
-
-                    // Set Partitioned Flag for SameSite=None Cookie
-                    if (config.getPartitioned()
-                        && sameSiteAttributeValue.equalsIgnoreCase(HttpConfigConstants.SameSite.NONE.getName())) {
-                        if (cookie.getAttribute("partitioned") == null) { // null means no value has been set yet
-                            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                                Tr.debug(tc, "[1] Setting the Partitioned attribute for SameSite=None");
-                            }
-                            cookie.setAttribute("partitioned", "");
-                        }
-                    }
-
-                } else {
-                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                        Tr.debug(tc, "No SameSite configuration found");
-                    }
-                }
-            }
-
-            // If SameSite=None is set programmatically, but partitioned is set via server.xml, then add the partitioned attribute
-            if (config.useSameSiteConfig() && cookie.getAttribute("samesite") != null) {
-                boolean sameSiteNoneUsed = cookie.getAttribute("samesite").equalsIgnoreCase(HttpConfigConstants.SameSite.NONE.getName());
-                if (config.getPartitioned() && sameSiteNoneUsed) {
-                    if (cookie.getAttribute("partitioned") == null) { // null means no value has been set yet
-                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                            Tr.debug(tc, "[2] Setting the Partitioned attribute for SameSite=None");
-                        }
-                        cookie.setAttribute("partitioned", "");
-                    }
-                }
-            }
-
-            String partitionedValue = cookie.getAttribute("partitioned");
-            if(partitionedValue != null && !partitionedValue.equalsIgnoreCase("false")){
-                boolean sameSiteIsNotNone = true;
-                if(cookie.getAttribute("samesite") != null){
-                    sameSiteIsNotNone = !cookie.getAttribute("samesite").equalsIgnoreCase(HttpConfigConstants.SameSite.NONE.getName());
-                }
-                if(sameSiteIsNotNone){
-                    cookie.setAttribute("partitioned", "false");
-                }
-            }
-
-            if(cookie.getAttribute("samesite") != null && cookie.getAttribute("samesite").equals(HttpConfigConstants.SameSite.NONE.getName())){
-                String userAgent = getServiceContext().getRequest().getHeader(HttpHeaderKeys.HDR_USER_AGENT).asString();
-                if(userAgent != null && SameSiteCookieUtils.isSameSiteNoneIncompatible(userAgent)){
-                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled() && setCookieNames.containsKey(cookie.getName())) {
-                        Tr.debug(tc, "Incompatible client for SameSite=None found with the following User-Agent: " + userAgent);
-                    }
-                    cookie.setAttribute("samesite", null);
-                    if(partitionedValue != null){
-                        cookie.setAttribute("partitioned", null);
-                    }
-                }
-            }
-
-            String value = CookieUtils.toString(cookie, header, config.isv0CookieDateRFC1123compat(),
-                                                config.shouldSkipCookiePathQuotes());
+            String value = CookieEncoder.encode(cookie, header, config, userAgent);
+            
             if (null != value) {
-
-                //PI31734 start
-                if (config.doNotAllowDuplicateSetCookies() && (header.getName().equals("Set-Cookie"))) {
-                    if (setCookieNames == null)
-                        setCookieNames = new HashMap<String, String>();
-                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled() && setCookieNames.containsKey(cookie.getName())) {
-                        Tr.debug(tc, "Found Duplicated Set-Cookie, replacing it for the newest one: [Set-Cookie: " + value + "]");
-                    }
+                if(filterDuplicates){
                     setCookieNames.put(cookie.getName(), value);
                 } else {
                     appendHeader(header, value);
                 }
             }
-
         }
 
-        if (config.doNotAllowDuplicateSetCookies() && setCookieNames != null) {
-            setCookieNames.values().forEach(value -> appendHeader(header, value));
-
+        if(filterDuplicates && setCookieNames != null){
+            removeHeader((header.getName()));
+            for(String headerValue: setCookieNames.values()){
+                appendHeader(header, headerValue);
+            }
         }
-        //PI31734 end
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             Tr.exit(tc, "marshallCookies");
@@ -1218,9 +1079,62 @@ public class NettyBaseMessage implements HttpBaseMessage, Externalizable {
         return this.serviceContext;
     }
 
-    @Override
-    public List<String> getAllCookieValues(String name) {
-        // TODO Auto-generated method stub
-        return null;
+    /**
+     * Decides if a cookie header should be parsed based on the message
+     * type and whether it is inbound or outbound. The incoming is used in the
+     * traditional sense, implying reading from the wire. This results in parse 
+     * operations. When the incoming flag is false, the transport is expected
+     * to write (marshall) instead. Therefore the conditions for parsing are:
+     * 
+     *  -> REQUEST: When the transport acts as a server, parse "Cookie" headers
+     *  -> RESPONSE: When the transport acts as a client, parse "Set-Cookie" headers
+     */
+    private boolean shouldParseCookieHeader(HttpHeaderKeys header){
+
+        if(header == HttpHeaderKeys.HDR_COOKIE || header == HttpHeaderKeys.HDR_COOKIE2){
+            return (messageType == MessageType.REQUEST && isIncoming());
+        }
+        else{
+            return (messageType == MessageType.RESPONSE && isIncoming());
+        }
     }
+
+    protected boolean cookieCacheExists(HttpHeaderKeys header) {
+
+        return (cookieCacheMap.containsKey(header));
+
+    }
+
+    private void parseNewCookieLinesIfNeeded(CookieCacheData cache){
+        if(!shouldParseCookieHeader(cache.getHeaderType())){
+            return;
+        }
+        HttpHeaderKeys header = cache.getHeaderType();
+        List<HeaderField> fields = getHeaders(header);
+        int size = fields.size();
+        for(int i = cache.getHeaderIndex(); i < size; i++){
+            String lineValue = fields.get(i).asString();
+            List<HttpCookie> decoded = CookieDecoder.decode(lineValue, header);
+            cache.addParsedCookies(decoded);
+            cache.incrementHeaderIndex();
+        }
+    }
+
+    protected void addAllCookies(HttpHeaderKeys header, List<HttpCookie> list) {
+        if (!containsHeader(header) && !cookieCacheExists(header)) {
+            return;
+        }
+        CookieCacheData cache = getCookieCache(header);
+        cache.getAllCookies(list);
+    }
+
+    
+    protected void addAllCookies(String name, HttpHeaderKeys header, List<HttpCookie> list) {
+        if (!containsHeader(header) && !cookieCacheExists(header)) {
+            return;
+        }
+        CookieCacheData cache = getCookieCache(header);
+        cache.getAllCookies(name, list);
+    }
+    
 }
