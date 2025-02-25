@@ -270,6 +270,8 @@ public class DataJPATestServlet extends FATServlet {
 
         // TODO remove this workaround for intermittent issue triggered by test ordering once 28078 is fixed
         testLiteralDouble();
+        // To quickly try reproducing the issue, remove the above line and add the following line to tearDown,
+        // runTest(server, "DataJPATestApp", "testLiteralDouble");
     }
 
     /**
@@ -298,8 +300,7 @@ public class DataJPATestServlet extends FATServlet {
      * Use a repository method comparing a BigDecimal value on an entity that includes BigDecimal attributes.
      * This includes both a comparison in the query conditions as well as ordering on the BigDecimal attribute.
      */
-    // TODO re-enable once 28813 (java.time.Instant DateTimeParseException) is fixed
-    //@Test
+    @Test
     public void testBigDecimal() {
         final ZoneId EASTERN = ZoneId.of("America/New_York");
 
@@ -327,8 +328,7 @@ public class DataJPATestServlet extends FATServlet {
      * Use a repository method comparing a BigInteger value on an entity that includes BigInteger attributes.
      * This includes both a comparison in the query conditions as well as ordering on the BigInteger attribute.
      */
-    // TODO re-enable once 28813 (java.time.Instant DateTimeParseException) is fixed
-    //@Test
+    @Test
     public void testBigInteger() {
         ZoneId ET = ZoneId.of("America/New_York");
 
@@ -2082,9 +2082,15 @@ public class DataJPATestServlet extends FATServlet {
         assertEquals(Integer.valueOf(1983), camry.getYearIntroduced());
         assertEquals("Toyota", camry.getManufacturer().getName());
 
-        corolla = models.findById(corollaId).orElseThrow();
-
-        assertEquals("Corolla", corolla.getName());
+        Instant corollaLastMod;
+        corollaLastMod = models.lastModified(corollaId).orElseThrow();
+        List<Model> found = models.modifiedAt(corollaLastMod);
+        assertEquals(false, found.isEmpty());
+        corolla = null;
+        for (Model model : found)
+            if ("Corolla".equals(model.getName()))
+                corolla = model;
+        assertNotNull(corolla);
         assertEquals(Integer.valueOf(1966), corolla.getYearIntroduced());
         assertEquals("Toyota", corolla.getManufacturer().getName());
 
@@ -2716,8 +2722,7 @@ public class DataJPATestServlet extends FATServlet {
      * Repository method that queries by an Instant attribute and retrieves an
      * entity that includes the Instant attribute.
      */
-    // TODO requires #28813 to fix java.time.Instant DateTimeParseException
-    //@Test
+    @Test
     public void testInstant() {
         final ZoneId EASTERN = ZoneId.of("America/New_York");
         final Instant apr_28_2023 = ZonedDateTime.of(2023, 4, 28,
@@ -2733,13 +2738,13 @@ public class DataJPATestServlet extends FATServlet {
         assertEquals(134060000L,
                      info.numFullTimeWorkers.longValue());
 
-        assertEquals(6852746625848.93,
+        assertEquals(6852746625849.0,
                      info.intragovernmentalDebt.doubleValue(),
-                     0.01);
+                     1.0);
 
-        assertEquals(24605068022566.94,
+        assertEquals(24605068022567.0,
                      info.publicDebt.doubleValue(),
-                     0.01);
+                     1.0);
     }
 
     /**
@@ -4334,9 +4339,7 @@ public class DataJPATestServlet extends FATServlet {
         }
 
         // Update the version/LocalDateTime and retry:
-        Long lastUpdate;
-        // TODO switch to the following once EclipseLink bug #30534 is fixed
-        //LocalDateTime lastUpdate;
+        LocalDateTime lastUpdate;
         lastUpdate = dodge.lastUpdated = counties.findLastUpdatedByName("Dodge");
         dodge.population = 20981;
 

@@ -458,8 +458,13 @@ public class DBStoreEMBuilder extends EntityManagerBuilder implements DDLGenerat
     }
 
     @Override
+    @Trivial
     public EntityManager createEntityManager() {
-        return persistenceServiceUnit.createEntityManager();
+        EntityManager em = persistenceServiceUnit.createEntityManager();
+
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
+            Tr.debug(this, tc, "createEntityManager: " + em);
+        return em;
     }
 
     /**

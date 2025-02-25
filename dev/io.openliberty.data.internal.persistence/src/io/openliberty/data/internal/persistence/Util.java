@@ -56,6 +56,15 @@ public class Util {
     public static final String EOLN = String.format("%n");
 
     /**
+     * Type of life cycle methods (by annotation name) that are capable of
+     * returning entities.
+     */
+    static final List<String> LIFE_CYCLE_METHODS_THAT_RETURN_ENTITIES = //
+                    List.of(Insert.class.getSimpleName(),
+                            Save.class.getSimpleName(),
+                            Update.class.getSimpleName());
+
+    /**
      * Commonly used result types that are not entities.
      */
     static final Set<Class<?>> NON_ENTITY_RESULT_TYPES = new HashSet<>();

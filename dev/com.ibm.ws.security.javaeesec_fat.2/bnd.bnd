@@ -74,7 +74,9 @@ src: \
 	org.apache.derby:derby;version=10.11.1.1,\
 	com.ibm.websphere.javaee.jaxrs.2.1;version=latest,\
 	com.ibm.ws.security.authentication;version=latest,\
-	com.ibm.ws.security.fat.common;version=latest,\
 	com.ibm.ws.security.jaas.common;version=latest,\
 	com.ibm.ws.security.javaeesec.cdi;version=latest,\
 	com.ibm.ws.security.javaeesec_fat;version=latest
+
+# Copy in FIPS keys
+ltpa.fips.enabled: true

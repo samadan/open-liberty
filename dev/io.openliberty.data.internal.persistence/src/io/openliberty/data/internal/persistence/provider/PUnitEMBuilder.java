@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023,2024 IBM Corporation and others.
+ * Copyright (c) 2023,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,8 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.ras.annotation.Trivial;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
@@ -33,6 +35,7 @@ import jakarta.persistence.PersistenceException;
  * This builder is used when a persistence unit reference JNDI name is configured as the repository dataStore.
  */
 public class PUnitEMBuilder extends EntityManagerBuilder {
+    private static final TraceComponent tc = Tr.register(PUnitEMBuilder.class);
 
     private final EntityManagerFactory emf;
 
@@ -66,8 +69,13 @@ public class PUnitEMBuilder extends EntityManagerBuilder {
     }
 
     @Override
+    @Trivial
     public EntityManager createEntityManager() {
-        return emf.createEntityManager();
+        EntityManager em = emf.createEntityManager();
+
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
+            Tr.debug(this, tc, "createEntityManager: " + em);
+        return em;
     }
 
     @FFDCIgnore(PersistenceException.class)
