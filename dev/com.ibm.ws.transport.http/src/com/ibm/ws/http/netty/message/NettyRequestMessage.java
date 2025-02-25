@@ -18,10 +18,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -36,6 +38,7 @@ import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer;
 import com.ibm.ws.http.netty.pipeline.inbound.HttpDispatcherHandler;
 import com.ibm.ws.http2.GrpcServletServices;
 import com.ibm.wsspi.genericbnf.BNFHeaders;
+import com.ibm.wsspi.genericbnf.HeaderField;
 import com.ibm.wsspi.genericbnf.HeaderStorage;
 import com.ibm.wsspi.genericbnf.exception.UnsupportedMethodException;
 import com.ibm.wsspi.genericbnf.exception.UnsupportedSchemeException;
@@ -140,7 +143,7 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
         super.init(request, isc, config);
         setAndGetIsGrpc();
         setMessageType(MessageType.REQUEST);
-        
+
     }
 
     /**
@@ -826,7 +829,7 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
         }
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "HTTPRequestMessageImpl pbPath = " + pbPath);
+            Tr.debug(tc, "pushNewRequest() pbPath = " + pbPath);
         }
         HttpToHttp2ConnectionHandler handler = this.nettyContext.channel().pipeline().get(HttpToHttp2ConnectionHandler.class);
         Http2Connection connection = handler.connection();
@@ -854,23 +857,47 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
             }
         } else {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.exit(tc, "HTTPRequestMessageImpl: Cannot find hostname for required :authority pseudo header");
+                Tr.exit(tc, "pushNewRequest(): Cannot find hostname for required :authority pseudo header");
             }
             return;
         }
         headers.authority(auth);
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-            Tr.debug(tc, "handleH2LinkPreload(): Method is GET, authority is " + auth + ", scheme is " + scheme);
+            Tr.debug(tc, "pushNewRequest(): Method is GET, authority is " + auth + ", scheme is " + scheme);
         }
+
+        // Get all the headers from the PushBuilder and add them to the Http2Headers for Netty.
+        Set<HeaderField> pushBuilderHeaders = pushBuilder.getHeaders();
+        if (pushBuilderHeaders != null) {
+            Iterator<HeaderField> iterator = pushBuilderHeaders.iterator();
+            HeaderField hf = null;
+
+            while (iterator.hasNext()) {
+                hf = iterator.next();
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(tc, "pushNewRequest() PushBuilder header: " + hf.getName() + " " + hf.asString());
+                }
+
+                /*
+                 * toLowerCase() must be used here otherwise Netty throws an Exception such as the following:
+                 * io.netty.handler.codec.http2.Http2Exception: invalid header name [Referer]
+                 */
+                headers.add(hf.getName().toLowerCase(), hf.asString());
+            }
+        } else {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "pushNewRequest() no PushBuilder headers");
+            }
+        }
+
         ChannelFuture promise = handler.encoder().writePushPromise(nettyContext, currentStreamId, nextPromisedStreamId, headers, 0,
                                                                    new VoidChannelPromise(this.nettyContext.channel(), true));
 
         promise.addListener(future -> {
-            if (future.isSuccess()){
+            if (future.isSuccess()) {
 
-            }
-            else {
+            } else {
                 future.cause().printStackTrace();
             }
         });
@@ -887,7 +914,7 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
                         ((HttpDispatcherHandler) nettyContext.channel().pipeline().get(HttpPipelineInitializer.HTTP_DISPATCHER_HANDLER_NAME)).channelRead(nettyContext,
                                                                                                                                                           newRequest);
                     } catch (Exception e) {
-               
+
                         e.printStackTrace();
                     }
                 }
@@ -940,10 +967,10 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
     @Override
     public long getStartTime() {
 
-        if(nettyContext.channel().hasAttr(NettyHttpConstants.REQUEST_START_TIME)){
+        if (nettyContext.channel().hasAttr(NettyHttpConstants.REQUEST_START_TIME)) {
             return nettyContext.channel().attr(NettyHttpConstants.REQUEST_START_TIME).get();
         }
-        
+
         return 0;
     }
 
