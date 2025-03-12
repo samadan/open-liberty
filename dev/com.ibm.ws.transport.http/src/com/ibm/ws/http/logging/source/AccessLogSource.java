@@ -15,6 +15,7 @@ package com.ibm.ws.http.logging.source;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,6 +92,7 @@ public class AccessLogSource implements Source {
             this.loggingConfig = loggingConfig;
             this.logstashConfig = logstashConfig;
             this.telemetryLoggingConfig = telemetryLoggingConfig;
+
         }
 
         //@formatter:off
@@ -314,6 +316,8 @@ public class AccessLogSource implements Source {
 
         ArrayList<AccessLogDataFieldSetter> fieldSetters = new ArrayList<AccessLogDataFieldSetter>();
         for (String f : fields.keySet()) {
+
+
             switch (f) {
                 //@formatter:off
                 case "%h": fieldSetters.add((ald, alrd) -> ald.setRemoteHost(alrd.getRemoteAddress())); break;
@@ -370,7 +374,7 @@ public class AccessLogSource implements Source {
                 case "%r": fieldSetters.add((ald, alrd) -> ald.setRequestFirstLine(AccessLogFirstLine.getFirstLineAsString(alrd.getResponse(), alrd.getRequest(), null))); break;
                 case "%t": fieldSetters.add((ald, alrd) -> ald.setRequestStartTime(AccessLogStartTime.getStartTimeAsLongForJSON(alrd.getResponse(), alrd.getRequest(), null))); break;
                 case "%{t}W": fieldSetters.add((ald, alrd) -> ald.setAccessLogDatetime(AccessLogCurrentTime.getAccessLogCurrentTimeAsLong(alrd.getResponse(), alrd.getRequest(), null))); break;
-                case "%u": fieldSetters.add((ald, alrd) -> ald.setRemoteUser(AccessLogRemoteUser.getRemoteUser(alrd.getResponse(), alrd.getRequest(), null))); break;
+                case "%u": fieldSetters.add((ald, alrd) -> ald.setRemoteUser(AccessLogRemoteUser.getRemoteUser(alrd.getResponse(), alrd.getRequest(), null)));break;
                 //@formatter:on
             }
         }
@@ -982,8 +986,11 @@ public class AccessLogSource implements Source {
     }
 
     private static JsonFieldAdder addRemoteUserField(int format) {
+
         return (jsonBuilder, ald) -> {
             if (ald.getRemoteUser() != null && !ald.getRemoteUser().isEmpty())
+                
+
                 return jsonBuilder.addField(AccessLogData.getRemoteUserKey(format), ald.getRemoteUser(), false, true);
             return jsonBuilder;
         };
