@@ -481,6 +481,23 @@ public class DataErrPathsTestServlet extends FATServlet {
     }
 
     /**
+     * Verify MappingException is raised if attempting to supply an empty string
+     * value instead of a valid entity attribute name to the By annotation.
+     */
+    @Test
+    public void testEmptyBy() {
+        try {
+            List<Voter> found = voters.inPrecinct(2);
+            fail("Queried on an empty string attribute name and found " + found);
+        } catch (MappingException x) {
+            if (x.getMessage() == null ||
+                !x.getMessage().startsWith("CWWKD1024E:") ||
+                !x.getMessage().contains("inPrecinct"))
+                throw x;
+        }
+    }
+
+    /**
      * Verify IllegalArgumentException is raised if you attempt to delete an
      * empty list of entities.
      */
@@ -510,6 +527,40 @@ public class DataErrPathsTestServlet extends FATServlet {
             if (x.getMessage() == null ||
                 !x.getMessage().startsWith("CWWKD1092E:") ||
                 !x.getMessage().contains("register"))
+                throw x;
+        }
+    }
+
+    /**
+     * Verify MappingException is raised if attempting to supply an empty string
+     * value instead of a valid entity attribute name to the OrderBy annotation.
+     */
+    @Test
+    public void testEmptyOrderBy() {
+        try {
+            List<Voter> found = voters.inTownship("Haverhill");
+            fail("Ordered by an empty string attribute name and returned " + found);
+        } catch (MappingException x) {
+            if (x.getMessage() == null ||
+                !x.getMessage().startsWith("CWWKD1024E:") ||
+                !x.getMessage().contains("inTownship"))
+                throw x;
+        }
+    }
+
+    /**
+     * Verify MappingException is raised if attempting to supply an empty string
+     * value instead of a valid named parameter name to the Param annotation.
+     */
+    @Test
+    public void testEmptyParam() {
+        try {
+            List<Voter> found = voters.inWard(3);
+            fail("Queried with an empty string named parameter and found " + found);
+        } catch (MappingException x) {
+            if (x.getMessage() == null ||
+                !x.getMessage().startsWith("CWWKD1104E:") ||
+                !x.getMessage().contains("inWard"))
                 throw x;
         }
     }

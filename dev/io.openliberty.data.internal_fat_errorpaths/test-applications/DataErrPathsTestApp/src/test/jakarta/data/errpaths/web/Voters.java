@@ -231,6 +231,30 @@ public interface Voters extends BasicRepository<Voter, Integer> {
                            PageRequest pageReq);
 
     /**
+     * This invalid method has a By annotation where the value is an empty string
+     * instead of a valid entity attribute name.
+     */
+    @Find
+    List<Voter> inPrecinct(@By("") int precinct);
+
+    /**
+     * This invalid method has an OrderBy annotation where the value is an
+     * empty string instead of a valid entity attribute name.
+     */
+    @Query("WHERE address LIKE CONCAT('%;TOWNSHIP:', ?1, ';%')")
+    @OrderBy("address")
+    @OrderBy("")
+    @OrderBy("ssn")
+    List<Voter> inTownship(String name);
+
+    /**
+     * This invalid method has a Param annotation where the value is an empty string
+     * instead of a valid named parameter name.
+     */
+    @Query("WHERE address IS NOT NULL")
+    List<Voter> inWard(@Param("") int ward);
+
+    /**
      * This invalid method has 2 Limit parameters.
      */
     @Find

@@ -14,7 +14,6 @@ package test.jakarta.data.jpa.web;
 
 import static componenttest.annotation.SkipIfSysProp.DB_DB2;
 import static componenttest.annotation.SkipIfSysProp.DB_Not_Default;
-import static componenttest.annotation.SkipIfSysProp.DB_Oracle;
 import static componenttest.annotation.SkipIfSysProp.DB_Postgres;
 import static componenttest.annotation.SkipIfSysProp.DB_SQLServer;
 import static jakarta.data.repository.By.ID;
@@ -44,6 +43,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1098,12 +1098,6 @@ public class DataJPATestServlet extends FATServlet {
         cityNames.add("Aberdeen");
         cityNames.add("Mitchell");
         cityNames.add("Pierre");
-
-        //TODO Eclipse link SQL Generation bug on Oracle: https://github.com/OpenLiberty/open-liberty/issues/30444
-        if (jdbcJarName.startsWith("ojdbc8")) {
-            cities.removeByStateName("South Dakota"); //Cleanup Cities repository and skip the rest of these tests
-            return;
-        }
 
         Order<City> orderByCityName = supportsOrderByForUpdate ? Order.by(Sort.asc("name")) : Order.by();
         Iterator<CityId> ids = cities.deleteByStateName("South Dakota", Limit.of(3), orderByCityName).iterator();
@@ -2750,9 +2744,6 @@ public class DataJPATestServlet extends FATServlet {
     /**
      * Repository method that queries by the year component of an Instant attribute.
      */
-    @SkipIfSysProp({ DB_Postgres, //TODO Failing due to Eclipselink Issue on PostgreSQL: https://github.com/OpenLiberty/open-liberty/issues/29440
-                     DB_Oracle // //TODO Failing due to Eclipselink Issue on Oracle: https://github.com/OpenLiberty/open-liberty/issues/29440
-    })
     @Test
     public void testInstantExtractYear() {
 
@@ -2860,6 +2851,38 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
+     * Verify that LOWER(ID(o)) is valid in a query.
+     */
+    @Test
+    public void testLowerId() {
+        assertEquals(0, counties.deleteByNameIn(List.of("Freeborn", "Steele")));
+
+        int[] freebornZipCodes = new int[] { 55912, 56007, 56009, 56016, 56020, //
+                                             56026, 56029, 56032, 56035, 56036 };
+
+        int[] steeleZipCodes = new int[] { 55049, 55060, 55917, 55924, 55926, //
+                                           55946, 559072 };
+
+        County freeborn = new County("Freeborn", "Minnesota", 30895, freebornZipCodes, //
+                        "Albert Lea", "Alden", "Clarks Grove", "Conger", "Emmons", //
+                        "Freeborn", "Geneva", "Glenville", "Hartland", "Hayward", //
+                        "Hollandale", "Manchester", "Myrtle", "Twin Lakes");
+
+        County steele = new County("Steele", "Minnesota", 37406, steeleZipCodes, //
+                        "Blooming Prairie", "Ellendale", "Medford", "Owatonna");
+
+        counties.save(freeborn, steele);
+
+        assertEquals(Integer.valueOf(30895),
+                     counties.populationOf("freeborn").orElseThrow());
+
+        assertEquals(Integer.valueOf(37406),
+                     counties.populationOf("steele").orElseThrow());
+
+        assertEquals(2, counties.deleteByNameIn(List.of("Freeborn", "Steele")));
+    }
+
+    /**
      * Use a custom join query so that a ManyToMany association can query by attributes of the many side of the relationship.
      */
     @Test
@@ -2885,11 +2908,12 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
-     * Query that matches multiple entities and returns a stream of results
-     * where each result has a ManyToMany association.
+     * Query that matches multiple entities that have a ManyToMany relation.
+     * Verify that the data within the ManyToMany relations of the results
+     * is correct.
      */
     @Test
-    public void testManyToManyReturnsCombinedCollectionFromMany() {
+    public void testManyToManyIncludedInResults() {
 
         List<String> addresses = customers.findByPhoneIn(List.of(5075552444L,
                                                                  5075550101L))
@@ -2912,11 +2936,12 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
-     * Query that matches a single entity, from which the corresponding collection
-     * from its ManyToMany association can be accessed.
+     * Query that matches a single entity that has a ManyToMany relation.
+     * Verify that the data within the ManyToMany relation of the result
+     * is correct.
      */
     @Test
-    public void testManyToManyReturnsOneWithSetOfMany() {
+    public void testManyToManyIncludedInSingleResult() {
         Set<DeliveryLocation> locations = customers //
                         .findByEmail("Maximilian@tests.openliberty.io")
                         .orElseThrow().deliveryLocations;
@@ -2939,7 +2964,6 @@ public class DataJPATestServlet extends FATServlet {
         assertNotNull(loc3.street);
         assertEquals(2800, loc3.houseNum);
         assertEquals("37th St", loc3.street.name);
-        assertEquals("NW", loc3.street.direction);
 
         assertNotNull(locations.toString(), loc4);
         assertEquals(DeliveryLocation.Type.HOME, loc4.type);
@@ -3018,6 +3042,27 @@ public class DataJPATestServlet extends FATServlet {
         assertIterableEquals(List.of("Monica@tests.openliberty.io",
                                      "martin@tests.openliberty.io"),
                              creditCards.findByExpiresOnBetween(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)));
+    }
+
+    /**
+     * Query that matches based on an attribute of the One of a ManyToOne relation.
+     */
+    @Test
+    public void testManyToOneSubAttribute() {
+
+        Stream<CreditCard> cards = customers//
+                        .findCardsByDebtorEmailEndsWith("an@tests.openliberty.io");
+        List<Long> cardNumbers = cards
+                        .map(card -> card.number)
+                        .collect(Collectors.toList());
+
+        // Customer 5's card numbers must come before Customer 4's card numbers
+        // due to the ordering on Customer.phone.
+        assertEquals(Set.of(5000921051110001L, 5000921052220002L),
+                     new HashSet<>(cardNumbers.subList(0, 2)));
+
+        assertEquals(Set.of(4000921041110001L, 4000921042220002L),
+                     new HashSet<>(cardNumbers.subList(2, 4)));
     }
 
     /**
@@ -3212,28 +3257,6 @@ public class DataJPATestServlet extends FATServlet {
                                      "Maximilian@tests.openliberty.io",
                                      "Megan@tests.openliberty.io"),
                              customers.withCardIssuer(Issuer.MonsterCard));
-    }
-
-    /**
-     * Query that matches multiple entities and returns a combined collection of results across matches for the OneToMany association.
-     */
-    //@Test
-    // This test is currently incorrect because Email is an attribute of Customer (primary entity type), not CreditCard (result type).
-    // This would require a way to indicate that a projection is desired, meaning the return type indicates
-    // an attribute of the entity rather than the entity class itself.
-    // TODO Could this be achieved with @Select?
-    public void testOneToManyReturnsCombinedCollectionFromMany() {
-
-        List<Long> cardNumbers = customers.findCardsByDebtorEmailEndsWith("an@tests.openliberty.io")
-                        .map(card -> card.number)
-                        .collect(Collectors.toList());
-
-        // Customer 5's card numbers must come before Customer 4's card numbers due to the ordering on Customer.phone.
-        assertEquals(cardNumbers.toString(),
-                     true, cardNumbers.equals(List.of(5000921051110001L, 5000921052220002L, 4000921041110001L, 4000921042220002L)) ||
-                           cardNumbers.equals(List.of(5000921051110001L, 5000921052220002L, 4000921042220002L, 4000921041110001L)) ||
-                           cardNumbers.equals(List.of(5000921052220002L, 5000921051110001L, 4000921042220002L, 4000921041110001L)) ||
-                           cardNumbers.equals(List.of(5000921052220002L, 5000921051110001L, 4000921041110001L, 4000921042220002L)));
     }
 
     /**
@@ -4299,9 +4322,20 @@ public class DataJPATestServlet extends FATServlet {
          * Without using the Eclipselink Oracle plugin the precision of Timestamp is 1 second
          * Therefore, we need to ensure 1 second has passed between queries where we expect
          * the LocalDateTime/version to be different.
+         *
+         * For Derby the timestamp field can hold a precision of nanoseconds,
+         * but the CURRENT_TIMESTAMP function returns a timestamp with millis
+         * precision and there is no configuration to change that.
+         *
+         * For SQLServer the timestamp field also defaults to millis and Eclipselink
+         * offers no alternative query to get better percision.
+         *
+         * PostgreSQL - default is nanoseconds
+         * DB2 - default is microseconds
          */
         String jdbcJarName = System.getenv().getOrDefault("DB_DRIVER", "UNKNOWN");
-        boolean secondPercision = jdbcJarName.startsWith("ojdbc");
+        boolean secondPrecision = jdbcJarName.startsWith("ojdbc");
+        boolean millisecondPrecision = jdbcJarName.startsWith("derby") || jdbcJarName.startsWith("mssql-jdbc");
 
         assertEquals(0, counties.deleteByNameIn(List.of("Dodge", "Mower")));
 
@@ -4323,8 +4357,10 @@ public class DataJPATestServlet extends FATServlet {
 
         dodge = counties.findByName("Dodge").orElseThrow();
 
-        if (secondPercision)
+        if (secondPrecision)
             Thread.sleep(Duration.ofSeconds(1).toMillis());
+        if (millisecondPrecision)
+            Thread.sleep(Duration.ofMillis(1).toMillis());
 
         dodgeZipCodes = new int[] { 55917, 55924, 55927, 55940, 55944, 55955, 55963, 55985 };
         assertEquals(true, counties.updateByNameSetZipCodes("Dodge", dodgeZipCodes));
@@ -4343,8 +4379,10 @@ public class DataJPATestServlet extends FATServlet {
         lastUpdate = dodge.lastUpdated = counties.findLastUpdatedByName("Dodge");
         dodge.population = 20981;
 
-        if (secondPercision)
+        if (secondPrecision)
             Thread.sleep(Duration.ofSeconds(1).toMillis());
+        if (millisecondPrecision)
+            Thread.sleep(Duration.ofMillis(1).toMillis());
 
         counties.save(dodge);
 

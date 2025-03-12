@@ -1378,13 +1378,22 @@ public class QueryInfo {
                                                           Set<String> qlRequired) {
         String firstExtraParam = null;
         StringBuilder extraParamNames = new StringBuilder();
-        for (String name : extras) {
-            if (firstExtraParam == null)
-                firstExtraParam = name;
-            else
-                extraParamNames.append(", ");
-            extraParamNames.append(name);
-        }
+        for (String name : extras)
+            if (name.length() > 0) {
+                if (firstExtraParam == null)
+                    firstExtraParam = name;
+                else
+                    extraParamNames.append(", ");
+                extraParamNames.append(name);
+            }
+
+        if (firstExtraParam == null && !extras.isEmpty())
+            // @Param("") with empty String is not valid
+            return exc(MappingException.class,
+                       "CWWKD1104.empty.anno.value",
+                       Param.class.getSimpleName(),
+                       method.getName(),
+                       repositoryInterface.getName());
 
         boolean isFirst = true;
         StringBuilder qlParamNames = new StringBuilder();
@@ -3075,8 +3084,14 @@ public class QueryInfo {
 
                     String[] names = new String[recordComponents.length];
                     for (int i = 0; i < recordComponents.length; i++) {
-                        // 1.1 TODO first check for Select annotation on record component
-                        names[i] = recordComponents[i].getName();
+                        String[] select = entityInfo.builder.provider.compat //
+                                        .getSelections(recordComponents[i]);
+                        if (select == null || select.length == 0)
+                            names[i] = recordComponents[i].getName();
+                        else if (select.length == 1)
+                            names[i] = select[0];
+                        else
+                            throw new UnsupportedOperationException("@Select " + Arrays.toString(select)); // 1.1 TODO
                     }
 
                     try {
@@ -3452,46 +3467,45 @@ public class QueryInfo {
                           method.getName(),
                           repositoryInterface.getName(),
                           entityInfo.attributeTypes.keySet());
+        } else if (len == 0) {
+            throw exc(MappingException.class,
+                      "CWWKD1024.missing.entity.attr",
+                      method.getName(),
+                      repositoryInterface.getName(),
+                      entityInfo.getType().getName(),
+                      entityInfo.attributeTypes.keySet());
         } else {
             String lowerName = name.toLowerCase();
             attributeName = entityInfo.attributeNames.get(lowerName);
-            if (attributeName == null)
-                if (name.length() == 0) {
-                    throw exc(MappingException.class,
-                              "CWWKD1024.missing.entity.attr",
-                              method.getName(),
-                              repositoryInterface.getName(),
-                              entityInfo.getType().getName(),
-                              entityInfo.attributeTypes.keySet());
-                } else {
-                    // tolerate possible mixture of . and _ separators:
-                    lowerName = lowerName.replace('.', '_');
+            if (attributeName == null) {
+                // tolerate possible mixture of . and _ separators:
+                lowerName = lowerName.replace('.', '_');
+                attributeName = entityInfo.attributeNames.get(lowerName);
+                if (attributeName == null) {
+                    // tolerate possible mixture of . and _ separators with lack of separators:
+                    lowerName = lowerName.replace("_", "");
                     attributeName = entityInfo.attributeNames.get(lowerName);
-                    if (attributeName == null) {
-                        // tolerate possible mixture of . and _ separators with lack of separators:
-                        lowerName = lowerName.replace("_", "");
-                        attributeName = entityInfo.attributeNames.get(lowerName);
-                        if (attributeName == null && failIfNotFound) {
-                            if (Util.hasOperationAnno(method))
-                                throw exc(MappingException.class,
-                                          "CWWKD1010.unknown.entity.attr",
-                                          name,
-                                          entityInfo.getType().getName(),
-                                          method.getName(),
-                                          repositoryInterface.getName(),
-                                          entityInfo.attributeTypes.keySet());
-                            else
-                                throw exc(MappingException.class,
-                                          "CWWKD1091.method.name.parse.err",
-                                          name,
-                                          entityInfo.getType().getName(),
-                                          method.getName(),
-                                          repositoryInterface.getName(),
-                                          Util.OP_ANNOS,
-                                          entityInfo.attributeTypes.keySet());
-                        }
+                    if (attributeName == null && failIfNotFound) {
+                        if (Util.hasOperationAnno(method))
+                            throw exc(MappingException.class,
+                                      "CWWKD1010.unknown.entity.attr",
+                                      name,
+                                      entityInfo.getType().getName(),
+                                      method.getName(),
+                                      repositoryInterface.getName(),
+                                      entityInfo.attributeTypes.keySet());
+                        else
+                            throw exc(MappingException.class,
+                                      "CWWKD1091.method.name.parse.err",
+                                      name,
+                                      entityInfo.getType().getName(),
+                                      method.getName(),
+                                      repositoryInterface.getName(),
+                                      Util.OP_ANNOS,
+                                      entityInfo.attributeTypes.keySet());
                     }
                 }
+            }
         }
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
             Tr.debug(this, tc, "getAttributeName " + name + ": " + attributeName);
@@ -4246,14 +4260,23 @@ public class QueryInfo {
 
             StringBuilder q;
             if (selectLen > 0) {
-                q = new StringBuilder(ql.length() + (selectLen >= 0 ? 0 : 50) + (fromLen >= 0 ? 0 : 50) + 2);
                 String selection = ql.substring(select0, select0 + selectLen);
+                q = new StringBuilder(ql.length() + (selectLen >= 0 ? 0 : 50) + (fromLen >= 0 ? 0 : 50) + 2);
+                q.append("SELECT");
+                // TODO 1.1 use Jakarta Persistence enhancement issue 420 instead of
+                // editing the query
+                boolean insertConstructor = compat.atLeast(1, 1) &&
+                                            singleType.isRecord() &&
+                                            !selection.toUpperCase().contains(" NEW ");
+                if (insertConstructor)
+                    q.append(" NEW ").append(singleType.getName()).append('(');
                 if (insertEntityVar) {
-                    q.append("SELECT");
                     appendWithIdentifierName(ql, select0, select0 + selectLen, entityVar_, q);
                 } else {
-                    q.append("SELECT").append(selection);
+                    q.append(selection);
                 }
+                if (insertConstructor)
+                    q.append(") ");
                 if (fromLen == 0 && whereLen == 0 && orderLen == 0 &&
                     !Character.isWhitespace(q.charAt(q.length() - 1)))
                     q.append(' ');
@@ -4648,9 +4671,13 @@ public class QueryInfo {
      *
      * @param writer writes to the introspection file.
      * @param indent indentation for lines.
+     * @param future future for this QueryInfo.
      */
+    @FFDCIgnore(Throwable.class)
     @Trivial
-    public void introspect(PrintWriter writer, String indent) {
+    public void introspect(PrintWriter writer,
+                           String indent,
+                           CompletableFuture<QueryInfo> future) {
         writer.println(indent + "QueryInfo@" + Integer.toHexString(hashCode()));
         indent = indent + "  ";
         writer.println(indent + "entity: " + entityInfo);
@@ -4722,6 +4749,22 @@ public class QueryInfo {
 
         writer.println(indent + "validate method parameters? " + validateParams);
         writer.println(indent + "validate method result? " + validateResult);
+
+        if (future != null) {
+            writer.print(indent + "state: ");
+            if (future.isCancelled())
+                writer.println("cancelled");
+            else if (future.isDone())
+                try {
+                    future.join();
+                    writer.println("completed");
+                } catch (Throwable x) {
+                    writer.println("failed");
+                    Util.printStackTrace(x, writer, indent + "  ", null);
+                }
+            else
+                writer.println("not completed");
+        }
     }
 
     /**
