@@ -2289,16 +2289,11 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
             String closeNonUpgraded = (String) (this.myVC.getStateMap().get(TransportConstants.CLOSE_NON_UPGRADED_STREAMS));
             // Shouldn't close upgraded requests
             boolean upgradedRequest = closeNonUpgraded != null && closeNonUpgraded.equalsIgnoreCase("true");
-            if (!upgradedRequest && (!myChannelConfig.isKeepAliveEnabled() || nettyContext.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).get() >= myChannelConfig.getMaximumPersistentRequests())) {
+            if (!upgradedRequest && (!myChannelConfig.isKeepAliveEnabled() || (myChannelConfig.getMaximumPersistentRequests() != -1 && nettyContext.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).get() >= myChannelConfig.getMaximumPersistentRequests()))) {
                 // Keep alive disabled or exceeded maximum number of keep alive requests
                 if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                     Tr.debug(tc, "sendHeaders: Adding close connection header due to keep alive disabled or exceeded number of maximum persistent requests");
                 }
-                System.out.println("sendHeaders: Adding close connection header due to keep alive disabled or exceeded number of maximum persistent requests");
-                System.out.println("VC Map content: ");
-                myVC.getStateMap().forEach((key, value) -> {
-                    System.out.println(key + "->" + value);
-                });
                 response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
             }
             if (HttpUtil.isContentLengthSet(response)) {
