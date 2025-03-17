@@ -65,6 +65,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
     public void handlerAdded(ChannelHandlerContext ctx) {
         // Store the context for later use
         context = ctx;
+        context.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).set(0);
     }
 
     // Method to allow direct invocation
@@ -218,6 +219,8 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
             context.channel().attr(NettyHttpConstants.CONTENT_LENGTH).set(null);
 
         }
+        int numberOfRequests = context.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).get();
+        context.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).set(numberOfRequests+1);
         link.init(context, request, config);
         link.ready();
     }
