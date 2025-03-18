@@ -34,7 +34,7 @@ import io.openliberty.http.netty.stream.WsByteBufferChunkedInput;
 public class HttpContentDecompressor {
 
     /** RAS tracing variable */
-    private static final TraceComponent tc = Tr.register(HttpServiceContextImpl.class, HttpMessages.HTTP_TRACE_NAME, HttpMessages.HTTP_BUNDLE);
+    private static final TraceComponent tc = Tr.register(HttpContentDecompressor.class, HttpMessages.HTTP_TRACE_NAME, HttpMessages.HTTP_BUNDLE);
 
     /**
      * Decompresses the given buffer using the appropriate decompression handler based on the content encoding header
@@ -50,9 +50,6 @@ public class HttpContentDecompressor {
         
         Objects.requireNonNull(config, "Http configuration must not be null");
         DecompressionHandler handler = chooseHandler(contentEncoding, config);
-
-        System.out.println("Is handler enabled: " +handler.isEnabled());
-        System.out.println("Buffer remaining: " + buffer==null? "null": buffer.remaining());
 
         return decompress(buffer, config, handler);
     }
@@ -82,9 +79,6 @@ public class HttpContentDecompressor {
     public WsByteBuffer decompress(WsByteBuffer buffer, HttpChannelConfig config, DecompressionHandler handler) throws DataFormatException{
 
         if(!handler.isEnabled() || buffer == null || buffer.remaining() == 0){
-            System.out.println("Handler returning buffer without encoding: ");
-            System.out.println("[decompress] Is handler enabled: " + handler.isEnabled());
-            System.out.println("[decompress] Buffer remaining: " + buffer == null ? "null" : buffer.remaining());
             return buffer;
         }
 

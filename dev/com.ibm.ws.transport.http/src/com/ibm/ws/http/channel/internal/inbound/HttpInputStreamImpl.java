@@ -98,7 +98,7 @@ public class HttpInputStreamImpl extends HttpInputStreamConnectWeb {
 
             HttpContentDecompressor decompressor = new HttpContentDecompressor();
             try{
-                decompressor.decompress(buffer, config, contentEncoding);
+                this.buffer = decompressor.decompress(buffer, config, contentEncoding);
             
             } catch (DataFormatException dfe) {
                 FFDCFilter.processException(dfe, getClass().getName(), "1");
