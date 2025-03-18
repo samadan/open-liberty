@@ -15,12 +15,14 @@ package com.ibm.ws.http.channel.internal.inbound;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.zip.DataFormatException;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
+import com.ibm.ws.ffdc.FFDCFilter;
 import com.ibm.ws.http.channel.inputstream.HttpInputStreamConnectWeb;
 import com.ibm.ws.http.channel.inputstream.HttpInputStreamObserver;
 import com.ibm.ws.http.channel.internal.HttpMessages;
@@ -92,7 +94,12 @@ public class HttpInputStreamImpl extends HttpInputStreamConnectWeb {
             // Use the existing legacy decompression handler to decompress the buffer
             
             DecompressionHandler decompressHandler ;
-            if(this.isc instanceof HttpInboundServiceContextImpl && !((HttpInboundServiceContextImpl)this.isc).getHttpConfig().isAutoDecompressionEnabled()){
+            HttpInboundServiceContextImpl serviceContextImpl = null;
+            if(isc instanceof HttpInboundServiceContextImpl){
+                serviceContextImpl = (HttpInboundServiceContextImpl) isc;
+            }
+
+            if(serviceContextImpl != null && !serviceContextImpl.getHttpConfig().isAutoDecompressionEnabled()){
                 decompressHandler = new IdentityInputHandler();
             } else {
                 ContentEncodingValues encoding = ContentEncodingValues.find(contentEncoding);
@@ -107,26 +114,55 @@ public class HttpInputStreamImpl extends HttpInputStreamConnectWeb {
                     decompressHandler = new IdentityInputHandler();
                 }
             }
-            // Decompress the buffer
+
             if (decompressHandler != null) {
-                try{
-                    List<WsByteBuffer> buffers = decompressHandler.decompress(buffer);
-                    int totalSize = buffers.stream().mapToInt(WsByteBuffer::remaining).sum();
+                double limit = serviceContextImpl != null? serviceContextImpl.getHttpConfig().getDecompressionRatioLimit():200;
+                int tolerance = serviceContextImpl != null ? serviceContextImpl.getHttpConfig().getDecompressionTolerance():3;
+                try {
+                    // Use a temporary list to handle iterative decompression.
+                    LinkedList<WsByteBuffer> tempBuffers = new LinkedList<>();
+                    tempBuffers.add(buffer);
+                    int cyclesAboveDecompressionRatio = 0;
+                    List<WsByteBuffer> storage = new ArrayList<>();
+
+                    // Process buffers iteratively
+                    while (!tempBuffers.isEmpty()) {
+                        WsByteBuffer temp = tempBuffers.removeFirst();
+                        while (temp.hasRemaining()) {
+                            List<WsByteBuffer> decompressedChunks = decompressHandler.decompress(temp);
+                            if (!decompressedChunks.isEmpty()) {
+                                if (decompressHandler.getBytesRead() > 0) {
+                                    double ratio = (double) decompressHandler.getBytesWritten() / decompressHandler.getBytesRead();
+                                    if (ratio > limit) {
+                                        cyclesAboveDecompressionRatio++;
+                                        if (cyclesAboveDecompressionRatio > tolerance) {
+                                            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                                                Tr.debug(tc, "Decompression ratio tolerance reached. Cycles: " + cyclesAboveDecompressionRatio);
+                                            }
+                                            throw new DataFormatException("Decompression tolerance reached");
+                                        }
+                                    }
+                                }
+                                storage.addAll(decompressedChunks);
+                            }
+                        }
+                        temp.release();
+                    }
+                    // Combine decompressed buffers into one
+                    int totalSize = storage.stream().mapToInt(WsByteBuffer::remaining).sum();
                     WsByteBuffer combinedBuffer = ChannelFrameworkFactory.getBufferManager().allocate(totalSize);
-                    for(WsByteBuffer buffer: buffers) {
-                        combinedBuffer.put(buffer);
+                    for (WsByteBuffer buf : storage) {
+                        combinedBuffer.put(buf);
                     }
                     combinedBuffer.flip();
                     this.buffer = combinedBuffer;
-                }catch (DataFormatException dfe) {
-                        //FFDCFilter.processException(dfe, getClass().getName() + ".moveBuffers", "1");
-                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                            Tr.debug(tc, "Received exception during decompress; " + dfe);
-                        }
-                        //throw new IllegalHttpBodyException(dfe.getMessage());
-                        
+                } catch (DataFormatException dfe) {
+                    FFDCFilter.processException(dfe, getClass().getName(), "1");
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(tc, "Received exception during decompress; " + dfe);
                     }
-                
+                    // TODO -> handle
+                }
             }
         }
         this.bytesRead += buffer.remaining();

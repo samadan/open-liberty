@@ -84,6 +84,9 @@ public class NettyHttpRequestImpl extends HttpRequestImpl implements Http2Reques
         } else {
             this.body = new HttpInputStreamImpl(context, request);
         }
+
+        //TODO -> if we had an issue with decoding the body, legacy throws an exception. Right now we are 
+        //not throwing the exception upwards. 
     }
 
     /*
