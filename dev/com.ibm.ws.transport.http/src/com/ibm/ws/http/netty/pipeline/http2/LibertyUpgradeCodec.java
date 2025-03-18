@@ -65,7 +65,6 @@ public class LibertyUpgradeCodec implements UpgradeCodecFactory {
 
         @Override
         public void logRstStream(Direction direction, ChannelHandlerContext ctx, int streamId, long errorCode) {
-            new Exception().printStackTrace();
             super.logRstStream(direction, ctx, streamId, errorCode);
         };
     };

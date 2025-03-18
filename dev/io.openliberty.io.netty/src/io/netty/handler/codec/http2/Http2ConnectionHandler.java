@@ -734,6 +734,10 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
                 }
             }
         }
+        
+        if (http2Ex.getMessage().startsWith("Maximum active streams violated for this endpoint")) {
+        	ctx.fireExceptionCaught(cause);
+        }
 
         if (stream == null) {
             if (!outbound || connection().local().mayHaveCreatedStream(streamId)) {
