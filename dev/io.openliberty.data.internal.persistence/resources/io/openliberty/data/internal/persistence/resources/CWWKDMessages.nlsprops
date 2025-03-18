@@ -1062,3 +1062,14 @@ CWWKD1104.empty.anno.value.explanation=The empty value for the String class is \
 CWWKD1104.empty.anno.value.useraction=If the annotation is not needed, \
  remove it from the repository method. Otherwise, specify a valid value for \
  the annotation.
+
+CWWKD1105.keyword.in.orderby=CWWKD1105E: The OrderBy clause of the {0} method \
+ of the {1} repository cannot be parsed because the {2} entity attribute of the \
+ {3} entity contains the {4} keyword of the Jakarta Data Query by Method Name \
+ pattern. Remove the OrderBy clause from the {0} method name and use the \
+ OrderBy annotation instead.
+CWWKD1105.keyword.in.orderby.explanation=Entity attribute names that contain \
+ Jakarta Data keywords cannot be used in the names of repository methods that \
+ follow the Jakarta Data Query by Method Name pattern.
+CWWKD1105.keyword.in.orderby.useraction=Rename the entity attribute or switch \
+ to the OrderBy annotation to specify the ordering.

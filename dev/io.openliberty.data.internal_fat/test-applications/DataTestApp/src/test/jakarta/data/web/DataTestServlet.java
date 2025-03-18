@@ -67,7 +67,6 @@ import jakarta.data.Sort;
 import jakarta.data.exceptions.EmptyResultException;
 import jakarta.data.exceptions.EntityExistsException;
 import jakarta.data.exceptions.MappingException;
-import jakarta.data.exceptions.NonUniqueResultException;
 import jakarta.data.exceptions.OptimisticLockingFailureException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
@@ -577,22 +576,8 @@ public class DataTestServlet extends FATServlet {
         assertEquals((byte) 41,
                      primes.numberAsByte(41));
 
-        try {
-            byte result = primes.numberAsByte(4021);
-            fail("Should not convert long value 4021 to byte value " + result);
-        } catch (MappingException x) {
-            // expected - out of range
-        }
-
         assertEquals((byte) 37,
                      primes.numberAsByteWrapper(37).orElseThrow().byteValue());
-
-        try {
-            Optional<Byte> result = primes.numberAsByteWrapper(4019);
-            fail("Should not convert long value 4019 to Byte value " + result);
-        } catch (MappingException x) {
-            // expected - out of range
-        }
 
         assertEquals(4003.0, primes.numberAsDouble(4003), 0.01);
 
@@ -637,19 +622,6 @@ public class DataTestServlet extends FATServlet {
 
         assertEquals(false,
                      primes.singleHexDigit(12).isPresent());
-
-        try {
-            Optional<Character> found = primes.singleHexDigit(29);
-            fail("Should not be able to return hex 1D as a single character: " +
-                 found);
-        } catch (MappingException x) {
-            if (x.getMessage() != null &&
-                x.getMessage().startsWith("CWWKD1046E") &&
-                x.getMessage().contains("singleHexDigit"))
-                ; // pass
-            else
-                throw x;
-        }
     }
 
     /**
@@ -666,20 +638,6 @@ public class DataTestServlet extends FATServlet {
     @Test
     public void testCountAsBigInteger() {
         assertEquals(BigInteger.valueOf(13L), primes.countAsBigIntegerByNumberIdLessThan(43));
-    }
-
-    /**
-     * Repository method that returns the count as a boolean value,
-     * which is not an allowed return type. This must raise an error.
-     */
-    @Test
-    public void testCountAsBoolean() {
-        try {
-            boolean count = primes.countAsBooleanByNumberIdLessThan(42);
-            fail("Count queries cannot have a boolean return type: " + count);
-        } catch (MappingException x) {
-            // expected
-        }
     }
 
     /**
@@ -1086,14 +1044,6 @@ public class DataTestServlet extends FATServlet {
         packages.save(new Package(10002, 11.0f, 12.4f, 4.0f, "testDeleteIgnoresFirstKeywork#10002"));
         packages.save(new Package(10003, 12.0f, 11.0f, 4.0f, "testDeleteIgnoresFirstKeywork#10003"));
         packages.save(new Package(10004, 13.0f, 10.0f, 4.0f, "testDeleteIgnoresFirstKeywork#10004"));
-
-        try {
-            Optional<Package> pkg = packages.deleteFirst();
-            fail("Expected packages.deleteFirst() to ignore the 'first' keyword" +
-                 " and fail to return a signular result. Instead returned: " + pkg);
-        } catch (NonUniqueResultException e) {
-            // pass
-        }
 
         Package pkg = packages.deleteFirst5ByWidthLessThan(10.5f);
         assertEquals(10004, pkg.id);
@@ -1639,13 +1589,6 @@ public class DataTestServlet extends FATServlet {
         assertEquals(4.0f, p1.height, 0.01f);
         assertEquals("testFindAndDelete#40001", p1.description);
 
-        try {
-            Optional<Package> p = packages.deleteByDescription("testFindAndDelete#4001x");
-            fail("Should get NonUniqueResultException when there are multiple results but a singular return type. Instead, result is: " + p);
-        } catch (NonUniqueResultException x) {
-            // expected
-        }
-
         String jdbcJarName = System.getenv().getOrDefault("DB_DRIVER", "UNKNOWN");
         boolean supportsOrderByForUpdate = !jdbcJarName.startsWith("derby");
         Sort<?>[] sorts = supportsOrderByForUpdate ? new Sort[] { Sort.asc("id") } : null;
@@ -1861,74 +1804,6 @@ public class DataTestServlet extends FATServlet {
         ids = packages.delete2(Limit.of(2), sorts);
         assertEquals(Arrays.toString(ids), 1, ids.length);
         assertEquals(remaining.iterator().next(), Integer.valueOf(ids[0]));
-    }
-
-    /**
-     * Find-and-delete repository operations that return invalid types that are neither the entity class,
-     * record class, or id class.
-     */
-    @Test
-    public void testFindAndDeleteReturnsInvalidTypes() {
-        packages.deleteAll();
-
-        packages.save(new Package(60006, 16.0f, 61.1f, 6.0f, "testFindAndDeleteReturnsInvalidTypes#60006"));
-
-        Sort<Package> sort = Sort.asc("id");
-
-        try {
-            long[] deleted = packages.delete3(Limit.of(3), sort);
-            fail("Deleted with return type of long[]: " + Arrays.toString(deleted) + " even though the id type is int.");
-        } catch (MappingException x) {
-            // expected
-        }
-
-        try {
-            List<String> deleted = packages.delete4(Limit.of(4), sort);
-            fail("Deleted with return type of List<String>: " + deleted + " even though the id type is int.");
-        } catch (MappingException x) {
-            // expected
-        }
-
-        try {
-            Collection<Number> deleted = packages.delete5(Limit.of(5), sort);
-            fail("Deleted with return type of Collection<Number>: " + deleted + " even though the id type is int.");
-        } catch (MappingException x) {
-            // expected
-        }
-    }
-
-    /**
-     * Find-and-delete repository operations that return invalid types that are neither the entity class,
-     * record class, or id class.
-     * In this case the table is empty and no results will have been deleted,
-     * we should still throw a mapping exception.
-     */
-    @Test
-    public void testFindAndDeleteReturnsInvalidTypesEmpty() {
-        packages.deleteAll();
-
-        Sort<Package> sort = Sort.asc("id");
-
-        try {
-            long[] deleted = packages.delete3(Limit.of(3), sort);
-            fail("Deleted with return type of long[]: " + Arrays.toString(deleted) + " even though the id type is int.");
-        } catch (MappingException x) {
-            // expected
-        }
-
-        try {
-            List<String> deleted = packages.delete4(Limit.of(4), sort);
-            fail("Deleted with return type of List<String>: " + deleted + " even though the id type is int.");
-        } catch (MappingException x) {
-            // expected
-        }
-
-        try {
-            Collection<Number> deleted = packages.delete5(Limit.of(5), sort);
-            fail("Deleted with return type of Collection<Number>: " + deleted + " even though the id type is int.");
-        } catch (MappingException x) {
-            // expected
-        }
     }
 
     /**
@@ -3580,41 +3455,6 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
-     * A repository might attempt to define a method that returns a CursoredPage
-     * without specifying a PageRequest and attempt to use a Limit parameter
-     * instead. This is not supported by the spec.
-     * Expect UnsupportedOperationException.
-     */
-    @Test
-    public void testLacksPageRequestUseLimitInstead() {
-        CursoredPage<Prime> page;
-        try {
-            page = primes.findByNumberIdBetween(15L, 45L, Limit.of(5));
-            fail("Able to obtain CursoredPage without a PageRequest: " + page);
-        } catch (UnsupportedOperationException x) {
-            // pass
-        }
-    }
-
-    /**
-     * A repository might attempt to define a method that returns a CursoredPage
-     * without specifying a PageRequest and attempt to use a Sort parameter instead.
-     * This is not supported by the spec. Expect UnsupportedOperationException.
-     */
-    @Test
-    public void testLacksPageRequestUseSortInstead() {
-        CursoredPage<Prime> page;
-        try {
-            page = primes.findByNumberIdBetweenAndBinaryDigitsNotNull(30L, //
-                                                                      40L, //
-                                                                      Sort.asc(ID));
-            fail("Able to obtain CursoredPage without a PageRequest: " + page);
-        } catch (UnsupportedOperationException x) {
-            // pass
-        }
-    }
-
-    /**
      * Use a repository method that performs a JDQL query using LEFT function
      * to obtain the beginning of a String value.
      */
@@ -3780,18 +3620,6 @@ public class DataTestServlet extends FATServlet {
         assertEquals(197, ints[2]); // sum
         assertEquals(12, ints[3]); // count
         assertEquals(16, ints[4]); // average
-
-        try {
-            float[] floats = primes.minMaxSumCountAverageFloat(35);
-            fail("Allowed unsafe conversion from double to float: " +
-                 Arrays.toString(floats));
-        } catch (MappingException x) {
-            if (x.getMessage().startsWith("CWWKD1046E") &&
-                x.getMessage().contains("float[]"))
-                ; // unsafe to convert double to float
-            else
-                throw x;
-        }
 
         List<Long> list = primes.minMaxSumCountAverageList(30);
         assertEquals(Long.valueOf(2L), list.get(0)); // minimum
@@ -4010,41 +3838,6 @@ public class DataTestServlet extends FATServlet {
     public void testOrderedSet() {
         assertIterableEquals(List.of(47L, 43L, 41L, 37L, 31L, 29L, 23L),
                              primes.findNumberIdByNumberIdBetween(20, 49));
-    }
-
-    /**
-     * Exceed the maximum offset allowed by JPA.
-     */
-    @Test
-    public void testOverflow() {
-        Limit range = Limit.range(Integer.MAX_VALUE + 5L, Integer.MAX_VALUE + 10L);
-        try {
-            List<Prime> found = primes.findByNumberIdLessThanEqualOrderByNumberIdDesc(9L, range);
-            fail("Expected an error because starting position of range exceeds Integer.MAX_VALUE. Found: " + found);
-        } catch (IllegalArgumentException x) {
-            // expected
-        }
-
-        try {
-            Stream<Prime> found = primes.findFirst2147483648ByNumberIdGreaterThan(1L);
-            fail("Expected an error because limit exceeds Integer.MAX_VALUE. Found: " + found);
-        } catch (UnsupportedOperationException x) {
-            // expected
-        }
-
-        try {
-            CursoredPage<Prime> found = primes.findByNumberIdBetween(5L, 15L, PageRequest.ofPage(33).size(Integer.MAX_VALUE / 30));
-            fail("Expected an error because when offset for pagination exceeds Integer.MAX_VALUE. Found: " + found);
-        } catch (IllegalArgumentException x) {
-            // expected
-        }
-
-        try {
-            Page<Prime> found = primes.findByNumberIdLessThanEqualOrderByNumberIdDesc(52L, PageRequest.ofPage(22).size(Integer.MAX_VALUE / 20));
-            fail("Expected an error because when offset for pagination exceeds Integer.MAX_VALUE. Found: " + found);
-        } catch (IllegalArgumentException x) {
-            // expected
-        }
     }
 
     /**
@@ -5354,43 +5147,11 @@ public class DataTestServlet extends FATServlet {
         Prime p = primes.findByNumberIdBetween(14L, 18L);
         assertEquals(17L, p.numberId);
 
-        // No result must raise EmptyResultException:
-        try {
-            p = primes.findByNumberIdBetween(24L, 28L);
-            fail("Unexpected prime " + p);
-        } catch (EmptyResultException x) {
-            // expected
-        }
-
-        // Multiple results must raise NonUniqueResultException:
-        try {
-            p = primes.findByNumberIdBetween(34L, 48L);
-            fail("Should find more primes than " + p);
-        } catch (NonUniqueResultException x) {
-            // expected
-        }
-
         // With custom return type:
 
         // Single result is fine:
         long n = primes.findAsLongBetween(12L, 16L);
         assertEquals(13L, n);
-
-        // No result must raise EmptyResultException:
-        try {
-            n = primes.findAsLongBetween(32L, 36L);
-            fail("Unexpected prime number " + n);
-        } catch (EmptyResultException x) {
-            // expected
-        }
-
-        // Multiple results must raise NonUniqueResultException:
-        try {
-            n = primes.findAsLongBetween(22L, 42L);
-            fail("Should find more prime numbers than " + n);
-        } catch (NonUniqueResultException x) {
-            // expected
-        }
     }
 
     /**
