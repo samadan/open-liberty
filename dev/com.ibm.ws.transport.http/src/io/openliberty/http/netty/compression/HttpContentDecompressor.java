@@ -48,8 +48,11 @@ public class HttpContentDecompressor {
      */
     public WsByteBuffer decompress(WsByteBuffer buffer, HttpChannelConfig config, String contentEncoding) throws DataFormatException{
         
-        Objects.requireNonNull(config, "Http configuration must not be null!");
+        Objects.requireNonNull(config, "Http configuration must not be null");
         DecompressionHandler handler = chooseHandler(contentEncoding, config);
+
+        System.out.println("Is handler enabled: " +handler.isEnabled());
+        System.out.println("Buffer remaining: " + buffer==null? "null": buffer.remaining());
 
         return decompress(buffer, config, handler);
     }
@@ -77,6 +80,17 @@ public class HttpContentDecompressor {
     }
 
     public WsByteBuffer decompress(WsByteBuffer buffer, HttpChannelConfig config, DecompressionHandler handler) throws DataFormatException{
+
+        if(!handler.isEnabled() || buffer == null || buffer.remaining() == 0){
+            System.out.println("Handler returning buffer without encoding: ");
+            System.out.println("[decompress] Is handler enabled: " + handler.isEnabled());
+            System.out.println("[decompress] Buffer remaining: " + buffer == null ? "null" : buffer.remaining());
+            return buffer;
+        }
+
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "Removing encoding...");
+        }
         LinkedList<WsByteBuffer> tempBuffers = new LinkedList<>();
         tempBuffers.add(buffer);
         int cyclesAboveDecompressionRatio = 0;
@@ -109,6 +123,10 @@ public class HttpContentDecompressor {
             while(!tempBuffers.isEmpty()){
                 tempBuffers.removeFirst().release();
             }
+        }
+
+        if (storage.isEmpty()) {
+            return ChannelFrameworkFactory.getBufferManager().allocate(0);
         }
         
         // Combine all decompressed chunks into one buffer.
