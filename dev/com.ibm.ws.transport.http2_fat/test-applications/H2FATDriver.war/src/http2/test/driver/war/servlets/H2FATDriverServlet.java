@@ -5252,7 +5252,7 @@ public class H2FATDriverServlet extends FATServlet {
         CountDownLatch blockUntilConnectionIsDone = new CountDownLatch(1);
         Http2Client h2Client = getDefaultH2Client(request, response, blockUntilConnectionIsDone);
 
-        FrameGoAway errorFrame = new FrameGoAway(0, "too many client-initiated streams have been refused; closing the connection".getBytes(), ENHANCE_YOUR_CALM_ERROR, 1, false);
+        FrameGoAway errorFrame = new FrameGoAway(0, "too many client-initiated streams have been refused; closing the connection".getBytes(), ENHANCE_YOUR_CALM_ERROR, USING_NETTY ? 201 : 1, false);
         h2Client.addExpectedFrame(errorFrame);
 
         setupDefaultUpgradedConnection(h2Client, HEADERS_ONLY_URI);
