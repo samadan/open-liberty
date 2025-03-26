@@ -735,6 +735,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
             }
         }
         
+        // Liberty override to notify down the pipeline this specific error to manage it
         if (http2Ex.getMessage().startsWith("Maximum active streams violated for this endpoint")) {
         	ctx.fireExceptionCaught(cause);
         }
