@@ -38,6 +38,8 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.TooLongHttpHeaderException;
 import io.netty.handler.codec.http2.Http2Connection;
 import io.netty.handler.codec.http2.Http2Exception.StreamException;
+import io.netty.handler.codec.http2.Http2Error;
+import io.netty.handler.codec.http2.Http2Stream;
 import io.netty.handler.codec.http2.HttpConversionUtil;
 import io.netty.handler.codec.http2.HttpToHttp2ConnectionHandler;
 import io.netty.util.ReferenceCountUtil;
@@ -52,6 +54,8 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
     HttpChannelConfig config;
     private ChannelHandlerContext context;
     private final DefaultFullHttpResponse errorResponse;
+    private static final String MAX_STREAMS_REFUSED_MESSAGE = "too many client-initiated streams have been refused; closing the connection";
+
     // private HttpDispatcherLink link;
 
     public HttpDispatcherHandler(HttpChannelConfig config) {
@@ -66,6 +70,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
         // Store the context for later use
         context = ctx;
         context.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).set(0);
+        context.channel().attr(NettyHttpConstants.STREAMS_REFUSED).set(0);
     }
 
     // Method to allow direct invocation
@@ -97,8 +102,9 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
                 }
             });
         } else {
-            if (request.decoderResult().cause() != null)
+            if (request.decoderResult().cause() != null) {
                 request.decoderResult().cause().printStackTrace();
+            }
         }
 
     }
@@ -114,8 +120,32 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
             StreamException c = (StreamException) cause;
             HttpToHttp2ConnectionHandler handler = context.pipeline().get(HttpToHttp2ConnectionHandler.class);
             Http2Connection connection = handler.connection();
-            connection.stream(c.streamId()).close();
-            return;
+
+            if(cause.getMessage().startsWith("Maximum active streams violated for this endpoint")) {
+                // This is for the overlay to control the amount of streams we are willing to refuse on a channel
+                if(config.getH2MaxStreamsRefused() == 0) {
+                    // Check disabled, just send a reset stream out and don't worry about the rest
+                    // Reset already handled by codec so just return here
+                    return;
+                }
+                // Increment max streams refused and continue
+                int streamsRefused = context.channel().attr(NettyHttpConstants.STREAMS_REFUSED).get();
+                if (++streamsRefused >= config.getH2MaxStreamsRefused()) {
+                    // Streams refused exceeded the number of configured allowed streams so closing connection
+                    // Send go away with enhance your calm
+                    handler.goAway(context, connection.remote().lastStreamCreated(), Http2Error.ENHANCE_YOUR_CALM.code(), Unpooled.wrappedBuffer(MAX_STREAMS_REFUSED_MESSAGE.getBytes()), context.channel().newPromise());
+                }else {
+                    // Increment streams refused attribute and let reset happen by codec
+                    context.channel().attr(NettyHttpConstants.STREAMS_REFUSED).set(streamsRefused);
+                    return;
+                }
+            } else {
+                Http2Stream stream = connection.stream(c.streamId());
+                if (Objects.nonNull(stream)) {
+                    stream.close();
+                }
+                return;
+            }
         } else if (cause instanceof IllegalArgumentException) {
             //Legacy doesnt throw ffdc on processNewInformation
             if (context.channel().attr(NettyHttpConstants.THROW_FFDC).get() != null) {
@@ -220,7 +250,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 
         }
         int numberOfRequests = context.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).get();
-        context.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).set(numberOfRequests+1);
+        context.channel().attr(NettyHttpConstants.NUMBER_OF_HTTP_REQUESTS).set(numberOfRequests + 1);
         link.init(context, request, config);
         link.ready();
     }
