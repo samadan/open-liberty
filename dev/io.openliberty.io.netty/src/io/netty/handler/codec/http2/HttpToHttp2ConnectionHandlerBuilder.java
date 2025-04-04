@@ -80,11 +80,23 @@ public final class HttpToHttp2ConnectionHandlerBuilder extends
         return super.headerSensitivityDetector(headerSensitivityDetector);
     }
 
-    // Overlay added to follow same CHFW behavior https://github.com/OpenLiberty/open-liberty/issues/29561
     @Override
     public HttpToHttp2ConnectionHandlerBuilder encoderIgnoreMaxHeaderListSize(
             boolean encoderIgnoreMaxHeaderListSize) {
         return super.encoderIgnoreMaxHeaderListSize(encoderIgnoreMaxHeaderListSize);
+    }
+
+    @Override
+    public HttpToHttp2ConnectionHandlerBuilder decoderEnforceMaxConsecutiveEmptyDataFrames(
+            int maxConsecutiveEmptyFrames) {
+        return super.decoderEnforceMaxConsecutiveEmptyDataFrames(maxConsecutiveEmptyFrames);
+    }
+
+    // Overlay added for max reset http options. Can be removed after Netty 4.1.120.Final
+    @Override
+    public HttpToHttp2ConnectionHandlerBuilder decoderEnforceMaxRstFramesPerWindow(int maxRstFramesPerWindow,
+            int secondsPerWindow) {
+        return super.decoderEnforceMaxRstFramesPerWindow(maxRstFramesPerWindow, secondsPerWindow);
     }
 
     @Override
