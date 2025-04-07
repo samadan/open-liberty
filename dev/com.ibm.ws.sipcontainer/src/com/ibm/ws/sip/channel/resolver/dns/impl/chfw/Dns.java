@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -82,7 +82,15 @@ public final class Dns {
 	  public static final int NOT_IMPL    = 4;
 	  public static final int REFUSED     = 5;
 	  public static final int TRY_TCP     = 6;
-	  /** 6-15 reserved for future use */
+	  public static final int NOT_ZONE    = 9;
+	  /** more DNS response codes have been defined
+	  *   since this code was written 
+          *   rcode: 7, rcode:8 and rcode: 9
+	  *   we are introducing here rcode: 9  
+	  *   rcode: 7 and rcode: 8 will be addressed in 
+   	  *   separate pull requests
+	  */
+	  
 	  
 	 
 }
