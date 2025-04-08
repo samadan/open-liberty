@@ -172,7 +172,8 @@ public class LibertyUpgradeCodec implements UpgradeCodecFactory {
 
     HttpToHttp2ConnectionHandler buildHttp2ConnectionHandler(HttpChannelConfig httpConfig, Channel channel) {
         DefaultHttp2Connection connection = new DefaultHttp2Connection(true);
-        int maxContentlength = (int) httpConfig.getMessageSizeLimit();
+        // Netty accepts integer for max length so we would need to adapt for this
+        int maxContentlength = httpConfig.getMessageSizeLimit() >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) httpConfig.getMessageSizeLimit();
         InboundHttp2ToHttpAdapterBuilder builder = new InboundHttp2ToHttpAdapterBuilder(connection).propagateSettings(false).validateHttpHeaders(false);
         if (maxContentlength > 0)
             builder.maxContentLength(maxContentlength);
