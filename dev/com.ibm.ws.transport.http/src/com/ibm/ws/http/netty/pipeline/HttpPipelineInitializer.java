@@ -41,6 +41,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -116,7 +117,7 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         channel.attr(NettyHttpConstants.IS_OUTBOUND_KEY).set(false);
         channel.attr(NettyHttpConstants.ENDPOINT_PID).set(chain.getEndpointPID());
 
-        RecvByteBufAllocator channelAllocator = channel.config().getRecvByteBufAllocator();
+        FixedRecvByteBufAllocator channelAllocator = new FixedRecvByteBufAllocator(httpConfig.getIncomingBodyBufferSize());
         LoggingRecvByteBufAllocator loggingAllocator = new LoggingRecvByteBufAllocator(channelAllocator);
         channel.config().setRecvByteBufAllocator(loggingAllocator);
 
