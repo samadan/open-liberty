@@ -211,11 +211,14 @@ public class HttpChannelConfig {
 
     /** Tracks headers that have been configured erroneously **/
     protected HashSet<String> configuredHeadersErrorSet = null;
-    /** Identifies if the transport will ignore writes if the message has been committed. When false, an exception 
-     * is expected to be thrown marking the invalid state. */
+    /**
+     * Identifies if the transport will ignore writes if the message has been committed. When false, an exception
+     * is expected to be thrown marking the invalid state.
+     */
     private boolean ignoreWriteAfterCommit = false;
 
     protected boolean useNetty = Boolean.FALSE;
+
     /**
      * Constructor for an HTTP channel config object.
      *
@@ -239,7 +242,6 @@ public class HttpChannelConfig {
      *
      */
     public HttpChannelConfig() {
-        // TODO Auto-generated constructor stub
     }
 
     /**
@@ -566,7 +568,7 @@ public class HttpChannelConfig {
                 props.put(HttpConfigConstants.PROPNAME_RESPONSE_HEADERS_REMOVE_INTERNAL, value);
             }
 
-            if (key.equalsIgnoreCase(HttpConfigConstants.PROPNAME_IGNORE_WRITE_AFTER_COMMIT)){
+            if (key.equalsIgnoreCase(HttpConfigConstants.PROPNAME_IGNORE_WRITE_AFTER_COMMIT)) {
                 props.put(HttpConfigConstants.PROPNAME_IGNORE_WRITE_AFTER_COMMIT, value);
             }
 
@@ -657,8 +659,6 @@ public class HttpChannelConfig {
         }
         return (null != value) ? value.trim() : null;
     }
-
-    
 
     /**
      * Method to handle parsing all of the persistence related configuration
@@ -3098,10 +3098,10 @@ public class HttpChannelConfig {
     }
 
     /**
-     * Returns whether a connection should remain active even if an error occurs during 
+     * Returns whether a connection should remain active even if an error occurs during
      * closure.
      */
-    public boolean ignoreWriteAfterCommit(){
+    public boolean ignoreWriteAfterCommit() {
         return this.ignoreWriteAfterCommit;
     }
 
