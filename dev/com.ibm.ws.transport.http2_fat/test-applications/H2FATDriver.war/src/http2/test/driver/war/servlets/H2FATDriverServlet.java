@@ -5207,7 +5207,14 @@ public class H2FATDriverServlet extends FATServlet {
         CountDownLatch blockUntilConnectionIsDone = new CountDownLatch(1);
         Http2Client h2Client = getDefaultH2Client(request, response, blockUntilConnectionIsDone);
 
-        FrameGoAway errorFrame = new FrameGoAway(0, "too many reset frames received".getBytes(), ENHANCE_YOUR_CALM_ERROR, 1, false);
+        byte[] cfhwDebugData = "too many reset frames received".getBytes();
+        byte[] nettyDebugData = "Maximum number of RST frames reached".getBytes();
+        FrameGoAway errorFrame;
+
+        if (USING_NETTY)
+            errorFrame = new FrameGoAway(0, nettyDebugData, ENHANCE_YOUR_CALM_ERROR, 2147483647, false);
+        else
+            errorFrame = new FrameGoAway(0, cfhwDebugData, ENHANCE_YOUR_CALM_ERROR, 1, false);
         h2Client.addExpectedFrame(errorFrame);
 
         setupDefaultUpgradedConnection(h2Client, HEADERS_ONLY_URI);
