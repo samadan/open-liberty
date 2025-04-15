@@ -1375,19 +1375,12 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
      */
     @Override
     public SSLContext getSSLContext() {
-
-//        if (this.usingNetty) {
-//            //TODO: return null for now, connect to pipeline ssl
-//            return null;
-//        } else {
         if (this.sslinfo == null &&
             this.isc != null &&
             this.isc.getSSLContext() != null) {
             this.sslinfo = new SSLContextImpl(this.isc.getSSLContext());
         }
         return this.sslinfo;
-        //    }
-
     }
 
     /*
