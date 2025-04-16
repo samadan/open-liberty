@@ -56,6 +56,7 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.ReferenceCountUtil;
 import io.openliberty.http.netty.channel.AllocatorContextSetter;
 import io.openliberty.http.netty.channel.LoggingRecvByteBufAllocator;
+import io.openliberty.http.netty.timeout.TimeoutHandler;
 import io.openliberty.netty.internal.ChannelInitializerWrapper;
 import io.openliberty.netty.internal.exception.NettyException;
 import io.openliberty.netty.internal.impl.NettyConstants;
@@ -220,6 +221,7 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         HttpServerCodec sourceCodec = new HttpServerCodec(8192, httpConfig.getIncomingBodyBufferSize(), httpConfig.getLimitOfFieldSize(), httpConfig.getLimitOnNumberOfHeaders());
         pipeline.addLast(CRLF_VALIDATION_HANDLER, new CRLFValidationHandler());
         pipeline.addLast(NETTY_HTTP_SERVER_CODEC, sourceCodec);
+        pipeline.addLast("timeoutHandler", new TimeoutHandler(httpConfig));
         pipeline.addLast(HTTP_DISPATCHER_HANDLER_NAME, new HttpDispatcherHandler(httpConfig));
         addPreHttpCodecHandlers(pipeline);
         addPreDispatcherHandlers(pipeline, false);
