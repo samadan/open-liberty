@@ -12,6 +12,7 @@ package io.openliberty.netty.internal.tls.impl;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.Map.Entry;
 
 import javax.net.ssl.*;
@@ -57,6 +58,15 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
     static final String ALIAS_KEY = "alias";
     static final String SSLPROP_CLIENT_AUTHENTICATION = "com.ibm.ssl.clientAuthentication";
     static final String SSLPROP_CLIENT_AUTHENTICATION_SUPPORTED = "com.ibm.ssl.clientAuthenticationSupported";
+
+    private static final String SSLSESSION_CACHE_SIZE = "SSLSessionCacheSize";
+    private static final String SSLSESSION_TIMEOUT = "SSLSessionTimeout";
+    private static final String SSLSESSION_TIMEOUT_8500 = "sessionTimeout";
+
+    /** Defaults for some properties. */
+    private static final String DEFAULT_SSLSESSION_CACHE_SIZE = "100";
+    private static final String DEFAULT_SSLSESSION_TIMEOUT = "86400";
+
 
     
     /**
@@ -284,6 +294,34 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
     	else if(getBooleanProperty(SSLPROP_CLIENT_AUTHENTICATION_SUPPORTED, config))
     		return ClientAuth.OPTIONAL;
     	return ClientAuth.NONE;
+    }
+
+    private int getSslSessionTimeout(SSLConfig sslConfig) {
+        String sslSessionTimeout = String.valueOf(sslConfig.getOrDefault(SSLSESSION_TIMEOUT, DEFAULT_SSLSESSION_TIMEOUT));
+        try {
+            int parsedValue = Integer.parseInt(sslSessionTimeout);
+            return parsedValue;
+        } catch (NumberFormatException nfe) {
+            // no FFDC required;
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Property " + SSLSESSION_TIMEOUT + ", format error in [" + sslSessionTimeout + "]");
+            }
+            return -1;
+        }
+    }
+
+    private int getSslSessionCacheSize(SSLConfig sslConfig) {
+        String sslSessionCacheSize = String.valueOf(sslConfig.getOrDefault(SSLSESSION_CACHE_SIZE ,DEFAULT_SSLSESSION_CACHE_SIZE));
+        try {
+            int parsedValue = Integer.parseInt(sslSessionCacheSize);
+            return parsedValue;
+        } catch (NumberFormatException nfe) {
+            // no FFDC required;
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Property " + SSLSESSION_CACHE_SIZE + ", format error in [" + sslSessionCacheSize + "]");
+            }
+            return -1;
+        }
     }
     
     /**
