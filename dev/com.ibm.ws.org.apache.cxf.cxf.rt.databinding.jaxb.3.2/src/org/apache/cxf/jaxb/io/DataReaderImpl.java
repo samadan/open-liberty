@@ -33,6 +33,7 @@ import javax.xml.bind.ValidationEventHandler;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.namespace.QName;
 
+import org.apache.cxf.attachment.AttachmentUtil;
 import org.apache.cxf.common.i18n.Message;
 import org.apache.cxf.common.jaxb.JAXBUtils;
 import org.apache.cxf.common.logging.LogUtils;
@@ -76,11 +77,11 @@ public class DataReaderImpl<T> extends JAXBDataBase implements DataReader<T> {
             }
             // hack for CXF-3453
             String msg = event.getMessage();
-	    // Liberty change begin
-	    if (LOG.isLoggable(Level.FINEST)) {  
-		LOG.finest("ValidationEvent message: " + msg);
-	    } 
-	    // Liberty change end
+            // Liberty change begin
+            if (LOG.isLoggable(Level.FINEST)) {  
+                LOG.finest("ValidationEvent message: " + msg);
+            } 
+            // Liberty change end
             return msg != null
                 && msg.contains(":Id")
                 && (msg.startsWith("cvc-type.3.1.1")
@@ -94,34 +95,33 @@ public class DataReaderImpl<T> extends JAXBDataBase implements DataReader<T> {
         boolean isLoggableFinest = LOG.isLoggable(Level.FINEST);  // Liberty change
         if (prop.equals(JAXBDataBinding.UNWRAP_JAXB_ELEMENT)) {
             unwrapJAXBElement = Boolean.TRUE.equals(value);
-	    // Liberty change begin
-	    if (isLoggableFinest) {  
-            	LOG.finest("UnwrapJAXBElement is set to: " + unwrapJAXBElement + " trough property"); // Liberty change
-	    } 
-	    // Liberty change end
+            // Liberty change begin
+            if (isLoggableFinest) {  
+                LOG.finest("UnwrapJAXBElement is set to: " + unwrapJAXBElement + " trough property"); // Liberty change
+            } 
+            // Liberty change end
         } else if (prop.equals(org.apache.cxf.message.Message.class.getName())) {
             org.apache.cxf.message.Message m = (org.apache.cxf.message.Message)value;
             veventHandler = getValidationEventHandler(m, JAXBDataBinding.READER_VALIDATION_EVENT_HANDLER);
             if (veventHandler == null) {
                 veventHandler = databinding.getValidationEventHandler();
             }
-            setEventHandler = MessageUtils.getContextualBoolean(m,
-                    JAXBDataBinding.SET_VALIDATION_EVENT_HANDLER, true);
-	    // Liberty change begin
-	    if (isLoggableFinest) {  
-            	LOG.finest("SetEventHandler is set to: " + setEventHandler); // Liberty change
-	    } 
-	    // Liberty change end
+            setEventHandler = AttachmentUtil.mtomOverride(m, MessageUtils.getContextualBoolean(m, JAXBDataBinding.SET_VALIDATION_EVENT_HANDLER, true));
+            // Liberty change begin
+            if (isLoggableFinest) {  
+                LOG.finest("SetEventHandler is set to: " + setEventHandler); // Liberty change
+            } 
+            // Liberty change end
             Object unwrapProperty = m.get(JAXBDataBinding.UNWRAP_JAXB_ELEMENT);
             if (unwrapProperty == null) {
                 unwrapProperty = m.getExchange().get(JAXBDataBinding.UNWRAP_JAXB_ELEMENT);
             }
             if (unwrapProperty != null) {
                 unwrapJAXBElement = Boolean.TRUE.equals(unwrapProperty);
-		// Liberty change begin
-	        if (isLoggableFinest) {  
+                // Liberty change begin
+                if (isLoggableFinest) {  
                    LOG.finest("UnwrapJAXBElement is set to: " + unwrapJAXBElement); // Liberty change
-	        } // Liberty change end
+                } // Liberty change end
             }
         }
     }

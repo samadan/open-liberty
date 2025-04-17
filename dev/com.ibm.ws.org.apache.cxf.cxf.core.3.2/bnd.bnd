@@ -64,6 +64,7 @@ Import-Package: \
   org.apache.cxf.helpers;version="[${exportVer},4.0.0)", \
   com.ibm.ws.cxf.client;version="[${exportVer},${exportVer}]", \
   com.ibm.ws.cxf.client.component;version="[${exportVer},${exportVer}]", \
+  javax.xml.soap;resolution:=optional;version=!, \
   *
 
 Export-Package: \
@@ -143,7 +144,8 @@ Export-Package: \
   org.apache.cxf.wsdl.http;version=${exportVer}, \
   com.ibm.ws.cxf.client;version=${exportVer}, \
   com.ibm.ws.cxf.client.component;version=${exportVer}, \
-  io.openliberty.cxf.logging;version=${exportVer}
+  io.openliberty.cxf.logging;version=${exportVer}, \
+  javax.xml.soap;
 
 DynamicImport-Package: \
   com.ctc.wstx.*, \
@@ -186,4 +188,5 @@ instrument.classesExcludes: \
   com.ibm.websphere.org.osgi.service.cm;version=latest, \
   com.ibm.wsspi.org.osgi.core, \
   com.ibm.ws.org.apache.ws.xmlschema.core.2.0.3;version=latest, \
-  com.ibm.ws.jaxb.tools
+  com.ibm.ws.jaxb.tools, \
+  javax.xml.soap:javax.xml.soap-api;version=1.4.0

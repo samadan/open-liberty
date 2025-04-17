@@ -40,9 +40,11 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.attachment.AttachmentMarshaller;
 
 import org.apache.cxf.Bus;
+import org.apache.cxf.attachment.AttachmentUtil;
 import org.apache.cxf.common.i18n.Message;
 import org.apache.cxf.common.jaxb.JAXBUtils;
 import org.apache.cxf.common.logging.LogUtils;
+import org.apache.cxf.common.util.PropertyUtils;
 import org.apache.cxf.common.util.ReflectionUtil;
 import org.apache.cxf.databinding.DataWriter;
 import org.apache.cxf.interceptor.Fault;
@@ -80,18 +82,17 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
 
     public void setProperty(String prop, Object value) {
         if (prop.equals(org.apache.cxf.message.Message.class.getName())) {
-            org.apache.cxf.message.Message m = (org.apache.cxf.message.Message)value;
+            org.apache.cxf.message.Message m = (org.apache.cxf.message.Message) value;
             veventHandler = getValidationEventHandler(m, JAXBDataBinding.WRITER_VALIDATION_EVENT_HANDLER);
             if (veventHandler == null) {
                 veventHandler = databinding.getValidationEventHandler();
             }
-	    // Liberty change begin
-	    if (LOG.isLoggable(Level.FINEST)) { 
-		LOG.finest("Validation event handler: " + (veventHandler != null ? veventHandler.getClass().getCanonicalName() : "null"));
-	    } 
-	    // Liberty change end
-            setEventHandler = MessageUtils.getContextualBoolean(m,
-                    JAXBDataBinding.SET_VALIDATION_EVENT_HANDLER, true);
+            // Liberty change begin
+            if (LOG.isLoggable(Level.FINEST)) {
+                LOG.finest("Validation event handler: " + (veventHandler != null ? veventHandler.getClass().getCanonicalName() : "null"));
+            }
+            // Liberty change end
+            setEventHandler = AttachmentUtil.mtomOverride(m, MessageUtils.getContextualBoolean(m, JAXBDataBinding.SET_VALIDATION_EVENT_HANDLER, true));
         }
     }
 
@@ -187,6 +188,10 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
 
             marshaller.setSchema(schema);
             AttachmentMarshaller atmarsh = getAttachmentMarshaller();
+            if(atmarsh instanceof JAXBAttachmentMarshaller)     {
+                ((JAXBAttachmentMarshaller) atmarsh).setXOPPackage(setEventHandler); // setEventHandler equals isXop in this case
+            }
+            
 	    // Liberty change begin
 	    if (isLoggableFinest) {
 	       LOG.finest("Setting AttachmentMarshaller: " + (atmarsh != null ? atmarsh.getClass().getName() : "null") );
@@ -196,14 +201,16 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
 
             if (schema != null
                 && atmarsh instanceof JAXBAttachmentMarshaller) {
-	        // Liberty change begin
-	        if (isLoggableFinest) {
-		   LOG.finest("Setting MtomValidationHandler on marshaller.");
-	        } 
-	        // Liberty change end
-                //we need a special even handler for XOP attachments
-                marshaller.setEventHandler(new MtomValidationHandler(marshaller.getEventHandler(),
-                                                            (JAXBAttachmentMarshaller)atmarsh));
+                
+                // Liberty change begin
+                if (setEventHandler) {
+                    if (isLoggableFinest) {
+                        LOG.finest("Setting MtomValidationHandler on marshaller.");
+                    }
+                    // Liberty change end
+                    //we need a special even handler for XOP attachments
+                    marshaller.setEventHandler(new MtomValidationHandler(marshaller.getEventHandler(), (JAXBAttachmentMarshaller) atmarsh));
+                }
             }
         } catch (javax.xml.bind.MarshalException ex) {
             Message faultMessage = new Message("MARSHAL_ERROR", LOG, ex.getLinkedException()

@@ -55,6 +55,7 @@ import javax.activation.FileDataSource;
 import javax.activation.MailcapCommandMap;
 import javax.activation.URLDataSource;
 
+import org.apache.cxf.common.util.PropertyUtils;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.common.util.SystemPropertyAction; // Liberty Change
 import org.apache.cxf.helpers.HttpHeaderHelper;
@@ -684,5 +685,16 @@ public final class AttachmentUtil {
     private static DataSource loadDataSource(String contentId, Collection<Attachment> atts) {
         return new LazyDataSource(contentId, atts);
     }
-
+    
+    // Liberty change begin
+    public static boolean mtomOverride(org.apache.cxf.message.Message message, boolean defaultValue)     {
+        boolean mtomEnabled = defaultValue;
+        Object contextualProperty = System.getProperty("ibm-mtom-enabled");
+        if(!MessageUtils.isRequestor(message) && (contextualProperty != null))   {
+                // override mtomEnabled for outbound response if property is set
+                mtomEnabled = PropertyUtils.isTrue(contextualProperty); 
+        }
+         return mtomEnabled;   
+    }
+    // Liberty change end
 }
