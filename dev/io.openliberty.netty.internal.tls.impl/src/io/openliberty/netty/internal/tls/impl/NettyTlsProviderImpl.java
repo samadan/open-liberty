@@ -151,6 +151,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
         try {
             SslContext nettyContext = new JdkSslContext(jdkContext, true, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
                     null, getClientAuth(sslConfig), protocols, false);
+            preConfigureSslContext(sslConfig, nettyContext);
             return nettyContext;
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
@@ -199,6 +200,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
         try {
             SslContext nettyContext = new JdkSslContext(jdkContext, false, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
                     null, getClientAuth(sslConfig), protocols, false);
+            preConfigureSslContext(sslConfig, nettyContext);
             return nettyContext;
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
@@ -256,6 +258,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
                     ApplicationProtocolNames.HTTP_1_1);
             SslContext nettyContext = new JdkSslContext(jdkContext, false, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
             apn, getClientAuth(sslConfig), protocols, false);
+            preConfigureSslContext(sslConfig, nettyContext);
             return nettyContext;
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
@@ -263,6 +266,24 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
             }
             return null;
         }
+    }
+
+    private void preConfigureSslContext(SSLConfig config, SslContext nettyContext) throws NettyException {
+        // Get SSL configurations
+        int sslSessionCacheSize = getSslSessionCacheSize(config);
+        if (sslSessionCacheSize == -1) {
+            throw new NettyException("Found invalid value for SSLSessionCacheSize!");
+        }
+        int sslSessionTimeout = getSslSessionTimeout(config);
+        if (sslSessionTimeout == -1) {
+            throw new NettyException("Found invalid value for SSLSessionTimeout!");
+        }
+        sslSessionTimeout = (int)TimeUnit.MILLISECONDS.toSeconds(sslSessionTimeout);
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "Property sslSessionTimout converted to seconds: " + sslSessionTimeout);
+        }
+        nettyContext.sessionContext().setSessionCacheSize(sslSessionCacheSize);
+        nettyContext.sessionContext().setSessionTimeout(sslSessionTimeout);
     }
     
     private String[] getSSLProtocol(String protocol) {
@@ -437,20 +458,9 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
         // repertoire based or on-thread config... merge the channel props into
         // them without overwriting any
         if (null != props) {
-            Enumeration<?> names = properties.propertyNames();
-            String key = null;
-            String value = null;
-            while (names.hasMoreElements()) {
-                key = (String) names.nextElement();
-                value = properties.getProperty(key);
-                if (value instanceof String && null != value && !props.containsKey(key)) {
-                    props.put(key, value);
-                }
-            }
-        } else {
-            // otherwise we just use the channel config
-            props = properties;
-        }
+            properties.putAll(props);
+        } 
+        props = properties;
 
         // "SSSL" is a zOS repertoire type that is not supported by SSLChannel
         // We only support "JSSE"
