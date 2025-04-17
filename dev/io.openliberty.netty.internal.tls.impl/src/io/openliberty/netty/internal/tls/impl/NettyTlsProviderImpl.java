@@ -48,6 +48,7 @@ import io.netty.handler.ssl.SslContext;
  * Adapted from
  * {@link com.ibm.ws.channel.ssl.internal.SSLChannel.getSSLContextForLink(VirtualConnection,
  * String, String, String, Boolean, SSLConnectionLink)}
+ * {@link com.ibm.ws.channel.ssl.internal.SSLChannelData}
  *
  */
 @Component(configurationPid = "io.openliberty.netty.internal.tls", immediate = true, service = NettyTlsProvider.class)
@@ -500,8 +501,23 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
 
     private static Properties createProps(Map<String, Object> map) {
         Properties properties = new Properties();
+        boolean realTimeoutSet = false;
         if (map != null) {
             for (Entry<String, Object> entry : map.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(SSLSESSION_CACHE_SIZE)) {
+                    properties.put(SSLSESSION_CACHE_SIZE, entry.getValue());
+                    continue;
+                }
+                if (entry.getKey().equalsIgnoreCase(SSLSESSION_TIMEOUT)) {
+                    properties.put(SSLSESSION_TIMEOUT, entry.getValue());
+                    realTimeoutSet = true;
+                    continue;
+                }
+                if ((realTimeoutSet == false) && (entry.getKey().equalsIgnoreCase(SSLSESSION_TIMEOUT_8500))) {
+                    // we only want the real timeout in the map
+                    properties.put(SSLSESSION_TIMEOUT, entry.getValue());
+                    continue;
+                }
                 properties.put(entry.getKey(), entry.getValue());
             }
         }
