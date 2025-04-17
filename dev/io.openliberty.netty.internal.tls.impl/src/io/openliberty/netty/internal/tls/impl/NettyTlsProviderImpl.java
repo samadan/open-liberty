@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2024 IBM Corporation and others.
+ * Copyright (c) 2021, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -318,6 +318,13 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
     	return ClientAuth.NONE;
     }
 
+    /**
+     * Gets the SSL Session Timeout using the keyword and default constant
+     * as established in {@link com.ibm.ws.channel.ssl.internal.SSLChannelData}
+     * 
+     * @param sslConfig the SSL configuration
+     * @return sslSessionTimeout or -1 if there was an error parsing the timeout
+     */
     private int getSslSessionTimeout(SSLConfig sslConfig) {
         String sslSessionTimeout = String.valueOf(sslConfig.getOrDefault(SSLSESSION_TIMEOUT, DEFAULT_SSLSESSION_TIMEOUT));
         try {
@@ -332,6 +339,13 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
         }
     }
 
+    /**
+     * Gets the SSL Session Cache Size using the keyword and default constant
+     * as established in {@link com.ibm.ws.channel.ssl.internal.SSLChannelData}
+     * 
+     * @param sslConfig the SSL configuration
+     * @return sslSessionCacheSize or -1 if there was an error parsing the cache size
+     */
     private int getSslSessionCacheSize(SSLConfig sslConfig) {
         String sslSessionCacheSize = String.valueOf(sslConfig.getOrDefault(SSLSESSION_CACHE_SIZE ,DEFAULT_SSLSESSION_CACHE_SIZE));
         try {
