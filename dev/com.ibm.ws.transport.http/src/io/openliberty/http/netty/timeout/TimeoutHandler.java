@@ -9,6 +9,8 @@
  *******************************************************************************/
 package io.openliberty.http.netty.timeout;
 
+import java.util.concurrent.TimeUnit;
+
 import com.ibm.ws.http.netty.NettyHttpChannelConfig;
 
 import io.netty.channel.ChannelDuplexHandler;
@@ -20,34 +22,41 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.timeout.IdleStateHandler;
 
+// TODO -> Should this be @ChannelHandler.Sharable. Config is all equivalent across the endpoint
+// so might be fine...
 public class TimeoutHandler extends ChannelDuplexHandler{
 
-    private static final String REQUEST_IDLE_NAME  = "requestIdleHandler";
-    private static final String PERSIST_IDLE_NAME  = "persistIdleHandler";
-    private static final String REQUEST_IDLE_EVENT = "requestIdleEventHandler";
-    private static final String PERSIST_IDLE_EVENT = "persistIdleEventHandler";
+    // IdleStateHandlers for request reads or persist reads (NETTY)
+    private static final String NETTY_REQUEST_IDLE_HANDLER  = "requestIdleHandler";
+    private static final String NETTY_PERSIST_IDLE_HANDLER  = "persistIdleHandler";
 
-    private final int requestReadTimeoutSeconds;
-    private final int persistReadTimeoutSeconds;
+    // TimeoutEventHandlers for request read  or persist user event (OL)
+    private static final String OL_REQUEST_IDLE_EVENT = "requestIdleEventHandler";
+    private static final String OL_PERSIST_IDLE_EVENT = "persistIdleEventHandler";
+
+    private static final TimeUnit LEGACY_UNIT       = TimeUnit.MILLISECONDS;
+    private static final TimeUnit PREFERRED_UNIT    = TimeUnit.SECONDS;
+
+    private final long configReadTimeout;
+    private final long configPersistTimeout;
 
     public TimeoutHandler(NettyHttpChannelConfig config) {
-        this.requestReadTimeoutSeconds = config.getReadTimeout();   
-        this.persistReadTimeoutSeconds = config.getPersistTimeout(); 
+        this.configReadTimeout = config.getReadTimeout();   
+        this.configPersistTimeout = config.getPersistTimeout();
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        activateRequestIdle(ctx);
-        super.channelActive(ctx);
+    public void channelActive(ChannelHandlerContext context) throws Exception {
+        activateRead(context);
+        super.channelActive(context);
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext context, Object msg) throws Exception {
         if (msg instanceof FullHttpRequest) {
-            // We have begun reading a new request
-            activateRequestIdle(ctx);
+            activateRead(context);
         }
-        super.channelRead(ctx, msg);
+        super.channelRead(context, msg);
     }
 
     /**
@@ -60,54 +69,65 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         if (msg instanceof FullHttpResponse) {
             promise.addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
-                    activatePersistIdle(ctx);
-                } else {
-                    // TODO -> Verify if anything needed. Should be handled by tcp write handler
-                }
+                    activatePersist(ctx);
+                } 
             });
         }
         super.write(ctx, msg, promise);
     }
 
-    /**
-     * Add the 'request read' IdleStateHandler if not present;
-     * remove the 'persist' idle if it's currently in place.
-     */
-    private void activateRequestIdle(ChannelHandlerContext ctx) {
-        removeIfExists(ctx, PERSIST_IDLE_NAME, PERSIST_IDLE_EVENT);
-        if (!handlerExists(ctx, REQUEST_IDLE_NAME) && requestReadTimeoutSeconds > 0) {
-            IdleStateHandler idle = new IdleStateHandler(requestReadTimeoutSeconds, 0, 0);
-            ctx.pipeline().addBefore(ctx.name(), REQUEST_IDLE_NAME, idle);
-            ctx.pipeline().addAfter(REQUEST_IDLE_NAME, REQUEST_IDLE_EVENT,
-                new TimeoutEventHandler(TimeoutType.READ, requestReadTimeoutSeconds));
-        }
+    private void activateRead(ChannelHandlerContext context){
+        swap(context, TimeoutType.READ, configReadTimeout, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
+    }
+
+    private void activatePersist(ChannelHandlerContext context){
+        swap(context, TimeoutType.PERSIST, configPersistTimeout, NETTY_PERSIST_IDLE_HANDLER, OL_PERSIST_IDLE_EVENT);
+    }
+
+
+    private void swap(ChannelHandlerContext context, TimeoutType type, long timeout, String idleHandler, String eventHandler){
+        remove(context, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
+        remove(context, NETTY_PERSIST_IDLE_HANDLER, OL_PERSIST_IDLE_EVENT);
+
+        if(timeout <= 0) return;
+
+        IdleStateHandler idle = (type == TimeoutType.WRITE) ? 
+                    new IdleStateHandler(0, timeout, 0, LEGACY_UNIT):
+                    new IdleStateHandler(timeout, 0, 0, LEGACY_UNIT);
+
+        context.pipeline().addBefore(context.name(), idleHandler, idle);
+        long preferredDuration = asPreferred(timeout, LEGACY_UNIT);
+        context.pipeline().addAfter(idleHandler, eventHandler, new TimeoutEventHandler(type, preferredDuration, PREFERRED_UNIT));
     }
 
     /**
-     * Add the 'persist keep-alive' IdleStateHandler if not present;
-     * remove the 'request' idle if currently in place.
+     * Used to remove the TimeoutEventHandler (ours) and/or IdleStateHandler (Netty) if 
+     * they are configured in the pipeline. If the handlers are not in the pipeline, this
+     * method results in a No-Op.
+     * 
+     * @param context
+     * @param handlerName
+     * @param eventName
      */
-    private void activatePersistIdle(ChannelHandlerContext ctx) {
-        removeIfExists(ctx, REQUEST_IDLE_NAME, REQUEST_IDLE_EVENT);
-        if (!handlerExists(ctx, PERSIST_IDLE_NAME) && persistReadTimeoutSeconds > 0) {
-            IdleStateHandler idle = new IdleStateHandler(persistReadTimeoutSeconds, 0, 0);
-            ctx.pipeline().addBefore(ctx.name(), PERSIST_IDLE_NAME, idle);
-            ctx.pipeline().addAfter(PERSIST_IDLE_NAME, PERSIST_IDLE_EVENT,
-                new TimeoutEventHandler(TimeoutType.PERSIST, persistReadTimeoutSeconds));
-        }
-    }
-
-    private void removeIfExists(ChannelHandlerContext ctx, String handlerName, String eventHandlerName) {
-        ChannelPipeline pipeline = ctx.pipeline();
-        if (pipeline.get(handlerName) != null) {
+    private static void remove(ChannelHandlerContext context, String handlerName, String eventName){
+        ChannelPipeline pipeline = context.pipeline();
+        if(pipeline.get(handlerName) != null){
             pipeline.remove(handlerName);
         }
-        if (pipeline.get(eventHandlerName) != null) {
-            pipeline.remove(eventHandlerName);
+        if(pipeline.get(eventName) != null){
+            pipeline.remove(eventName);
         }
     }
 
-    private boolean handlerExists(ChannelHandlerContext ctx, String name) {
-        return ctx.pipeline().get(name) != null;
+    /**
+     * Convert a timeout duration from any TimeUnit to our preferred
+     * logging convention.
+     * @param timeout
+     * @param unit
+     * @return
+     */
+    private static long asPreferred(long timeout, TimeUnit unit){
+
+        return PREFERRED_UNIT.convert(timeout, unit);
     }
 }

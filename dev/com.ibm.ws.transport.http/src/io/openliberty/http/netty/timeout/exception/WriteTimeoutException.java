@@ -7,15 +7,16 @@
  * 
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.http.netty.timeout;
+package io.openliberty.http.netty.timeout.exception;
 
-/**
- * Enumeration to identify the type of timeout being enforced.
- */
-public enum TimeoutType {
+import java.util.concurrent.TimeUnit;
 
-    READ,   // Used for request read timeouts
-    PERSIST,// Used for keep-alive persist read timeouts
-    WRITE   // Used for write timeouts
+public class WriteTimeoutException extends TimeoutException {
 
+    private static final long serialVersionUID = 1;
+    private static final String errorCode = "SOME_CODE";
+
+    public WriteTimeoutException(long duration, TimeUnit unit){
+        super(errorCode, duration, unit);
+    }
 }

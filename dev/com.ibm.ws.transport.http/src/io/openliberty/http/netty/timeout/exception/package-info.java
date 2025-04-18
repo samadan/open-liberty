@@ -7,15 +7,7 @@
  * 
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.http.netty.timeout;
 
-/**
- * Enumeration to identify the type of timeout being enforced.
- */
-public enum TimeoutType {
+@org.osgi.annotation.versioning.Version("1.0")
+package io.openliberty.http.netty.timeout.exception;
 
-    READ,   // Used for request read timeouts
-    PERSIST,// Used for keep-alive persist read timeouts
-    WRITE   // Used for write timeouts
-
-}

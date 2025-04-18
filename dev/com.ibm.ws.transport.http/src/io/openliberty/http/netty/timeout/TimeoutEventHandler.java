@@ -9,33 +9,43 @@
  *******************************************************************************/
 package io.openliberty.http.netty.timeout;
 
+import java.util.concurrent.TimeUnit;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.openliberty.http.netty.timeout.exception.PersistTimeoutException;
+import io.openliberty.http.netty.timeout.exception.ReadTimeoutException;
+import io.openliberty.http.netty.timeout.exception.TimeoutException;
+import io.openliberty.http.netty.timeout.exception.UnknownTimeoutException;
+import io.openliberty.http.netty.timeout.exception.WriteTimeoutException;
 
 public class TimeoutEventHandler extends ChannelInboundHandlerAdapter{
 
-    //TODO log tr 
+    private final long          timeout;
+    private final TimeUnit      unit;
+    private final TimeoutType   type;
 
-    private final TimeoutType type;
-    private final int timeoutSeconds;
-
-    public TimeoutEventHandler(TimeoutType type, int timeoutSeconds) {
-        this.type = type;
-        this.timeoutSeconds = timeoutSeconds;
+    public TimeoutEventHandler(TimeoutType type, long timeout, TimeUnit unit) {
+        this.type =     type;
+        this.timeout =  timeout;
+        this.unit =     unit;
     }
 
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent idleEvt = (IdleStateEvent) evt;
-            System.err.println(type + " Idle Timeout after " 
-                               + timeoutSeconds + "s => " + idleEvt.state() 
-                               + " => closing channel.");
-            //TODO -> Change this to handle the appropriate exception IOException extended read/write/persist
-            ctx.close();
+    public void userEventTriggered(ChannelHandlerContext context, Object event) throws Exception {
+        if (event instanceof IdleStateEvent) {
+            TimeoutException exception;
+
+            switch(type){
+                case READ:      exception = new ReadTimeoutException(timeout, unit);    break;
+                case WRITE:     exception = new WriteTimeoutException(timeout, unit);   break;
+                case PERSIST:   exception = new PersistTimeoutException(timeout, unit); break;
+                default:        exception = new UnknownTimeoutException(this.type);  // Future proof, should not happen unless enum expands
+            }
+            context.fireExceptionCaught(exception);
         } else {
-            super.userEventTriggered(ctx, evt);
+            super.userEventTriggered(context, event);
         }
     }
 
