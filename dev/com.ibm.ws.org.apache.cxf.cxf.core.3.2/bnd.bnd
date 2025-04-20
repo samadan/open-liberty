@@ -64,7 +64,6 @@ Import-Package: \
   org.apache.cxf.helpers;version="[${exportVer},4.0.0)", \
   com.ibm.ws.cxf.client;version="[${exportVer},${exportVer}]", \
   com.ibm.ws.cxf.client.component;version="[${exportVer},${exportVer}]", \
-  javax.xml.soap;resolution:=optional;version=!, \
   *
 
 Export-Package: \
@@ -144,8 +143,7 @@ Export-Package: \
   org.apache.cxf.wsdl.http;version=${exportVer}, \
   com.ibm.ws.cxf.client;version=${exportVer}, \
   com.ibm.ws.cxf.client.component;version=${exportVer}, \
-  io.openliberty.cxf.logging;version=${exportVer}, \
-  javax.xml.soap;
+  io.openliberty.cxf.logging;version=${exportVer}
 
 DynamicImport-Package: \
   com.ctc.wstx.*, \
@@ -166,10 +164,12 @@ DynamicImport-Package: \
 
 instrument.ffdc: false
 instrument.classesExcludes: \
+  org/apache/cxf/attachment/*.class, \
   org/apache/cxf/common/jaxb/*.class, \
   org/apache/cxf/service/invoker/*.class, \
   org/apache/cxf/phase/*.class, \
   org/apache/cxf/interceptor/*.class, \
+  org/apache/cxf/io/*.class, \
   org/apache/cxf/service/model/*.class, \
   org/apache/cxf/staxutils/*.class, \
   org/apache/cxf/common/logging/*.class, \

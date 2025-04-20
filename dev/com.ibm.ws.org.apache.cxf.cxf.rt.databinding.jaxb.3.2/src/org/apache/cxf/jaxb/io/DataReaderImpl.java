@@ -77,11 +77,11 @@ public class DataReaderImpl<T> extends JAXBDataBase implements DataReader<T> {
             }
             // hack for CXF-3453
             String msg = event.getMessage();
-            // Liberty change begin
-            if (LOG.isLoggable(Level.FINEST)) {  
-                LOG.finest("ValidationEvent message: " + msg);
-            } 
-            // Liberty change end
+	    // Liberty change begin
+	    if (LOG.isLoggable(Level.FINEST)) {  
+		LOG.finest("ValidationEvent message: " + msg);
+	    } 
+	    // Liberty change end
             return msg != null
                 && msg.contains(":Id")
                 && (msg.startsWith("cvc-type.3.1.1")
@@ -95,11 +95,11 @@ public class DataReaderImpl<T> extends JAXBDataBase implements DataReader<T> {
         boolean isLoggableFinest = LOG.isLoggable(Level.FINEST);  // Liberty change
         if (prop.equals(JAXBDataBinding.UNWRAP_JAXB_ELEMENT)) {
             unwrapJAXBElement = Boolean.TRUE.equals(value);
-            // Liberty change begin
-            if (isLoggableFinest) {  
-                LOG.finest("UnwrapJAXBElement is set to: " + unwrapJAXBElement + " trough property"); // Liberty change
-            } 
-            // Liberty change end
+	    // Liberty change begin
+	    if (isLoggableFinest) {  
+            	LOG.finest("UnwrapJAXBElement is set to: " + unwrapJAXBElement + " trough property"); // Liberty change
+	    } 
+	    // Liberty change end
         } else if (prop.equals(org.apache.cxf.message.Message.class.getName())) {
             org.apache.cxf.message.Message m = (org.apache.cxf.message.Message)value;
             veventHandler = getValidationEventHandler(m, JAXBDataBinding.READER_VALIDATION_EVENT_HANDLER);
@@ -118,10 +118,10 @@ public class DataReaderImpl<T> extends JAXBDataBase implements DataReader<T> {
             }
             if (unwrapProperty != null) {
                 unwrapJAXBElement = Boolean.TRUE.equals(unwrapProperty);
-                // Liberty change begin
-                if (isLoggableFinest) {  
+		// Liberty change begin
+	        if (isLoggableFinest) {  
                    LOG.finest("UnwrapJAXBElement is set to: " + unwrapJAXBElement); // Liberty change
-                } // Liberty change end
+	        } // Liberty change end
             }
         }
     }

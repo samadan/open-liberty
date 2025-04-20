@@ -21,9 +21,7 @@ package org.apache.cxf.jaxb.io;
 
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array; // Liberty Change
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,7 +31,6 @@ import java.util.logging.Logger;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.MarshalException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.PropertyException;
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
@@ -42,7 +39,6 @@ import javax.xml.bind.attachment.AttachmentMarshaller;
 import org.apache.cxf.Bus;
 import org.apache.cxf.attachment.AttachmentUtil;
 import org.apache.cxf.common.i18n.Message;
-import org.apache.cxf.common.jaxb.JAXBUtils;
 import org.apache.cxf.common.logging.LogUtils;
 import org.apache.cxf.common.util.PropertyUtils;
 import org.apache.cxf.common.util.ReflectionUtil;
@@ -65,7 +61,8 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
     boolean noEscape;
     private JAXBDataBinding databinding;
     private Bus bus;
-
+    private boolean isMtomDisabledEndPointInfoProperty = false;
+    
     public DataWriterImpl(Bus bus, JAXBDataBinding binding) {
         this(bus, binding, false);
     }
@@ -82,7 +79,7 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
 
     public void setProperty(String prop, Object value) {
         if (prop.equals(org.apache.cxf.message.Message.class.getName())) {
-            org.apache.cxf.message.Message m = (org.apache.cxf.message.Message) value;
+            org.apache.cxf.message.Message m = (org.apache.cxf.message.Message)value;
             veventHandler = getValidationEventHandler(m, JAXBDataBinding.WRITER_VALIDATION_EVENT_HANDLER);
             if (veventHandler == null) {
                 veventHandler = databinding.getValidationEventHandler();
@@ -93,6 +90,10 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
             }
             // Liberty change end
             setEventHandler = AttachmentUtil.mtomOverride(m, MessageUtils.getContextualBoolean(m, JAXBDataBinding.SET_VALIDATION_EVENT_HANDLER, true));
+            // Only count when MTOM is disabled on purpose trough system property 
+            Object mtomEnabledProperty = AttachmentUtil.getMtomEnabledFromEndPointInfoProperty(m);
+            // Check if mtom is disabled by endpoint property. 
+            isMtomDisabledEndPointInfoProperty = (mtomEnabledProperty != null && PropertyUtils.isFalse(mtomEnabledProperty));
         }
     }
 
@@ -188,7 +189,7 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
 
             marshaller.setSchema(schema);
             AttachmentMarshaller atmarsh = getAttachmentMarshaller();
-            if(atmarsh instanceof JAXBAttachmentMarshaller)     {
+            if(atmarsh instanceof JAXBAttachmentMarshaller && isMtomDisabledEndPointInfoProperty)     {
                 ((JAXBAttachmentMarshaller) atmarsh).setXOPPackage(setEventHandler); // setEventHandler equals isXop in this case
             }
             
@@ -201,16 +202,14 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
 
             if (schema != null
                 && atmarsh instanceof JAXBAttachmentMarshaller) {
-                
-                // Liberty change begin
-                if (setEventHandler) {
-                    if (isLoggableFinest) {
-                        LOG.finest("Setting MtomValidationHandler on marshaller.");
-                    }
-                    // Liberty change end
-                    //we need a special even handler for XOP attachments
-                    marshaller.setEventHandler(new MtomValidationHandler(marshaller.getEventHandler(), (JAXBAttachmentMarshaller) atmarsh));
-                }
+	        // Liberty change begin
+	        if (isLoggableFinest) {
+		   LOG.finest("Setting MtomValidationHandler on marshaller.");
+	        } 
+	        // Liberty change end
+                //we need a special even handler for XOP attachments
+                marshaller.setEventHandler(new MtomValidationHandler(marshaller.getEventHandler(),
+                                                            (JAXBAttachmentMarshaller)atmarsh));
             }
         } catch (javax.xml.bind.MarshalException ex) {
             Message faultMessage = new Message("MARSHAL_ERROR", LOG, ex.getLinkedException()

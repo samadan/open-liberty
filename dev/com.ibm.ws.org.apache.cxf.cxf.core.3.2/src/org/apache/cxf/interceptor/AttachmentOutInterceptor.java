@@ -21,31 +21,22 @@ package org.apache.cxf.interceptor;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.PrimitiveIterator.OfDouble;
 
 import org.apache.cxf.attachment.AttachmentSerializer;
 import org.apache.cxf.attachment.AttachmentUtil;
 import org.apache.cxf.common.i18n.BundleUtils;
-import org.apache.cxf.message.Attachment;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.message.MessageUtils;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
 import org.apache.cxf.common.logging.LogUtils;
-import org.apache.cxf.common.util.PropertyUtils;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.xml.soap.MimeHeaders;
-import javax.xml.soap.SOAPException;
-import javax.xml.soap.SOAPMessage;
 
 public class AttachmentOutInterceptor extends AbstractPhaseInterceptor<Message> {
 
@@ -68,8 +59,6 @@ public class AttachmentOutInterceptor extends AbstractPhaseInterceptor<Message> 
     }
 
     public void handleMessage(Message message) {
-        LOG.fine("~handleMessage message: " + message); // Liberty Change
-
         boolean isFineEnabled = LOG.isLoggable(Level.FINE); // Liberty Change
         //avoid AttachmentOutInterceptor invoked twice on the 
         //same message
@@ -88,16 +77,6 @@ public class AttachmentOutInterceptor extends AbstractPhaseInterceptor<Message> 
         // Make it possible to step into this process in spite of Eclipse
         // by declaring the Object.
         boolean mtomEnabled=AttachmentUtil.mtomOverride(message, AttachmentUtil.isMtomEnabled(message));
-
-        Object contextualProperty = System.getProperty("ibm-mtom-enabled");//message.getContextualProperty("ibm-mtom-enabled");
-        
-        if(!MessageUtils.isRequestor(message) && (contextualProperty != null))   {
-                // override mtomEnabled for outbound response if property is set
-                mtomEnabled = PropertyUtils.isTrue(contextualProperty); 
-                LOG.fine("MtomEnabled value fetched from system property for outbound response: " + mtomEnabled);
-        } else  {
-            LOG.fine("MtomEnabled value fetched from system property for outbound request: " + message.getContextualProperty("ibm-mtom-enabled"));
-        }
         
         boolean writeAtts = MessageUtils.getContextualBoolean(message, WRITE_ATTACHMENTS, false)
             || (message.getAttachments() != null && !message.getAttachments().isEmpty());
