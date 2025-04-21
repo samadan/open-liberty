@@ -546,8 +546,6 @@ public class HttpInboundServiceContextImpl extends HttpServiceContextImpl implem
         setStartTime();
         HttpRequestMessageImpl req = getMyRequest();
 
-        // if applicable set the HTTP/2 specific content length
-        //TODO: Netty H2
         if (!getHttpConfig().useNetty() && myLink instanceof H2HttpInboundLinkWrap) {
             int len = ((H2HttpInboundLinkWrap) myLink).getH2ContentLength();
             if (len != -1) {
@@ -945,7 +943,7 @@ public class HttpInboundServiceContextImpl extends HttpServiceContextImpl implem
      * @return HttpInvalidMessageException (null if valid)
      */
     protected HttpInvalidMessageException checkResponseValidity() {
-        
+
         // if this wasn't a HEAD request, then check to make sure we sent the
         // same amount of bytes that were in the content-length header
         if (!MethodValues.HEAD.equals(getRequest().getMethodValue())) {
@@ -2125,7 +2123,7 @@ public class HttpInboundServiceContextImpl extends HttpServiceContextImpl implem
 
                 if (Objects.nonNull(nettyContext)) {
                     nettyContext.channel().attr(NettyHttpConstants.REQUEST_START_TIME).set(this.startTime);
-                } 
+                }
             }
         }
     }
@@ -2195,7 +2193,7 @@ public class HttpInboundServiceContextImpl extends HttpServiceContextImpl implem
     }
 
     public String getRemoteUser() {
-       return this.remoteUser;
+        return this.remoteUser;
     }
 
     public void initForwardedValues() {
