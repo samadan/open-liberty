@@ -4,11 +4,13 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
+<<<<<<< HEAD
  *
  * SPDX-License-Identifier: EPL-2.0
+=======
+>>>>>>> integration
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package com.ibm.ws.wsoc.outbound;
 
@@ -54,7 +56,11 @@ public class WsocChain {
     private BootstrapExtended nettyBootstrap;
 
     /**
+<<<<<<< HEAD
      * Will set the chain to enabled after a custoemr needs a wsoc outbound chain - so when they use the JSR 356 API
+=======
+     * Will set the chain to enabled after a customer needs a wsoc outbound chain - so when they use the JSR 356 API
+>>>>>>> integration
      *
      */
     private volatile boolean enabled = false;
