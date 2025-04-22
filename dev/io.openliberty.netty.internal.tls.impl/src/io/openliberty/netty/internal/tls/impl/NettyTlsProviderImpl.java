@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2024 IBM Corporation and others.
+ * Copyright (c) 2021, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package io.openliberty.netty.internal.tls.impl;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.Map.Entry;
 
 import javax.net.ssl.*;
@@ -47,6 +48,7 @@ import io.netty.handler.ssl.SslContext;
  * Adapted from
  * {@link com.ibm.ws.channel.ssl.internal.SSLChannel.getSSLContextForLink(VirtualConnection,
  * String, String, String, Boolean, SSLConnectionLink)}
+ * {@link com.ibm.ws.channel.ssl.internal.SSLChannelData}
  *
  */
 @Component(configurationPid = "io.openliberty.netty.internal.tls", immediate = true, service = NettyTlsProvider.class)
@@ -57,6 +59,15 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
     static final String ALIAS_KEY = "alias";
     static final String SSLPROP_CLIENT_AUTHENTICATION = "com.ibm.ssl.clientAuthentication";
     static final String SSLPROP_CLIENT_AUTHENTICATION_SUPPORTED = "com.ibm.ssl.clientAuthenticationSupported";
+
+    private static final String SSLSESSION_CACHE_SIZE = "SSLSessionCacheSize";
+    private static final String SSLSESSION_TIMEOUT = "SSLSessionTimeout";
+    private static final String SSLSESSION_TIMEOUT_8500 = "sessionTimeout";
+
+    /** Defaults for some properties. */
+    private static final String DEFAULT_SSLSESSION_CACHE_SIZE = "100";
+    private static final String DEFAULT_SSLSESSION_TIMEOUT = "86400";
+
 
     
     /**
@@ -140,6 +151,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
         try {
             SslContext nettyContext = new JdkSslContext(jdkContext, true, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
                     null, getClientAuth(sslConfig), protocols, false);
+            preConfigureSslContext(sslConfig, nettyContext);
             return nettyContext;
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
@@ -188,6 +200,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
         try {
             SslContext nettyContext = new JdkSslContext(jdkContext, false, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
                     null, getClientAuth(sslConfig), protocols, false);
+            preConfigureSslContext(sslConfig, nettyContext);
             return nettyContext;
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
@@ -245,6 +258,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
                     ApplicationProtocolNames.HTTP_1_1);
             SslContext nettyContext = new JdkSslContext(jdkContext, false, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
             apn, getClientAuth(sslConfig), protocols, false);
+            preConfigureSslContext(sslConfig, nettyContext);
             return nettyContext;
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
@@ -252,6 +266,24 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
             }
             return null;
         }
+    }
+
+    private void preConfigureSslContext(SSLConfig config, SslContext nettyContext) throws NettyException {
+        // Get SSL configurations
+        int sslSessionCacheSize = getSslSessionCacheSize(config);
+        if (sslSessionCacheSize == -1) {
+            throw new NettyException("Found invalid value for SSLSessionCacheSize!");
+        }
+        int sslSessionTimeout = getSslSessionTimeout(config);
+        if (sslSessionTimeout == -1) {
+            throw new NettyException("Found invalid value for SSLSessionTimeout!");
+        }
+        sslSessionTimeout = (int)TimeUnit.MILLISECONDS.toSeconds(sslSessionTimeout);
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "Property sslSessionTimout converted to seconds: " + sslSessionTimeout);
+        }
+        nettyContext.sessionContext().setSessionCacheSize(sslSessionCacheSize);
+        nettyContext.sessionContext().setSessionTimeout(sslSessionTimeout);
     }
     
     private String[] getSSLProtocol(String protocol) {
@@ -284,6 +316,48 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
     	else if(getBooleanProperty(SSLPROP_CLIENT_AUTHENTICATION_SUPPORTED, config))
     		return ClientAuth.OPTIONAL;
     	return ClientAuth.NONE;
+    }
+
+    /**
+     * Gets the SSL Session Timeout using the keyword and default constant
+     * as established in {@link com.ibm.ws.channel.ssl.internal.SSLChannelData}
+     * 
+     * @param sslConfig the SSL configuration
+     * @return sslSessionTimeout or -1 if there was an error parsing the timeout
+     */
+    private int getSslSessionTimeout(SSLConfig sslConfig) {
+        String sslSessionTimeout = String.valueOf(sslConfig.getOrDefault(SSLSESSION_TIMEOUT, DEFAULT_SSLSESSION_TIMEOUT));
+        try {
+            int parsedValue = Integer.parseInt(sslSessionTimeout);
+            return parsedValue;
+        } catch (NumberFormatException nfe) {
+            // no FFDC required;
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Property " + SSLSESSION_TIMEOUT + ", format error in [" + sslSessionTimeout + "]");
+            }
+            return -1;
+        }
+    }
+
+    /**
+     * Gets the SSL Session Cache Size using the keyword and default constant
+     * as established in {@link com.ibm.ws.channel.ssl.internal.SSLChannelData}
+     * 
+     * @param sslConfig the SSL configuration
+     * @return sslSessionCacheSize or -1 if there was an error parsing the cache size
+     */
+    private int getSslSessionCacheSize(SSLConfig sslConfig) {
+        String sslSessionCacheSize = String.valueOf(sslConfig.getOrDefault(SSLSESSION_CACHE_SIZE ,DEFAULT_SSLSESSION_CACHE_SIZE));
+        try {
+            int parsedValue = Integer.parseInt(sslSessionCacheSize);
+            return parsedValue;
+        } catch (NumberFormatException nfe) {
+            // no FFDC required;
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Property " + SSLSESSION_CACHE_SIZE + ", format error in [" + sslSessionCacheSize + "]");
+            }
+            return -1;
+        }
     }
     
     /**
@@ -398,20 +472,9 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
         // repertoire based or on-thread config... merge the channel props into
         // them without overwriting any
         if (null != props) {
-            Enumeration<?> names = properties.propertyNames();
-            String key = null;
-            String value = null;
-            while (names.hasMoreElements()) {
-                key = (String) names.nextElement();
-                value = properties.getProperty(key);
-                if (value instanceof String && null != value && !props.containsKey(key)) {
-                    props.put(key, value);
-                }
-            }
-        } else {
-            // otherwise we just use the channel config
-            props = properties;
-        }
+            properties.putAll(props);
+        } 
+        props = properties;
 
         // "SSSL" is a zOS repertoire type that is not supported by SSLChannel
         // We only support "JSSE"
@@ -462,8 +525,23 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
 
     private static Properties createProps(Map<String, Object> map) {
         Properties properties = new Properties();
+        boolean realTimeoutSet = false;
         if (map != null) {
             for (Entry<String, Object> entry : map.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(SSLSESSION_CACHE_SIZE)) {
+                    properties.put(SSLSESSION_CACHE_SIZE, entry.getValue());
+                    continue;
+                }
+                if (entry.getKey().equalsIgnoreCase(SSLSESSION_TIMEOUT)) {
+                    properties.put(SSLSESSION_TIMEOUT, entry.getValue());
+                    realTimeoutSet = true;
+                    continue;
+                }
+                if ((realTimeoutSet == false) && (entry.getKey().equalsIgnoreCase(SSLSESSION_TIMEOUT_8500))) {
+                    // we only want the real timeout in the map
+                    properties.put(SSLSESSION_TIMEOUT, entry.getValue());
+                    continue;
+                }
                 properties.put(entry.getKey(), entry.getValue());
             }
         }
