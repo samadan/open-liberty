@@ -106,8 +106,8 @@ public class DataReaderImpl<T> extends JAXBDataBase implements DataReader<T> {
             if (veventHandler == null) {
                 veventHandler = databinding.getValidationEventHandler();
             }
+             // Liberty change begin
             setEventHandler = AttachmentUtil.mtomOverride(m, MessageUtils.getContextualBoolean(m, JAXBDataBinding.SET_VALIDATION_EVENT_HANDLER, true));
-            // Liberty change begin
             if (isLoggableFinest) {  
                 LOG.finest("SetEventHandler is set to: " + setEventHandler); // Liberty change
             } 

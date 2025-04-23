@@ -61,7 +61,9 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
     boolean noEscape;
     private JAXBDataBinding databinding;
     private Bus bus;
+    // Liberty Change Start
     private boolean isMtomDisabledEndPointInfoProperty = false;
+    // Liberty Change End
     
     public DataWriterImpl(Bus bus, JAXBDataBinding binding) {
         this(bus, binding, false);
@@ -87,13 +89,13 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
             // Liberty change begin
             if (LOG.isLoggable(Level.FINEST)) {
                 LOG.finest("Validation event handler: " + (veventHandler != null ? veventHandler.getClass().getCanonicalName() : "null"));
-            }
-            // Liberty change end
+            } 
             setEventHandler = AttachmentUtil.mtomOverride(m, MessageUtils.getContextualBoolean(m, JAXBDataBinding.SET_VALIDATION_EVENT_HANDLER, true));
             // Only count when MTOM is disabled on purpose trough system property 
-            Object mtomEnabledProperty = AttachmentUtil.getMtomEnabledFromEndPointInfoProperty(m);
+            Object mtomEnabledProperty = AttachmentUtil.getPropertyFromEndPointInfo(m, AttachmentUtil.IBM_MTOM_ENABLED);
             // Check if mtom is disabled by endpoint property. 
             isMtomDisabledEndPointInfoProperty = (mtomEnabledProperty != null && PropertyUtils.isFalse(mtomEnabledProperty));
+            // Liberty Change end
         }
     }
 
@@ -189,15 +191,14 @@ public class DataWriterImpl<T> extends JAXBDataBase implements DataWriter<T> {
 
             marshaller.setSchema(schema);
             AttachmentMarshaller atmarsh = getAttachmentMarshaller();
+            // Liberty change begin
             if(atmarsh instanceof JAXBAttachmentMarshaller && isMtomDisabledEndPointInfoProperty)     {
                 ((JAXBAttachmentMarshaller) atmarsh).setXOPPackage(setEventHandler); // setEventHandler equals isXop in this case
             }
-            
-	    // Liberty change begin
-	    if (isLoggableFinest) {
-	       LOG.finest("Setting AttachmentMarshaller: " + (atmarsh != null ? atmarsh.getClass().getName() : "null") );
-	    } 
-	    // Liberty change end
+            if (isLoggableFinest) {
+               LOG.finest("Setting AttachmentMarshaller: " + (atmarsh != null ? atmarsh.getClass().getName() : "null") );
+            } 
+            // Liberty change end
             marshaller.setAttachmentMarshaller(atmarsh);
 
             if (schema != null

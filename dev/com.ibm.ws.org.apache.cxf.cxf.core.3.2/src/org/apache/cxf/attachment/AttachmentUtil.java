@@ -86,8 +86,10 @@ public final class AttachmentUtil {
     private static final CommandMap DEFAULT_COMMAND_MAP = CommandMap.getDefaultCommandMap();
     private static final MailcapCommandMap COMMAND_MAP = new EnhancedMailcapCommandMap();
     private static final Logger LOG = LogUtils.getL7dLogger(AttachmentUtil.class);  // Liberty Change
-
-    private static final String IBM_MTOM_ENABLED = "ibm-mtom-enabled";
+    
+    // Liberty change begin
+    public static final String IBM_MTOM_ENABLED = "ibm-mtom-enabled";
+    // Liberty change end
     
     static final class EnhancedMailcapCommandMap extends MailcapCommandMap {
         @Override

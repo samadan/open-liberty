@@ -188,5 +188,4 @@ instrument.classesExcludes: \
   com.ibm.websphere.org.osgi.service.cm;version=latest, \
   com.ibm.wsspi.org.osgi.core, \
   com.ibm.ws.org.apache.ws.xmlschema.core.2.0.3;version=latest, \
-  com.ibm.ws.jaxb.tools, \
-  javax.xml.soap:javax.xml.soap-api;version=1.4.0
+  com.ibm.ws.jaxb.tools
