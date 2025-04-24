@@ -20,6 +20,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.timeout.IdleStateHandler;
 
 // TODO -> Should this be @ChannelHandler.Sharable. Config is all equivalent across the endpoint
@@ -66,13 +67,15 @@ public class TimeoutHandler extends ChannelDuplexHandler{
      */
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (msg instanceof FullHttpResponse) {
-            promise.addListener((ChannelFutureListener) future -> {
-                if (future.isSuccess()) {
+        System.out.println(">>> Entered write >>>");
+        promise.addListener((ChannelFutureListener) future -> {
+            if(future.isSuccess()){
+                if(msg instanceof FullHttpResponse || msg instanceof LastHttpContent){
+                    System.out.println(">>> Installing Persist timeout handler >>>");
                     activatePersist(ctx);
-                } 
-            });
-        }
+                }
+            }
+        });
         super.write(ctx, msg, promise);
     }
 
@@ -86,6 +89,7 @@ public class TimeoutHandler extends ChannelDuplexHandler{
 
 
     private void swap(ChannelHandlerContext context, TimeoutType type, long timeout, String idleHandler, String eventHandler){
+        System.out.println(">>> Swap timeout requested >>>");
         remove(context, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
         remove(context, NETTY_PERSIST_IDLE_HANDLER, OL_PERSIST_IDLE_EVENT);
 
@@ -112,9 +116,11 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     private static void remove(ChannelHandlerContext context, String handlerName, String eventName){
         ChannelPipeline pipeline = context.pipeline();
         if(pipeline.get(handlerName) != null){
+            System.out.println(">>> Removing " + handlerName +" >>>");
             pipeline.remove(handlerName);
         }
         if(pipeline.get(eventName) != null){
+            System.out.println(">>> Removing " + eventName + " >>>");
             pipeline.remove(eventName);
         }
     }
