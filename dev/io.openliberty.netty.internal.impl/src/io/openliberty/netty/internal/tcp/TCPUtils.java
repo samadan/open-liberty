@@ -184,8 +184,10 @@ public class TCPUtils {
 						return;
 					}
 					if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-						Tr.debug(tc, "attempt to bind again after a wait of " + timeBetweenRetriesMsec + "ms; "
-								+ retryCount + " attempts remaining" + " for " + config.getExternalName());
+						// config.getPortOpenRetries() + 1 because the initial bind failed, now trying
+						// config.getPortOpenRetries() additional times.
+						Tr.debug(tc, "attempt " + retryCount + " of " + (config.getPortOpenRetries() + 1)
+								+ " failed to open the port, will try again after wait interval");
 					}
 					// recurse until we either complete successfully or run out of retries;
 					try {
