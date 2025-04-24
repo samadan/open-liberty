@@ -459,7 +459,7 @@ public class SipResolver implements SipResolverTransportListener {
 					listener.handleSipResolverEvent(event);
 					break;
 
-                case Dns.NAME_ERROR:
+        case Dns.NAME_ERROR:
                     event = new SipResolverEvent();
                     
                     if (c_logger.isTraceDebugEnabled())
@@ -470,11 +470,13 @@ public class SipResolver implements SipResolverTransportListener {
                     listener.handleSipResolverEvent(event);
                     break;
 
-                    
-		case Dns.FORM_ERROR:
-		case Dns.NOT_IMPL:
-                case Dns.REFUSED:
-                case Dns.NOT_ZONE:
+		    case Dns.FORM_ERROR:
+		    case Dns.SERVER_FAIL:
+		    case Dns.NOT_IMPL:
+        case Dns.REFUSED:
+	case Dns.XRRSET:
+	case Dns.NOT_AUTH:
+        case Dns.NOT_ZONE:
                     event = new SipResolverEvent();
                     
                     if (c_logger.isTraceDebugEnabled())
@@ -485,7 +487,7 @@ public class SipResolver implements SipResolverTransportListener {
                     listener.handleSipResolverEvent(event);
                     break;
                     
-                case Dns.TRY_TCP:    
+        case Dns.TRY_TCP:    
 					/** try TCP, UDP with EDNS failed or some other error */
                     
                     if (c_logger.isTraceDebugEnabled()){

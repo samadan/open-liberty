@@ -82,16 +82,9 @@ public final class Dns {
 	  public static final int NOT_IMPL    = 4;
 	  public static final int REFUSED     = 5;
 	  public static final int TRY_TCP     = 6;
+	  public static final int XRRSET      = 7;
+	  public static final int NOT_AUTH    = 8; 
 	  public static final int NOT_ZONE    = 9;
-	  /** more DNS response codes have been defined
-	  *   since this code was written 
-          *   rcode: 7, rcode:8 and rcode: 9
-	  *   we are introducing here rcode: 9  
-	  *   rcode: 7 and rcode: 8 will be addressed in 
-   	  *   separate pull requests
-	  */
-	  
-	  
 	 
 }
 
