@@ -700,9 +700,10 @@ public final class AttachmentUtil {
                 // override mtomEnabled for outbound response if property is set
                 mtomEnabled = PropertyUtils.isTrue(mtomEnabledBySystemProperty); 
         }
-         return mtomEnabled;   
+        LOG.fine("~mtomEnabled: " + mtomEnabled);
+        return mtomEnabled;   
     }
-    
+
     /*
      * @return  If <propertyName> end point info property value is set returns that value,
      *          If no value set returns null
@@ -716,6 +717,7 @@ public final class AttachmentUtil {
                 propertyValue = endpointInfo.getProperty(propertyName);        
             }
         }
+        LOG.fine("~propertyValue: " + propertyValue);
         return propertyValue;
     }
     // Liberty change end
