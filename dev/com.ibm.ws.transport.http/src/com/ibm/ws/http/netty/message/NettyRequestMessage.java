@@ -831,12 +831,10 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
         int currentStreamId = this.request.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), 0);
 
         Http2Headers headers = new DefaultHttp2Headers().clear();
-        // TODO Implement this
-//        String scheme = new String("https");
-//        if (!this.isSecure()) {
-//            scheme = new String("http");
-//        }
-        String scheme = new String("http");
+        String scheme = new String("https");
+        if (!context.isSecure()) {
+            scheme = new String("http");
+        }
         headers.method(pushBuilder.getMethod()).scheme(scheme).path(pbPath);
 
         // Encode authority

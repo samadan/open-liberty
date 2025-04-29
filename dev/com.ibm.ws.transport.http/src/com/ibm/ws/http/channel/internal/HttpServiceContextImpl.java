@@ -3010,12 +3010,10 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
         int currentStreamId = nettyRequest.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), 0);
 
         Http2Headers headers = new DefaultHttp2Headers().clear();
-        // TODO Add SSL ALPN
-//        String scheme = new String("https");
-//        if (!this.isSecure()) {
-//            scheme = new String("http");
-//        }
-        String scheme = new String("http");
+       String scheme = new String("https");
+       if (!this.isSecure()) {
+           scheme = new String("http");
+       }
         headers.method("GET").scheme(scheme).path(uri);
 
         String auth = getLocalAddr().getHostName();
