@@ -32,6 +32,7 @@ import com.ibm.ws.http.channel.internal.HttpChannelConfig;
 import com.ibm.ws.http.channel.internal.HttpMessages;
 import com.ibm.ws.http.channel.internal.HttpServiceContextImpl;
 import com.ibm.ws.http.channel.internal.inbound.HttpInboundServiceContextImpl;
+import com.ibm.ws.http.dispatcher.internal.HttpDispatcher;
 import com.ibm.ws.http.netty.NettyHttpConstants;
 import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer;
 import com.ibm.ws.http.netty.pipeline.inbound.HttpDispatcherHandler;
@@ -882,22 +883,25 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
             }
         }
 
-        ChannelFuture promise = handler.encoder().writePushPromise(nettyContext, currentStreamId, nextPromisedStreamId, headers, 0,
-                                                                   new VoidChannelPromise(this.nettyContext.channel(), true));
-
-        promise.addListener(future -> {
-            if (future.isSuccess()) {
-
-            } else {
-                future.cause().printStackTrace();
+        this.nettyContext.channel().eventLoop().execute(new Runnable() {
+            @Override
+            public void run() {
+                ChannelFuture promise = handler.encoder().writePushPromise(nettyContext, currentStreamId, nextPromisedStreamId, headers, 0,
+                                                                   new VoidChannelPromise(nettyContext.channel(), true));
+                promise.addListener(future -> {
+                    if (future.isSuccess()){
+                        // Should we process the new request here when we ensure we wrote out a push promise?
+                    }
+                });
             }
         });
 
         try {
             DefaultFullHttpRequest newRequest = new DefaultFullHttpRequest(request.protocolVersion(), HttpMethod.GET, pbPath);
             newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), nextPromisedStreamId);
+            newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme);
             HttpUtil.setContentLength(newRequest, 0);
-            this.nettyContext.executor().execute(new Runnable() {
+            HttpDispatcher.getExecutorService().execute(new Runnable() {
 
                 @Override
                 public void run() {
@@ -905,7 +909,6 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
                         ((HttpDispatcherHandler) nettyContext.channel().pipeline().get(HttpPipelineInitializer.HTTP_DISPATCHER_HANDLER_NAME)).channelRead(nettyContext,
                                                                                                                                                           newRequest);
                     } catch (Exception e) {
-
                         e.printStackTrace();
                     }
                 }

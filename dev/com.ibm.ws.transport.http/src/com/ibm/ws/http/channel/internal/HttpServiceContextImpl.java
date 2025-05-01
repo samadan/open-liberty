@@ -3010,10 +3010,10 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
         int currentStreamId = nettyRequest.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), 0);
 
         Http2Headers headers = new DefaultHttp2Headers().clear();
-       String scheme = new String("https");
-       if (!this.isSecure()) {
-           scheme = new String("http");
-       }
+        String scheme = new String("https");
+        if (!this.isSecure()) {
+            scheme = new String("http");
+        }
         headers.method("GET").scheme(scheme).path(uri);
 
         String auth = getLocalAddr().getHostName();
@@ -3030,24 +3030,25 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
                          + headers);
         }
 
-        ChannelFuture promise = handler.encoder().writePushPromise(nettyContext, currentStreamId, nextPromisedStreamId, headers, 0,
-                                                                   new VoidChannelPromise(this.nettyContext.channel(), true));
-
-        promise.addListener(future -> {
-            if (future.isSuccess()){
-
-            }
-            else {
-                future.cause().printStackTrace();
+        this.nettyContext.channel().eventLoop().execute(new Runnable() {
+            @Override
+            public void run() {
+                ChannelFuture promise = handler.encoder().writePushPromise(nettyContext, currentStreamId, nextPromisedStreamId, headers, 0,
+                                                                   new VoidChannelPromise(nettyContext.channel(), true));
+                promise.addListener(future -> {
+                    if (future.isSuccess()){
+                        // Should we process the new request here when we ensure we wrote out a push promise?
+                    }
+                });
             }
         });
 
         try {
             DefaultFullHttpRequest newRequest = new DefaultFullHttpRequest(nettyRequest.protocolVersion(), HttpMethod.GET, uri);
             newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), nextPromisedStreamId);
+            newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme);
             HttpUtil.setContentLength(newRequest, 0);
             HttpDispatcher.getExecutorService().execute(new Runnable() {
-
                 @Override
                 public void run() {
                     try {
