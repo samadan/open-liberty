@@ -3010,9 +3010,9 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
         int currentStreamId = nettyRequest.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), 0);
 
         Http2Headers headers = new DefaultHttp2Headers().clear();
-        String scheme = new String("https");
+        String scheme = "https";
         if (!this.isSecure()) {
-            scheme = new String("http");
+            scheme = "http";
         }
         headers.method("GET").scheme(scheme).path(uri);
 
@@ -3038,30 +3038,29 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
                 promise.addListener(future -> {
                     if (future.isSuccess()){
                         // Should we process the new request here when we ensure we wrote out a push promise?
+                        // Follow up issue https://github.com/OpenLiberty/open-liberty/issues/31439
                     }
                 });
             }
         });
 
-        try {
-            DefaultFullHttpRequest newRequest = new DefaultFullHttpRequest(nettyRequest.protocolVersion(), HttpMethod.GET, uri);
-            newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), nextPromisedStreamId);
-            newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme);
-            HttpUtil.setContentLength(newRequest, 0);
-            HttpDispatcher.getExecutorService().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        nettyContext.pipeline().get(HttpDispatcherHandler.class).channelRead(nettyContext, newRequest);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+        DefaultFullHttpRequest newRequest = new DefaultFullHttpRequest(nettyRequest.protocolVersion(), HttpMethod.GET, uri);
+        newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), nextPromisedStreamId);
+        newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme);
+        HttpUtil.setContentLength(newRequest, 0);
+        HttpDispatcher.getExecutorService().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    nettyContext.pipeline().get(HttpDispatcherHandler.class).channelRead(nettyContext, newRequest);
+                } catch (Exception e) {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(tc, "handleNettyPreload(): Unable to dispatch push request: " + e.getMessage(), e);
                     }
                 }
-            });
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            }
+        });
     }
 
     /**

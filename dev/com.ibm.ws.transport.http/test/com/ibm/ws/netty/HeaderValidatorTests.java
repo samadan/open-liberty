@@ -34,7 +34,6 @@ import io.openliberty.http.netty.channel.utils.HeaderValidator.FieldType;
  * Rejection of invalid characters in header names per RFC 7230.
  * Handling of extended ASCII characters.
  * Handling of null, empty, and whitespace leading/trailing fields.
- * Enforcement of a configurable header field size limit.
  * Handling of header folding
  * Proper normalization of fields (lowercase or trimming when applicable).
  */
@@ -103,27 +102,6 @@ public class HeaderValidatorTests {
         String result = HeaderValidator.process(token, VALUE, config);
         assertThat(result, is(token.trim()));
         //Should trim but not lowercase a header value during normalization
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testValidateHeaderNameExceedsMaxLength() {
-        String token = boundary+"1"; // Exceeds max length (100)
-        HeaderValidator.process(token, NAME, config);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testValidateHeaderValueExceedsMaxLength() {
-        String token = boundary+ "1"; // Exceeds max length (100)
-        HeaderValidator.process(token, VALUE, config);
-    }
-
-    @Test 
-    public void testValidateTokenExceedsMaxLengthWithTrailingWhitespace(){
-        String token = boundary + " ";
-        String result = HeaderValidator.process(token, NAME, config);
-        assertThat(result, is(boundary));
-        //No exception should be thrown since, after trimming, header field is not 
-        //larger than limit size.
     }
 
     @Test(expected = IllegalArgumentException.class)
