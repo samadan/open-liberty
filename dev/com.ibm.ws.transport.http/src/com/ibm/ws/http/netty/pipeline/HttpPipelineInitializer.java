@@ -299,7 +299,7 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
             pipeline.addAfter(HTTP_AGGREGATOR_HANDLER_NAME, HTTP_REQUEST_HANDLER_NAME, new LibertyHttpRequestHandler());
         }
 
-        pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, "timeoutHandler", new TimeoutHandler(httpConfig));
+        
         pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, "chunkLoggingHandler", new ChunkSizeLoggingHandler());
         pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, "chunkWriteHandler", new ChunkedWriteHandler());
         pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, null, new ByteBufferCodec());
@@ -308,6 +308,7 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         if (httpConfig.useForwardingHeaders()) {
             pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, null, new RemoteIpHandler(httpConfig));
         }
+        pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, "timeoutHandler", new TimeoutHandler(httpConfig));
     }
 
     public static class HttpPipelineBuilder {

@@ -55,7 +55,8 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     @Override
     public void channelRead(ChannelHandlerContext context, Object msg) throws Exception {
         if (msg instanceof FullHttpRequest) {
-            activateRead(context);
+            //activateRead(context);
+            remove(context, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
         }
         super.channelRead(context, msg);
     }
