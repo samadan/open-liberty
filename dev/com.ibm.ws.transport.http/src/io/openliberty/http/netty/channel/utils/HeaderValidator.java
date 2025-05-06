@@ -91,7 +91,6 @@ public class HeaderValidator {
 
     /**
      * Validates and cleans a header field:
-     *  Enforces the maximum allowed length as specified by {@link HttpChannelConfig}
      *  Returns token as-is if validation is disabled.
      *  Checks that a header name token is complaint with the RFC "tchar" pattern.
      *  Disallows trailing CR or LF characters.
@@ -106,14 +105,6 @@ public class HeaderValidator {
      * @throws IllegalArgumentException if the field fails one of the checks
      */
     private static String validate(String token, FieldType type, HttpChannelConfig config){
-
-        final int MAX_FIELD_SIZE = config.getLimitOfFieldSize();
-
-        // Check for length limit
-        if (token.length() > MAX_FIELD_SIZE) {
-            throw new IllegalArgumentException(token +
-                                               " exceeds the maximum allowed length of " + MAX_FIELD_SIZE + " characters");
-        }
 
         if(!config.isHeaderValidationEnabled()){
             return token;
@@ -169,12 +160,7 @@ public class HeaderValidator {
             throw new IllegalArgumentException(error);
         }
 
-        String validated = sb.toString();
-        if (validated.length() > MAX_FIELD_SIZE) {
-            throw new IllegalArgumentException(validated +" (rewritten) exceeds the maximum allowed length of " + MAX_FIELD_SIZE + " characters");
-        }
-
-        return validated;
+        return sb.toString();
     }
 
     

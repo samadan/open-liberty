@@ -32,6 +32,7 @@ import com.ibm.ws.http.channel.internal.HttpChannelConfig;
 import com.ibm.ws.http.channel.internal.HttpMessages;
 import com.ibm.ws.http.channel.internal.HttpServiceContextImpl;
 import com.ibm.ws.http.channel.internal.inbound.HttpInboundServiceContextImpl;
+import com.ibm.ws.http.dispatcher.internal.HttpDispatcher;
 import com.ibm.ws.http.netty.NettyHttpConstants;
 import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer;
 import com.ibm.ws.http.netty.pipeline.inbound.HttpDispatcherHandler;
@@ -831,12 +832,10 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
         int currentStreamId = this.request.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), 0);
 
         Http2Headers headers = new DefaultHttp2Headers().clear();
-        // TODO Implement this
-//        String scheme = new String("https");
-//        if (!this.isSecure()) {
-//            scheme = new String("http");
-//        }
-        String scheme = new String("http");
+        String scheme = "https";
+        if (!context.isSecure()) {
+            scheme = "http";
+        }
         headers.method(pushBuilder.getMethod()).scheme(scheme).path(pbPath);
 
         // Encode authority
@@ -884,41 +883,38 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
             }
         }
 
-        ChannelFuture promise = handler.encoder().writePushPromise(nettyContext, currentStreamId, nextPromisedStreamId, headers, 0,
-                                                                   new VoidChannelPromise(this.nettyContext.channel(), true));
-
-        promise.addListener(future -> {
-            if (future.isSuccess()) {
-
-            } else {
-                future.cause().printStackTrace();
+        this.nettyContext.channel().eventLoop().execute(new Runnable() {
+            @Override
+            public void run() {
+                ChannelFuture promise = handler.encoder().writePushPromise(nettyContext, currentStreamId, nextPromisedStreamId, headers, 0,
+                                                                   new VoidChannelPromise(nettyContext.channel(), true));
+                promise.addListener(future -> {
+                    if (future.isSuccess()){
+                        // Should we process the new request here when we ensure we wrote out a push promise?
+                        // Follow up issue https://github.com/OpenLiberty/open-liberty/issues/31439
+                    }
+                });
             }
         });
 
-        try {
-            DefaultFullHttpRequest newRequest = new DefaultFullHttpRequest(request.protocolVersion(), HttpMethod.GET, pbPath);
-            newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), nextPromisedStreamId);
-            HttpUtil.setContentLength(newRequest, 0);
-            this.nettyContext.executor().execute(new Runnable() {
+        DefaultFullHttpRequest newRequest = new DefaultFullHttpRequest(request.protocolVersion(), HttpMethod.GET, pbPath);
+        newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), nextPromisedStreamId);
+        newRequest.headers().set(HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme);
+        HttpUtil.setContentLength(newRequest, 0);
+        HttpDispatcher.getExecutorService().execute(new Runnable() {
 
-                @Override
-                public void run() {
-                    try {
-                        ((HttpDispatcherHandler) nettyContext.channel().pipeline().get(HttpPipelineInitializer.HTTP_DISPATCHER_HANDLER_NAME)).channelRead(nettyContext,
-                                                                                                                                                          newRequest);
-                    } catch (Exception e) {
-
-                        e.printStackTrace();
+            @Override
+            public void run() {
+                try {
+                    ((HttpDispatcherHandler) nettyContext.channel().pipeline().get(HttpPipelineInitializer.HTTP_DISPATCHER_HANDLER_NAME)).channelRead(nettyContext,
+                                                                                                                                                        newRequest);
+                } catch (Exception e) {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(tc, "pushNewRequest() Unable to dispatch push request: " + e.getMessage(), e);
                     }
                 }
-            });
-
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            // Do you need FFDC here? Remember FFDC instrumentation and @FFDCIgnore
-            e.printStackTrace();
-        }
-
+            }
+        });
     }
 
     /**
