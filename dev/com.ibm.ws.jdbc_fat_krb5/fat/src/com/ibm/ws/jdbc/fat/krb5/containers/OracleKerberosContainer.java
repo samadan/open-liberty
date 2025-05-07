@@ -12,7 +12,7 @@
  *******************************************************************************/
 package com.ibm.ws.jdbc.fat.krb5.containers;
 
-import static com.ibm.ws.jdbc.fat.krb5.containers.KerberosContainer.KRB5_KDC;
+import static com.ibm.ws.jdbc.fat.krb5.containers.KerberosContainer.KRB5_KDC_EXTERNAL;
 import static com.ibm.ws.jdbc.fat.krb5.containers.KerberosContainer.KRB5_REALM;
 
 import java.time.Duration;
@@ -59,7 +59,7 @@ public class OracleKerberosContainer extends OracleXEContainer {
             cmd.withHostName("oracle");
         });
         withEnv("KRB5_REALM", KRB5_REALM);
-        withEnv("KRB5_KDC", KRB5_KDC);
+        withEnv("KRB5_KDC", KRB5_KDC_EXTERNAL);
         super.configure();
     }
 

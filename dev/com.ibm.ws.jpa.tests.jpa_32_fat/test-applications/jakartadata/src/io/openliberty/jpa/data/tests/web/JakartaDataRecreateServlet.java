@@ -483,6 +483,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
 
     @Test //Reference issue: https://github.com/eclipse-ee4j/eclipselink/issues/2234
     public void testELGH2234() throws Exception {
+        deleteAllEntities(Product.class);
 
         Product p = Product.of("testSnapshot", "product", 10.50f);
         tx.begin();

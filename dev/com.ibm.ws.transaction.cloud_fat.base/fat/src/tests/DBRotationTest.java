@@ -27,6 +27,8 @@ import org.testcontainers.containers.JdbcDatabaseContainer;
 import com.ibm.tx.jta.ut.util.XAResourceImpl;
 import com.ibm.websphere.simplicity.ShrinkHelper;
 import com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions;
+import com.ibm.websphere.simplicity.config.ServerConfiguration;
+import com.ibm.websphere.simplicity.config.Transaction;
 import com.ibm.websphere.simplicity.log.Log;
 import com.ibm.ws.transaction.fat.util.FATUtils;
 import com.ibm.ws.transaction.fat.util.SetupRunner;
@@ -471,29 +473,26 @@ public class DBRotationTest extends CloudFATServletClient {
     }
 
     @Test
-    @AllowedFFDC(value = { "javax.transaction.xa.XAException", "com.ibm.ws.recoverylog.spi.RecoveryFailedException",
-                           "javax.transaction.SystemException", "com.ibm.ws.recoverylog.spi.InternalLogException",
-                           "com.ibm.ws.recoverylog.spi.LogsUnderlyingTablesMissingException", "java.lang.Exception" })
+    // Annoying that all these have to be allowed rather that some being expected. Thanks Derby.
+    @AllowedFFDC(value = { "com.ibm.ws.recoverylog.spi.LogsUnderlyingTablesMissingException", "javax.transaction.SystemException", "java.lang.Exception",
+                           "com.ibm.ws.recoverylog.spi.InternalLogException" })
     public void testReactionToDeletedTables() throws Exception {
-        final String method = "testReactionToDeletedTables";
-        StringBuilder sb = null;
-        if (!TxTestContainerSuite.isDerby()) { // Embedded Derby cannot support tests with concurrent server startup
 
+        if (!TxTestContainerSuite.isDerby()) { // Can't get a connection to drop tables on embedded Derby
             serversToCleanup = new LibertyServer[] { server2, noRecoveryGroupServer1 };
-            //            server2.setHttpDefaultPort(cloud2ServerPort);
             server2.useSecondaryHTTPPort();
-            FATUtils.startServers(_runner, server2);
-            assertNotNull("Home server recovery failed", server2.waitForStringInTrace("Transaction recovery processing for this server is complete", FATUtils.LOG_SEARCH_TIMEOUT));
-            FATUtils.startServers(_runner, noRecoveryGroupServer1);
 
-            sb = runTestWithResponse(noRecoveryGroupServer1, SERVLET_NAME, "dropServer2Tables");
-            Log.info(c, method, "testReactionToDeletedTables dropServer2Tables returned: " + sb);
+            FATUtils.startServers(_runner, server2, noRecoveryGroupServer1);
+            assertNotNull("Home server recovery should have completed",
+                          server2.waitForStringInTrace("WTRN0133I: Transaction recovery processing for this server is complete", FATUtils.LOG_SEARCH_TIMEOUT));
 
-            assertNotNull("Failed to drop tables", noRecoveryGroupServer1.waitForStringInTrace("<<< END:   dropServer2Tables", FATUtils.LOG_SEARCH_TIMEOUT));
+            runTestWithResponse(noRecoveryGroupServer1, SERVLET_NAME, "dropServer2Tables");
 
-            sb = runTestWithResponse(server2, SERVLET_NAME, "twoTrans");
-            Log.info(c, method, "testReactionToDeletedTables twoTrans returned: " + sb);
-            assertNotNull("Home server tables are still present", server2.waitForStringInTrace("Underlying SQL tables missing", FATUtils.LOG_SEARCH_TIMEOUT));
+            runTestWithResponse(server2, SERVLET_NAME, "twoTrans");
+            assertNotNull("Home server tables sould have been deleted", server2.waitForStringInTrace("Underlying SQL tables missing", FATUtils.LOG_SEARCH_TIMEOUT));
+
+            assertNotNull("Server should have stopped",
+                          server2.waitForStringInLog("CWWKE0036I: The server com.ibm.ws.transaction_ANYDBCLOUD002 stopped", FATUtils.LOG_SEARCH_TIMEOUT));
         }
     }
 
@@ -553,18 +552,44 @@ public class DBRotationTest extends CloudFATServletClient {
         longLeaseServerB.setHttpDefaultPort(longLeaseServerPortB);
         longLeaseServerC.setHttpDefaultPort(longLeaseServerPortC);
 
-        FATUtils.startServers(_runner, longLeaseServerA, longLeaseServerB, longLeaseServerC, server2);
+        try (AutoCloseable x = withExtraTranAttribute(server2, "peerTimeBeforeStale", "20")) {
+            FATUtils.startServers(_runner, longLeaseServerA, longLeaseServerB, longLeaseServerC, server2);
 
-        //  Check for key strings to see whether peer recovery has failed
-        assertNotNull("First peer recovery unexpectedly succeeded",
-                      server2.waitForStringInTrace("WTRN0108I: Peer recovery will not be attempted, this server was unable to claim the logs of the server with recovery identity cloud0011",
-                                                   FATUtils.LOG_SEARCH_TIMEOUT));
-        assertNotNull("Second peer recovery unexpectedly succeeded",
-                      server2.waitForStringInTrace("WTRN0108I: Peer recovery will not be attempted, this server was unable to claim the logs of the server with recovery identity cloud0012",
-                                                   FATUtils.LOG_SEARCH_TIMEOUT));
-        assertNotNull("Third peer recovery unexpectedly succeeded",
-                      server2.waitForStringInTrace("WTRN0108I: Peer recovery will not be attempted, this server was unable to claim the logs of the server with recovery identity cloud0013",
-                                                   FATUtils.LOG_SEARCH_TIMEOUT));
+            //  Check for key strings to see whether peer recovery has failed
+            assertNotNull("First peer recovery unexpectedly succeeded",
+                          server2.waitForStringInTrace("WTRN0108I: Peer recovery will not be attempted, this server was unable to claim the logs of the server with recovery identity cloud0011",
+                                                       FATUtils.LOG_SEARCH_TIMEOUT));
+            assertNotNull("Second peer recovery unexpectedly succeeded",
+                          server2.waitForStringInTrace("WTRN0108I: Peer recovery will not be attempted, this server was unable to claim the logs of the server with recovery identity cloud0012",
+                                                       FATUtils.LOG_SEARCH_TIMEOUT));
+            assertNotNull("Third peer recovery unexpectedly succeeded",
+                          server2.waitForStringInTrace("WTRN0108I: Peer recovery will not be attempted, this server was unable to claim the logs of the server with recovery identity cloud0013",
+                                                       FATUtils.LOG_SEARCH_TIMEOUT));
+        }
+    }
+
+    /**
+     * Temporarily set an extra transaction attribute
+     * server should be stopped
+     */
+    private static AutoCloseable withExtraTranAttribute(LibertyServer server, String attribute, String value) throws Exception {
+        final ServerConfiguration config = server.getServerConfiguration();
+        final ServerConfiguration originalConfig = config.clone();
+        final Transaction transaction = config.getTransaction();
+        transaction.setExtraAttribute(attribute, value);
+
+        try {
+            server.updateServerConfiguration(config);
+        } catch (Exception e) {
+            try {
+                server.updateServerConfiguration(originalConfig);
+            } catch (Exception e1) {
+                e.addSuppressed(e1);
+            }
+            throw e;
+        }
+
+        return () -> server.updateServerConfiguration(originalConfig);
     }
 
     // Returns false if the server is alive, throws Exception otherwise

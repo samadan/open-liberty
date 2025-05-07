@@ -482,15 +482,7 @@ public class Simple2PCCloudServlet extends Base2PCCloudServlet {
 
         try (Connection con = getConnection(dsTranLog)) {
             con.setAutoCommit(false);
-            DatabaseMetaData mdata = con.getMetaData();
-            String dbName = mdata.getDatabaseProductName();
-            boolean isPostgreSQL = dbName.toLowerCase().contains("postgresql");
-            boolean isOracle = dbName.toLowerCase().contains("oracle");
-            boolean isSQLServer = dbName.toLowerCase().contains("microsoft sql");
-            Statement stmt = null;
-            // Statement used to drop table
-            try {
-                stmt = con.createStatement();
+            try (Statement stmt = con.createStatement()) {
                 String dropTableString = "DROP TABLE WAS_TRAN_LOGCLOUD0021";
                 System.out.println("dropServer2Tables: Drop table using: " + dropTableString);
                 int dropReturn = stmt.executeUpdate(dropTableString);
@@ -501,7 +493,6 @@ public class Simple2PCCloudServlet extends Base2PCCloudServlet {
             } catch (Exception ex) {
                 System.out.println("dropServer2Tables: caught exception in testSetup: " + ex);
             }
-
         }
     }
 

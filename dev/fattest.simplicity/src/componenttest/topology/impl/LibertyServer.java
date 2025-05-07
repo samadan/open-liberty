@@ -3557,7 +3557,6 @@ public class LibertyServer implements LogMonitorClient {
                                                      "opentracingFATServer3", //com.ibm.ws.opentracing.1.x_fat
                                                      "opentracingFATServer4", //com.ibm.ws.opentracing.1.x_fat
 
-                                                     "RequestTimingServer", //com.ibm.ws.request.timing_fat
                                                      "HungRequestTimingServer", //com.ibm.ws.request.timing.hung_fat
 
                                                      "com.ibm.ws.rest.handler.config.fat", //com.ibm.ws.rest.handler.config_fat
@@ -3577,8 +3576,6 @@ public class LibertyServer implements LogMonitorClient {
                                                      "com.ibm.ws.ui.fat", //com.ibm.ws.ui_rest_fat
 
                                                      "com.ibm.ws.jaxrs.fat.exceptionMappingWithOT", //com.ibm.ws.jaxrs.2.0_fat
-
-                                                     "RequestTimingServer", //com.ibm.ws.request.timing_fat
 
                                                      "MPServer41", //io.openliberty.microprofile41.internal_fat
                                                      "MPServer", //io.openliberty.microprofile.internal_fat

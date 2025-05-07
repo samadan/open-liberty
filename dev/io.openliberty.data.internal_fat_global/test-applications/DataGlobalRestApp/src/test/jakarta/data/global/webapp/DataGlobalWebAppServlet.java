@@ -25,6 +25,9 @@ import componenttest.app.FATServlet;
 @WebServlet("/webapp/*")
 public class DataGlobalWebAppServlet extends FATServlet {
     @Inject
+    Alphabet alphabet;
+
+    @Inject
     Dictionary dictionary;
 
     /**
@@ -41,5 +44,21 @@ public class DataGlobalWebAppServlet extends FATServlet {
         assertEquals(false, dictionary.isWord("llo"));
 
         assertEquals(1, dictionary.deleteWord("hello"));
+    }
+
+    /**
+     * Use a repository that requires a java:global/env DataSource resource
+     * reference that is defined in this same application.
+     */
+    @Test
+    public void testRepositoryUsesResourceReferenceFromSameApp() {
+
+        alphabet.addLetter(Letter.of('D'));
+
+        assertEquals(true, alphabet.hasLetter('D'));
+
+        assertEquals(false, alphabet.hasLetter('2'));
+
+        assertEquals(1, alphabet.deleteLetter('D'));
     }
 }

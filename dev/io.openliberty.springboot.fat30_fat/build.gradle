@@ -63,12 +63,13 @@ def appDefs =
     [ 'io.openliberty.springboot.fat30.war.app', '.war' ],
     [ 'io.openliberty.springboot.fat30.java.app', '.jar' ],
     [ 'io.openliberty.springboot.fat30.webanno.app', '.jar' ],
-    [ 'io.openliberty.springboot.fat30.websocket.app', '.jar' ],
+    [ 'io.openliberty.springboot.fat30.websocket.app', '.war' ],
     [ 'io.openliberty.springboot.fat30.actuator.app', '.jar' ],
     [ 'io.openliberty.springboot.fat30.webflux.app', '.jar' ],
     [ 'io.openliberty.springboot.fat30.multicontext.app', '.jar' ],
     [ 'io.openliberty.springboot.fat30.security.app', '.jar' ],
-    [ 'io.openliberty.springboot.fat30.transactions.app', '.war' ]  ]
+    [ 'io.openliberty.springboot.fat30.transactions.app', '.war' ],
+    [ 'io.openliberty.springboot.fat30.data.app', '.war' ]  ]
 
 autoFVT.dependsOn ':wlp.lib.extract:build'
 appDefs.each { appDef ->
