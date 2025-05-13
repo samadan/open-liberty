@@ -16,6 +16,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
@@ -40,6 +41,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.database.container.DatabaseContainerType;
 import componenttest.topology.database.container.DatabaseContainerUtil;
 import componenttest.topology.impl.LibertyServer;
+import componenttest.topology.utils.FATServletClient;
 
 @RunWith(FATRunner.class)
 @AllowedFFDC(value = { "com.microsoft.sqlserver.jdbc.SQLServerException", "javax.resource.spi.ResourceAllocationException",
@@ -172,7 +174,7 @@ public class DBRotationTest extends CloudFATServletClient {
         StringBuilder sb = null;
         String id = "001";
 
-        serversToCleanup = new LibertyServer[] { server1 };
+        serversToCleanup = Arrays.asList(server1);
 
         FATUtils.startServers(_runner, server1);
 
@@ -194,7 +196,7 @@ public class DBRotationTest extends CloudFATServletClient {
     public void testDBBaseRecovery() throws Exception {
         String id = "001";
 
-        serversToCleanup = new LibertyServer[] { server1 };
+        serversToCleanup = Arrays.asList(server1);
 
         FATUtils.startServers(_runner, server1);
         try {
@@ -234,7 +236,7 @@ public class DBRotationTest extends CloudFATServletClient {
     @AllowedFFDC(value = { "com.ibm.ws.rsadapter.exceptions.DataStoreAdapterException" })
     public void testDBRecoveryTakeover() throws Exception {
         String id = "001";
-        serversToCleanup = new LibertyServer[] { server1, server2 };
+        serversToCleanup = Arrays.asList(server1, server2);
 
         FATUtils.startServers(_runner, server1);
         try {
@@ -284,7 +286,7 @@ public class DBRotationTest extends CloudFATServletClient {
         final String method = "testDBRecoveryCompeteForLogPeerPrecedence";
         String id = "001";
 
-        serversToCleanup = new LibertyServer[] { peerPrecedenceServer1, server2 };
+        serversToCleanup = Arrays.asList(peerPrecedenceServer1, server2);
 
         FATUtils.startServers(_runner, peerPrecedenceServer1);
         try {
@@ -351,7 +353,7 @@ public class DBRotationTest extends CloudFATServletClient {
 
         String id = "001";
 
-        serversToCleanup = new LibertyServer[] { longLeaseCompeteServer1 };
+        serversToCleanup = Arrays.asList(longLeaseCompeteServer1);
 
         FATUtils.startServers(_runner, longLeaseCompeteServer1);
         try {
@@ -382,7 +384,7 @@ public class DBRotationTest extends CloudFATServletClient {
     public void testLogFailure() throws Exception {
 
         if (!TxTestContainerSuite.isDerby()) { // Embedded Derby cannot support tests with concurrent server startup
-            serversToCleanup = new LibertyServer[] { longLeaseLogFailServer1, server2nopeerlocking };
+            serversToCleanup = Arrays.asList(longLeaseLogFailServer1, server2nopeerlocking);
 
             longLeaseLogFailServer1.setFFDCChecking(false);
             server2nopeerlocking.setHttpDefaultPort(cloud2ServerPort);
@@ -411,7 +413,7 @@ public class DBRotationTest extends CloudFATServletClient {
     public void testLogFailureNoShutdown() throws Exception {
 
         if (!TxTestContainerSuite.isDerby()) { // Embedded Derby cannot support tests with concurrent server startup
-            serversToCleanup = new LibertyServer[] { noShutdownServer1, server2nopeerlocking };
+            serversToCleanup = Arrays.asList(noShutdownServer1, server2nopeerlocking);
 
             noShutdownServer1.setFFDCChecking(false);
             server2nopeerlocking.setHttpDefaultPort(cloud2ServerPort);
@@ -436,7 +438,7 @@ public class DBRotationTest extends CloudFATServletClient {
     @AllowedFFDC(value = { "com.ibm.ws.recoverylog.spi.LogsUnderlyingTablesMissingException" })
     public void testBackwardCompatibility() throws Exception {
 
-        serversToCleanup = new LibertyServer[] { server1 };
+        serversToCleanup = Arrays.asList(server1);
 
         FATUtils.startServers(_runner, server1);
 
@@ -457,7 +459,7 @@ public class DBRotationTest extends CloudFATServletClient {
     @AllowedFFDC(value = { "javax.transaction.xa.XAException", "com.ibm.ws.recoverylog.spi.RecoveryFailedException" })
     public void testLeaseIndexBackwardCompatibility() throws Exception {
 
-        serversToCleanup = new LibertyServer[] { noRecoveryGroupServer1, shortLeaseServer1 };
+        serversToCleanup = Arrays.asList(noRecoveryGroupServer1, shortLeaseServer1);
 
         FATUtils.startServers(_runner, noRecoveryGroupServer1);
 
@@ -475,23 +477,25 @@ public class DBRotationTest extends CloudFATServletClient {
     @Test
     // Annoying that all these have to be allowed rather that some being expected. Thanks Derby.
     @AllowedFFDC(value = { "com.ibm.ws.recoverylog.spi.LogsUnderlyingTablesMissingException", "javax.transaction.SystemException", "java.lang.Exception",
-                           "com.ibm.ws.recoverylog.spi.InternalLogException" })
+                           "com.ibm.ws.recoverylog.spi.InternalLogException", "java.lang.IllegalStateException" })
     public void testReactionToDeletedTables() throws Exception {
 
         if (!TxTestContainerSuite.isDerby()) { // Can't get a connection to drop tables on embedded Derby
-            serversToCleanup = new LibertyServer[] { server2, noRecoveryGroupServer1 };
+            serversToCleanup = Arrays.asList(server2, noRecoveryGroupServer1);
+
             server2.useSecondaryHTTPPort();
 
             FATUtils.startServers(_runner, server2, noRecoveryGroupServer1);
-            assertNotNull("Home server recovery should have completed",
+            assertNotNull(server2.getServerName() + " recovery should have completed",
                           server2.waitForStringInTrace("WTRN0133I: Transaction recovery processing for this server is complete", FATUtils.LOG_SEARCH_TIMEOUT));
 
-            runTestWithResponse(noRecoveryGroupServer1, SERVLET_NAME, "dropServer2Tables");
+            runTest(noRecoveryGroupServer1, SERVLET_NAME, "dropServer2Tables");
 
-            runTestWithResponse(server2, SERVLET_NAME, "twoTrans");
-            assertNotNull("Home server tables sould have been deleted", server2.waitForStringInTrace("Underlying SQL tables missing", FATUtils.LOG_SEARCH_TIMEOUT));
+            runTest(server2, SERVLET_NAME, "twoTrans");
+            assertNotNull(server2.getServerName() + " recovery tables should have been deleted",
+                          server2.waitForStringInTrace("Underlying SQL tables missing", FATUtils.LOG_SEARCH_TIMEOUT));
 
-            assertNotNull("Server should have stopped",
+            assertNotNull(server2.getServerName() + " should have stopped",
                           server2.waitForStringInLog("CWWKE0036I: The server com.ibm.ws.transaction_ANYDBCLOUD002 stopped", FATUtils.LOG_SEARCH_TIMEOUT));
         }
     }
@@ -515,7 +519,7 @@ public class DBRotationTest extends CloudFATServletClient {
             return;
         }
 
-        serversToCleanup = new LibertyServer[] { longLeaseServerA, server2 };
+        serversToCleanup = Arrays.asList(longLeaseServerA, server2);
 
         longLeaseServerA.setFFDCChecking(false);
         server2.setHttpDefaultPort(cloud2ServerPort);
@@ -545,7 +549,7 @@ public class DBRotationTest extends CloudFATServletClient {
             return;
         }
 
-        serversToCleanup = new LibertyServer[] { longLeaseServerA, server2, longLeaseServerB, longLeaseServerC };
+        serversToCleanup = Arrays.asList(longLeaseServerA, server2, longLeaseServerB, longLeaseServerC);
 
         longLeaseServerA.setFFDCChecking(false);
         server2.setHttpDefaultPort(cloud2ServerPort);
@@ -619,12 +623,17 @@ public class DBRotationTest extends CloudFATServletClient {
 
     @Override
     protected boolean checkOrphanLeaseExists(LibertyServer server, String path, String serverName) throws Exception {
+        boolean absent = false;
         try {
-            runTest(server, path, "checkOrphanLeaseAbsence");
-            return false;
+            final StringBuilder sb = runInServlet(server, path, "checkOrphanLeaseAbsence");
+
+            if (sb.indexOf(FATServletClient.SUCCESS) != -1) {
+                absent = true;
+            }
         } catch (Exception e) {
         }
-        return true;
+
+        return !absent;
     }
 
     @Override

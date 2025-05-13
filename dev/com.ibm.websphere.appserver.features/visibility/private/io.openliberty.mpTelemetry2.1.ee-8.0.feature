@@ -11,7 +11,7 @@ singleton=true
 -bundles=\
   com.ibm.ws.collector, \
   com.ibm.ws.cdi.interfaces, \
-  io.openliberty.microprofile.telemetry.2.1.internal, \
+  io.openliberty.microprofile.telemetry.2.0.internal, \
   io.openliberty.microprofile.telemetry.2.1.logging.internal, \
   io.openliberty.io.opentelemetry.internal.2.1, \
   io.openliberty.microprofile.telemetry.internal.common,\

@@ -30,6 +30,11 @@ public class SemconvConstantsAccessorImpl implements SemcovConstantsAccessor {
     }
 
     @Override
+    public AttributeKey<String> httpRoute() {
+        return SemanticAttributes.HTTP_ROUTE;
+    }
+
+    @Override
     public AttributeKey<String> accessRequestHost() { //TODO fix method name
         return SemanticAttributes.SERVER_ADDRESS;
     }

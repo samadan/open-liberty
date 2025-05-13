@@ -35,6 +35,7 @@ import com.ibm.ws.transaction.fat.util.SetupRunner;
 import com.ibm.ws.transaction.fat.util.TxFATServletClient;
 import com.ibm.ws.transaction.fat.util.TxTestContainerSuite;
 
+import componenttest.annotation.AllowedFFDC;
 import componenttest.annotation.ExpectedFFDC;
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
@@ -172,6 +173,7 @@ public class ContainerAuthTest extends FATServletClient {
     }
 
     @Test
+    @AllowedFFDC(value = { "javax.resource.spi.ResourceAllocationException" })
     public void testDynamicContainerAuthEmbed() throws Exception {
 
         serversToCleanup = new LibertyServer[] { conAuthEmbed };

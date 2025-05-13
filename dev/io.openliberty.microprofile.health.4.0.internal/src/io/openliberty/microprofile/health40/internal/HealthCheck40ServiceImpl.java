@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -748,8 +749,12 @@ public class HealthCheck40ServiceImpl implements HealthCheck40Service {
                             Tr.debug(tc, "In performHealthCheck(): appName = " + appName + ", moduleName = " + moduleName);
                         }
                         try {
-
-                            hcResponses = hcExecutor.runHealthChecks(appName, moduleName, healthCheckProcedure);
+                            /*
+                             * Prevent calls to any apps that are "stopping".
+                             */
+                            if (!stoppingApplication.contains(appName)) {
+                                hcResponses = hcExecutor.runHealthChecks(appName, moduleName, healthCheckProcedure);
+                            }
 
                         } catch (HealthCheckBeanCallException e) {
                             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
@@ -764,7 +769,7 @@ public class HealthCheck40ServiceImpl implements HealthCheck40Service {
                             Tr.debug(tc, "In performHealthCheck(): hcResponses = " + hcResponses);
                         }
 
-                        if (!hcResponses.isEmpty()) {
+                        if (hcResponses != null && !hcResponses.isEmpty()) {
                             evaluatedStatusFx.accept(hcResponses);
                         }
                     }
@@ -782,6 +787,26 @@ public class HealthCheck40ServiceImpl implements HealthCheck40Service {
         if (hcExecutor != null) {
             hcExecutor.removeModuleReferences(appName, moduleName);
         }
+    }
+
+    /*
+     * Temp solution to app shutting down and a performFileHealthCheck running at the same time.
+     * This leads to scenario where the application is completely shut down while the Health Check
+     * process is underway. Specifically when a Contextual Proxy is created right before app stops,
+     * followed by the app stopping and then the invocation of the contextual proxy. This causes an
+     * ISE due to the app metadata no longer existing during the proxy invocation.
+     *
+     * The set and the `stopping` and `started` method calls below allow us to create a block for
+     * any health checks conducted on a `stopping` App. The set is cleared when the app is redeployed.
+     */
+    Set<String> stoppingApplication = ConcurrentHashMap.newKeySet();
+
+    public void stoppingApplication(String appName) {
+        stoppingApplication.add(appName);
+    }
+
+    public void startedApplication(String appName) {
+        stoppingApplication.remove(appName);
     }
 
     /**

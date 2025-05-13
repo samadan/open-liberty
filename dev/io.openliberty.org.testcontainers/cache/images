@@ -23,7 +23,6 @@ wasliberty-infrastructure-docker/jiwoo/simple-keyserver:1.0
 wasliberty-infrastructure-docker/jiwoo/squid-proxy:1.0
 wasliberty-infrastructure-docker/kyleaure/db2-krb5:2.0
 wasliberty-infrastructure-docker/kyleaure/oracle-21.3.0-faststart:1.0.full.krb5
-wasliberty-infrastructure-docker/kyleaure/postgres-krb5:1.0
 wasliberty-infrastructure-docker/letsencrypt/pebble-challtestsrv:v2.3.1
 wasliberty-infrastructure-docker/letsencrypt/pebble:v2.3.1
 wasliberty-infrastructure-docker/mariadb:10.3
@@ -49,7 +48,7 @@ wasliberty-internal-docker-local/openliberty/testcontainers/ldap-server:3.17
 wasliberty-internal-docker-local/openliberty/testcontainers/oracle-krb5:23-full-faststart
 wasliberty-internal-docker-local/openliberty/testcontainers/oracle-ssl:23-full-faststart
 wasliberty-internal-docker-local/openliberty/testcontainers/postgres-init:17-alpine
-wasliberty-internal-docker-local/openliberty/testcontainers/postgres-krb5:17
+wasliberty-internal-docker-local/openliberty/testcontainers/postgres-krb5:17.0.0.1
 wasliberty-internal-docker-local/openliberty/testcontainers/postgres-ssl:17.0.0.1
 wasliberty-internal-docker-local/openliberty/testcontainers/sqlserver-ssl:2022.0.0.1-latest
 wasliberty-mcr-docker-remote/mssql/server:2022-latest
