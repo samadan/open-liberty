@@ -72,6 +72,7 @@ public class MTOMClientServlet extends HttpServlet {
         }
 
         byte[] bytes = proxy.getAttachment();
+        writer.println("Content-Type -> " + bp.getResponseContext().get("Content-Type"));
         writer.println("getAttachment() returned " + bytes);
 
         writer.flush();

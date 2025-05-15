@@ -183,6 +183,31 @@ public class MismatchingSOAPActionMTOMTest {
         assertTrue(printExpectedResponses(expectedResponses, false), checkExpectedResponses(urlBuilder.toString(), expectedResponses, false, HttpURLConnection.HTTP_OK));
     }
 
+    /**
+     * TestDescription: When ibm-mtom-enabled is set to false
+     * MTOM is disabled only for response
+     *
+     * <webservice-endpoint-properties ibm-mtom-enabled="false" />
+     *
+     * Result:
+     * - response Content-Type is expected to be text/xml
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testDisableMtomForResponse() throws Exception {
+
+        server.reconfigureServer("MTOMTestServer/disableMtomForResponse.xml", "CWWKG0017I");
+
+        String soapAction = "";
+        int port = server.getHttpDefaultPort();
+        StringBuilder urlBuilder = new StringBuilder("http://").append(clientServer.getHostname()).append(":").append(clientServer.getHttpDefaultPort()).append(SERVLET_PATH).append("?service=MTOMService").append("&port=").append(port).append("&setSoapAction=").append(soapAction);
+
+        List<String> expectedResponses = new ArrayList<String>(1);
+        expectedResponses.add("Content-Type -> text/xml");
+        assertTrue(printExpectedResponses(expectedResponses, false), checkExpectedResponses(urlBuilder.toString(), expectedResponses, false, HttpURLConnection.HTTP_OK));
+    }
+
     private boolean checkExpectedResponses(String servletUrl, List<String> expectedResponses, boolean exact, int responseCode) throws IOException {
         Log.info(this.getClass(), testName.getMethodName(), "Calling Application with URL=" + servletUrl);
 
