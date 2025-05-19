@@ -57,6 +57,7 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         if (msg instanceof FullHttpRequest) {
             //activateRead(context);
             remove(context, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
+            remove(context, NETTY_PERSIST_IDLE_HANDLER, OL_PERSIST_IDLE_EVENT);
         }
         super.channelRead(context, msg);
     }
@@ -71,6 +72,8 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         System.out.println(">>> Entered write >>>");
         promise.addListener((ChannelFutureListener) future -> {
             if(future.isSuccess()){
+                remove(ctx, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
+
                 if(msg instanceof FullHttpResponse || msg instanceof LastHttpContent){
                     System.out.println(">>> Installing Persist timeout handler >>>");
                     activatePersist(ctx);
