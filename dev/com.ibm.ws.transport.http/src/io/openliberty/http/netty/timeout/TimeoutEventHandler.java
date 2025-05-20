@@ -22,14 +22,14 @@ import io.openliberty.http.netty.timeout.exception.WriteTimeoutException;
 
 public class TimeoutEventHandler extends ChannelInboundHandlerAdapter{
 
-    private final long          timeout;
-    private final TimeUnit      unit;
-    private final TimeoutType   type;
+    private final long timeout;
+    private final TimeUnit unit;
+    private final TimeoutType type;
 
     public TimeoutEventHandler(TimeoutType type, long timeout, TimeUnit unit) {
-        this.type =     type;
-        this.timeout =  timeout;
-        this.unit =     unit;
+        this.type = type;
+        this.timeout = timeout;
+        this.unit = unit;
     }
 
     @Override
@@ -48,5 +48,4 @@ public class TimeoutEventHandler extends ChannelInboundHandlerAdapter{
             super.userEventTriggered(context, event);
         }
     }
-
 }

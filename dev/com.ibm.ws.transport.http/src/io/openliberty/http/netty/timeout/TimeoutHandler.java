@@ -35,8 +35,8 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     private static final String OL_REQUEST_IDLE_EVENT = "requestIdleEventHandler";
     private static final String OL_PERSIST_IDLE_EVENT = "persistIdleEventHandler";
 
-    private static final TimeUnit LEGACY_UNIT       = TimeUnit.MILLISECONDS;
-    private static final TimeUnit PREFERRED_UNIT    = TimeUnit.SECONDS;
+    private static final TimeUnit LEGACY_UNIT = TimeUnit.MILLISECONDS;
+    private static final TimeUnit PREFERRED_UNIT = TimeUnit.SECONDS;
 
     private final long configReadTimeout;
     private final long configPersistTimeout;
@@ -53,34 +53,37 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext context, Object msg) throws Exception {
-        if (msg instanceof FullHttpRequest) {
-            //activateRead(context);
+    public void channelRead(ChannelHandlerContext context, Object message) throws Exception {
+        if (message instanceof FullHttpRequest) {
             remove(context, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
             remove(context, NETTY_PERSIST_IDLE_HANDLER, OL_PERSIST_IDLE_EVENT);
         }
-        super.channelRead(context, msg);
+        super.channelRead(context, message);
     }
 
     /**
      * Capture outbound writes. Once the server writes a FullHttpResponse,
      * we assume we've finished handling the request. At that point,
      * let's switch to "persist" mode
+     * 
+     * NOTE: Technically, persist should be for only the first read of the next request. 
+     * But the way we currently operate, and with autoread enabled, requests are
+     * aggregated and queued up prior to this point. So this only provides partial 
+     * coverage of the legacy implementation. A more loyal implementation can be provided
+     * by disabling auto-read which will be tackled at a later point. 
      */
     @Override
-    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+    public void write(ChannelHandlerContext context, Object message, ChannelPromise promise) throws Exception {
         System.out.println(">>> Entered write >>>");
         promise.addListener((ChannelFutureListener) future -> {
             if(future.isSuccess()){
-                remove(ctx, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
-
-                if(msg instanceof FullHttpResponse || msg instanceof LastHttpContent){
+                if(message instanceof FullHttpResponse || message instanceof LastHttpContent){
                     System.out.println(">>> Installing Persist timeout handler >>>");
-                    activatePersist(ctx);
+                    activatePersist(context);
                 }
             }
         });
-        super.write(ctx, msg, promise);
+        super.write(context, message, promise);
     }
 
     private void activateRead(ChannelHandlerContext context){
@@ -99,12 +102,17 @@ public class TimeoutHandler extends ChannelDuplexHandler{
 
         if(timeout <= 0) return;
 
+        //TODO *1* - does creating new idleStateHandlers cause performance degradation? Check with perf team. If it does, 
+        //we should try another strategy here like directly scheduling tasks. 
         IdleStateHandler idle = (type == TimeoutType.WRITE) ? 
                     new IdleStateHandler(0, timeout, 0, LEGACY_UNIT):
                     new IdleStateHandler(timeout, 0, 0, LEGACY_UNIT);
 
         context.pipeline().addBefore(context.name(), idleHandler, idle);
         long preferredDuration = asPreferred(timeout, LEGACY_UNIT);
+
+        //TODO - same as TODO *1* -> perhaps we should consider persisting the same timeout event handler and clearing up the 
+        //state. 
         context.pipeline().addAfter(idleHandler, eventHandler, new TimeoutEventHandler(type, preferredDuration, PREFERRED_UNIT));
     }
 
