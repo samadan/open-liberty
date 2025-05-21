@@ -38,12 +38,13 @@ public abstract class TimeoutException extends IOException {
         this.duration = duration;
         this.unit = unit;
 
-        //TODO omit FFDC?
-        if(warningCode != null && unit != null){
-            Tr.error(tc, warningCode, getMessage());
-        }else{
-            Tr.error(tc, getMessage());
-        }
+        //TODO (not needed for beta) -> Consider if we want to print out warnings for these exceptions
+        //or just hand them up to the transport without logging. 
+        // if(warningCode != null && unit != null){
+        //     Tr.error(tc, warningCode, getMessage());
+        // }else{
+        //     Tr.error(tc, getMessage());
+        // }
         
     }
 

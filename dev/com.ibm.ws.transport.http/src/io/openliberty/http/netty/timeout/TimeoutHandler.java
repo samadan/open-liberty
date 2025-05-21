@@ -74,11 +74,9 @@ public class TimeoutHandler extends ChannelDuplexHandler{
      */
     @Override
     public void write(ChannelHandlerContext context, Object message, ChannelPromise promise) throws Exception {
-        System.out.println(">>> Entered write >>>");
         promise.addListener((ChannelFutureListener) future -> {
             if(future.isSuccess()){
                 if(message instanceof FullHttpResponse || message instanceof LastHttpContent){
-                    System.out.println(">>> Installing Persist timeout handler >>>");
                     activatePersist(context);
                 }
             }
@@ -96,7 +94,6 @@ public class TimeoutHandler extends ChannelDuplexHandler{
 
 
     private void swap(ChannelHandlerContext context, TimeoutType type, long timeout, String idleHandler, String eventHandler){
-        System.out.println(">>> Swap timeout requested >>>");
         remove(context, NETTY_REQUEST_IDLE_HANDLER, OL_REQUEST_IDLE_EVENT);
         remove(context, NETTY_PERSIST_IDLE_HANDLER, OL_PERSIST_IDLE_EVENT);
 
@@ -128,11 +125,9 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     private static void remove(ChannelHandlerContext context, String handlerName, String eventName){
         ChannelPipeline pipeline = context.pipeline();
         if(pipeline.get(handlerName) != null){
-            System.out.println(">>> Removing " + handlerName +" >>>");
             pipeline.remove(handlerName);
         }
         if(pipeline.get(eventName) != null){
-            System.out.println(">>> Removing " + eventName + " >>>");
             pipeline.remove(eventName);
         }
     }
