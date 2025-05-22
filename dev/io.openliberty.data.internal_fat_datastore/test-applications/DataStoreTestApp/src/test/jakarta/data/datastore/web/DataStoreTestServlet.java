@@ -19,6 +19,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.function.Consumer;
 
 import jakarta.annotation.Resource;
 import jakarta.annotation.sql.DataSourceDefinition;
@@ -65,6 +66,9 @@ public class DataStoreTestServlet extends FATServlet {
 
     @Inject
     DSAccessorMethodQualifiedRepo dsAccessorQualifiedRepo;
+
+    @EJB(lookup = "java:global/DataStoreEJBApp/DataEJBAppBean!java.util.function.Consumer")
+    Consumer<String> ejbApp;
 
     @Inject
     EMAccessorMethodQualifiedRepo emAccessorQualifiedRepo;
@@ -184,6 +188,14 @@ public class DataStoreTestServlet extends FATServlet {
         // Prove it went into the expected database by accessing it from
         // another repository that uses the same DataSource
         defaultDSRepo.existsByIdAndValue(32, "DSRAMQI-2");
+    }
+
+    /**
+     * Use a repository that is defined within an EJB application.
+     */
+    @Test
+    public void testEJBAppDefinesAndUsesRepository() {
+        ejbApp.accept("testEJBAppDefinesAndUsesRepository");
     }
 
     /**
@@ -403,6 +415,24 @@ public class DataStoreTestServlet extends FATServlet {
     @Test
     public void testDataSourceDefinitionInWARModuleFromEJB() throws SQLException {
         testEJB.testDataSourceDefinitionInWARModuleFromEJB();
+    }
+
+    /**
+     * Verify that code in an EJB application can access a Jakarta Data repository
+     * from a CDI Startup event.
+     */
+    @Test
+    public void testStartupEventObserverInEJBApplicationUsesRepository() {
+        ejbApp.accept("testStartupEventObserverInEJBApplicationUsesRepository");
+    }
+
+    /**
+     * Verify that code in an EJB module can access a Jakarta Data repository from
+     * a CDI Startup event.
+     */
+    @Test
+    public void testStartupEventObserverInEJBModuleUsesRepository() {
+        testEJB.testStartupEventObserverInEJBModuleUsesRepository();
     }
 
     /**

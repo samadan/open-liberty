@@ -34,10 +34,17 @@ public abstract class JPAAppAbstractTests extends AbstractSpringTests {
         ConfigElementList<DataSource> dataSources = config.getDataSources();
 
         File derbyJar = new File();
-        derbyJar.setName("${shared.resource.dir}/derby/derby.jar");
+        derbyJar.setName("${shared.resource.dir}/derby16/derby.jar");
+        File derbyToolsJar = new File();
+        derbyToolsJar.setName("${shared.resource.dir}/derby16/derbytools.jar");
+        File derbySharedJar = new File();
+        derbySharedJar.setName("${shared.resource.dir}/derby16/derbyshared.jar");
+
         Library derbyLib = new Library();
         derbyLib.setId("DerbyLib");
         derbyLib.getFiles().add(derbyJar);
+        derbyLib.getFiles().add(derbyToolsJar);
+        derbyLib.getFiles().add(derbySharedJar);
         libraries.add(derbyLib);
 
         JdbcDriver derbyDriver = new JdbcDriver();

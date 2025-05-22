@@ -10,6 +10,8 @@ public interface SemcovConstantsAccessor {
 
     public AttributeKey<String> httpRequestMethod();
 
+    public AttributeKey<String> httpRoute();
+
     public AttributeKey<String> accessRequestHost(); //TODO fix method name
 
     public AttributeKey<String> clientAddress();
@@ -25,7 +27,6 @@ public interface SemcovConstantsAccessor {
     public AttributeKey<String> networkProtocolVersion();
 
     //Thread attributes
-
     public AttributeKey<String> threadName();
 
     public AttributeKey<Long> threadId();

@@ -64,7 +64,8 @@ import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
                 ApplicationStartedEventTests30.class,
                 JTAAppTests30.class,
                 JTAAppTests30War.class,
-                JPAAppTests30War.class
+                JPAHibernateAppTests30War.class,
+                JPALibertyAppTests30War.class
 })
 
 public class FATSuite {

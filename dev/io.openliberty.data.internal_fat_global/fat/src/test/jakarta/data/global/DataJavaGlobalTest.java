@@ -278,4 +278,29 @@ public class DataJavaGlobalTest extends FATServletClient {
                 throw x;
         }
     }
+
+    /**
+     * Verify that a REST Application method that observes the CDI Startup event
+     * has access to a Jakarta Data repository and can use it to populate data.
+     */
+    @Test
+    public void testStartupEventInRestApplication() throws Exception {
+        String path = "/DataGlobalRestApp/data/referral/email/" +
+                      "startup@openliberty.io";
+        JsonObject json = new HttpRequest(server, path).run(JsonObject.class);
+
+        String found = "found: " + json;
+
+        assertEquals(found,
+                     "startup@openliberty.io",
+                     json.getString("email"));
+
+        assertEquals(found,
+                     "Startup Event",
+                     json.getString("name"));
+
+        assertEquals(found,
+                     5075556789L,
+                     json.getJsonNumber("phone").longValue());
+    }
 }

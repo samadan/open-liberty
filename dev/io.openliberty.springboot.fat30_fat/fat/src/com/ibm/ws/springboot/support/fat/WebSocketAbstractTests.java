@@ -17,9 +17,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -30,10 +27,8 @@ import jakarta.websocket.WebSocketContainer;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import com.ibm.websphere.simplicity.log.Log;
-import com.ibm.ws.springboot.support.fat.AbstractSpringTests.AppConfigType;
 
 public abstract class WebSocketAbstractTests extends AbstractSpringTests {
 
@@ -70,7 +65,7 @@ public abstract class WebSocketAbstractTests extends AbstractSpringTests {
         wsContainer = ContainerProvider.getWebSocketContainer();
         clientEndpoint = new WebSocketTests30EndpointEcho();
     }
-    
+
     @Before
     public void setDefaultPort() {
         server.setHttpDefaultPort(DEFAULT_HTTP_PORT);
@@ -78,7 +73,7 @@ public abstract class WebSocketAbstractTests extends AbstractSpringTests {
 
     public void testEchoWebSocket30() throws Exception {
         Log.info(getClass(), "testWebSocket30", wsContainer.toString());
-        Session session = wsContainer.connectToServer(clientEndpoint, new URI("ws://" + server.getHostname() + ":" + server.getHttpDefaultPort() + getContextRoot() +"echo"));
+        Session session = wsContainer.connectToServer(clientEndpoint, new URI("ws://" + server.getHostname() + ":" + server.getHttpDefaultPort() + getContextRoot() + "echo"));
         assertNotNull("Session cannot be null", session);
         assertTrue("Session is not open", session.isOpen());
         CountDownLatch latch = new CountDownLatch(1);
@@ -91,20 +86,22 @@ public abstract class WebSocketAbstractTests extends AbstractSpringTests {
      * Test websocket using a custom websocket configurer.
      *
      * The application registers a custom websocket handler and a abstract handshake handler.
-     * The org.springframework.web.socket.server.support.AbstractHandshakeHandler looks up com.ibm.websphere.wsoc.WsWsocServerContainer 
-     * to do the WebSocket upgrade on provided HttpServletRequest and HttpServletResponse using 
+     * The org.springframework.web.socket.server.support.AbstractHandshakeHandler looks up com.ibm.websphere.wsoc.WsWsocServerContainer
+     * to do the WebSocket upgrade on provided HttpServletRequest and HttpServletResponse using
      * com.ibm.websphere.wsoc.WsWsocServerContainer#doUpgrade(HttpServletRequest req, HttpServletResponse resp, ServerEndpointConfig sec, Map<String, String> pathParams)
-     * 
-     * Since websocket-2.1 - jakarta.websocket.server.ServerContainer#upgradeHttpToWebSocket(Object httpServletRequest, Object httpServletResponse, ServerEndpointConfig sec, Map<String,String> pathParameters) can be used.
-     * 
+     *
+     * Since websocket-2.1 - jakarta.websocket.server.ServerContainer#upgradeHttpToWebSocket(Object httpServletRequest, Object httpServletResponse, ServerEndpointConfig sec,
+     * Map<String,String> pathParameters) can be used.
+     *
      * So looking for WsWsocServerContainer in order to do the upgrade is no longer required and is being removed in spring framework 7.x.
-     * 
+     *
      *
      * @throws Exception
      */
     public void testEchoWithCustomWebsocketHandler() throws Exception {
         Log.info(getClass(), "testEchoWithCustomWebsocketHandler", wsContainer.toString());
-        Session session = wsContainer.connectToServer(clientEndpoint, new URI("ws://" + server.getHostname() + ":" + server.getHttpDefaultPort() + getContextRoot() +"customHandler"));
+        Session session = wsContainer.connectToServer(clientEndpoint,
+                                                      new URI("ws://" + server.getHostname() + ":" + server.getHttpDefaultPort() + getContextRoot() + "customHandler"));
         assertNotNull("Session cannot be null", session);
         assertTrue("Session is not open", session.isOpen());
         CountDownLatch latch = new CountDownLatch(1);
@@ -122,7 +119,7 @@ public abstract class WebSocketAbstractTests extends AbstractSpringTests {
     public boolean useDefaultVirtualHost() {
         return true;
     }
-    
+
     public String getContextRoot() {
         return "/";
     }

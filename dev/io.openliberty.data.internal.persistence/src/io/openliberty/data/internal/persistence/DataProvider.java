@@ -903,7 +903,9 @@ public class DataProvider implements //
                     moduleNameWithDot != null &&
                     moduleNameWithDot.length() == moduleName.length() + 4 &&
                     moduleNameWithDot.startsWith(moduleName) &&
-                    moduleNameWithDot.endsWith(".jar")) {
+                    moduleNameWithDot.regionMatches(true, //
+                                                    moduleNameWithDot.length() - 4, //
+                                                    ".jar", 0, 4)) {
 
                     if (trace && tc.isDebugEnabled())
                         Tr.debug(this, tc, "matched with " + futureEMBuilder.jeeName);

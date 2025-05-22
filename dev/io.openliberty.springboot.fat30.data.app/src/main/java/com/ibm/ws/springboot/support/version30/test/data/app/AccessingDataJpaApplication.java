@@ -95,18 +95,20 @@ public class AccessingDataJpaApplication extends SpringBootServletInitializer {
 
 
 		// fetch an individual customer by ID
-		Customer customer1 = testTransaction.getCustomerByID(1);
-		Assert.isTrue(customer1.equals(customers.get(0)), "Wrong customer with id 1: " + customer1 + " != " + customers.get(0));
+		Customer firstCustomerA = persistedCustomers.iterator().next();
+		Customer firstCustomerB = testTransaction.getCustomerByID(firstCustomerA.getId());
+		Assert.isTrue(firstCustomerA.equals(firstCustomerB), "Wrong customer with id: " + firstCustomerA + " != " + firstCustomerB);
 
 		// fetch customers by last name
 		Collection<Customer> bauers = testTransaction.getCustomersByLastName("Bauer");
 		Assert.isTrue(bauers.size() == 2, "Wrong number of Bauers: " + bauers);
 
 		// fetch an individual employee by ID
-		Employee employee1 = testTransaction.getEmployeeByID(1);
-		Assert.isTrue(employee1.equals(employees.get(0)), "Wrong employee with id 1: " + employee1 + " != " + employees.get(0));
+		Employee firstEmployeeA = persistedEmployees.iterator().next();
+		Employee firstEmployeeB = testTransaction.getEmployeeByID(firstEmployeeA.getId());
+		Assert.isTrue(firstEmployeeA.equals(firstEmployeeB), "Wrong employee with id: " + firstEmployeeA + " != " + firstEmployeeB);
 
-
+		// fetch employees by last name
 		Collection<Employee> bristows = testTransaction.getEmployeesByLastName("Bristow");
 		Assert.isTrue(bauers.size() == 2, "Wrong number of Bristow: " + bristows);
 
