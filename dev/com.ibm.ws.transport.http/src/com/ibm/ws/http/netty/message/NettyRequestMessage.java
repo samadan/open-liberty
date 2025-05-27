@@ -304,8 +304,6 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
      */
     @Override
     public boolean isBodyExpected() {
-        boolean result = Boolean.FALSE;
-
         if(super.isBodyExpected()) {
             return !request.method().equals(HttpMethod.TRACE); // Trace method does not have a body
         }
