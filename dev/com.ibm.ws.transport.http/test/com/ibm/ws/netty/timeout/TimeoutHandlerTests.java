@@ -9,9 +9,8 @@
  *******************************************************************************/
 package com.ibm.ws.netty.timeout;
 
-import java.util.concurrent.TimeUnit;
-
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -24,6 +23,10 @@ import io.openliberty.http.netty.timeout.TimeoutType;
 import io.openliberty.http.netty.timeout.exception.PersistTimeoutException;
 import io.openliberty.http.netty.timeout.exception.ReadTimeoutException;
 import io.openliberty.http.netty.timeout.exception.UnknownTimeoutException;
+
+import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -62,11 +65,11 @@ public class TimeoutHandlerTests {
 
         TimeoutHandler handler = new TimeoutHandler(config);
         EmbeddedChannel channel = new EmbeddedChannel(handler);
-        assertNotNull("Request Idle handler is missing.", channel.pipeline().get("requestIdleHandler"));
+        assertNotNull("Request Idle handler is missing.", channel.pipeline().get(TimeoutHandler.class));
     }
 
     @Test
-    public void timeoutHandlerSwitchToPersist(){
+    public void timeoutHandlerSwitchToPersist() throws Exception{
         NettyHttpChannelConfig config = mock(NettyHttpChannelConfig.class);
         when(config.getReadTimeout()).thenReturn(2000);
         when(config.getPersistTimeout()).thenReturn(1000);
@@ -74,13 +77,12 @@ public class TimeoutHandlerTests {
         EmbeddedChannel channel = new EmbeddedChannel(handler);
 
         DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
-        channel.writeOutbound(response);
-
-        assertNotNull(channel.pipeline().get("persistIdleHandler"));
-
-        channel.pipeline().fireUserEventTriggered(IdleStateEvent.FIRST_READER_IDLE_STATE_EVENT);
-        Throwable t = extractException(channel);
-        assertTrue(t instanceof PersistTimeoutException);
+        ChannelFuture future = channel.writeAndFlush(response);
+        channel.runPendingTasks();
+        assertTrue(future.isSuccess());
+        
+        TimeoutType phase = (TimeoutType) getPrivate(handler, "phase");
+        assertEquals("Expected handler to be in PERSIST phase", TimeoutType.PERSIST, phase);
         channel.close();
     }
 
@@ -94,4 +96,12 @@ public class TimeoutHandlerTests {
             return t;
         }
     }
+
+    private static Object getPrivate(Object object, String field) throws ReflectiveOperationException{
+        Field f = object.getClass().getDeclaredField(field);
+        f.setAccessible(true);
+        return f.get(object);
+    }
+
+
 }
