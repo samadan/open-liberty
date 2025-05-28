@@ -144,12 +144,10 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
     }
 
     /**
-     *
+     * Method for running request validation with our legacy logic to maintain
+     * behavior.
      */
     public void verifyRequest() {
-        // TODO Add check for verifying request integrity
-        // Method check possibly handled by Netty. Need to verify
-        // Path check need to add some for ourselves
         if (!getMethod().equalsIgnoreCase(HttpMethod.CONNECT.toString())) {
             setRequestURI(getRequestURI());
             // Additional verification for url host
@@ -306,35 +304,10 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
      */
     @Override
     public boolean isBodyExpected() {
-        boolean result = Boolean.FALSE;
-
-        if (HttpUtil.isTransferEncodingChunked(request)) {
-            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.debug(tc, "Msg says chunked encoding: " + this);
-            }
-
-            result = Boolean.TRUE;
+        if(super.isBodyExpected()) {
+            return !request.method().equals(HttpMethod.TRACE); // Trace method does not have a body
         }
-
-        else if (HttpUtil.isContentLengthSet(request)) {
-            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.debug(tc, "Msg says content-length: " + getContentLength() + " " + this);
-            }
-            result = Boolean.TRUE;
-        }
-
-        if (result) {
-
-        }
-
-        else {
-            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.debug(tc, "No bodyExpected: " + this);
-            }
-        } //TODO: finish
-
-        return result;
-
+        return false;
     }
 
     @Override
@@ -761,7 +734,6 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
     @Override
     public void setScheme(SchemeValues scheme) {
         this.scheme = scheme;
-        //TODO: first line changed needed?
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "setScheme(v): " + scheme.getName());
         }
