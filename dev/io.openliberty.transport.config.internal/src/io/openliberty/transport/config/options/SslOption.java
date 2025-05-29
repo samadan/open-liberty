@@ -23,7 +23,8 @@ public enum SslOption implements EndpointOption{
     SESSION_TIMEOUT("sessionTimeout", 86400, Integer.class, ConfigType.SSL),
     SSL_SESSION_TIMEOUT("sslSessionTimeout", 86400000, Integer.class, ConfigType.SSL),
     SUPPRESS_HANDSHAKE_ERRORS("suppressHandshakeErrors", true, Boolean.class, ConfigType.SSL),
-    SUPPRESS_HANDSHAKE_ERRORS_COUNT("suppressHandshakeErrorsCount", 100, Integer.class, ConfigType.SSL);
+    SUPPRESS_HANDSHAKE_ERRORS_COUNT("suppressHandshakeErrorsCount", 100, Long.class, ConfigType.SSL),
+    ENFORCE_CIPHER_ORDER("com.ibm.ws.ssl.enforceCipherOrder", false, Boolean.class, ConfigType.SSL);
     
 
     private final String key;

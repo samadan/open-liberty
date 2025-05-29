@@ -10,13 +10,14 @@
 package io.openliberty.netty.internal.tls;
 
 import java.util.Map;
-import io.netty.handler.ssl.SslContext;
+import io.netty.channel.Channel;
+import io.netty.handler.ssl.SslHandler;
 
 public interface NettyTlsProvider {
 
-    public SslContext getOutboundSSLContext(Map<String, Object> sslOptions, String host, String port);
+    public SslHandler getOutboundSSLContext(Map<String, Object> sslOptions, String host, String port, Channel channel);
 
-    public SslContext getInboundSSLContext(Map<String, Object> sslOptions, String host, String port);
+    public SslHandler getInboundSSLContext(Map<String, Object> sslOptions, String host, String port, Channel channel);
     
-    public SslContext getInboundALPNSSLContext(Map<String, Object> sslOptions, String host, String port);
+    public SslHandler getInboundALPNSSLContext(Map<String, Object> sslOptions, String host, String port, Channel channel);
 }
