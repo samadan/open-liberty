@@ -152,10 +152,9 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
 
     private void setupH2Pipeline(ChannelPipeline pipeline) throws NettyException {
 
-        SslContext context = getSslContext();
-        SSLEngine engine = context.newEngine(pipeline.channel().alloc());
+        SslHandler handler = getSslHandler(pipeline.channel());
 
-        pipeline.addFirst(HTTP_SSL_HANDLER_NAME, new LibertySslHandler(engine, httpConfig));
+        pipeline.addFirst(HTTP_SSL_HANDLER_NAME, handler);
         addPreHttpCodecHandlers(pipeline);
         pipeline.addLast(HTTP_ALPN_HANDLER_NAME, new LibertyNettyALPNHandler(httpConfig));
         pipeline.addLast(HTTP_DISPATCHER_HANDLER_NAME, new HttpDispatcherHandler(httpConfig));
@@ -166,16 +165,18 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
     }
 
     private void setupHttpsPipeline(ChannelPipeline pipeline) throws NettyException {
-        SslContext context = getSslContext();
-        SSLEngine engine = context.newEngine(pipeline.channel().alloc());
+        SslHandler handler = getSslHandler(pipeline.channel());
 
-        pipeline.addFirst(HTTP_SSL_HANDLER_NAME, new LibertySslHandler(engine, httpConfig));
+        pipeline.addFirst(HTTP_SSL_HANDLER_NAME, handler);
         pipeline.channel().attr(NettyHttpConstants.IS_SECURE).set(Boolean.TRUE);
         setupHttp11Pipeline(pipeline);
     }
 
-    private SslContext getSslContext() throws NettyException {
+    private SslHandler getSslHandler(Channel channel) throws NettyException {
         NettyTlsProvider tlsProvider = chain.getOwner().getNettyTlsProvider();
+
+        SslHandler handler = null;
+
         if(tlsProvider == null){
             throw new NettyException("TLS Provider is not loaded");
         }
@@ -183,14 +184,17 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         String host = ep.getHost();
         String port = Integer.toString(ep.getPort());
 
-        SslContext context = chain.isHttp2Enabled() ? 
-            tlsProvider.getInboundALPNSSLContext(configOptions.get(ConfigElement.SSL_OPTIONS), host, port)
-            : tlsProvider.getInboundSSLContext(configOptions.get(ConfigElement.SSL_OPTIONS), host, port);
-        if (context == null) {
-            throw new NettyException("Failed to create SSL context for endpoint: " + ep.getHost() + ":" + ep.getPort());
+        if(chain.isHttp2Enabled())
+            handler = tlsProvider.getInboundALPNSSLContext(configOptions.get(ConfigElement.SSL_OPTIONS), host, port, channel);
+        else {
+            handler = tlsProvider.getInboundSSLContext(configOptions.get(ConfigElement.SSL_OPTIONS), host, port, channel);
         }
 
-        return context;
+        if (handler == null) {
+            throw new NettyException("Failed to create SSL handler for endpoint: " + ep.getHost() + ":" + ep.getPort());
+        }
+
+        return handler;
     }
 
    

@@ -10,7 +10,8 @@ io.openliberty.io.netty,\
 io.openliberty.io.netty.ssl,\
 io.openliberty.netty.internal,\
 io.openliberty.netty.internal.impl,\
-io.openliberty.endpoint
+io.openliberty.endpoint,\
+io.openliberty.transport.config.internal
 -jars=com.ibm.websphere.appserver.spi.httptransport; location:=dev/spi/ibm/
 -files=dev/spi/ibm/javadoc/com.ibm.websphere.appserver.spi.httptransport_4.2-javadoc.zip
 kind=ga
