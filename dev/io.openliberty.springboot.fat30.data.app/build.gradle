@@ -10,10 +10,10 @@
  ********************************************************************************/
 
 plugins {
-  id 'org.springframework.boot' version '3.3.0'
+  id 'org.springframework.boot' version '3.4.6'
 }
+
 apply from: '../wlp-gradle/subprojects/spring.gradle'
-def sv = springVersions[ '3.0' ]
 
 apply plugin: 'war'
 apply plugin: 'io.spring.dependency-management'

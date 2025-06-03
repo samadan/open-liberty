@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023,2024 IBM Corporation and others.
+ * Copyright (c) 2023,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -253,14 +253,14 @@ public class DataStoreTestServlet extends FATServlet {
 
         try {
             persistenceUnitRepo.connection();
-            fail("TODO write better test if EclipseLink ever adds this capability.");
+            fail("write better test if EclipseLink ever adds this capability.");
         } catch (UnsupportedOperationException x) {
             // expected - EclipseLink does not allow unwrap as Connection
         }
 
         try {
             persistenceUnitRepo.dataSource();
-            fail("TODO write better test if EclipseLink ever adds this capability.");
+            fail("write better test if EclipseLink ever adds this capability.");
         } catch (UnsupportedOperationException x) {
             // expected - EclipseLink does not allow unwrap as DataSource
         }

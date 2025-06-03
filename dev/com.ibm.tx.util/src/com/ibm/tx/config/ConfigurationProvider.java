@@ -382,4 +382,9 @@ public interface ConfigurationProvider {
      * @return
      */
     public boolean isThrowCheckedExceptions();
+
+    /**
+     * Size of threadpool for sending protocol messages
+     */
+    public int getAsyncResponseThreadpoolSize();
 }

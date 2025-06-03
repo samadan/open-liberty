@@ -69,6 +69,10 @@ public class JPAHibernateAppTests20War extends JPAAppAbstractTests {
                         newEntry = new JarEntry(entryName.replace("lib-provided", "lib"));
                     }
                 }
+                if (entryName.equals("WEB-INF/classes/META-INF/persistence.xml")) {
+                    // Remove the default persistence.xml processed by Liberty
+                    continue;
+                }
                 jarOutputStream.putNextEntry(newEntry);
                 byte[] buffer = new byte[1024];
                 int bytesRead;

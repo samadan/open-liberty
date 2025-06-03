@@ -60,6 +60,7 @@ public class DataErrPathsTest extends FATServletClient {
                                    "CWWKD1009E.*storeNothing", // Save method without parameters
                                    "CWWKD1009E.*storeInDatabase", // Save method with multiple parameters
                                    "CWWKD1010E.*nameAndZipCode", // Record return type with invalid attribute name
+                                   "CWWKD1010E.*selectByBirthday", // Sort with invalid attribute name
                                    "CWWKD1010E.*sortedByEndOfAddress", // OrderBy with invalid function
                                    "CWWKD1010E.*sortedByZipCode", // OrderBy with invalid attribute name
                                    "CWWKD1011E.*findByIgnoreCaseContains", // missing entity attribute name
@@ -102,6 +103,7 @@ public class DataErrPathsTest extends FATServletClient {
                                    "CWWKD1086E.*withAddressShorterThan", // Param used for positional parameter
                                    "CWWKD1090E.*findByAddressOrderBy", // OrderBy anno/keyword conflict
                                    "CWWKD1091E.*deleteByAddressOrderByName", // OrderBy without return type
+                                   "CWWKD1093E.*selectByBirthday", // VERSION(THIS) used when there is no version
                                    "CWWKD1094E.*register", // incompatible return type
                                    "CWWKD1096E.*discardInOrder", // OrderBy annotation without return type
                                    "CWWKD1097E.*discardLimited", // Limit parameter on Delete method

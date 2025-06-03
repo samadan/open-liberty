@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
@@ -45,13 +46,13 @@ import com.ibm.websphere.simplicity.config.SpringBootApplication;
 import com.ibm.websphere.simplicity.config.VirtualHost;
 import com.ibm.websphere.simplicity.config.WebApplication;
 
+import componenttest.containers.TestContainerSuite;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.impl.LibertyServerFactory;
 
-public abstract class AbstractSpringTests {
+public abstract class AbstractSpringTests extends TestContainerSuite {
 
     // All current FAT application names.
-
     public static final String SPRING_BOOT_30_APP_ACTUATOR = "io.openliberty.springboot.fat30.actuator.app-0.0.1-SNAPSHOT.jar";
     public static final String SPRING_BOOT_30_APP_BASE = "io.openliberty.springboot.fat30.app-0.0.1-SNAPSHOT.jar";
     public static final String SPRING_BOOT_30_APP_JAVA = "io.openliberty.springboot.fat30.java.app-0.0.1-SNAPSHOT.jar";
@@ -63,16 +64,95 @@ public abstract class AbstractSpringTests {
     public static final String SPRING_BOOT_30_APP_SECURITY = "io.openliberty.springboot.fat30.security.app-0.0.1-SNAPSHOT.jar";
     public static final String SPRING_BOOT_30_APP_TRANSACTIONS = "io.openliberty.springboot.fat30.transactions.app-0.0.1-SNAPSHOT.war";
     public static final String SPRING_BOOT_30_APP_DATA = "io.openliberty.springboot.fat30.data.app-0.0.1-SNAPSHOT.war";
+    public static final String SPRING_BOOT_30_APP_JMS = "io.openliberty.springboot.fat30.jms.app-0.0.1-SNAPSHOT.war";
 
     // Various spring configuration property fragments.
-
     public static final String ID_VIRTUAL_HOST = "springBootVirtualHost-";
     public static final String ID_HTTP_ENDPOINT = "springBootHttpEndpoint-";
     public static final String ID_SSL = "springBootSsl-";
     public static final String ID_KEY_STORE = "springBootKeyStore-";
     public static final String ID_TRUST_STORE = "springBootTrustStore-";
 
-    //
+    // Pre-JDK 9 the java.version is 1.MAJOR.MINOR, post-JDK 9 its MAJOR.MINOR
+    public static final String javaVersion;
+    public static final String SERVER_NAME = "SpringBootTests";
+    public static final LibertyServer server;
+    public static RemoteFile serverRootFile;
+    public static RemoteFile dropinsFile;
+    public static int DEFAULT_HTTP_PORT;
+    public static int DEFAULT_HTTPS_PORT;
+    public static final int EXPECTED_HTTP_PORT = 8081;
+    public static final List<RemoteFile> dropinFiles = new ArrayList<>();
+    public static final String SPRING_THIN_APPS_DIR = "spring.thin.apps";
+    public static final String SPRING_LIB_INDEX_CACHE = "lib.index.cache";
+    public static final String SPRING_WORKAREA_DIR = "workarea/spring/";
+    public static final String USER_SHARED_DIR = "usr/shared/";
+    public static final String SHARED_SPRING_LIB_INDEX_CACHE = "resources/" + SPRING_LIB_INDEX_CACHE;
+    public static final AtomicBoolean serverStarted = new AtomicBoolean();
+    public static final boolean DO_CLEANUP_APPS = true;
+    /**
+     * Sub-folder of "dropins" which is used by the spring application
+     * when {@link AppConfigType#DROPINS_SPRING} is specified as
+     * the application configuration type.
+     */
+    public static final String SPRING_APP_TYPE = "spring";
+    public static final String DROPINS_SPRING_DIR = "dropins/" + SPRING_APP_TYPE + "/";
+    /**
+     * Fragment test method name: Test methods which include this text fragment
+     * have the default host as an expected endpoint. See {@link #ID_DEFAULT_HOST}.
+     */
+    public static final String DEFAULT_HOST_WITH_APP_PORT = "DefaultHostWithAppPort";
+    public static final String ID_DEFAULT_HOST = "default_host";
+    /**
+     * Application argument used to indicate that a spring application
+     * will use the default host. Added as an application argument unless
+     * {@link #useDefaultVirtualHost()} is false.
+     */
+    public static final String LIBERTY_USE_DEFAULT_HOST = "server.liberty.use-default-host";
+
+    /** Control parameter: Tell if default values are added to bootstrap properties. */
+    protected static final boolean DO_ADD_DEFAULT_PROPERTIES = true;
+    /**
+     * Extra arguments which are provided to the server. These are available
+     * to subclasses. Set these on the server prior to starting the server,
+     * and clear them when stopping the server.
+     *
+     * The intent is that any <code>@BeforeClass</code> processing will populate
+     * the extra arguments before proceeding to start the server.
+     */
+    protected static final List<String> extraServerArgs = new ArrayList<>();
+
+    private static final Properties bootStrapProperties = new Properties();
+    private static ServerConfiguration originalServerConfig;
+
+    static {
+        javaVersion = System.getProperty("java.version");
+        server = LibertyServerFactory.getLibertyServer(SERVER_NAME);
+
+        recordDefaultPorts();
+        resetDefaultPorts();
+    }
+
+    /**
+     * When requested (via <code>@Rule</code>), JUnit injects the test
+     * name at the beginning of the test lifecycle. Injection occurs
+     * before <code>@Before</code> is invoked.
+     *
+     * These Spring FAT tests use the injected test name to specialize
+     * test behavior. For example, this allows security to be
+     * conditionally enabled.
+     *
+     * TODO: This is a pecululiar way to control test behavior, and is
+     * not advised. Using a more direct mechanism would be much better,
+     * but is hard to put in at this time.
+     */
+    @Rule
+    public TestName testName = new TestName();
+
+    @BeforeClass
+    public static void saveServerConfiguration() throws Exception {
+        originalServerConfig = server.getServerConfiguration().clone();
+    }
 
     /**
      * Default bootstrap properties which are used by most spring tests.
@@ -102,28 +182,9 @@ public abstract class AbstractSpringTests {
         return Collections.emptyMap();
     }
 
-    //
-
-    // Pre-JDK 9 the java.version is 1.MAJOR.MINOR, post-JDK 9 its MAJOR.MINOR
-    public static final String javaVersion;
-
-    public static final String SERVER_NAME = "SpringBootTests";
-    public static final LibertyServer server;
-
-    static {
-        javaVersion = System.getProperty("java.version");
-        server = LibertyServerFactory.getLibertyServer(SERVER_NAME);
-
-        recordDefaultPorts();
-        resetDefaultPorts();
-    }
-
     public static RemoteFile getServerFile(String name) throws Exception {
         return server.getFileFromLibertyServerRoot(name);
     }
-
-    public static RemoteFile serverRootFile;
-    public static RemoteFile dropinsFile;
 
     public static RemoteFile getServerRootFile() throws Exception {
         if (serverRootFile == null) {
@@ -141,16 +202,10 @@ public abstract class AbstractSpringTests {
 
     // The default values may be changed by specific tests.
     // Record the initial defaults and restore them after each test.
-
-    public static int DEFAULT_HTTP_PORT;
-    public static int DEFAULT_HTTPS_PORT;
-
     protected static void recordDefaultPorts() {
         DEFAULT_HTTP_PORT = server.getHttpDefaultPort();
         DEFAULT_HTTPS_PORT = server.getHttpDefaultSecurePort();
     }
-
-    public static final int EXPECTED_HTTP_PORT = 8081;
 
     protected static void resetDefaultPorts() {
         server.setHttpDefaultPort(EXPECTED_HTTP_PORT);
@@ -175,10 +230,6 @@ public abstract class AbstractSpringTests {
         String traceMsg = server.waitForStringInTraceUsingLastOffset(regex, timeout);
         assertNull(msg, traceMsg);
     }
-
-    //
-
-    public static final List<RemoteFile> dropinFiles = new ArrayList<>();
 
     public static Collection<RemoteFile> getDropinFiles() {
         return dropinFiles;
@@ -221,42 +272,9 @@ public abstract class AbstractSpringTests {
         dropinFiles.clear();
     }
 
-    //
-
-    public static final String SPRING_THIN_APPS_DIR = "spring.thin.apps";
-
-    public static final String SPRING_LIB_INDEX_CACHE = "lib.index.cache";
-    public static final String SPRING_WORKAREA_DIR = "workarea/spring/";
-    public static final String USER_SHARED_DIR = "usr/shared/";
-
-    public static final String SHARED_SPRING_LIB_INDEX_CACHE = "resources/" + SPRING_LIB_INDEX_CACHE;
-
     protected static void deleteSpringCache() throws Exception {
         server.deleteDirectoryFromLibertyServerRoot(SPRING_WORKAREA_DIR + SPRING_LIB_INDEX_CACHE);
         server.deleteDirectoryFromLibertyInstallRoot(USER_SHARED_DIR + SHARED_SPRING_LIB_INDEX_CACHE);
-    }
-
-    //
-
-    /**
-     * When requested (via <code>@Rule</code>), JUnit injects the test
-     * name at the beginning of the test lifecycle. Injection occurs
-     * before <code>@Before</code> is invoked.
-     *
-     * These Spring FAT tests use the injected test name to specialize
-     * test behavior. For example, this allows security to be
-     * conditionally enabled.
-     *
-     * TODO: This is a pecululiar way to control test behavior, and is
-     * not advised. Using a more direct mechanism would be much better,
-     * but is hard to put in at this time.
-     */
-    @Rule
-    public TestName testName = new TestName();
-
-    @After
-    public void tearDownTest() {
-        resetDefaultPorts();
     }
 
     @Before
@@ -266,6 +284,11 @@ public abstract class AbstractSpringTests {
         if (serverStarted.compareAndSet(false, true)) {
             doConfigureServer();
         }
+    }
+
+    @After
+    public void tearDownTest() {
+        resetDefaultPorts();
     }
 
     /**
@@ -446,34 +469,23 @@ public abstract class AbstractSpringTests {
         requireServerMessage("Server is not ready to run", "CWWKF0011I:.*");
     }
 
-    //
-
-    /**
-     * Extra arguments which are provided to the server. These are available
-     * to subclasses. Set these on the server prior to starting the server,
-     * and clear them when stopping the server.
-     *
-     * The intent is that any <code>@BeforeClass</code> processing will populate
-     * the extra arguments before proceeding to start the server.
-     */
-    protected static final List<String> extraServerArgs = new ArrayList<>();
-
     protected static void clearExtraArgs() {
         extraServerArgs.clear();
     }
 
-    public static final AtomicBoolean serverStarted = new AtomicBoolean();
-
     @AfterClass
     public static void stopServer() throws Exception {
-        stopServer(DO_CLEANUP_APPS);
+        try {
+            stopServer(DO_CLEANUP_APPS);
+        } finally {
+            server.updateServerConfiguration(originalServerConfig);
+        }
     }
-
-    public static final boolean DO_CLEANUP_APPS = true;
 
     public static void stopServer(boolean cleanupApps, String... expectedErrors) throws Exception {
         clearExtraArgs();
         clearBootStrapProperties();
+        clearEnvVariables();
 
         boolean isActive = serverStarted.getAndSet(false);
 
@@ -506,6 +518,19 @@ public abstract class AbstractSpringTests {
         if (exception != null) {
             throw exception;
         }
+    }
+
+    public static void configureEnvVariable(LibertyServer server, Map<String, String> newEnv) throws Exception {
+        Properties serverEnvProperties = new Properties();
+        serverEnvProperties.putAll(newEnv);
+        File serverEnvFile = new File(server.getFileFromLibertyServerRoot("server.env").getAbsolutePath());
+        try (OutputStream out = new FileOutputStream(serverEnvFile)) {
+            serverEnvProperties.store(out, "");
+        }
+    }
+
+    private static void clearEnvVariables() throws Exception {
+        configureEnvVariable(server, Map.of());
     }
 
     @FunctionalInterface
@@ -595,14 +620,6 @@ public abstract class AbstractSpringTests {
     }
 
     /**
-     * Sub-folder of "dropins" which is used by the spring application
-     * when {@link AppConfigType#DROPINS_SPRING} is specified as
-     * the application configuration type.
-     */
-    public static final String SPRING_APP_TYPE = "spring";
-    public static final String DROPINS_SPRING_DIR = "dropins/" + SPRING_APP_TYPE + "/";
-
-    /**
      * Tell the particular strategy in use for configuring
      * the application of this test class. Used by
      * {@link #doConfigureServer}.
@@ -636,13 +653,6 @@ public abstract class AbstractSpringTests {
         return true;
     }
 
-    /**
-     * Fragment test method name: Test methods which include this text fragment
-     * have the default host as an expected endpoint. See {@link #ID_DEFAULT_HOST}.
-     */
-    public static final String DEFAULT_HOST_WITH_APP_PORT = "DefaultHostWithAppPort";
-    public static final String ID_DEFAULT_HOST = "default_host";
-
     public List<String> getExpectedWebApplicationEndpoints() {
         List<String> expectedEndpoints = new ArrayList<String>();
 
@@ -665,13 +675,6 @@ public abstract class AbstractSpringTests {
     public void modifyServerConfiguration(ServerConfiguration config) {
         // do nothing by default
     }
-
-    /**
-     * Application argument used to indicate that a spring application
-     * will use the default host. Added as an application argument unless
-     * {@link #useDefaultVirtualHost()} is false.
-     */
-    public static final String LIBERTY_USE_DEFAULT_HOST = "server.liberty.use-default-host";
 
     /**
      * Tell if the spring application will use the default host. When
@@ -724,8 +727,6 @@ public abstract class AbstractSpringTests {
 
     //
 
-    private static final Properties bootStrapProperties = new Properties();
-
     protected static void clearBootStrapProperties() {
         bootStrapProperties.clear();
     }
@@ -733,9 +734,6 @@ public abstract class AbstractSpringTests {
     protected void configureBootStrapProperties(boolean dropinsTest) throws Exception {
         configureBootStrapProperties(dropinsTest, DO_ADD_DEFAULT_PROPERTIES);
     }
-
-    /** Control parameter: Tell if default values are added to bootstrap properties. */
-    protected static final boolean DO_ADD_DEFAULT_PROPERTIES = true;
 
     /**
      * Setup bootstrap properties. Gather properties and store then in the usual

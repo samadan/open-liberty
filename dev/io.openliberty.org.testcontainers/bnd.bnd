@@ -14,8 +14,8 @@
 bVersion: 1.0
 
 #Common Versions
-testContainerVersion: 1.21.0
-dockerJavaVersion: 3.5.0
+testContainerVersion: 1.20.3
+dockerJavaVersion: 3.4.0
 
 Bundle-Name: FAT Testcontainer Bundle
 Bundle-SymbolicName: io.openliberty.org.testcontainers
@@ -68,7 +68,6 @@ generate.replacement: true
 	org.testcontainers:mongodb;version=${testContainerVersion},\
 	org.testcontainers:mssqlserver;version=${testContainerVersion},\
 	org.testcontainers:oracle-free;version=${testContainerVersion},\
-	org.testcontainers:oracle-xe;version=${testContainerVersion},\
 	org.testcontainers:postgresql;version=${testContainerVersion},\
 	org.testcontainers:selenium;version=${testContainerVersion},\
 	org.rnorth.duct-tape:duct-tape;version=1.0.8,\

@@ -11,6 +11,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 addRequiredLibraries.dependsOn addDerby
+addRequiredLibraries.dependsOn copyJdbcDrivers
+addRequiredLibraries.dependsOn copyTestContainers
 
 repositories { 
   mavenCentral()
@@ -18,6 +20,7 @@ repositories {
 
 configurations {
   derby16 // See derby/java compatibility matrix https://db.apache.org/derby/derby_downloads.html
+  mq
 }
 
 dependencies {
@@ -60,8 +63,9 @@ dependencies {
     project(':io.openliberty.org.apache.commons.codec'),
     project(':io.openliberty.org.apache.xercesImpl')
 
-    derby16 "org.apache.derby:derby:10.16.1.1",
-            "org.apache.derby:derbytools:10.16.1.1"
+    derby16 'org.apache.derby:derby:10.16.1.1',
+            'org.apache.derby:derbytools:10.16.1.1'
+    mq 'com.ibm.mq:wmq.jakarta.jmsra:9.4.2.0@rar'
 }
 
 task addDerby16(type: Copy) {
@@ -73,7 +77,15 @@ task addDerby16(type: Copy) {
   rename 'derbytools-.*.jar', 'derbytools.jar'
 }
 
+task addMQ(type: Copy) {
+  shouldRunAfter jar
+  from configurations.mq
+  into new File(autoFvtDir, 'publish/shared/resources/mq')
+  rename 'wmq.*.rar', 'wmq.jakarta.jmsra.rar'
+}
+
 addRequiredLibraries.dependsOn addDerby16
+addRequiredLibraries.dependsOn addMQ
 
 def appDefs =
   [ [ 'io.openliberty.springboot.fat30.app', '.jar' ],
@@ -86,7 +98,8 @@ def appDefs =
     [ 'io.openliberty.springboot.fat30.multicontext.app', '.jar' ],
     [ 'io.openliberty.springboot.fat30.security.app', '.jar' ],
     [ 'io.openliberty.springboot.fat30.transactions.app', '.war' ],
-    [ 'io.openliberty.springboot.fat30.data.app', '.war' ]  ]
+    [ 'io.openliberty.springboot.fat30.data.app', '.war' ],
+    [ 'io.openliberty.springboot.fat30.jms.app', '.war' ]  ]
 
 autoFVT.dependsOn ':wlp.lib.extract:build'
 appDefs.each { appDef ->

@@ -16,6 +16,7 @@ import static com.ibm.ws.kernel.server.internal.InspectCommand.Introspectors.INT
 import static org.osgi.service.component.annotations.ConfigurationPolicy.IGNORE;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.SortedSet;
@@ -44,32 +45,60 @@ import com.ibm.wsspi.logging.Introspector;
                         "service.vendor=IBM"
            })
 public class InspectCommand {
-    @Descriptor("Lists or invokes the known introspections available in this server. Run `introspect help' for more information.")
-    public void inspect(String... args) {
-        if (args.length == 0) {
-            INTROSPECTORS.listAll();
-        } else if ("help".equalsIgnoreCase(args[0])) {
-            if (args.length == 1)
+
+    public void inspect() {
+        displayUsage();
+    }
+
+    @Descriptor("Lists or invokes the known introspections available in this server.")
+    public void inspect(String arg) {
+        switch (arg.toLowerCase()) {
+            case "-h":
+            case "--help":
+            case "help":
                 displayUsage();
-            else
-                Stream.of(args).skip(1).forEach(INTROSPECTORS::findAndDescribe);
-        } else {
-            Stream.of(args).forEach(INTROSPECTORS::findAndRun);
+                return;
+            case "-l":
+            case "--list":
+            case "list":
+                INTROSPECTORS.listAll();
+                return;
+            default:
+                INTROSPECTORS.findAndRun(arg);
+                return;
+        }
+    }
+
+    @Descriptor("Describes or invokes the known introspections available in this server.")
+    public void inspect(String arg, String introspector) {
+        switch (arg.toLowerCase()) {
+            case "-h":
+            case "--help":
+            case "help":
+                INTROSPECTORS.findAndDescribe(introspector);
+                return;
+            case "-r":
+            case "--run":
+            case "run":
+                INTROSPECTORS.findAndRun(introspector);
+                return;
+            default:
+                throw new RuntimeException("error: unknown option '" + arg + "' to inspect command");
         }
     }
 
     private void displayUsage() {
-        System.out.println("usage: inspect");
-        System.out.println("       Lists available introspections.");
+        System.out.println("usage: inspect [-h|--help|help]");
+        System.out.println("       Print this usage message.");
         System.out.println();
-        System.out.println("usage: inspect <introspection>");
-        System.out.println("       Displays the output of the named introspection.");
+        System.out.println("usage: inspect -h|--help|help <introspector>");
+        System.out.println("       Describe the named introspector.");
         System.out.println();
-        System.out.println("usage: inspect help");
-        System.out.println("       Displays this usage message.");
+        System.out.println("usage: inspect -l|--list|list");
+        System.out.println("       List available introspectors.");
         System.out.println();
-        System.out.println("usage: inspect help <introspection>");
-        System.out.println("       Displays the description of the named introspection.");
+        System.out.println("usage: inspect [-r|--run|run] <introspector>");
+        System.out.println("       Run the named introspection.");
     }
 
     /**
@@ -93,11 +122,15 @@ public class InspectCommand {
         }
 
         void findAndDescribe(String name) {
-            forEach("describe introspector", this::describe, i -> Objects.equals(name, i.getIntrospectorName()));
+            int num = forEach("describe introspector", this::describe, i -> Objects.equals(name, i.getIntrospectorName()));
+            if (0 == num)
+                throw new RuntimeException("error: could not find an introspector with name '" + name + "'");
         }
 
         void findAndRun(String name) {
-            forEach("run introspector", this::run, i -> Objects.equals(name, i.getIntrospectorName()));
+            int num = forEach("run introspector", this::run, i -> Objects.equals(name, i.getIntrospectorName()));
+            if (0 == num)
+                throw new RuntimeException("error: could not find an introspector with name '" + name + "'");
         }
 
         private void describe(Introspector ii) {
@@ -109,14 +142,17 @@ public class InspectCommand {
         }
 
         private void run(Introspector i) throws Exception {
-            try (PrintWriter pw = new PrintWriter(System.out)) {
+            final StringWriter sw = new StringWriter();
+            try (PrintWriter pw = new PrintWriter(sw)) {
                 i.introspect(pw);
                 pw.flush();
             }
+            System.out.println(sw);
         }
 
         @SafeVarargs
-        private final void forEach(String desc, IntrospectorAction action, Predicate<Introspector>... filters) {
+        private final int forEach(String desc, IntrospectorAction action, Predicate<Introspector>... filters) {
+            int count = 0;
             final BundleContext ctx = FrameworkUtil.getBundle(Introspectors.class).getBundleContext();
             final Collection<ServiceReference<Introspector>> refs;
             try {
@@ -124,6 +160,8 @@ public class InspectCommand {
             } catch (InvalidSyntaxException e) {
                 throw new RuntimeException("error: unable to retrieve introspector service references", e);
             }
+
+            Throwable cause = null;
 
             for (final ServiceReference<Introspector> rrr : refs) {
                 try {
@@ -135,23 +173,38 @@ public class InspectCommand {
                     } catch (Exception e) {
                         System.err.println("error: failed to match introspector of type " + svc.getClass());
                         e.printStackTrace();
+                        cause = chain(cause, e);
                         continue;
                     }
                     // found a match! run action on introspector
                     try (AutoCloseable ungetter = () -> ctx.ungetService(rrr)) {
                         try {
                             action.actOn(svc);
+                            count++;
                         } catch (Exception e) {
                             System.err.println("error: failed to " + desc + " for service of type " + svc.getClass());
+                            cause = chain(cause, e);
                         }
                     } catch (Exception e) {
                         System.err.println("error: problem occurred while ungetting service of type " + svc.getClass());
+                        cause = chain(cause, e);
                     }
                 } catch (Exception e) {
                     System.err.println("error: unable to retrieve service of type " + rrr.getClass().getName());
                     e.printStackTrace();
+                    cause = chain(cause, e);
                 }
             }
+            if (null == cause)
+                return count;
+            throw new RuntimeException(cause);
+        }
+
+        private static Throwable chain(Throwable prev, Throwable next) {
+            if (null == prev)
+                return next;
+            prev.addSuppressed(next);
+            return prev;
         }
     }
 }

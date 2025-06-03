@@ -1,5 +1,5 @@
 #*******************************************************************************
-# Copyright (c) 2018,2024 IBM Corporation and others.
+# Copyright (c) 2018,2025 IBM Corporation and others.
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License 2.0
 # which accompanies this distribution, and is available at
@@ -15,6 +15,8 @@ bVersion=1.0
 
 fat.project: true
 
+fat.test.container.images: icr.io/ibm-messaging/mq:9.3.2.0-r2
+
 tested.features: \
   javaee-7.0, \
   javaee-8.0, \
@@ -28,7 +30,9 @@ tested.features: \
   transportSecurity-1.0, \
 \
   springBoot-1.5, \
-  springBoot-2.0
+  springBoot-2.0, \
+  jms-2.0, \
+  jndi-1.0
 
 src: \
   fat/src,\
@@ -65,4 +69,6 @@ src: \
   com.ibm.ws.kernel.boot.core;version=latest, \
   com.ibm.ws.kernel.service;version=latest,\
   com.ibm.ws.kernel.security.thread;version=latest,\
-  com.ibm.ws.springboot.fat20.websocket.app;version=latest
+  com.ibm.ws.springboot.fat20.websocket.app;version=latest,\
+  com.ibm.ws.springboot.fat20.jms.app;version=latest,\
+  io.openliberty.org.testcontainers;version=latest

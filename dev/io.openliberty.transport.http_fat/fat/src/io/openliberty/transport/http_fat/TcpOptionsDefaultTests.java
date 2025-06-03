@@ -93,4 +93,56 @@ public class TcpOptionsDefaultTests {
         // Validate that soReuseAddr default is true.
         assertNotNull("The default value of soReuseAddr was not true!", server.waitForStringInTrace("soReuseAddr: true"));
     }
+
+    /**
+     * The test will check the default value of addressExlcludeList by searching the trace file.
+     *
+     * The default value of addressExcludeList is null.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testAddressExcludeList_default() throws Exception {
+        // Validate that addressExcludeList default is null.
+        assertNotNull("The default value of addressExcludeList was not null!", server.waitForStringInTrace("addressExcludeList: null"));
+    }
+
+    /**
+     * The test will check the default value of addressIncludeList by searching the trace file.
+     *
+     * The default value of addressIncludeList is null.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testAddressIncludeList_default() throws Exception {
+        // Validate that addressIncludeList default is null.
+        assertNotNull("The default value of addressIncludeList was not null!", server.waitForStringInTrace("addressIncludeList: null"));
+    }
+
+    /**
+     * The test will check the default value of hostNameExcludeList by searching the trace file.
+     *
+     * The default value of hostNameExcludeList is null.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testHostNameExcludeList_default() throws Exception {
+        // Validate that hostNameExcludeList default null.
+        assertNotNull("The default value of hostNameExcludeList was not null!", server.waitForStringInTrace("hostNameExcludeList: null"));
+    }
+
+    /**
+     * The test will check the default value of hostNameIncludeList by searching the trace file.
+     *
+     * The default value of hostNameIncludeList is null.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testHostNameIncludeList_default() throws Exception {
+        // Validate that hostNameIncludeList default null.
+        assertNotNull("The default value of hostNameIncludeList was not null!", server.waitForStringInTrace("hostNameIncludeList: null"));
+    }
 }

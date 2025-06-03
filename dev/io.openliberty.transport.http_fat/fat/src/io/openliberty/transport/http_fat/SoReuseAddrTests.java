@@ -76,6 +76,11 @@ public class SoReuseAddrTests {
         server.updateServerConfiguration(configuration);
         server.waitForConfigUpdateInLogUsingMark(null);
 
+        // CWWKO0219I: TCP Channel defaultHttpEndpoint has been started and is now listening for requests on host *  (IPv6) port 8010.
+        // We should wait for the TCP Channel to start before checking the trace. If we don't it is possible we try to start shutting down
+        // the server before we even have finished starting up causing quiesce issues.
+        server.waitForStringInLogUsingMark("CWWKO0219I");
+
         // Validate that soReuseAddr is set to false.
         assertNotNull("The configured value of soReuseAddr was not false!", server.waitForStringInTraceUsingMark("soReuseAddr: false"));
     }

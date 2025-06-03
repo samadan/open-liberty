@@ -478,11 +478,10 @@ public class DBRotationTest extends CloudFATServletClient {
     // Annoying that all these have to be allowed rather that some being expected. Thanks Derby.
     @AllowedFFDC(value = { "com.ibm.ws.recoverylog.spi.LogsUnderlyingTablesMissingException", "javax.transaction.SystemException", "java.lang.Exception",
                            "com.ibm.ws.recoverylog.spi.InternalLogException", "java.lang.IllegalStateException" })
-    public void testReactionToDeletedTables() throws Exception {
+    public void testHeartbeatReactionToDeletedTables() throws Exception {
 
         if (!TxTestContainerSuite.isDerby()) { // Can't get a connection to drop tables on embedded Derby
             serversToCleanup = Arrays.asList(server2, noRecoveryGroupServer1);
-
             server2.useSecondaryHTTPPort();
 
             FATUtils.startServers(_runner, server2, noRecoveryGroupServer1);
@@ -491,12 +490,45 @@ public class DBRotationTest extends CloudFATServletClient {
 
             runTest(noRecoveryGroupServer1, SERVLET_NAME, "dropServer2Tables");
 
-            runTest(server2, SERVLET_NAME, "twoTrans");
+            // Heartbeat will fail within 5 seconds and bring the server down
             assertNotNull(server2.getServerName() + " recovery tables should have been deleted",
                           server2.waitForStringInTrace("Underlying SQL tables missing", FATUtils.LOG_SEARCH_TIMEOUT));
 
             assertNotNull(server2.getServerName() + " should have stopped",
                           server2.waitForStringInLog("CWWKE0036I: The server com.ibm.ws.transaction_ANYDBCLOUD002 stopped", FATUtils.LOG_SEARCH_TIMEOUT));
+        }
+    }
+
+    @Test
+    // Same as above but take the heartbeat out of the equation and drive some transactional work instead
+    // The work should fail
+    // Annoying that all these have to be allowed rather that some being expected. Thanks Derby.
+    @AllowedFFDC(value = { "com.ibm.ws.recoverylog.spi.LogsUnderlyingTablesMissingException", "javax.transaction.SystemException", "java.lang.Exception",
+                           "com.ibm.ws.recoverylog.spi.InternalLogException", "java.lang.IllegalStateException" })
+    public void testWorkReactionToDeletedTables() throws Exception {
+
+        if (!TxTestContainerSuite.isDerby()) { // Can't get a connection to drop tables on embedded Derby
+            serversToCleanup = Arrays.asList(server2, noRecoveryGroupServer1);
+            server2.useSecondaryHTTPPort();
+
+            try (AutoCloseable x = withExtraTranAttribute(server2, "peerTimeBeforeStale", "600")) {
+                FATUtils.startServers(_runner, server2, noRecoveryGroupServer1);
+                assertNotNull(server2.getServerName() + " recovery should have completed",
+                              server2.waitForStringInTrace("WTRN0133I: Transaction recovery processing for this server is complete", FATUtils.LOG_SEARCH_TIMEOUT));
+
+                runTest(noRecoveryGroupServer1, SERVLET_NAME, "dropServer2Tables");
+                try {
+                    runInServlet(server2, SERVLET_NAME, "doomedTran");
+                } catch (IOException e) {
+                    // Not really bothered. Server probably went away too quickly.
+                }
+
+                assertNotNull(server2.getServerName() + " recovery tables should have been deleted",
+                              server2.waitForStringInTrace("Underlying SQL tables missing", FATUtils.LOG_SEARCH_TIMEOUT));
+
+                assertNotNull(server2.getServerName() + " should have stopped",
+                              server2.waitForStringInLog("CWWKE0036I: The server com.ibm.ws.transaction_ANYDBCLOUD002 stopped", FATUtils.LOG_SEARCH_TIMEOUT));
+            }
         }
     }
 
@@ -574,7 +606,6 @@ public class DBRotationTest extends CloudFATServletClient {
 
     /**
      * Temporarily set an extra transaction attribute
-     * server should be stopped
      */
     private static AutoCloseable withExtraTranAttribute(LibertyServer server, String attribute, String value) throws Exception {
         final ServerConfiguration config = server.getServerConfiguration();

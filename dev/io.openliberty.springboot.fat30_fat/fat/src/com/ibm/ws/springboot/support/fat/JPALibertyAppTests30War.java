@@ -24,10 +24,12 @@ import org.junit.runner.RunWith;
 
 import com.ibm.websphere.simplicity.config.WebApplication;
 
+import componenttest.annotation.MinimumJavaLevel;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.utils.HttpUtils;
 
 @RunWith(FATRunner.class)
+@MinimumJavaLevel(javaLevel = 17)
 public class JPALibertyAppTests30War extends JPAAppAbstractTests {
 
     @Override

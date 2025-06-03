@@ -922,6 +922,15 @@ public class JTMConfigurationProvider extends DefaultConfigurationProvider imple
         return (Boolean) _props.get("enableLogLocking");
     }
 
+    @Override
+    @Trivial
+    public int getAsyncResponseThreadpoolSize() {
+        final Number num = (Number) _props.get("asyncResponseThreadpoolSize");
+        if (tc.isDebugEnabled())
+            Tr.debug(tc, "asyncResponseThreadpoolSize: {0}", num);
+        return num.intValue();
+    }
+
     /*
      * (non-Javadoc)
      *

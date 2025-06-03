@@ -904,6 +904,7 @@ public class ProducerGrpcServiceClientImpl extends ProducerGrpcServiceClient {
             // Error on the reply from the server service
             errorMessage = t.getMessage();
             log.info("grpcTwoWayStreamApp: onError received from server service: " + errorMessage);
+            log.log(Level.SEVERE, "Error received...", t);
             latch.countDown();
         }
 

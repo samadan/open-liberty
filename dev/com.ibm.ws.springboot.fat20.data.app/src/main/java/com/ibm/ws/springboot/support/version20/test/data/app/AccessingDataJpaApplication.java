@@ -48,26 +48,38 @@ public class AccessingDataJpaApplication extends SpringBootServletInitializer {
 		};
 	}
 
-	static void doDataTest(String context, TestPersistence testTransaction) {
-
-		testTransaction.clear();
-		// save a few employees
+	static private List<Employee> getEmployees() {
 		List<Employee> employees = new ArrayList<>();
 		employees.add(new Employee("Sydney", "Bristow"));
 		employees.add(new Employee("Michael", "Vahughn"));
 		employees.add(new Employee("Jack", "Bristow"));
 		employees.add(new Employee("Arvin", "Sloane"));
 		employees.add(new Employee("Marshall", "Flinkman"));
+		return employees;
+	}
 
-		// save a few customers
+	static private List<Customer> getCustomers(boolean includeError) {
 		List<Customer> customers = new ArrayList<>();
 		customers.add(new Customer("Jack", "Bauer", "T"));
 		customers.add(new Customer("Chloe", "O'Brian", "S"));
 		customers.add(new Customer("Kim", "Bauer", "R"));
 		customers.add(new Customer("David", "Palmer", "Q"));
 		customers.add(new Customer("Michelle", "Dessler", "P"));
-		// should cause failure with middle initial being too long
-		customers.add(new Customer("Thomas", "Watson", "IBM"));
+		if (includeError) {
+			// should cause failure with middle initial being too long
+			customers.add(new Customer("Thomas", "Watson", "IBM"));
+		}
+		return customers;
+	}
+
+	static void doDataTest(String context, TestPersistence testTransaction) {
+
+		testTransaction.clear();
+		// save a few employees
+		List<Employee> employees = getEmployees();
+
+		// save a few customers
+		List<Customer> customers = getCustomers(true);
 
 		boolean gotException = false;
 		try {
@@ -82,8 +94,10 @@ public class AccessingDataJpaApplication extends SpringBootServletInitializer {
 		Assert.isTrue(shouldBeEmptyEmployees.isEmpty(), "Employees should be empty: " + shouldBeEmptyEmployees);
 		Assert.isTrue(shouldBeEmptyCustomers.isEmpty(), "Customers should be empty: " + shouldBeEmptyCustomers);
 
-		// remove bad middle name customer
-		customers.remove(5);
+		// Remove bad middle name customer;
+		// Do not reuse entities from failed transaction see https://hibernate.atlassian.net/browse/HHH-19481
+		customers = getCustomers(false);
+		employees = getEmployees();
 
 		testTransaction.addAll(employees, customers);
 
