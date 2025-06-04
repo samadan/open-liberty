@@ -3761,6 +3761,9 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
 
             getTSC().getWriteInterface().setBuffers(writeBuffers);
             try {
+                if(!nettyContext.channel().isOpen()){
+                    throw new IOException("Attempted to write on a closed Netty channel");
+                }
                 getTSC().getWriteInterface().write(TCPWriteRequestContext.WRITE_ALL_DATA, null, false, getWriteTimeout());
             } finally {
                 // 457369 - disconnect write buffers in TCP when done
