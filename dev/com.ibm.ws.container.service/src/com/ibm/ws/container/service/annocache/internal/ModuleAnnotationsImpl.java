@@ -115,6 +115,7 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
     // A name attribute supplied by the application element of the server configuration.
     //
     // A name supplied by the application descriptor.
+    // (This is disambiguated in "ApplicationInfoImpl".  See the notes below, re: issue 30315.)
     //
     // The base name of the application archive (as specified by the location attribute
     //   of the application element).
@@ -129,13 +130,32 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
     // And to which a number may be added if the resulting name is not
     // unique to the server runtime.
     //
-    // This implementation uses the J2EE name.
+    // XXX This implementation uses the J2EE name. XXX
+    // This implementation uses the application name.  See the comments below,
+    // re: issue 30315.
     //
     // The other location which generates an application name for use by the
     // cache is:
     //   com.ibm.ws.app.manager.ear.internal.EARDeployedAppInfo.
     //      hasAnnotations(Container, Collection<String>)
-    // That location uses (in effect) the J2EE name of the application.
+    // 
+    // Curiously, that location already uses the application name!
+
+    // Issue 30315:
+    //
+    // Issue 30315 uncovered a problem in using the deployment name (which is usually the application J2EE name).
+    //
+    // The FAT test:
+    //
+    // com.ibm.ws.app.manager.wab.installer.fat.FATSuite testMultipleConfiguration
+    //
+    // Produces output showing that only the application name is unique.  The deployment name may not be unique!
+    //
+    //                                                                                        getAppName()    getDeploymentName()
+    // [49:21:427] 006a SystemOut O getAppName: [ ApplicationInfoImpl@61eb9b38[test.wab1] ]   [ test.wab1 ]   [ test.wab1 ]
+    // [49:21:427] 0066 SystemOut O getAppName: [ ApplicationInfoImpl@34c7a7c0[test.wab2] ]   [ test.wab2 ]   [ test.wab2 ]
+    // [49:21:427] 006b SystemOut O getAppName: [ ApplicationInfoImpl@2784ac9a[test.wab2_2] ] [ test.wab2_2 ] [ test.wab2 ]
+    // [49:21:428] 0065 SystemOut O getAppName: [ ApplicationInfoImpl@c0e8062c[test.wab1_2] ] [ test.wab1_2 ] [ test.wab1 ]
 
     public static String getAppName(ModuleInfo moduleInfo) {
         String methodName = "getAppName";
@@ -147,9 +167,12 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
             Tr.debug(tc, methodName + ": AppName [ " + appName + " ] AppDepName [ " + appDepName + " ] (using AppDepName)");
         }
 
-        // System.out.println(methodName + ": ApplicationInfo [ " + appInfo + " ] [ " + appInfo.getClass().getName() + " ] [ " + appDepName + " ]");
+        // System.out.println(methodName +
+	//     ": ApplicationInfo [ " + appInfo + " ]" +
+	//     " [ " + appInfo.getClass().getName() + " ]" +
+	//     " [ " + appName + " ] [ " + appDepName + " ]");
 
-        return appDepName;
+        return appName; // Issue 30315
     }
 
     public ModuleAnnotationsImpl(

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2024 IBM Corporation and others.
+ * Copyright (c) 2014, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,8 @@
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package com.ibm.ws.cdi.visibility.tests.basic;
+
+import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
 
 import javax.enterprise.inject.spi.Extension;
 
@@ -20,6 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 
+import com.ibm.websphere.simplicity.CDIArchiveHelper;
 import com.ibm.websphere.simplicity.ShrinkHelper;
 import com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions;
 import com.ibm.ws.cdi.visibility.tests.basic.classloadPrereqWar.ClassLoadPrereqLoggerServlet;
@@ -36,6 +39,9 @@ import com.ibm.ws.cdi.visibility.tests.basic.warlibs.maifestLibJar.TestInjection
 import com.ibm.ws.cdi.visibility.tests.basic.warlibs.war.WarBean;
 import com.ibm.ws.cdi.visibility.tests.basic.warlibs.war.WarLibsTestServlet;
 import com.ibm.ws.cdi.visibility.tests.basic.warlibs.webinfLibJar.TestInjectionClass;
+import com.ibm.ws.cdi.visibility.tests.duplicate.lib.DuplicateLibraryBean;
+import com.ibm.ws.cdi.visibility.tests.duplicate.war1.DuplicateWar1Servlet;
+import com.ibm.ws.cdi.visibility.tests.duplicate.war2.DuplicateWar2Servlet;
 
 import componenttest.annotation.Server;
 import componenttest.annotation.TestServlet;
@@ -67,6 +73,10 @@ public class BasicVisibilityTests extends FATServletClient {
 
     public static final String WAR_LIB_ACCESS_APP_NAME = "warlibs";
 
+    private static final String DUP_LIB_EAR_APP_NAME = "dupLibEar";
+    private static final String DUP_WAR2_APP_NAME = "dupWar2";
+    private static final String DUP_WAR1_APP_NAME = "dupWar1";
+
     @Server(SERVER_NAME)
     @TestServlets({
                     @TestServlet(servlet = PackageAccessTestServlet.class, contextRoot = PACKAGE_ACCESS_APP_NAME), //LITE
@@ -76,7 +86,10 @@ public class BasicVisibilityTests extends FATServletClient {
                     @TestServlet(servlet = Web2Servlet.class, contextRoot = MULTI_MOD4_APP_NAME), //FULL
                     @TestServlet(servlet = ClassLoadPrereqLoggerServlet.class, contextRoot = CLASS_LOAD_APP_NAME), //FULL
                     @TestServlet(servlet = RootClassLoaderServlet.class, contextRoot = ROOT_CLASSLOADER_APP_NAME), //LITE
-                    @TestServlet(servlet = WarLibsTestServlet.class, contextRoot = WAR_LIB_ACCESS_APP_NAME) }) //LITE
+                    @TestServlet(servlet = WarLibsTestServlet.class, contextRoot = WAR_LIB_ACCESS_APP_NAME), // LITE
+                    @TestServlet(servlet = DuplicateWar1Servlet.class, contextRoot = DUP_WAR1_APP_NAME), // FULL
+                    @TestServlet(servlet = DuplicateWar2Servlet.class, contextRoot = DUP_WAR2_APP_NAME) // FULL
+    })
     public static LibertyServer server;
 
     @BeforeClass
@@ -128,6 +141,27 @@ public class BasicVisibilityTests extends FATServletClient {
             ShrinkHelper.exportDropinAppToServer(server, multiModuleAppTwo, DeployOptions.SERVER_ONLY);
 
             /////////////////
+
+            JavaArchive dupJar = ShrinkWrap.create(JavaArchive.class, "dupJar.jar")
+                                           .addPackage(DuplicateLibraryBean.class.getPackage());
+            CDIArchiveHelper.addBeansXML(dupJar);
+
+            WebArchive dupWar1 = ShrinkWrap.create(WebArchive.class, DUP_WAR1_APP_NAME + ".war")
+                                           .addPackage(DuplicateWar1Servlet.class.getPackage())
+                                           .addAsLibrary(dupJar);
+            CDIArchiveHelper.addBeansXML(dupWar1);
+
+            WebArchive dupWar2 = ShrinkWrap.create(WebArchive.class, DUP_WAR2_APP_NAME + ".war")
+                                           .addPackage(DuplicateWar2Servlet.class.getPackage())
+                                           .addAsLibrary(dupJar);
+            CDIArchiveHelper.addBeansXML(dupWar2);
+
+            EnterpriseArchive dupLibEar = ShrinkWrap.create(EnterpriseArchive.class, DUP_LIB_EAR_APP_NAME + ".ear")
+                                                    .addAsModule(dupWar1)
+                                                    .addAsModule(dupWar2);
+
+            ShrinkHelper.exportDropinAppToServer(server, dupLibEar, SERVER_ONLY);
+
         }
 
         JavaArchive rootClassLoaderExtension = ShrinkWrap.create(JavaArchive.class, "rootClassLoaderExt.jar")

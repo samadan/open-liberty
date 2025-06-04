@@ -28,6 +28,7 @@ import io.openliberty.microprofile.health.file.healthcheck.fat.utils.HealthFileU
 @SuiteClasses({
                 AlwaysPassesTest.class,
                 SimpleFileBasedHealthCheckTest.class,
+                ConfigTest.class,
                 MPConfigDefaultValuesTest.class
 })
 

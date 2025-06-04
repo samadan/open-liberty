@@ -37,11 +37,16 @@ public class TCPChannelInitializerImpl extends ChannelInitializerWrapper {
     TCPConfigurationImpl config;
 	NettyFrameworkImpl bundle;
 	MaxOpenConnectionsHandler maxHandler;
+	AccessListHandler includeHandler;
     
     public TCPChannelInitializerImpl(BootstrapConfiguration config, NettyFrameworkImpl bundle) {
     	this.bundle = bundle;
         this.config = (TCPConfigurationImpl) config;
         maxHandler = new MaxOpenConnectionsHandler(this.config.getMaxOpenConnections());
+
+       if (this.config.getAccessLists() != null) {
+           includeHandler = new AccessListHandler(this.config.getAccessLists());
+       }
     }
 
     @Override
@@ -61,7 +66,6 @@ public class TCPChannelInitializerImpl extends ChannelInitializerWrapper {
             channel.pipeline().addLast(NettyConstants.INACTIVITY_TIMEOUT_HANDLER_NAME, new InactivityTimeoutHandler(0, 0, config.getInactivityTimeout(), TimeUnit.MILLISECONDS));
         }
         if (config.getAccessLists() != null) {
-            AccessListHandler includeHandler = new AccessListHandler(config.getAccessLists());
             channel.pipeline().addLast(NettyConstants.ACCESSLIST_HANDLER_NAME, includeHandler);
         }
         channel.pipeline().addLast(NettyConstants.MAX_OPEN_CONNECTIONS_HANDLER_NAME, maxHandler);

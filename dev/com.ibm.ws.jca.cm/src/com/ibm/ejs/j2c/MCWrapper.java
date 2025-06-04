@@ -1930,7 +1930,21 @@ public final class MCWrapper implements com.ibm.ws.j2c.MCWrapper, JCAPMIHelper {
         // Get the a Connection from the ManagedConnection to return to our caller, and increment the
         // number of open connections for this ManagedConnection.
         try {
-            connection = mc.getConnection(subj, cri);
+            if (!aborted && !do_not_reuse_mcw) {
+                connection = mc.getConnection(subj, cri);
+            } else {
+                if (do_not_reuse_mcw) {
+                    if (isTracingEnabled && tc.isDebugEnabled()) {
+                        Tr.debug(this, tc, "Connection error occurred for this mcw " + this + ", mcw will not be reused");
+                    }
+                    markStale();
+                    ResourceException e = new ResourceException("Resource adapter called connection error event during getConnection " +
+                                                                "processing and did not throw a resource exception.  The reason for " +
+                                                                "this failure may have been logged during the connection error event " +
+                                                                "logging.");
+                    throw e;
+                }
+            }
             if (isValidating.get() != null && Boolean.FALSE.equals(testConnection()))
                 throw new ResourceAllocationException("ManagedConnection.testConnection() indicates connection is not valid.");
             if (_supportsReAuth) {

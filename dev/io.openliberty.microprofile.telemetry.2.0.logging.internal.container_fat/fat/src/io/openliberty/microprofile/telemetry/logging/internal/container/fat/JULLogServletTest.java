@@ -30,6 +30,7 @@ import com.ibm.websphere.simplicity.ShrinkHelper;
 import com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions;
 
 import componenttest.annotation.MaximumJavaLevel;
+import componenttest.annotation.MinimumJavaLevel;
 import componenttest.annotation.Server;
 import componenttest.annotation.SkipIfSysProp;
 import componenttest.containers.SimpleLogConsumer;
@@ -38,6 +39,7 @@ import componenttest.topology.impl.LibertyServer;
 
 @RunWith(FATRunner.class)
 @MaximumJavaLevel(javaLevel = 20)
+@MinimumJavaLevel(javaLevel = 11)
 public class JULLogServletTest {
 
     private static Class<?> c = JULLogServletTest.class;

@@ -499,7 +499,7 @@ public class QueryInfo {
      * Temporary code to append the portion of the query language ql starting from startAt
      * where the entity identify variable is inserted before references to entity attributes.
      * This method does not cover all scenarios but should be sufficient for simulating.
-     * TODO remove this method once we have Jakarta Persistence 3.2.
+     * TODO remove this method once EclipseLink issue #30351 is fixed
      *
      * @param ql        Jakarta Data Query Language
      * @param startAt   position in query language to start at.
@@ -3382,7 +3382,7 @@ public class QueryInfo {
                     // id(this)
                     attributeName = entityInfo.attributeNames.get(By.ID);
                     if (attributeName == null && failIfNotFound)
-                        throw exc(UnsupportedOperationException.class,
+                        throw exc(MappingException.class,
                                   "CWWKD1093.fn.not.applicable",
                                   name,
                                   entityInfo.getType().getName(),
@@ -3392,7 +3392,7 @@ public class QueryInfo {
                 } else if (len == 13 && name.regionMatches(true, 0, "version", 0, 7)) {
                     // version(this)
                     if (entityInfo.versionAttributeName == null && failIfNotFound)
-                        throw exc(UnsupportedOperationException.class,
+                        throw exc(MappingException.class,
                                   "CWWKD1093.fn.not.applicable",
                                   name,
                                   entityInfo.getType().getName(),
@@ -3471,16 +3471,15 @@ public class QueryInfo {
      */
     @Trivial
     Object[] getCursorValues(Object entity) {
+        final boolean trace = TraceComponent.isAnyTracingEnabled();
         ArrayList<Object> cursorValues = new ArrayList<>();
         for (Sort<?> sort : sorts)
             try {
                 List<Member> accessors = entityInfo.attributeAccessors.get(sort.property());
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
+                if (trace && tc.isDebugEnabled())
                     Tr.debug(this, tc, "getCursorValues for " + loggable(entity),
                              accessors);
                 Object value = entity;
-                // TODO is it possible for accessors to be null here?
-                // Could sort.property() being VERSION(THIS) or some invalid name cause this?
                 for (Member accessor : accessors)
                     if (accessor instanceof Method)
                         value = ((Method) accessor).invoke(value);
@@ -3490,6 +3489,8 @@ public class QueryInfo {
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException x) {
                 throw new DataException(x instanceof InvocationTargetException ? x.getCause() : x);
             }
+        if (trace && tc.isDebugEnabled())
+            Tr.debug(this, tc, "getCursorValues: " + loggable(cursorValues));
         return cursorValues.toArray();
     }
 

@@ -26,9 +26,6 @@
             <property name="jakarta.persistence.schema-generation.database.action" value="create" />
             <property name="jakarta.persistence.schema-generation.scripts.action" value="create"/>
             <property name="jakarta.persistence.schema-generation.scripts.create-target" value="createCustomers.ddl"/>
-            <property name="eclipselink.logging.level" value="FINE"/>
-            <property name="eclipselink.logging.parameters" value="true"/>
-            <property name="eclipselink.cache.shared.default" value="false"/>
         </properties>
     </persistence-unit>
 
@@ -39,9 +36,6 @@
             <property name="jakarta.persistence.schema-generation.database.action" value="create" />
             <property name="jakarta.persistence.schema-generation.scripts.action" value="create"/>
             <property name="jakarta.persistence.schema-generation.scripts.create-target" value="createEmployees.ddl"/>
-            <property name="eclipselink.logging.level" value="FINE"/>
-            <property name="eclipselink.logging.parameters" value="true"/>
-            <property name="eclipselink.cache.shared.default" value="false"/>
         </properties>
     </persistence-unit>
 </persistence>

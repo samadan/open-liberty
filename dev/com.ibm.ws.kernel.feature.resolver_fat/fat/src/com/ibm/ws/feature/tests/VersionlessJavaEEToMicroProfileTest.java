@@ -14,15 +14,11 @@ package com.ibm.ws.feature.tests;
 
 import java.util.Collection;
 
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.ibm.ws.feature.tests.util.PlatformConstants;
-
-import componenttest.topology.impl.LibertyServer;
-import componenttest.topology.impl.LibertyServerFactory;
 
 // @formatter:off
 
@@ -35,12 +31,6 @@ public class VersionlessJavaEEToMicroProfileTest extends VersionlessTest {
     public static final String SERVER_NAME_EE11 = "ee11toMP";
 
     public static final String[] ALLOWED_ERRORS = { "CWWKF0001E", "CWWKF0048E" };
-
-    @After
-    public void after() throws Exception {
-        LibertyServer server = LibertyServerFactory.getLibertyServer(getTestCase().serverName);
-        server.stopServer(ALLOWED_ERRORS);
-    }
 
     public static TestCase[] TEST_CASES = new TestCase[] {
         new TestCase("ee7toHealthAndMetricsMax",
@@ -125,6 +115,11 @@ public class VersionlessJavaEEToMicroProfileTest extends VersionlessTest {
     @Test
     public void versionless_javaEEToMicroProfileTest() throws Exception {
         test(getTestCase());
+    }
+
+    @Override
+    protected boolean waitForSSL() {
+        return true;
     }
 }
 // @formatter:on

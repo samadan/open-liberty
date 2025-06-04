@@ -114,6 +114,9 @@ public class VersionlessTest {
 
         server.startServer();
         try {
+            if (waitForSSL()) {
+                server.waitForSSLStart();
+            }
             action.accept(server);
         } finally {
             server.stopServerAlways(allowedErrors);
@@ -227,6 +230,14 @@ public class VersionlessTest {
                 return true;
             }
         }
+        return false;
+    }
+
+    /**
+     * If a subclass of this class has servers that enable SSL
+     * this method should be overridden to return true
+     */
+    protected boolean waitForSSL() {
         return false;
     }
 }

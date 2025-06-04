@@ -126,7 +126,7 @@ public class ContainerAuthTest extends FATServletClient {
         server.addEnvVar("DB_DRIVER", DatabaseContainerType.valueOf(testContainer).getDriverName());
 
         //Setup server DataSource properties
-        DatabaseContainerUtil.setupDataSourceProperties(server, testContainer);
+        DatabaseContainerUtil.build(server, testContainer).withDatabaseProperties().modify();
 
         server.setServerStartTimeout(FATUtils.LOG_SEARCH_TIMEOUT);
     }

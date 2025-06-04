@@ -358,6 +358,9 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
      *
      */
     final public void resetMsgParsedState() {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "resetMsgParsedState (0) called for" + this);
+        }
         this.msgParsedState = STATE_NONE;
     }
 
@@ -376,7 +379,7 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
      */
     public final void setBodyComplete() {
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "setBodyComplete() called");
+            Tr.debug(tc, "setBodyComplete (3) called");
         }
         this.msgParsedState = STATE_FULL_MESSAGE;
     }
@@ -405,6 +408,9 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
      *
      */
     final protected void setMessageSent() {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "setHeadersParsed (3) called for " + this);
+        }
         this.msgSentState = STATE_FULL_MESSAGE;
     }
 
@@ -463,6 +469,9 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
      *
      */
     final protected void setHeadersSent() {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "setHeadersParsed (1) called for " + this);
+        }
         this.msgSentState = STATE_FULL_HEADERS;
     }
 
@@ -481,7 +490,11 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
      * @return boolean
      */
     final public boolean headersParsed() {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "headersParsed called: msgParsedState -> " + this.msgParsedState);
+        }
         return getHttpConfig().useNetty() ? Boolean.TRUE : STATE_FULL_HEADERS <= this.msgParsedState;
+
     }
 
     /**
@@ -489,6 +502,9 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
      *
      */
     final public void setHeadersParsed() {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "setHeadersParsed  (1) called for " + this);
+        }
         this.msgParsedState = STATE_FULL_HEADERS;
 
     }

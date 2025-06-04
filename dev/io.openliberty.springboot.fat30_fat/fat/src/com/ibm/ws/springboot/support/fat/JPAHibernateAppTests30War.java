@@ -33,10 +33,12 @@ import org.junit.runner.RunWith;
 
 import com.ibm.websphere.simplicity.RemoteFile;
 
+import componenttest.annotation.MinimumJavaLevel;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.utils.HttpUtils;
 
 @RunWith(FATRunner.class)
+@MinimumJavaLevel(javaLevel = 17)
 public class JPAHibernateAppTests30War extends JPAAppAbstractTests {
 
     @BeforeClass
@@ -67,6 +69,10 @@ public class JPAHibernateAppTests30War extends JPAAppAbstractTests {
                     if (!tomcatStarter(entryName)) {
                         newEntry = new JarEntry(entryName.replace("lib-provided", "lib"));
                     }
+                }
+                if (entryName.equals("WEB-INF/classes/META-INF/persistence.xml")) {
+                    // Remove the default persistence.xml processed by Liberty
+                    continue;
                 }
                 jarOutputStream.putNextEntry(newEntry);
                 byte[] buffer = new byte[1024];

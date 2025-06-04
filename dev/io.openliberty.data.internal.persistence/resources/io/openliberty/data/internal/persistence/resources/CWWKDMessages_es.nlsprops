@@ -247,7 +247,7 @@ CWWKD1054.non.unique.result=CWWKD1054E: El m\u00e9todo {0} de la interfaz del re
 CWWKD1054.non.unique.result.explanation=El tipo de retorno del m\u00e9todo repositorio no permite devolver m\u00faltiples resultados.
 CWWKD1054.non.unique.result.useraction=Actualice el m\u00e9todo de repositorio para utilizar un tipo de devoluci\u00f3n que admita m\u00faltiples resultados o actualice el m\u00e9todo de repositorio para que no devuelva m\u00e1s que un \u00fanico resultado.
 
-CWWKD1055.unsupported.entity.attr=CWWKD1055E: El atributo {0} de la entidad {1} tiene un tipo no admitido: {2}. Jakarta Data admite tipos de enumeraci\u00f3n Java, los tipos temporales de la especificaci\u00f3n de tipos de datos de Java ( {3} ) y los siguientes tipos b\u00e1sicos: {4}. El proveedor de datos de Jakarta integrado tambi\u00e9n admite algunos tipos de persistencia de Jakarta, como los incrustables.
+CWWKD1055.unsupported.entity.attr=CWWKD1055E: El atributo {0} de la entidad {1} tiene un tipo no soportado: {2}. Jakarta Data admite los tipos de enumeraci\u00f3n de Java, los tipos temporales de {3} y los siguientes tipos b\u00e1sicos: {4}. El proveedor de Jakarta Data incorporado tambi\u00e9n soporta algunos tipos de Jakarta Persistence, como los embeddables. Alternativamente, si est\u00e1 utilizando una entidad Jakarta Persistence, puede a\u00f1adir la anotaci\u00f3n {5} al atributo {0} para proporcionar una implementaci\u00f3n AttributeConverter que convierta un tipo no soportado en un tipo soportado.
 CWWKD1055.unsupported.entity.attr.explanation=Yakarta Los datos no son compatibles con el tipo utilizado por el atributo de entidad.
 CWWKD1055.unsupported.entity.attr.useraction=Actualice el atributo de entidad para utilizar uno de los tipos admitidos.
 
@@ -472,3 +472,11 @@ CWWKD1108.missing.entity.anno.useraction=Aplicar la anotaci\u00f3n Entidad a la
 CWWKD1109.jpa.anno.on.record=CWWKD1109E: La anotaci\u00f3n {0} no est\u00e1 permitida en el m\u00e9todo {1} de la clase de entidad {2} porque la clase de entidad {2} es un registro Java.
 CWWKD1109.jpa.anno.on.record.explanation=Las anotaciones de Jakarta Persistence no est\u00e1n permitidas en los registros Java.
 CWWKD1109.jpa.anno.on.record.useraction=Cambie a una clase de entidad Jakarta Persistence o elimine la anotaci\u00f3n Jakarta Persistence del registro Java.
+
+CWWKD1110.incompat.with.collection=CWWKD1110E: El m\u00e9todo {0} de la interfaz de repositorio {1} tiene un nombre que incluye la palabra clave {2}, que es incompatible con el atributo {3} de la entidad {4} porque el atributo tiene un tipo de colecci\u00f3n. Las siguientes palabras clave de consulta por nombre de m\u00e9todo pueden utilizarse con atributos de entidad que tengan un tipo de colecci\u00f3n: {5}.
+CWWKD1110.incompat.with.collection.explanation=Algunas de las palabras clave de consulta por nombre de m\u00e9todo no son compatibles con los atributos de entidad que tienen un tipo de colecci\u00f3n.
+CWWKD1110.incompat.with.collection.useraction=Actualizar el m\u00e9todo de repositorio para evitar el uso de la palabra clave que no es compatible con el tipo de colecci\u00f3n.
+
+CWWKD1111.unsupported.convert=CWWKD1111E: La implementaci\u00f3n de {0} AttributeConverter convierte los valores de {1} al tipo {2}, que no est\u00e1 soportado por la especificaci\u00f3n Jakarta Data. La especificaci\u00f3n Jakarta Data admite los tipos de enumeraci\u00f3n de Java, los tipos temporales de {3} y los siguientes tipos b\u00e1sicos: {4}. El proveedor de datos incorporado de Jakarta tambi\u00e9n soporta algunos tipos de Jakarta Persistence.
+CWWKD1111.unsupported.convert.explanation=La implementaci\u00f3n de AttributeConverter no puede utilizarse con el proveedor de datos incorporado de Jakarta porque convierte los valores a un tipo no admitido.
+CWWKD1111.unsupported.convert.useraction=Actualice la implementaci\u00f3n de AttributeConverter para convertir los valores a uno de los tipos admitidos.
