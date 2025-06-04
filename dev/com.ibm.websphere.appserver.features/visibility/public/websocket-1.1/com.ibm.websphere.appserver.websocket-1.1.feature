@@ -17,6 +17,7 @@ Subsystem-Name: Java WebSocket 1.1
 -bundles=com.ibm.ws.wsoc, \
  com.ibm.ws.wsoc.1.1, \
  io.openliberty.wsoc.ssl.internal, \
+ io.openliberty.transport.config.internal, \
  io.openliberty.io.netty, \
  io.openliberty.io.netty.ssl, \
  io.openliberty.netty.internal, \
