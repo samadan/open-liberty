@@ -39,7 +39,7 @@ import io.openliberty.netty.internal.tls.NettyTlsProvider;
 import io.openliberty.netty.internal.tls.impl.handler.LibertySslHandler;
 import io.netty.handler.ssl.SslContext;
 
-import io.openliberty.transport.config.options.SslOption;
+import io.openliberty.netty.internal.tls.impl.options.SslOption;
 
 /**
  * Creates {@link io.netty.handler.ssl.SslContext} objects via

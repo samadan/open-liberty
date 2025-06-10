@@ -24,8 +24,6 @@ import com.ibm.ws.http.channel.internal.HttpConfigConstants;
 import com.ibm.ws.http.channel.internal.HttpMessages;
 import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer.ConfigElement;
 
-import io.openliberty.http.options.SslOption;
-
 /**
  * Configuration class for Netty-based HTTP channels.
  */
@@ -55,8 +53,6 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
         this.useSameSiteOptions = builder.useSameSite;
 
         this.parseConfig(builder.options);
-
-        parseSslOptions(builder.options);
 
     }
 
@@ -195,20 +191,6 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
         // HTTP/2 Options
         parseHttp2Options(options);
 
-    }
-
-
-    private void parseSslOptions(Map<String, Object> options) {
-        this.suppressHandshakeError =  SslOption.SUPPRESS_HANDSHAKE_ERRORS.parse(options);
-        this.suppressHandshakeErrorCount = SslOption.SUPPRESS_HANDSHAKE_ERRORS_COUNT.parse(options);
-    }
-
-    public boolean suppressHandshakeError() {
-        return suppressHandshakeError;
-    }
-
-    public int suppressHandshakeErrorCount(){
-        return suppressHandshakeErrorCount;
     }
 
     private void parseHttp2Options(Map<String, Object> options) {

@@ -27,7 +27,6 @@ import com.ibm.ws.http.netty.NettyChain;
 import com.ibm.ws.http.netty.NettyHttpChannelConfig;
 import com.ibm.ws.http.netty.NettyHttpChannelConfig.NettyConfigBuilder;
 import com.ibm.ws.http.netty.NettyHttpConstants;
-import com.ibm.ws.http.netty.pipeline.LibertySslHandler;
 import com.ibm.ws.http.netty.pipeline.http2.LibertyNettyALPNHandler;
 import com.ibm.ws.http.netty.pipeline.http2.LibertyUpgradeCodec;
 import com.ibm.ws.http.netty.pipeline.inbound.HttpDispatcherHandler;

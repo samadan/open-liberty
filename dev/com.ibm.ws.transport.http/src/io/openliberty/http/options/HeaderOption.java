@@ -11,8 +11,8 @@ package io.openliberty.http.options;
 
 import java.util.Map;
 
-import io.openliberty.http.options.EndpointOption.ConfigType;
-import io.openliberty.http.utils.HttpConfigUtils;
+import io.openliberty.transport.config.options.EndpointOption;
+import io.openliberty.transport.config.options.EndpointOption.ConfigType;
 
 /**
  * Enumeration of HTTP header configuration options.
@@ -57,11 +57,4 @@ public enum HeaderOption implements EndpointOption{
     public ConfigType getConfigType() {
         return configType;
     }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T parse(Map<String, Object> config) {
-        return(T) HttpConfigUtils.getOptionValue(config, this);
-    }
-
 }

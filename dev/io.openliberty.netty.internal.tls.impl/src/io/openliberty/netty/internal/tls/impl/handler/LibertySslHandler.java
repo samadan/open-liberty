@@ -50,7 +50,6 @@ public class LibertySslHandler extends SslHandler {
         engine().getSSLParameters().setUseCipherSuitesOrder(enforceCipherOrder);
         this.suppressLogError = SslOption.SUPPRESS_HANDSHAKE_ERRORS.parse(sslOptions);
         this.maxLogEntries = SslOption.SUPPRESS_HANDSHAKE_ERRORS_COUNT.parse(sslOptions);
-        System.out.println("Got options enforceCipherOrder:" + enforceCipherOrder + ", suppressHandshakeError: " + suppressLogError + ", maxCount: " + maxLogEntries );
     }
 
     /**
