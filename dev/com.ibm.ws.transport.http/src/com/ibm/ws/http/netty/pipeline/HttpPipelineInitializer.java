@@ -76,7 +76,8 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         COMPRESSION,
         SAMESITE,
         HEADERS,
-        ACCESS_LOG
+        ACCESS_LOG, 
+        TCP_OPTIONS
     }
 
     private final NettyChain chain;
