@@ -47,6 +47,7 @@ Export-Package: \
 	com.ibm.ws.netty.upgrade,\
 	com.ibm.ws.http.netty.inbound,\
 	com.ibm.ws.http.netty,\
+	io.openliberty.http.options,\
 	io.openliberty.http.netty*,\
 	io.openliberty.http.ext
 
@@ -59,7 +60,6 @@ Private-Package: \
 	com.ibm.ws.http.*, \
 	com.ibm.ws.tcpchannel.internal.resources, \
 	com.ibm.ws.genericbnf.internal, \
-	io.openliberty.http.options, \
 	io.openliberty.http.utils
 
 -dsannotations: com.ibm.ws.http.channel.internal.inbound.HttpPipelineEventHandler,\

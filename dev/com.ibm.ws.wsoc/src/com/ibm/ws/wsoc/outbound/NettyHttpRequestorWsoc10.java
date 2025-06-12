@@ -11,6 +11,7 @@ package com.ibm.ws.wsoc.outbound;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +53,7 @@ import com.ibm.wsspi.http.channel.values.HttpHeaderKeys;
 import com.ibm.wsspi.http.channel.values.StatusCodes;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
@@ -67,6 +70,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
+import io.openliberty.http.options.HttpOption;
 import io.openliberty.netty.internal.BootstrapExtended;
 import io.openliberty.netty.internal.ChannelInitializerWrapper;
 import io.openliberty.netty.internal.exception.NettyException;
@@ -96,7 +100,6 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
 
     private ChannelPromise responsePromise;
     
-//    private ChannelPromise activePromise;
     private CountDownLatch activeChannelLatch;
 
     private FullHttpResponse resp;
@@ -105,11 +108,13 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
 
     private final Map<String, List<String>> parameterMap = new HashMap<String, List<String>>();
 
+    protected Map<String, Object> httpOptions;
+
     public NettyHttpRequestorWsoc10(WsocAddress endpointAddress, ClientEndpointConfig config, ParametersOfInterest things) {
-        System.out.println("New netty http requestor!!");
         this.endpointAddress = endpointAddress;
         this.config = config;
         this.things = things;
+        httpOptions = WsocOutboundChain.getCurrentHttpOptions();
     }
 
     @Override
@@ -131,86 +136,29 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
         int port = remoteAddress.getPort();
         factory.handler(new WsocClientInitializer(factory.getBaseInitializer(), this));
         activeChannelLatch = new CountDownLatch(1);
+        final AtomicBoolean connectSucceded = new AtomicBoolean(true);
         connection = WsocOutboundChain.getNettyFramework().startOutbound(factory, host, port, future -> {
             if (!future.isSuccess()) {
-                System.out.println("Error occurred connecting to outbound! Need to check what will be the correct approach here");
+                connectSucceded.set(false);
             }
             activeChannelLatch.countDown();
         });
-//        activePromise = connection.newPromise();
         responsePromise = connection.newPromise();
-        // TODO Configure this with legacy timeouts
-        System.out.println("Waiting up to 60s for connection to be established");
-        activeChannelLatch.await(60000, TimeUnit.MILLISECONDS);
-//        activePromise.get(60000, TimeUnit.MILLISECONDS);
+        activeChannelLatch.await(HttpOption.READ_TIMEOUT.parse(httpOptions), TimeUnit.SECONDS);
+        if(!connectSucceded.get()) {
+            throw new NettyException("Unable to connect to the specified endpoint!");
+        }
     }
 
     @Override
     public void sendRequest() throws IOException, MessageSentException {
-        System.out.println("Sending request!");
         sendRequest(null);
     }
 
     @Override
     public void sendRequest(ParametersOfInterest poi) throws IOException, MessageSentException {
-        System.out.println("Sending request with parameters!");
         access.setTCPConnectionContext(new NettyTCPConnectionContext(connection, null));
-        access.setDeviceConnLink(new ConnectionLink() {
-
-            @Override
-            public void ready(VirtualConnection vc) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void destroy(Exception e) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void setDeviceLink(ConnectionLink next) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void setApplicationCallback(ConnectionReadyCallback next) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public VirtualConnection getVirtualConnection() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public ConnectionLink getDeviceLink() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public Object getChannelAccessor() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public ConnectionReadyCallback getApplicationCallback() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public void close(VirtualConnection vc, Exception e) {
-                System.out.println("Closing connection from websocket!");
-                connection.close();
-            }
-        });
+        access.setDeviceConnLink(new NettyOutboundConnectionLink(connection));
 
         String uriPath = endpointAddress.getURI().getPath();
         String queryString = endpointAddress.getURI().getQuery();
@@ -315,17 +263,15 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
 
     @Override
     public WsByteBuffer completeResponse() throws IOException {
-        System.out.println("Completing response!");
         try {
-            // TODO Configure this with legacy timeouts
-            System.out.println("This should wait up to 60s");
-            responsePromise.get(60000, TimeUnit.MILLISECONDS);
+            responsePromise.get(HttpOption.READ_TIMEOUT.parse(httpOptions), TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e1) {
-            System.out.println("How much did we wait?");
-            e1.printStackTrace();
+            // This most probably means we timed out waiting for a response and so
+            // we throw a socket timeout exception to wrap around the exception reached
+            throw new SocketTimeoutException(e1.getMessage());
         }
         if (resp == null) {
-            throw new IOException("Don't have a response yet! Do we need to wait for it?");
+            throw new IOException("Don't have a response yet!");
         }
         if (StatusCodes.SWITCHING_PROTOCOLS.getIntCode() != resp.status().code()) {
             String msg = Tr.formatMessage(tc, "client.invalid.returncode", resp.status().code(),
@@ -411,14 +357,11 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
         NettyServletUpgradeHandler upgradeHandler = new NettyServletUpgradeHandler(connection);
 
         HttpClientCodec httpHandler = connection.pipeline().get(HttpClientCodec.class);
-        if (httpHandler == null) {
-            System.out.println("Found null handler HTTP!");
-            throw new UnsupportedOperationException("Can't deal with this");
+        if (Objects.isNull(httpHandler)) { // Should NOT happen
+            throw new UnsupportedOperationException("Found Null Http Codec!");
         }
 
         connection.pipeline().addLast("ServletUpgradeHandler", upgradeHandler);
-
-        System.out.println(connection.pipeline().names());
 
         // Remove HTTP Codecs
         connection.pipeline().remove(HttpClientCodec.class);
@@ -451,9 +394,8 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
             if (requestor.endpointAddress.isSecure()) {
                 SSLEngine engine = null;
 
-                if (Objects.isNull(engine) && (WsocOutboundChain.currentSSL == null || WsocOutboundChain.getNettyTlsProvider() == null)) { // This shouldn't happen
-                    System.out.println("Oh no, secure address requested but no SSL Options found!");
-                    throw new IllegalStateException("This ");
+                if (Objects.isNull(engine) && (WsocOutboundChain.getCurrentSslOptions() == null || WsocOutboundChain.getNettyTlsProvider() == null)) { // This shouldn't happen
+                    throw new IllegalStateException("Secure address requested but no SSL Options configured");
                 }
                 if (tc.isDebugEnabled())
                     Tr.debug(ch, tc, "initChannel", "Adding SSL Support");
@@ -461,10 +403,10 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
                 String host = remoteAddress.getHostString();
                 int port = remoteAddress.getPort();
                 if (tc.isDebugEnabled())
-                    Tr.debug(this, tc, "Create SSL", new Object[] { WsocOutboundChain.getNettyTlsProvider(), host, port, WsocOutboundChain.currentSSL });
+                    Tr.debug(this, tc, "Create SSL", new Object[] { WsocOutboundChain.getNettyTlsProvider(), host, port, WsocOutboundChain.getCurrentSslOptions() });
 
                 if (Objects.isNull(engine)) {
-                    SslContext context = WsocOutboundChain.getNettyTlsProvider().getOutboundSSLContext(WsocOutboundChain.currentSSL, host, Integer.toString(port));
+                    SslContext context = WsocOutboundChain.getNettyTlsProvider().getOutboundSSLContext(WsocOutboundChain.getCurrentSslOptions(), host, Integer.toString(port));
 
                     if (context == null) {
                         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
@@ -489,19 +431,16 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
 
                 @Override
                 protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse res) throws Exception {
-                    System.out.println("Alrighty here we go! " + res);
                     requestor.resp = res;
                     ctx.pipeline().remove(this);
                     requestor.updatePipelineToWebsocket();
                     requestor.responsePromise.setSuccess();
                 }
-                
+
                 public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                    System.out.println("Setting active!!! "+ctx.channel());
-//                    requestor.activePromise.setSuccess();
                     ctx.fireChannelActive();
                 }
-                
+
             });
             pipeline.remove(NettyConstants.INACTIVITY_TIMEOUT_HANDLER_NAME);
         }
