@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2023 IBM Corporation and others.
+ * Copyright (c) 2021, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -70,7 +70,16 @@ public class UDPUtils {
 
 	private static ChannelFuture bind(NettyFrameworkImpl framework, BootstrapExtended bootstrap, final Channel channel, String inetHost,
 			int inetPort, final int retryCount, final int retryDelay, ChannelFutureListener bindListener) {
-		ChannelFuture bindFuture = channel.bind(new InetSocketAddress(inetHost, inetPort));
+		ChannelFuture bindFuture = null;
+
+		final UDPConfigurationImpl config = ((UDPConfigurationImpl) bootstrap.getConfiguration());
+
+		if (config.isInboundChannel()) {
+			bindFuture = channel.bind(new InetSocketAddress(inetHost, inetPort));
+		} else {
+			bindFuture = channel.connect(new InetSocketAddress(inetHost, inetPort));
+		}
+
 		if (inetHost.equals("*")) {
 			inetHost = NettyConstants.INADDR_ANY;
 		}
@@ -79,7 +88,7 @@ public class UDPUtils {
 		if (bindListener != null) {
 			bindFuture.addListener(bindListener);
 		}
-		final UDPConfigurationImpl config = ((UDPConfigurationImpl) bootstrap.getConfiguration());
+
 		final String channelName = ((UDPConfigurationImpl) bootstrap.getConfiguration()).getExternalName();
 
 		bindFuture.addListener(future -> {
