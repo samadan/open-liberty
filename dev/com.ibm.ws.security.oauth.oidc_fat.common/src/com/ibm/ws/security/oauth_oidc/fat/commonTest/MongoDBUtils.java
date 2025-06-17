@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2021 IBM Corporation and others.
+ * Copyright (c) 2018, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -36,6 +36,7 @@ import com.mongodb.ServerAddress;
 
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.ExternalTestService;
+import componenttest.topology.utils.ExternalTestServiceReporter;
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -306,7 +307,8 @@ public class MongoDBUtils {
             // "Timed out" is checked in the output.txt and can cause a spurious failure
             String exceptionMsg = e.toString().replaceAll("Timed out", "Took too long");
             Log.info(thisClass, method, "Couldn't create a connection to " + mongoService.getServiceName() + " on " + mongoService.getAddress() + ". " + exceptionMsg);
-            mongoService.reportUnhealthy("Couldn't connect to server. Exception: " + exceptionMsg);
+			ExternalTestServiceReporter.reportUnhealthy(mongoService,
+					"Couldn't connect to server. Exception: " + exceptionMsg);
             return false;
         } finally {
             if (trustStore != null) {

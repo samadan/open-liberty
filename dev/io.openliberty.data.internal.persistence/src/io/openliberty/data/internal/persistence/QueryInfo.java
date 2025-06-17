@@ -3958,16 +3958,21 @@ public class QueryInfo {
                 // The end of the SELECT clause is a FROM, WHERE, GROUP BY, HAVING, or ORDER BY clause, or the end of the query
             }
 
+            // track depth of parenthesis to ignore FROM within expressions, such as in
+            // SELECT EXTRACT(YEAR FROM colName) FROM EntityName
+            int depth = 0;
             boolean isEmbedded = false;
             boolean isLiteral = false;
             StringBuilder paramName = null;
             for (; startAt < length; startAt++) {
                 char ch = ql.charAt(startAt);
-                if (!isLiteral && (ch == ':' || ch == '.')) {
-                    if (ch == ':')
-                        paramName = new StringBuilder(30);
-                    else
-                        isEmbedded = true;
+                if (!isLiteral && (ch == ':' || ch == '.' || ch == '(' || ch == ')')) {
+                    switch (ch) {
+                        case ':' -> paramName = new StringBuilder(30);
+                        case '.' -> isEmbedded = true;
+                        case '(' -> depth++;
+                        case ')' -> depth = depth > 0 ? depth - 1 : 0;
+                    }
                 } else if (ch == '\'') {
                     if (isLiteral) {
                         if (startAt + 1 < length && ql.charAt(startAt + 1) == '\'')
@@ -3991,7 +3996,7 @@ public class QueryInfo {
                             paramName.append(ch);
                             startAt++;
                         }
-                    } else if (!isEmbedded && !isLiteral) {
+                    } else if (!isEmbedded && !isLiteral && depth == 0) {
                         int by;
                         if (from0 < 0 && where0 < 0 && length > startAt + 4
                             && ql.regionMatches(true, startAt, "FROM", 0, 4)
