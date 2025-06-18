@@ -14,7 +14,7 @@ import java.util.Map;
 import io.openliberty.transport.config.options.utils.TransportConfigUtils;
 
 /**
- * Represents a configuration option for a transoport HTTP endpoint.
+ * Represents a configuration option for a specific endpoint.
  * This interface defines the structure for all types of options
  * (HTTP, HTTP/2, SSL, Compression, etc.) used in endpoint configuration.
  * 

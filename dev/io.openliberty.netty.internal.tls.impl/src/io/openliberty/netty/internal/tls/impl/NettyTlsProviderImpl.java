@@ -39,8 +39,6 @@ import io.openliberty.netty.internal.tls.NettyTlsProvider;
 import io.openliberty.netty.internal.tls.impl.handler.LibertySslHandler;
 import io.netty.handler.ssl.SslContext;
 
-import io.openliberty.netty.internal.tls.impl.options.SslOption;
-
 /**
  * Creates {@link io.netty.handler.ssl.SslContext} objects via
  * {@link io.netty.handler.ssl.JdkSslContext.JdkSslContext} using active Liberty
@@ -226,7 +224,6 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
         String[] protocols;
         try {
         	Properties props = createProps(sslOptions);
-            System.out.println("Got suppres: " + SslOption.SUPPRESS_HANDSHAKE_ERRORS.parse(sslOptions));
         	String alias = (String)props.getProperty(ALIAS_KEY);
             AbstractMap.SimpleEntry<SSLContext, SSLConfig> sslContextConfigPair = getSSLContextAndConfig(alias, props, true, host, port, port, false);
             if (sslContextConfigPair == null){ 
@@ -544,7 +541,6 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
                     continue;
                 }
                 properties.put(entry.getKey(), entry.getValue());
-                System.out.println(entry.getKey() + "->" + entry.getValue());
             }
         }
         return properties;
