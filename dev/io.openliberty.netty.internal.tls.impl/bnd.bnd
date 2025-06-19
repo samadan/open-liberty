@@ -24,7 +24,9 @@ Include-Resource: \
 
 Export-Package: io.openliberty.netty.internal.tls.impl
 
+# reuse the existing translated messages from the TCP Channel
 Private-Package: \
+  com.ibm.ws.channel.ssl.internal.resources, \
   io.openliberty.netty.internal.tls.impl.handler,\
   io.openliberty.netty.internal.tls.impl.options
 
@@ -38,6 +40,7 @@ Import-Package: \
 
 -buildpath: \
   com.ibm.ws.logging,\
+  com.ibm.ws.channel.ssl,\
   com.ibm.websphere.org.osgi.service.component,\
   com.ibm.wsspi.org.osgi.service.component.annotations,\
   com.ibm.ws.ssl, \
