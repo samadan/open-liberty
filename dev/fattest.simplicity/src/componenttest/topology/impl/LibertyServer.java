@@ -36,7 +36,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.AccessController;
 import java.security.KeyStore;
@@ -332,6 +334,8 @@ public class LibertyServer implements LogMonitorClient {
     private String openLibertyVersion;
 
     private String archiveMarker = null;
+    
+    private boolean serverLevelFipsEnabled = GLOBAL_FIPS_140_3;
 
     /**
      * This returns whether or not debugging is "programatically" allowed
@@ -7817,6 +7821,7 @@ public class LibertyServer implements LogMonitorClient {
         if (logOutput && GLOBAL_FIPS_140_3) {
             Log.info(c, methodName, "Liberty server is running JDK version: " + serverJavaInfo.majorVersion()
                                     + " and vendor: " + serverJavaInfo.VENDOR);
+            Log.info(c, methodName, "Server level fips property is : " + serverLevelFipsEnabled);
             if (isIBMJVM8) {
                 Log.info(c, methodName, "global build properties FIPS_140_3 is set for server " + getServerName() +
                                         " and IBM java 8 is available to run with FIPS 140-3 enabled.");
@@ -7828,7 +7833,7 @@ public class LibertyServer implements LogMonitorClient {
                                            ",  but no IBM java on liberty server to run with FIPS 140-3 enabled.");
             }
         }
-        return GLOBAL_FIPS_140_3 && (isIBMJVM8 || isIBMJVMGreaterOrEqualTo11);
+        return GLOBAL_FIPS_140_3 && (isIBMJVM8 || isIBMJVMGreaterOrEqualTo11) && serverLevelFipsEnabled;
     }
 
     public boolean isFIPS140_3EnabledAndSupported() throws IOException {
@@ -7837,6 +7842,10 @@ public class LibertyServer implements LogMonitorClient {
 
     public boolean isFIPS140_3EnabledAndSupported(JavaInfo info) throws IOException {
         return isFIPS140_3EnabledAndSupported(info, true);
+    }
+    
+    public void setServerLevelFips(boolean enabled) {
+        serverLevelFipsEnabled = enabled;
     }
 
     public boolean isFIPS140_2EnabledAndSupported(JavaInfo serverJavaInfo, boolean logOutput) throws IOException {
@@ -8105,7 +8114,8 @@ public class LibertyServer implements LogMonitorClient {
                          "FIPS 140-3 global build properties is set for server " + getServerName()
                                                  + " with IBM Java " + info.majorVersion() + ", adding required JVM arguments to run with FIPS 140-3 enabled");
                 opts.put("-Dsemeru.fips", "true");
-                opts.put("-Dsemeru.customprofile", "OpenJCEPlusFIPS.FIPS140-3-withPKCS12");
+                opts.put("-Dsemeru.customprofile", "OpenJCEPlusFIPS.FIPS140-3-Custom");
+                opts.put("-Djava.security.properties", getSemeruFips140_3CustomProfileLocationAndPrintFileContents());
             } else if (info.majorVersion() == 8) {
                 Log.info(c, "getFipsJvmOptions", "FIPS 140-3 global build properties is set for server "
                                                  + getServerName()
@@ -8132,6 +8142,27 @@ public class LibertyServer implements LogMonitorClient {
             }
         }
         return opts;
+    }
+
+    private String getSemeruFips140_3CustomProfileLocationAndPrintFileContents() throws Exception {
+        Properties localProperties = getLocalProperties();
+        String basedir = localProperties.getProperty("basedir");
+        String location = basedir + "/semeruFips140_3CustomProfile.properties";
+
+        byte[] fileContents = Files.readAllBytes(Paths.get(location));
+        Log.info(c, "getSemeruFips140_3CustomProfileLocationAndPrintFileContents",
+                 "semeruFips140_3CustomProfile.properties contents:\n" + new String(fileContents, StandardCharsets.UTF_8));
+
+        return location;
+    }
+
+    public Properties getLocalProperties() throws Exception {
+        String localPropertiesLocation = System.getProperty("local.properties");
+        Properties localProperties = new Properties();
+        FileInputStream in = new FileInputStream(localPropertiesLocation);
+        localProperties.load(in);
+        in.close();
+        return localProperties;
     }
 
     public void setKeysAndJVMOptsForFips() throws Exception {

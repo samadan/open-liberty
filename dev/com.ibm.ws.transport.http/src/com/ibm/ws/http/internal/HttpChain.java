@@ -684,6 +684,9 @@ public class HttpChain implements ChainEventListener {
         if (oldState > ChainState.QUIESCED.val) {
             quiesceChain();
         }
+        // Wake up anything waiting for the chain to stop
+        // (see the update method for one example)
+        stopWait.notifyStopped();
     }
 
     private void quiesceChain() {
