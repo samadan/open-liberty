@@ -17,7 +17,7 @@ import com.ibm.wsspi.channelfw.VirtualConnection;
 
 
 /**
- * En extension of ConnectionLink to wrap Netty channel operations necessary for 
+ * An extension of ConnectionLink to wrap Netty channel operations necessary for
  * Websocket outbound logic. Specifically the only method needed is to close the
  * connections whenever a close is triggered.
  */
