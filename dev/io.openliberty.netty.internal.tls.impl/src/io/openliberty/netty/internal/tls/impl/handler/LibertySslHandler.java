@@ -9,9 +9,11 @@
  *******************************************************************************/
 package io.openliberty.netty.internal.tls.impl.handler;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.AttributeKey;
 import io.openliberty.netty.internal.tls.impl.options.SslOption;
 
 import javax.net.ssl.SSLEngine;
@@ -23,6 +25,7 @@ import com.ibm.websphere.ras.TraceComponent;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -35,8 +38,8 @@ public class LibertySslHandler extends SslHandler {
 
     private final boolean suppressLogError;
     private final long maxLogEntries;
-    private static final AtomicLong numberOfLogEntries = new AtomicLong(0);
-    private static final AtomicBoolean loggingStopped = new AtomicBoolean(false);
+    private static final AttributeKey<Long> SSL_EXCEPTION_LOG_ENTRIES = AttributeKey.valueOf("SSL_EXCEPTION_LOG_ENTRIES");
+    private static final AttributeKey<AtomicBoolean> SSL_EXCEPTION_LOGGING_STOPPED = AttributeKey.valueOf("SSL_EXCEPTION_LOGGING_STOPPED");
 
     /**
      * Constructs a new LibertySslHandler.
@@ -44,12 +47,19 @@ public class LibertySslHandler extends SslHandler {
      * @param engine The SSLEngine to be used by this handler.
      * @param sslOptions A map containing SSL configuration options.
      */
-    public LibertySslHandler(SSLEngine engine, Map<String, Object> sslOptions) {
+    public LibertySslHandler(SSLEngine engine, Map<String, Object> sslOptions, Channel channel) {
         super(engine);
         Boolean enforceCipherOrder = SslOption.ENFORCE_CIPHER_ORDER.parse(sslOptions);
         engine().getSSLParameters().setUseCipherSuitesOrder(enforceCipherOrder);
         this.suppressLogError = SslOption.SUPPRESS_HANDSHAKE_ERRORS.parse(sslOptions);
         this.maxLogEntries = SslOption.SUPPRESS_HANDSHAKE_ERRORS_COUNT.parse(sslOptions);
+        if(Objects.nonNull(channel.parent())) {
+            channel.parent().attr(SSL_EXCEPTION_LOG_ENTRIES).setIfAbsent(new Long(0));
+            channel.parent().attr(SSL_EXCEPTION_LOGGING_STOPPED).setIfAbsent(new AtomicBoolean(false));
+        } else {
+            channel.attr(SSL_EXCEPTION_LOG_ENTRIES).setIfAbsent(new Long(0));
+            channel.attr(SSL_EXCEPTION_LOGGING_STOPPED).setIfAbsent(new AtomicBoolean(false));
+        }
     }
 
     /**
@@ -68,9 +78,10 @@ public class LibertySslHandler extends SslHandler {
         }
 
         if (cause instanceof SSLHandshakeException) {
+            System.out.println("Channel issue: " + ctx.channel() + " with parent being: " + ctx.channel().parent());
             InetSocketAddress local = (InetSocketAddress) ctx.channel().localAddress();
             InetSocketAddress remote = (InetSocketAddress) ctx.channel().remoteAddress();
-            noteHandshakeError((Exception) cause, local.getAddress(), local.getPort(), remote.getAddress(), remote.getPort());
+            noteHandshakeError((Exception) cause, local.getAddress(), local.getPort(), remote.getAddress(), remote.getPort(), ctx.channel());
         } else {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(tc, "Non-SSL exception caught: " + cause.getMessage());
@@ -90,8 +101,18 @@ public class LibertySslHandler extends SslHandler {
      * @param remoteAddr The remote address involved in the failed handshake.
      * @param remotePort The remote address involved in the failed handshake.
      */
-    private void noteHandshakeError(Exception failure, InetAddress localAddr, int localPort, InetAddress remoteAddr, int remotePort) {
-        long logCount = numberOfLogEntries.incrementAndGet();
+    private void noteHandshakeError(Exception failure, InetAddress localAddr, int localPort, InetAddress remoteAddr, int remotePort, Channel channel) {
+        long logCount;
+        AtomicBoolean loggingStopped;
+        if(Objects.nonNull(channel.parent())) {
+            logCount = channel.parent().attr(SSL_EXCEPTION_LOG_ENTRIES).get();
+            channel.parent().attr(SSL_EXCEPTION_LOG_ENTRIES).set(++logCount);
+            loggingStopped = channel.parent().attr(SSL_EXCEPTION_LOGGING_STOPPED).get();
+        } else {
+            logCount = channel.attr(SSL_EXCEPTION_LOG_ENTRIES).get();
+            channel.attr(SSL_EXCEPTION_LOG_ENTRIES).set(++logCount);
+            loggingStopped = channel.parent().attr(SSL_EXCEPTION_LOGGING_STOPPED).get();
+        }
         Exception ssle = failure;
 
         if (failure.getMessage().contains("plaintext connection?")) {
@@ -109,7 +130,7 @@ public class LibertySslHandler extends SslHandler {
                 Tr.error(tc, "CWWKO0801E", ssle, remoteAddr.getHostAddress(), remotePort, localAddr.getHostAddress(), localPort);
             } else if (!loggingStopped.get() && (logCount > maxLogEntries)) {
                 loggingStopped.set(true);
-                Tr.info(tc, "CWWKO0804I");
+                Tr.info(tc, "handshake.failure.stop.logging");
             }
         }
     }

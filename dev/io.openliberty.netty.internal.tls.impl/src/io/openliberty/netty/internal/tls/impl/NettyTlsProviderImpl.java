@@ -150,7 +150,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
             SslContext nettyContext = new JdkSslContext(jdkContext, true, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
                     null, getClientAuth(sslConfig), protocols, false);
             preConfigureSslContext(sslConfig, nettyContext);
-            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions);
+            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions, channel);
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
                 Tr.warning(tc, "getOutboundSSLContext exception caught creating JdkSslContext: " + e);
@@ -199,7 +199,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
             SslContext nettyContext = new JdkSslContext(jdkContext, false, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
                     null, getClientAuth(sslConfig), protocols, false);
             preConfigureSslContext(sslConfig, nettyContext);
-            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions);
+            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions, channel);
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
                 Tr.warning(tc, "getInboundSSLContext exception caught creating JdkSslContext: " + e);
@@ -257,7 +257,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
             SslContext nettyContext = new JdkSslContext(jdkContext, false, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
             apn, getClientAuth(sslConfig), protocols, false);
             preConfigureSslContext(sslConfig, nettyContext);
-            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions);
+            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions, channel);
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
                 Tr.warning(tc, "getInboundALPNSSLContext exception caught creating JdkSslContext: " + e);
