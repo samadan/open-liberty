@@ -1,15 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2013 IBM Corporation and others.
+ * Copyright (c) 2011, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
-<<<<<<< HEAD
- *
- * SPDX-License-Identifier: EPL-2.0
-=======
->>>>>>> integration
- *
+ * 
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package com.ibm.ws.wsoc.outbound;
@@ -56,11 +51,7 @@ public class WsocChain {
     private BootstrapExtended nettyBootstrap;
 
     /**
-<<<<<<< HEAD
-     * Will set the chain to enabled after a custoemr needs a wsoc outbound chain - so when they use the JSR 356 API
-=======
      * Will set the chain to enabled after a customer needs a wsoc outbound chain - so when they use the JSR 356 API
->>>>>>> integration
      *
      */
     private volatile boolean enabled = false;
@@ -220,14 +211,18 @@ public class WsocChain {
         // We don't have to check enabled/disabled here: chains are always allowed to stop.
         if (currentConfig == null)
             return;
-        // Do we need to do anything here?
-
+        owner.currentHttpOptions = null;
+        if (isHttps) {
+            owner.secureBootstrap = null;
+            owner.currentSSLOptions = null;
+        }
+        else
+            owner.unsecureBootstrap = null;
     }
 
     /**
      * Update/start the chain configuration.
      */
-//    @FFDCIgnore({ ChannelException.class, ChainException.class })
     public synchronized void update() {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
             Tr.event(this, tc, "update chain " + this);
@@ -253,9 +248,7 @@ public class WsocChain {
             // save the new/changed configuration before we start setting up the new chain
             currentConfig = newConfig;
 
-            if (useNettyTransport) {
-                // Do we need to do anything here?
-            } else {
+            if (!useNettyTransport) {
                 // Stop the chain-- will have to be recreated when port is updated
                 // notification/follow-on of stop operation is in the chainStopped listener method
                 try {
@@ -388,22 +381,19 @@ public class WsocChain {
             Tr.event(this, tc, "update chain " + this);
         }
 
-        // TODO Work with all other options
-
         try {
             nettyBootstrap = nettyBundle.createTCPBootstrapOutbound(tcpOptions);
-//            nettyBootstrap.handler(new WsocClientInitializer(nettyBootstrap.getBaseInitializer(), target));
+            owner.currentHttpOptions = httpOptions;
             if (isHttps) {
                 owner.secureBootstrap = nettyBootstrap;
-                owner.currentSSL = sslOptions;
+                owner.currentSSLOptions = sslOptions;
             }
             else
                 owner.unsecureBootstrap = nettyBootstrap;
         } catch (NettyException e) {
-            // TODO Auto-generated catch block
-            // Do you need FFDC here? Remember FFDC instrumentation and @FFDCIgnore
-            e.printStackTrace();
-
+            // When updating the legacy chain, no error processing took place
+            // due to already logged exceptions from channel framework. 
+            // https://github.com/OpenLiberty/open-liberty/issues/31815
         }
 
     }

@@ -70,7 +70,8 @@ public class WsocOutboundChain {
     private static boolean useNettyTransport = false;
     protected static BootstrapExtended unsecureBootstrap;
     protected static BootstrapExtended secureBootstrap;
-    protected static Map<String, Object> currentSSL;
+    protected static Map<String, Object> currentSSLOptions;
+    protected static Map<String, Object> currentHttpOptions;
 
     public static VirtualConnection getVCFactory(WsocAddress addr) throws ChainException, ChannelException {
         if (addr.isSecure()) {
@@ -93,7 +94,11 @@ public class WsocOutboundChain {
     }
 
     public static Map<String, Object> getCurrentSslOptions() {
-        return currentSSL;
+        return currentSSLOptions;
+    }
+    
+    public static Map<String, Object> getCurrentHttpOptions() {
+        return currentHttpOptions;
     }
 
     /**
