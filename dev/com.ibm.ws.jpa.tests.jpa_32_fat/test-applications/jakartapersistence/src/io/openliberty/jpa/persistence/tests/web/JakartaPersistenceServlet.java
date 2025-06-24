@@ -15,14 +15,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 import componenttest.app.FATServlet;
 import io.openliberty.jpa.persistence.tests.models.AsciiCharacter;
+import io.openliberty.jpa.persistence.tests.models.Book;
+import io.openliberty.jpa.persistence.tests.models.Event;
 import io.openliberty.jpa.persistence.tests.models.Organization;
 import io.openliberty.jpa.persistence.tests.models.Participant;
 import io.openliberty.jpa.persistence.tests.models.Person;
@@ -33,6 +37,7 @@ import io.openliberty.jpa.persistence.tests.models.TicketStatus;
 import io.openliberty.jpa.persistence.tests.models.User;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -56,6 +61,12 @@ public class JakartaPersistenceServlet extends FATServlet {
 
     @Resource
     private UserTransaction tx;
+    
+    @Test
+    public void testGetNameReturnsPersistenceUnitName() {
+        EntityManagerFactory emf = em.getEntityManagerFactory();
+        assertEquals("JakartaPersistenceUnit", emf.getName());
+    }
 
     @Test
     public void testSetOperationsJPQL() throws Exception{
@@ -680,6 +691,63 @@ public class JakartaPersistenceServlet extends FATServlet {
             throw e;
         }
         assertNull(result);
+    }
+
+    @Test
+    @Ignore("Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884")
+    public void testSecondPrecision() throws Exception {
+        deleteAllEntities(Event.class);
+
+        LocalDateTime original = LocalDateTime.of(2025, 6, 11, 12, 0, 0, 123_456_789); 
+        Event event = new Event(1L, original);
+
+        tx.begin();
+        em.persist(event);
+        tx.commit();
+
+        em.clear(); 
+
+        Event result;
+        try {
+            result = em.createQuery("SELECT e FROM Event e WHERE e.id = :id", Event.class)
+                            .setParameter("id", 1L)
+                            .getSingleResult();
+        } catch (Exception e){
+            throw e;
+        }
+
+        assertEquals(123_450_000, result.timestamp.getNano());
+    }
+
+    @Test
+    public void testGetSingleResultOrNull() throws Exception {
+        deleteAllEntities(Book.class);
+
+        Book bookJPA = new Book(1L, "Jakarta Persistence 3.2");
+
+        tx.begin();
+        em.persist(bookJPA);
+        tx.commit();
+
+        Book resultFound, resultNotFound;
+
+        try {
+            resultFound = em.createQuery("SELECT b FROM Book b WHERE b.id = ?1", Book.class)
+                        .setParameter(1, 1L)
+                        .getSingleResultOrNull();
+         } catch (Exception e){
+            throw e;
+        }
+        assertEquals("Jakarta Persistence 3.2", resultFound.title);
+
+        try {
+            resultNotFound = em.createQuery("SELECT b FROM Book b WHERE b.id = ?1", Book.class)
+                        .setParameter(1, 2L) // This ID does not exist
+                        .getSingleResultOrNull();
+         } catch (Exception e){
+            throw e;
+        }
+        assertNull(resultNotFound);
     }
 
     /**

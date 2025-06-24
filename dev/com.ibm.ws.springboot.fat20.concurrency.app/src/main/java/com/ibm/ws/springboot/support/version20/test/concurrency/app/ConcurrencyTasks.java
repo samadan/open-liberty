@@ -10,6 +10,16 @@
  *******************************************************************************/
 package com.ibm.ws.springboot.support.version20.test.concurrency.app;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -35,5 +45,25 @@ public class ConcurrencyTasks {
 		TimeUnit.SECONDS.sleep(3);
 		AppRunner.assertManagedThread(message + ": Async Task 2");
 		return CompletableFuture.completedFuture("Async Task 2 passed");
+	}
+	
+	@Async("taskExecutor1")
+	public CompletableFuture<String> task3(String message) throws FileNotFoundException, IOException {
+			 try {
+	               InputStream inputStream = ConcurrencyTasks.class.getResourceAsStream("AsyncTask3File.txt");
+	               if (inputStream != null) {
+	                   BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+	                   String line;
+	                   while ((line = reader.readLine()) != null) {
+	                       System.out.println("Async Task 3: File content:\n" + line);
+	                   }
+	                   reader.close();
+	               } else {
+	                   System.out.println("File not found!");
+	               }
+	           } catch (Exception e) {
+	               e.printStackTrace();
+	           }
+		return CompletableFuture.completedFuture("Async Task 3 passed");
 	}
 }

@@ -100,7 +100,7 @@ public class TxTestContainerSuite extends TestContainerSuite {
 
     public static void dropTables(String ...tables) {
     	Log.entering(TxTestContainerSuite.class, "dropTables");
-    	if (testContainer != null) {
+    	if (testContainer != null && !isDerby()) {
     		try (Connection conn = testContainer.createConnection(""); Statement stmt = conn.createStatement()) {
     			if (tables.length != 0) {
     				Log.info(TxTestContainerSuite.class, "dropTables", "explicit");
