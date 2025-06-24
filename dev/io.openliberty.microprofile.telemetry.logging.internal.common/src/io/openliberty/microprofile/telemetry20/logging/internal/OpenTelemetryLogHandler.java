@@ -40,6 +40,8 @@ import com.ibm.wsspi.collector.manager.CollectorManager;
 import com.ibm.wsspi.collector.manager.Handler;
 import com.ibm.wsspi.collector.manager.SynchronousHandler;
 
+import org.osgi.service.component.annotations.Reference;
+
 import io.openliberty.checkpoint.spi.CheckpointPhase;
 import io.openliberty.microprofile.telemetry.internal.common.AgentDetection;
 import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelemetryConstants;
@@ -47,6 +49,7 @@ import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryL
 import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemtryLifecycleManagerImpl;
 import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryAccessor;
 import io.openliberty.microprofile.telemetry.spi.OpenTelemetryInfo;
+import io.openliberty.microprofile.telemetry20.logging.internal.semconv.SemcovConstantsAccessor;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 
 @Component(name = OpenTelemetryLogHandler.COMPONENT_NAME, service = { Handler.class }, configurationPolicy = ConfigurationPolicy.OPTIONAL, property = { "service.vendor=IBM" })
@@ -73,6 +76,9 @@ public class OpenTelemetryLogHandler implements SynchronousHandler, OpenTelemtry
     private List<String> sourcesList = new ArrayList<String>();
 
     static String accessLogField = null;
+
+    @Reference
+    SemcovConstantsAccessor semcovConstantsAccessor;
 
     @Activate
     protected void activate(ComponentContext cc, Map<String, Object> configuration) {
@@ -170,7 +176,7 @@ public class OpenTelemetryLogHandler implements SynchronousHandler, OpenTelemtry
         String eventType = MpTelemetryLogMappingUtils.getLibertyEventType(source);
 
         // Map the Liberty event to the OpenTelemetry Logs Data Model
-        MpTelemetryLogMappingUtils.mapLibertyEventToOpenTelemetry(builder, eventType, event);
+        MpTelemetryLogMappingUtils.mapLibertyEventToOpenTelemetry(builder, eventType, event, semcovConstantsAccessor);
     }
 
     private final ThreadLocal<List<Object>> queuedMessages = ThreadLocal.withInitial(() -> new ArrayList<Object>());
@@ -180,7 +186,18 @@ public class OpenTelemetryLogHandler implements SynchronousHandler, OpenTelemtry
     public void synchronousWrite(Object event) {
         OpenTelemetryInfo otelInstance = null;
 
-        if (OpenTelemetryAccessor.isRuntimeEnabled()) {
+        if (!CheckpointPhase.getPhase().restored()) {
+            // restored() true if checkpoint has been restored or was never active.
+            // so with the negation we enter this block if checkpoint is active and
+            // we have not yet restored.
+
+            // In that situation OpenTelemetry always returns a no-op OpenTelemetryInfo
+            // but we don't want to start poking around the internals before they're set
+            // up in the post-restore phase.
+
+            // in short, this block is no-op.
+
+        } else if (OpenTelemetryAccessor.isRuntimeEnabled()) {
             // Runtime OpenTelemetry instance
             otelInstance = this.runtimeOtelInfo;
             synchronousWriteInternal(event, otelInstance);

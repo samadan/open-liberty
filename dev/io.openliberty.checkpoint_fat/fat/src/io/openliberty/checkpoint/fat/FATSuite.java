@@ -266,4 +266,18 @@ public class FATSuite {
                                           MP50_MPTEL11,
                                           MP41_MPTEL11);
     }
+
+    public static RepeatTests mpOpenApiRepeat(String serverName) {
+        return MicroProfileActions.repeat(serverName,
+                                          // first test in LITE mode
+                                          MicroProfileActions.MP71_EE10, // 4.1
+                                          // rest are FULL mode
+                                          MicroProfileActions.MP70_EE10, // 4.0
+                                          // Nothing specific for EE 11 that we should repeat for checkpoint
+                                          // MicroProfileActions.MP71_EE11,
+                                          // MicroProfileActions.MP70_EE11,
+                                          MicroProfileActions.MP61, // 3.1
+                                          MicroProfileActions.MP41, // 2.0
+                                          MicroProfileActions.MP50); // 3.0
+    }
 }

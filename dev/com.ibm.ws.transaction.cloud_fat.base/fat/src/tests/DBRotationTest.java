@@ -170,17 +170,12 @@ public class DBRotationTest extends CloudFATServletClient {
      */
     @Test
     public void testLeaseTableAccess() throws Exception {
-        final String method = "testLeaseTableAccess";
-        StringBuilder sb = null;
-        String id = "001";
 
         serversToCleanup = Arrays.asList(server1);
 
         FATUtils.startServers(_runner, server1);
 
-        sb = runTestWithResponse(server1, SERVLET_NAME, "testLeaseTableAccess");
-
-        Log.info(c, method, "testLeaseTableAccess" + id + " returned: " + sb);
+        runTest(server1, SERVLET_NAME, "testLeaseTableAccess");
     }
 
     /**

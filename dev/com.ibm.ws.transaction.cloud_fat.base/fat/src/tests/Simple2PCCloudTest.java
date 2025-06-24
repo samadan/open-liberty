@@ -80,25 +80,6 @@ public class Simple2PCCloudTest extends CloudTestBase {
     }
 
     /**
-     * Test access to the Lease table.
-     *
-     * This is a readiness check to verify that resources are available and accessible.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testLeaseTableAccess() throws Exception {
-
-        serversToCleanup = Arrays.asList(server1);
-        toleratedMsgs = new String[] { "CWWKE0701E" };
-
-        // Start Server1
-        FATUtils.startServers(server1);
-
-        runTest(server1, SERVLET_NAME, "testLeaseTableAccess");
-    }
-
-    /**
      * The purpose of this test is as a control to verify that single server recovery is working.
      *
      * The Cloud001 server is started and halted by a servlet that leaves an indoubt transaction.
