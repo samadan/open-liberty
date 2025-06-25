@@ -24,7 +24,7 @@ Include-Resource: \
 
 Export-Package: io.openliberty.netty.internal.tls.impl
 
-# reuse the existing translated messages from the TCP Channel
+# reuse the existing translated messages from the SSL Channel
 Private-Package: \
   com.ibm.ws.channel.ssl.internal.resources, \
   io.openliberty.netty.internal.tls.impl.handler,\

@@ -78,7 +78,6 @@ public class LibertySslHandler extends SslHandler {
         }
 
         if (cause instanceof SSLHandshakeException) {
-            System.out.println("Channel issue: " + ctx.channel() + " with parent being: " + ctx.channel().parent());
             InetSocketAddress local = (InetSocketAddress) ctx.channel().localAddress();
             InetSocketAddress remote = (InetSocketAddress) ctx.channel().remoteAddress();
             noteHandshakeError((Exception) cause, local.getAddress(), local.getPort(), remote.getAddress(), remote.getPort(), ctx.channel());
@@ -127,7 +126,7 @@ public class LibertySslHandler extends SslHandler {
 
         if (!suppressLogError) {
             if (logCount <= maxLogEntries) {
-                Tr.error(tc, "CWWKO0801E", ssle, remoteAddr.getHostAddress(), remotePort, localAddr.getHostAddress(), localPort);
+                Tr.error(tc, "handshake.failure", ssle, remoteAddr.getHostAddress(), remotePort, localAddr.getHostAddress(), localPort);
             } else if (!loggingStopped.get() && (logCount > maxLogEntries)) {
                 loggingStopped.set(true);
                 Tr.info(tc, "handshake.failure.stop.logging");
