@@ -192,6 +192,8 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
         parseWriteTimeout(options.get(HttpConfigConstants.PROPNAME_WRITE_TIMEOUT));
         parsev0CookieDateRFC1123compat(options.get(HttpConfigConstants.PROPNAME_V0_COOKIE_RFC1123_COMPAT));
 
+        parseIgnoreWriteAfterCommit(options.get(HttpConfigConstants.PROPNAME_IGNORE_WRITE_AFTER_COMMIT));
+
         // HTTP/2 Options
         parseHttp2Options(options);
 
