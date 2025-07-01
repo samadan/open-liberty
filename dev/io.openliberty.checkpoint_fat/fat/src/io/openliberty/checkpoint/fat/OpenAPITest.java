@@ -46,7 +46,7 @@ public class OpenAPITest {
     public static LibertyServer server;
 
     @ClassRule
-    public static RepeatTests repeatTest = FATSuite.mpOpenApiRepeat(SERVER_NAME);
+    public static RepeatTests repeatTest = FATSuite.defaultMPRepeat(SERVER_NAME);
 
     @BeforeClass
     public static void exportWebApp() throws Exception {

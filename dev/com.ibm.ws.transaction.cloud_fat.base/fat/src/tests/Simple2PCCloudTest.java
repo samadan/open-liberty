@@ -143,6 +143,7 @@ public class Simple2PCCloudTest extends CloudTestBase {
 
         // wait for 1st server to have gone away
         assertNotNull(server1.getServerName() + " did not crash", server1.waitForStringInTrace(XAResourceImpl.DUMP_STATE));
+        server1.resetStarted();
 
         server1.postStopServerArchive(); // must explicitly collect since crashed server
 
@@ -251,6 +252,7 @@ public class Simple2PCCloudTest extends CloudTestBase {
         server1.postStopServerArchive(); // must explicitly collect since crashed server
         // Need to ensure we have a long (5 minute) timeout for the lease, otherwise we may decide that we CAN delete
         // and renew our own lease. longLeasLengthServer1 is a clone of server1 with a longer lease length.
+        server1.resetStarted();
 
         FATUtils.startServers(longLeaseLengthServer1);
 

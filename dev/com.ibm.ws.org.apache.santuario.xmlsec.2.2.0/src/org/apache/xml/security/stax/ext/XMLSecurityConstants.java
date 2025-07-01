@@ -251,7 +251,7 @@ public class XMLSecurityConstants {
     public static final String NS_C14N_EXCL = "http://www.w3.org/2001/10/xml-exc-c14n#";
     public static final String NS_XMLDSIG_FILTER2 = "http://www.w3.org/2002/06/xmldsig-filter2";
     public static final String NS_XMLDSIG_ENVELOPED_SIGNATURE = NS_DSIG + "enveloped-signature";
-    public static final String NS_XMLDSIG_SHA1 = NS_DSIG + "sha1";
+    public static final String NS_XMLDSIG_SHA1 = NS_DSIG + CryptoUtils.MESSAGE_DIGEST_ALGORITHM_SHA1.toLowerCase();
     public static final String NS_XMLDSIG_HMACSHA1 = NS_DSIG + "hmac-sha1";
     public static final String NS_XMLDSIG_RSASHA1 = NS_DSIG + "rsa-sha1";
     public static final String NS_XMLDSIG_MANIFEST = NS_DSIG + "Manifest";
@@ -280,8 +280,8 @@ public class XMLSecurityConstants {
     public static final String NS_MGF1_SHA384 = NS_XMLENC11 + "mgf1sha384";
     public static final String NS_MGF1_SHA512 = NS_XMLENC11 + "mgf1sha512";
 
-    public static final String NS_XENC_SHA256 = NS_XMLENC + "sha256";
-    public static final String NS_XENC_SHA512 = NS_XMLENC + "sha512";
+    public static final String NS_XENC_SHA256 = NS_XMLENC + CryptoUtils.MESSAGE_DIGEST_ALGORITHM_SHA256.toLowerCase();
+    public static final String NS_XENC_SHA512 = NS_XMLENC + CryptoUtils.MESSAGE_DIGEST_ALGORITHM_SHA512.toLowerCase();
 
     public static final String PREFIX_C14N_EXCL = "c14nEx";
     public static final QName ATT_NULL_PrefixList = new QName(null, "PrefixList");

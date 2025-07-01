@@ -5009,27 +5009,26 @@ public class QueryInfo {
             for (int s = 0; s < sortPositions.length; s++) {
                 int p = sortPositions[s];
                 if (Order.class.equals(paramTypes[p]) ||
-                    Sort.class.equals(paramTypes[p]))
+                    Sort.class.equals(paramTypes[p]) ||
+                    Sort[].class.equals(paramTypes[p])) {
+                    String paramTypeName = Sort[].class.equals(paramTypes[p]) //
+                                    ? (Sort.class.getName() + "[]") //
+                                    : paramTypes[p].getName();
                     if (args[p] == null)
                         // BasicRepository.findAll(PageRequest, Order) requires
                         // NullPointerException when Order is null.
                         throw exc(NullPointerException.class,
                                   "CWWKD1087.null.param",
-                                  paramTypes[p].getName(),
+                                  paramTypeName,
                                   method.getName(),
                                   repositoryInterface.getName());
                     else
                         throw exc(IllegalArgumentException.class,
                                   "CWWKD1088.empty.sorts",
-                                  paramTypes[p].getName(),
+                                  paramTypeName,
                                   method.getName(),
                                   repositoryInterface.getName());
-                else if (Sort[].class.equals(paramTypes[p]))
-                    throw exc(IllegalArgumentException.class,
-                              "CWWKD1088.empty.sorts",
-                              Sort.class.getName() + "[]",
-                              method.getName(),
-                              repositoryInterface.getName());
+                }
             }
         }
 

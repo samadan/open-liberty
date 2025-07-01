@@ -33,10 +33,18 @@ public class CryptoUtils {
 
     private static boolean issuedBetaMessage = false;
 
-    public final static String MESSAGE_DIGEST_ALGORITHM_SHA256 = "SHA-256";
-    public final static String MESSAGE_DIGEST_ALGORITHM_SHA384 = "SHA-384";
-    public final static String MESSAGE_DIGEST_ALGORITHM_SHA512 = "SHA-512";
-    public final static String MESSAGE_DIGEST_ALGORITHM_SHA = "SHA";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA_128 = "SHA-128";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA128 = "SHA128";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA_256 = "SHA-256";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA256 = "SHA256";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA_384 = "SHA-384";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA384 = "SHA384";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA_512 = "SHA-512";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA512 = "SHA512";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA = "SHA";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA1 = "SHA1";
+    public static final String MESSAGE_DIGEST_ALGORITHM_SHA_1 = "SHA-1";
+    public static final String MESSAGE_DIGEST_ALGORITHM_MD5 = "MD5";
 
     public static boolean ibmJCEAvailable = false;
     public static boolean ibmJCEPlusFIPSAvailable = false;
@@ -96,6 +104,10 @@ public class CryptoUtils {
 
     public static final int DESEDE_KEY_LENGTH_BYTES = 24;
 
+    public static final int PBKDF2HMACSHA1_ITERATIONS = 84756;
+    // recommended PBKDF2WithHmacSHA512 OWASP recommended iterations
+    public static final int PBKDF2HMACSHA512_ITERATIONS = 210000;
+
     /**
      * For tracking all uses of PBKDF2WithHmacSHA1
      * <p>Example Usages:
@@ -123,7 +135,7 @@ public class CryptoUtils {
     // FIPS minimum allowable iteration count
     public static final int FIPS1403_PBKDF2_MINIMUM_ITERATIONS = 1000;
     // FIPS recommended iteration count
-    public static final int FIPS1403_PBKDF2_ITERATIONS = 210000;
+    public static final int FIPS1403_PBKDF2_ITERATIONS = PBKDF2HMACSHA512_ITERATIONS;
 
     private static boolean fips140_3Enabled = isFips140_3Enabled();
     private static boolean fipsEnabled = fips140_3Enabled;
@@ -155,11 +167,11 @@ public class CryptoUtils {
 
     private static Map<String, String> secureAlternative = new HashMap<>();
     static {
-        secureAlternative.put("SHA", "SHA256");
-        secureAlternative.put("SHA1", "SHA256");
-        secureAlternative.put("SHA-1", "SHA256");
-        secureAlternative.put("SHA128", "SHA256");
-        secureAlternative.put("MD5", "SHA256");
+        secureAlternative.put(MESSAGE_DIGEST_ALGORITHM_SHA, MESSAGE_DIGEST_ALGORITHM_SHA256);
+        secureAlternative.put(MESSAGE_DIGEST_ALGORITHM_SHA1, MESSAGE_DIGEST_ALGORITHM_SHA256);
+        secureAlternative.put(MESSAGE_DIGEST_ALGORITHM_SHA_1, MESSAGE_DIGEST_ALGORITHM_SHA256);
+        secureAlternative.put(MESSAGE_DIGEST_ALGORITHM_SHA128, MESSAGE_DIGEST_ALGORITHM_SHA256);
+        secureAlternative.put(CryptoUtils.MESSAGE_DIGEST_ALGORITHM_MD5, MESSAGE_DIGEST_ALGORITHM_SHA256);
     }
 
     /**
@@ -328,8 +340,8 @@ public class CryptoUtils {
      */
     private static final List<String> supportedMessageDigestAlgorithms = Arrays.asList(
                                                                                        MESSAGE_DIGEST_ALGORITHM_SHA256,
-                                                                                       MESSAGE_DIGEST_ALGORITHM_SHA384,
-                                                                                       MESSAGE_DIGEST_ALGORITHM_SHA512);
+                                                                                       MESSAGE_DIGEST_ALGORITHM_SHA_384,
+                                                                                       MESSAGE_DIGEST_ALGORITHM_SHA_512);
 
     public static String getMessageDigestAlgorithm() {
         return MESSAGE_DIGEST_ALGORITHM_SHA256;
@@ -350,10 +362,10 @@ public class CryptoUtils {
         try {
             if (fipsEnabled) {
                 if (isSemeruFips()) {
-                    md1 = MessageDigest.getInstance(MESSAGE_DIGEST_ALGORITHM_SHA512,
+                    md1 = MessageDigest.getInstance(MESSAGE_DIGEST_ALGORITHM_SHA_512,
                                                     OPENJCE_PLUS_FIPS_NAME);
                 } else {
-                    md1 = MessageDigest.getInstance(MESSAGE_DIGEST_ALGORITHM_SHA512,
+                    md1 = MessageDigest.getInstance(MESSAGE_DIGEST_ALGORITHM_SHA_512,
                                                     IBMJCE_PLUS_FIPS_NAME);
                 }
             } else if (CryptoUtils.isIBMJCEAvailable()) {
