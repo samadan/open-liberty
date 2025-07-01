@@ -307,6 +307,14 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
             this.nettyContext.channel().close();
         }
 
+        // Needed to match channel behavior. Related to HttpOptions' ignoreWriteAfterCommit config.
+        if(e != null) {
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(tc, "Closing connection. Error occurred -> " + e.getMessage());
+                }
+             this.nettyContext.channel().close();
+        }
+
         return;
 
     }
