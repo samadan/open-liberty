@@ -473,7 +473,7 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
     
     private synchronized void switchChains(boolean switchToNetty) {
 
-        performSanityChecks();
+        performChecks();
 
         if(this.useNetty == switchToNetty) {
             return;
@@ -526,7 +526,7 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
             Tr.debug(this, tc, "Processing HTTP chain work: enableEndpoint=" + enableEndpoint + ", isPause=" + isPause);
         }
 
-        performSanityChecks();
+        performChecks();
 
         if (enableEndpoint) {
             // enable the endpoint if it is currently disabled
@@ -1351,7 +1351,7 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
         }
         try {
 
-            performSanityChecks();
+            performChecks();
 
             // Start the HTTP and HTTPS chains.
             // By the time this method exits, requests that target this endpoint will be accepted (CWWKO0219I:
@@ -1435,9 +1435,9 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
         throw exception;
     }
 
-    private void performSanityChecks() throws IllegalStateException {
+    private void performChecks() throws IllegalStateException {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-            Tr.entry(this, tc, "performSanityChecks");
+            Tr.entry(this, tc, "performChecks");
         }
 
         if (netty == null) {
@@ -1467,11 +1467,11 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
         }
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(this, tc, "All sanity checks passed");
+            Tr.debug(this, tc, "All checks passed");
         }
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-            Tr.exit(this, tc, "performSanityChecks");
+            Tr.exit(this, tc, "performChecks");
         }
     }
 
