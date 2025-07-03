@@ -11,7 +11,6 @@ package io.openliberty.http.netty.timeout;
 
 import com.ibm.ws.http.netty.NettyHttpChannelConfig;
 
-import io.openliberty.http.netty.timeout.TimeoutType;
 import io.openliberty.http.netty.timeout.exception.PersistTimeoutException;
 import io.openliberty.http.netty.timeout.exception.ReadTimeoutException;
 import io.openliberty.http.options.TcpOption;
@@ -41,16 +40,23 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     private volatile TimeoutType phase = TimeoutType.READ;
     private volatile ChannelHandlerContext context;
 
+    private final static int USE_TCP_TIMEOUT = 0;
+
     private final AtomicReference<ScheduledFuture<?>> currentTimeout = new AtomicReference<>();
 
     private final Runnable timerTask = () -> timeoutFired();
 
     public TimeoutHandler(NettyHttpChannelConfig config) {
-        this.readTimeout = config.getReadTimeout();   
-        this.persistTimeout = config.getPersistTimeout();
+        
         this.inactivityTimeout = (int) config.get(TcpOption.INACTIVITY_TIMEOUT);
+        this.readTimeout = initTimeout(config.getReadTimeout());
+        this.persistTimeout = initTimeout(config.getPersistTimeout());
 
-        System.out.println("Handler started with inactivity timeout of: " + inactivityTimeout);
+
+    }
+
+    private int initTimeout(int timeout){
+        return timeout == USE_TCP_TIMEOUT ? inactivityTimeout : timeout;
     }
 
     @Override
