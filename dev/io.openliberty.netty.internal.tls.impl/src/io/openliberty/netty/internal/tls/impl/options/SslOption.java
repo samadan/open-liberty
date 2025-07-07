@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -7,16 +7,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.http.options;
+package io.openliberty.netty.internal.tls.impl.options;
 
 import java.util.Map;
 
-import io.openliberty.http.options.EndpointOption.ConfigType;
-import io.openliberty.http.utils.HttpConfigUtils;
+import io.openliberty.transport.config.options.EndpointOption;
 
 /**
  * Enumeration of SSL configuration options.
- * Each constant in this enum respresents a specific HTTP endpoint SSL configuration option
+ * Each constant in this enum respresents a specific endpoint SSL configuration option
  * with its key, default value, and value type.
  */
 public enum SslOption implements EndpointOption{
@@ -24,7 +23,8 @@ public enum SslOption implements EndpointOption{
     SESSION_TIMEOUT("sessionTimeout", 86400, Integer.class, ConfigType.SSL),
     SSL_SESSION_TIMEOUT("sslSessionTimeout", 86400000, Integer.class, ConfigType.SSL),
     SUPPRESS_HANDSHAKE_ERRORS("suppressHandshakeErrors", true, Boolean.class, ConfigType.SSL),
-    SUPPRESS_HANDSHAKE_ERRORS_COUNT("suppressHandshakeErrorsCount", 100, Integer.class, ConfigType.SSL);
+    SUPPRESS_HANDSHAKE_ERRORS_COUNT("suppressHandshakeErrorsCount", 100, Long.class, ConfigType.SSL),
+    ENFORCE_CIPHER_ORDER("com.ibm.ws.ssl.enforceCipherOrder", false, Boolean.class, ConfigType.SSL);
     
 
     private final String key;
@@ -57,11 +57,5 @@ public enum SslOption implements EndpointOption{
     @Override
     public ConfigType getConfigType() {
         return configType;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T parse(Map<String, Object> config) {
-        return(T) HttpConfigUtils.getOptionValue(config, this);
     }
 }

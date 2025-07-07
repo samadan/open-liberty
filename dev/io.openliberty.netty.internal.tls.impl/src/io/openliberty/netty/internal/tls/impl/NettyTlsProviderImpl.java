@@ -28,6 +28,7 @@ import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.ssl.*;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.*;
 import io.netty.handler.ssl.ApplicationProtocolConfig.Protocol;
@@ -35,6 +36,7 @@ import io.netty.handler.ssl.ApplicationProtocolConfig.SelectedListenerFailureBeh
 import io.netty.handler.ssl.ApplicationProtocolConfig.SelectorFailureBehavior;
 import io.openliberty.netty.internal.exception.NettyException;
 import io.openliberty.netty.internal.tls.NettyTlsProvider;
+import io.openliberty.netty.internal.tls.impl.handler.LibertySslHandler;
 import io.netty.handler.ssl.SslContext;
 
 /**
@@ -42,14 +44,10 @@ import io.netty.handler.ssl.SslContext;
  * {@link io.netty.handler.ssl.JdkSslContext.JdkSslContext} using active Liberty
  * SSL configurations
  * 
- * TODO: this logic should be made generic and put in a separate bundle so that
- * the SIP feature does not have a SSL runtime dependency
- * 
  * Adapted from
  * {@link com.ibm.ws.channel.ssl.internal.SSLChannel.getSSLContextForLink(VirtualConnection,
  * String, String, String, Boolean, SSLConnectionLink)}
  * {@link com.ibm.ws.channel.ssl.internal.SSLChannelData}
- *
  */
 @Component(configurationPid = "io.openliberty.netty.internal.tls", immediate = true, service = NettyTlsProvider.class)
 public class NettyTlsProviderImpl implements NettyTlsProvider {
@@ -118,8 +116,8 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
      * @param String port
      * @return SslContext
      */
-    public SslContext getOutboundSSLContext(Map<String, Object> sslOptions, String host,
-            String port) {
+    public SslHandler getOutboundSSLContext(Map<String, Object> sslOptions, String host,
+            String port, Channel channel) {
 
         SSLContext jdkContext;
         SSLConfig sslConfig;
@@ -152,7 +150,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
             SslContext nettyContext = new JdkSslContext(jdkContext, true, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
                     null, getClientAuth(sslConfig), protocols, false);
             preConfigureSslContext(sslConfig, nettyContext);
-            return nettyContext;
+            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions, channel);
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
                 Tr.warning(tc, "getOutboundSSLContext exception caught creating JdkSslContext: " + e);
@@ -169,7 +167,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
      * @param String port
      * @return SslContext
      */
-    public SslContext getInboundSSLContext(Map<String, Object> sslOptions, String host, String port) {
+    public SslHandler getInboundSSLContext(Map<String, Object> sslOptions, String host, String port, Channel channel) {
 
         SSLContext jdkContext;
         SSLConfig sslConfig;
@@ -201,7 +199,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
             SslContext nettyContext = new JdkSslContext(jdkContext, false, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
                     null, getClientAuth(sslConfig), protocols, false);
             preConfigureSslContext(sslConfig, nettyContext);
-            return nettyContext;
+            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions, channel);
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
                 Tr.warning(tc, "getInboundSSLContext exception caught creating JdkSslContext: " + e);
@@ -219,7 +217,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
      * @param String port
      * @return SslContext
      */
-    public SslContext getInboundALPNSSLContext(Map<String, Object> sslOptions, String host, String port) {
+    public SslHandler getInboundALPNSSLContext(Map<String, Object> sslOptions, String host, String port, Channel channel) {
 
         SSLContext jdkContext;
         SSLConfig sslConfig;
@@ -259,7 +257,7 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
             SslContext nettyContext = new JdkSslContext(jdkContext, false, Arrays.asList(jdkContext.getDefaultSSLParameters().getCipherSuites()), SupportedCipherSuiteFilter.INSTANCE,
             apn, getClientAuth(sslConfig), protocols, false);
             preConfigureSslContext(sslConfig, nettyContext);
-            return nettyContext;
+            return new LibertySslHandler(nettyContext.newEngine(channel.alloc()), sslOptions, channel);
         } catch (Exception e) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
                 Tr.warning(tc, "getInboundALPNSSLContext exception caught creating JdkSslContext: " + e);

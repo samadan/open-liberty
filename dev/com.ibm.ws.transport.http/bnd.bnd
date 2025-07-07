@@ -148,6 +148,7 @@ instrument.classesExcludes: \
 	com.ibm.ws.threading,\
 	com.ibm.ws.org.osgi.annotation.versioning;version=latest,\
 	io.openliberty.accesslists.internal,\
+	io.openliberty.transport.config.internal;version=latest,\
 	io.openliberty.io.netty;version=latest,\
 	io.openliberty.netty.internal;version=latest,\
 	io.openliberty.netty.internal.impl;version=latest,\

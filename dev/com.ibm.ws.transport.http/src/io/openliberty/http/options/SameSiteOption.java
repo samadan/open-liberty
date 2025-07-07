@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -11,8 +11,8 @@ package io.openliberty.http.options;
 
 import java.util.Map;
 
-import io.openliberty.http.options.EndpointOption.ConfigType;
-import io.openliberty.http.utils.HttpConfigUtils;
+import io.openliberty.transport.config.options.EndpointOption;
+import io.openliberty.transport.config.options.EndpointOption.ConfigType;
 
 /**
  * Enumeration of SameSite configuration options.
@@ -56,11 +56,5 @@ public enum SameSiteOption implements EndpointOption{
     @Override
     public ConfigType getConfigType() {
         return configType;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T parse(Map<String, Object> config) {
-        return(T) HttpConfigUtils.getOptionValue(config, this);
     }
 }

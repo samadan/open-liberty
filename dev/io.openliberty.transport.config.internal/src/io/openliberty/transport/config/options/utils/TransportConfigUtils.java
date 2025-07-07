@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package io.openliberty.http.utils;
+package io.openliberty.transport.config.options.utils;
 
 import java.util.Map;
 import java.util.Objects;
@@ -20,20 +20,19 @@ import java.util.function.Function;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.FFDCFilter;
-import com.ibm.ws.http.channel.internal.HttpMessages;
 
-import io.openliberty.http.options.EndpointOption;
+import io.openliberty.transport.config.options.EndpointOption;
 
 /**
- * Utility class for parsing configuration values in the HTTP transport.
+ * Utility class for parsing configuration values in the SSL transport.
  * This class provides methods to extract and parse different configuration 
  * options from a Map using the EndpointOption interface.
  */
-public class HttpConfigUtils {
+public class TransportConfigUtils {
 
-    private static final TraceComponent tc = Tr.register(HttpConfigUtils.class, HttpMessages.HTTP_TRACE_NAME, HttpMessages.HTTP_BUNDLE);
+    private static final TraceComponent tc = Tr.register(TransportConfigUtils.class);
 
-    private HttpConfigUtils() {
+    private TransportConfigUtils() {
         // Private constructor
     }
 
@@ -206,7 +205,7 @@ public class HttpConfigUtils {
                 return Optional.of(Integer.parseInt(((String) value).trim()));
             } catch (NumberFormatException e) {
                 Tr.warning(tc, "Invalid integer value for config: {0}", value);
-                FFDCFilter.processException(e, HttpConfigUtils.class.getName(), ".parseInteger", "1");
+                FFDCFilter.processException(e, TransportConfigUtils.class.getName(), ".parseInteger", "1");
             }
             
         }
@@ -228,7 +227,7 @@ public class HttpConfigUtils {
                 return Optional.of(Long.parseLong(((String) value).trim()));
             } catch (NumberFormatException e) {
                 Tr.warning(tc, "Invalid long value for config: {0}", value);
-                FFDCFilter.processException(e, HttpConfigUtils.class.getName(), ".parseLong", "1");
+                FFDCFilter.processException(e, TransportConfigUtils.class.getName(), ".parseLong", "1");
             }
             
         }

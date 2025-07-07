@@ -404,21 +404,15 @@ public class NettyHttpRequestorWsoc10 implements HttpRequestor {
                 int port = remoteAddress.getPort();
                 if (tc.isDebugEnabled())
                     Tr.debug(this, tc, "Create SSL", new Object[] { WsocOutboundChain.getNettyTlsProvider(), host, port, WsocOutboundChain.getCurrentSslOptions() });
-
-                if (Objects.isNull(engine)) {
-                    SslContext context = WsocOutboundChain.getNettyTlsProvider().getOutboundSSLContext(WsocOutboundChain.getCurrentSslOptions(), host, Integer.toString(port));
-
-                    if (context == null) {
-                        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
-                            Tr.entry(this, tc, "initChannel", "Error adding TLS Support");
-                        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
-                            Tr.exit(this, tc, "initChannel");
-                        ch.close();
-                        return;
-                    }
-                    engine = context.newEngine(ch.alloc());
+                SslHandler handler = WsocOutboundChain.getNettyTlsProvider().getOutboundSSLContext(WsocOutboundChain.getCurrentSslOptions(), host, Integer.toString(port), ch);
+                if (handler == null) {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
+                        Tr.entry(this, tc, "initChannel", "Error adding TLS Support");
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
+                        Tr.exit(this, tc, "initChannel");
+                    ch.close();
+                    return;
                 }
-                SslHandler handler = new SslHandler(engine);
                 pipeline.addFirst("SSLHandler", handler);
 
             }

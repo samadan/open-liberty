@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -7,12 +7,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.http.options;
+package io.openliberty.transport.config.options;
 
 import java.util.Map;
 
+import io.openliberty.transport.config.options.utils.TransportConfigUtils;
+
 /**
- * Represents a configuration option for an HTTP endpoint.
+ * Represents a configuration option for a specific endpoint.
  * This interface defines the structure for all types of options
  * (HTTP, HTTP/2, SSL, Compression, etc.) used in endpoint configuration.
  * 
@@ -68,6 +70,8 @@ public interface EndpointOption {
      * @param config The configuration map containing all options
      * @return The parsed value of type T
      */
-    <T> T parse(Map<String, Object> config);
+    default <T> T parse(Map<String, Object> config) {
+        return(T) TransportConfigUtils.getOptionValue(config, this);
+    }
 
 }
