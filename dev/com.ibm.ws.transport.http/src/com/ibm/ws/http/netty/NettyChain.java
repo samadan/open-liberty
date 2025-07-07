@@ -217,12 +217,13 @@ public class NettyChain extends HttpChain {
                 tcpOptions.put(ConfigConstants.EXTERNAL_NAME, endpointName);
 
                 bootstrap = nettyFramework.createTCPBootstrap(tcpOptions);
-                HttpPipelineInitializer.HttpPipelineBuilder pipelineBuilder = new HttpPipelineInitializer.HttpPipelineBuilder(this).with(ConfigElement.COMPRESSION,
-                                                                                                                                         owner.getCompressionConfig()).with(ConfigElement.HTTP_OPTIONS,
-                                                                                                                                                                            httpOptions).with(ConfigElement.HEADERS,
-                                                                                                                                                                                              owner.getHeadersConfig()).with(ConfigElement.REMOTE_IP,
-                                                                                                                                                                                                                             owner.getRemoteIpConfig()).with(ConfigElement.SAMESITE,
-                                                                                                                                                                                                                                                             owner.getSamesiteConfig());
+                HttpPipelineInitializer.HttpPipelineBuilder pipelineBuilder = new HttpPipelineInitializer.HttpPipelineBuilder(this)
+                    .with(ConfigElement.COMPRESSION, owner.getCompressionConfig())
+                    .with(ConfigElement.HTTP_OPTIONS, httpOptions)
+                    .with(ConfigElement.HEADERS, owner.getHeadersConfig())
+                    .with(ConfigElement.REMOTE_IP, owner.getRemoteIpConfig()) 
+                    .with(ConfigElement.SAMESITE, owner.getSamesiteConfig())
+                    .with(ConfigElement.TCP_OPTIONS, tcpOptions);
 
                 // Add SSL options only if the chain is SSL-enabled
                 if (this.isHttps()) {
