@@ -41,6 +41,7 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     private volatile ChannelHandlerContext context;
 
     private final static int USE_TCP_TIMEOUT = 0;
+    private volatile boolean readRetried;
 
     private final AtomicReference<ScheduledFuture<?>> currentTimeout = new AtomicReference<>();
 
@@ -51,8 +52,6 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         this.inactivityTimeout = (int) config.get(TcpOption.INACTIVITY_TIMEOUT);
         this.readTimeout = initTimeout(config.getReadTimeout());
         this.persistTimeout = initTimeout(config.getPersistTimeout());
-
-
     }
 
     private int initTimeout(int timeout){
@@ -78,6 +77,7 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         if (message instanceof FullHttpRequest) {
             cancelTimer();
             phase = TimeoutType.READ;
+            readRetried = false;
         }
         super.channelRead(context, message);
     }
@@ -121,6 +121,12 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     }
 
     private void timeoutFired(){
+        if(phase == TimeoutType.READ && !readRetried){
+            readRetried = true;
+            activateTimer();
+            return;
+        }
+
         IOException exception = (phase == TimeoutType.READ) 
                                 ? new ReadTimeoutException(readTimeout, LEGACY_UNIT)
                                 : new PersistTimeoutException(persistTimeout, LEGACY_UNIT);

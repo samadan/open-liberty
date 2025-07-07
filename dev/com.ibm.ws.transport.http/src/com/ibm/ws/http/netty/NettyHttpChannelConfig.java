@@ -99,7 +99,7 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
         parseSameSiteOptions(config);
 
         parseHttpOptions(config);
-
+        parseTCPOptions(config);
         
 
     }

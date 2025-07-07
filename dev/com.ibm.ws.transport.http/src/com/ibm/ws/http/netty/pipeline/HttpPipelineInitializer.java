@@ -129,7 +129,10 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         } else {
             setupUnsecurePipeline(pipeline);
         }
-        pipeline.remove(NettyConstants.INACTIVITY_TIMEOUT_HANDLER_NAME);
+        if(Objects.nonNull(pipeline.get(NettyConstants.INACTIVITY_TIMEOUT_HANDLER_NAME))){
+            pipeline.remove(NettyConstants.INACTIVITY_TIMEOUT_HANDLER_NAME);
+        }
+       
 
         Tr.exit(tc, "initChannel");
     }
@@ -358,6 +361,8 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
                     return "defaultHeaders".equalsIgnoreCase(id);
                 case SSL_OPTIONS:
                     return "defaultSSLOptions".equalsIgnoreCase(id);
+                case TCP_OPTIONS:
+                    return "defaultTCPOptions".equalsIgnoreCase(id);
                 default:
                     return false;
             }
