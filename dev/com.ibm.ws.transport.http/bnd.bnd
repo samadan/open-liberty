@@ -6,9 +6,6 @@
 # http://www.eclipse.org/legal/epl-2.0/
 # 
 # SPDX-License-Identifier: EPL-2.0
-#
-# Contributors:
-#     IBM Corporation - initial API and implementation
 #*******************************************************************************
 -include= ~../cnf/resources/bnd/bundle.props
 bVersion=1.0
@@ -59,8 +56,7 @@ Import-Package: \
 Private-Package: \
 	com.ibm.ws.http.*, \
 	com.ibm.ws.tcpchannel.internal.resources, \
-	com.ibm.ws.genericbnf.internal, \
-	io.openliberty.http.utils
+	com.ibm.ws.genericbnf.internal
 
 -dsannotations: com.ibm.ws.http.channel.internal.inbound.HttpPipelineEventHandler,\
   com.ibm.ws.http.dispatcher.internal.HttpDispatcher,\
