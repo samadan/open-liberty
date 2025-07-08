@@ -23,6 +23,7 @@ import io.openliberty.http.netty.timeout.TimeoutType;
 import io.openliberty.http.netty.timeout.exception.PersistTimeoutException;
 import io.openliberty.http.netty.timeout.exception.ReadTimeoutException;
 import io.openliberty.http.netty.timeout.exception.UnknownTimeoutException;
+import io.openliberty.http.options.TcpOption;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +61,7 @@ public class TimeoutHandlerTests {
     @Test
     public void readTimeoutHandlerOnActive(){
         NettyHttpChannelConfig config = mock(NettyHttpChannelConfig.class);
+        when(config.get(TcpOption.INACTIVITY_TIMEOUT)).thenReturn(0);
         when(config.getReadTimeout()).thenReturn(1000);
         when(config.getPersistTimeout()).thenReturn(1000);
 
@@ -71,6 +73,7 @@ public class TimeoutHandlerTests {
     @Test
     public void timeoutHandlerSwitchToPersist() throws Exception{
         NettyHttpChannelConfig config = mock(NettyHttpChannelConfig.class);
+        when(config.get(TcpOption.INACTIVITY_TIMEOUT)).thenReturn(0);
         when(config.getReadTimeout()).thenReturn(2000);
         when(config.getPersistTimeout()).thenReturn(1000);
         TimeoutHandler handler = new TimeoutHandler(config);
