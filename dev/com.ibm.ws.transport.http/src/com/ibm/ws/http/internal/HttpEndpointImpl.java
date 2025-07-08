@@ -6,9 +6,6 @@
  * http://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package com.ibm.ws.http.internal;
 
@@ -1456,12 +1453,12 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
         // Check SSL components only if HTTPS is configured
         if (httpsPort >= 0) {
             if (useNetty && nettyTlsProvider == null) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
-                    //Tr.warning(tc, "Netty TLS provider is not available, HTTPS will not be enabled");
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(tc, "Netty TLS provider is not available, HTTPS will not be enabled");
                 }
             } else if (!useNetty && sslFactoryProvider.getService() == null) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isWarningEnabled()) {
-                    Tr.warning(tc, "SSL factory provider is not available, HTTPS will not be enabled");
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(tc, "SSL factory provider is not available, HTTPS will not be enabled");
                 }
             }
         }
