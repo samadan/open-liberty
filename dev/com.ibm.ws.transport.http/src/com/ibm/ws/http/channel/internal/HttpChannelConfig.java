@@ -637,7 +637,7 @@ public class HttpChannelConfig {
         parseCookiesSameSitePartitioned(props);
         initSameSiteCookiesPatterns();
         parseHeaders(props);
-        parseIgnoreWriteAfterCommit(props);
+        parseIgnoreWriteAfterCommit(props.get(HttpConfigConstants.PROPNAME_IGNORE_WRITE_AFTER_COMMIT));
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             Tr.exit(tc, "parseConfig");
@@ -677,10 +677,9 @@ public class HttpChannelConfig {
      * Method to determine if a keep-alive connection should be kept open even if
      * an error is found during closure.
      */
-    private void parseIgnoreWriteAfterCommit(Map<Object, Object> props) {
-        Object value = props.get(HttpConfigConstants.PROPNAME_IGNORE_WRITE_AFTER_COMMIT);
-        if (null != value) {
-            ignoreWriteAfterCommit = convertBoolean(value);
+    protected void parseIgnoreWriteAfterCommit(Object option) {
+        if (Objects.nonNull(option)) {
+            this.ignoreWriteAfterCommit = convertBoolean(option);
             if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
                 Tr.event(tc, "Config: ignoreWriteAfterCommit is " + ignoreWriteAfterCommit());
             }
