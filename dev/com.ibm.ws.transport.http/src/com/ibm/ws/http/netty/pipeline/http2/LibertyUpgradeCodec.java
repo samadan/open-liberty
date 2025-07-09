@@ -17,6 +17,7 @@ import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.http.channel.h2internal.Constants;
 import com.ibm.ws.http.channel.internal.HttpChannelConfig;
 import com.ibm.ws.http.channel.internal.HttpMessages;
+import com.ibm.ws.http.netty.NettyHttpChannelConfig;
 import com.ibm.ws.http.netty.NettyHttpConstants;
 import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer;
 import com.ibm.ws.http.netty.pipeline.inbound.LibertyHttpObjectAggregator;
@@ -47,6 +48,8 @@ import io.netty.handler.codec.http2.InboundHttp2ToHttpAdapterBuilder;
 import io.netty.util.AsciiString;
 import io.netty.util.ReferenceCountUtil;
 import io.openliberty.http.netty.quiesce.QuiesceStrategy;
+import io.openliberty.http.netty.timeout.H2TimeoutHandler;
+import io.openliberty.http.netty.timeout.TimeoutUtils;
 import io.openliberty.netty.internal.impl.QuiesceHandler;
 
 /**
@@ -69,20 +72,20 @@ public class LibertyUpgradeCodec implements UpgradeCodecFactory {
         };
     };
 
-    private final HttpChannelConfig httpConfig;
+    private final NettyHttpChannelConfig httpConfig;
     private final Channel channel;
 
     /**
      * Helper method for creating H2C Upgrade handler
      */
-    public static CleartextHttp2ServerUpgradeHandler createCleartextUpgradeHandler(HttpChannelConfig httpConfig, Channel channel) {
+    public static CleartextHttp2ServerUpgradeHandler createCleartextUpgradeHandler(NettyHttpChannelConfig httpConfig, Channel channel) {
         HttpServerCodec sourceCodec = new HttpServerCodec(8192, httpConfig.getIncomingBodyBufferSize(), httpConfig.getLimitOfFieldSize(), httpConfig.getLimitOnNumberOfHeaders());
         LibertyUpgradeCodec codec = new LibertyUpgradeCodec(httpConfig, channel);
         final HttpServerUpgradeHandler upgradeHandler = new HttpServerUpgradeHandler(sourceCodec, codec);
         return new CleartextHttp2ServerUpgradeHandler(sourceCodec, upgradeHandler, codec.buildHttp2ConnectionHandler(httpConfig, channel));
     }
 
-    public LibertyUpgradeCodec(HttpChannelConfig httpConfig, Channel channel) {
+    public LibertyUpgradeCodec(NettyHttpChannelConfig httpConfig, Channel channel) {
         super();
         this.httpConfig = httpConfig;
         this.channel = channel;
@@ -106,6 +109,7 @@ public class LibertyUpgradeCodec implements UpgradeCodecFactory {
                     
                     // Call upgrade
                     super.upgradeTo(ctx, request);
+                    TimeoutUtils.switchToH2Timeout(channel.pipeline(), httpConfig);
                     // Set as stream 1 as defined in RFC
                     request.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), 1);
                     if (Constants.SPEC_INITIAL_WINDOW_SIZE != httpConfig.getH2ConnectionWindowSize()) {

@@ -30,8 +30,18 @@ public class H2TimeoutHandler extends ChannelDuplexHandler{
     private final int idleSeconds;
 
     public H2TimeoutHandler(NettyHttpChannelConfig config){
-        Object idleMillis = (long) config.get(HttpOption.HTTP2_CONNECTION_IDLE_TIMEOUT);
-        this.idleSeconds = (int)TimeUnit.MILLISECONDS.toSeconds((long)idleMillis);
+        System.out.println(">>> Adding h2 handler");
+        Object h2IdleTimeoutRaw = config.get(HttpOption.HTTP2_CONNECTION_IDLE_TIMEOUT);
+        long idleMillis;
+        if(h2IdleTimeoutRaw == null){
+            idleMillis = 0;
+        }else if(h2IdleTimeoutRaw instanceof Number){
+            idleMillis = ((Number)h2IdleTimeoutRaw).longValue();
+        }else {
+            idleMillis = Long.parseLong(h2IdleTimeoutRaw.toString().trim());
+        }
+        this.idleSeconds = (int) (idleMillis/1000L);
+        System.out.println(">>> Added h2 handler");
     }
 
     @Override
