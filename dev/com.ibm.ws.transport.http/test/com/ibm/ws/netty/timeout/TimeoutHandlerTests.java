@@ -11,24 +11,18 @@ package com.ibm.ws.netty.timeout;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http2.CleartextHttp2ServerUpgradeHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.openliberty.http.netty.timeout.H2TimeoutHandler;
 import io.openliberty.http.netty.timeout.TimeoutEventHandler;
 import io.openliberty.http.netty.timeout.TimeoutHandler;
 import io.openliberty.http.netty.timeout.TimeoutType;
-import io.openliberty.http.netty.timeout.TimeoutUtils;
 import io.openliberty.http.netty.timeout.exception.PersistTimeoutException;
 import io.openliberty.http.netty.timeout.exception.ReadTimeoutException;
 import io.openliberty.http.netty.timeout.exception.UnknownTimeoutException;
-import io.openliberty.http.options.HttpOption;
 import io.openliberty.http.options.TcpOption;
 
 import java.lang.reflect.Field;
@@ -36,27 +30,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import static org.mockito.Mockito.*;
 
 import com.ibm.ws.http.channel.internal.HttpChannelConfig;
 import com.ibm.ws.http.netty.NettyHttpChannelConfig;
-import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer;
 
 public class TimeoutHandlerTests {
-
-    private static final String DISPATCHER = HttpPipelineInitializer.HTTP_DISPATCHER_HANDLER_NAME;
-    private NettyHttpChannelConfig config;
-
-    @Before
-    public void setUp(){
-        config = mock(NettyHttpChannelConfig.class);
-        when(config.get(TcpOption.INACTIVITY_TIMEOUT)).thenReturn(300000);
-        when(config.get(HttpOption.HTTP2_CONNECTION_IDLE_TIMEOUT)).thenReturn(15000);
-    }
-
 
     @Test
     public void readTimeoutExceptionMessageTest(){
@@ -125,5 +105,6 @@ public class TimeoutHandlerTests {
         f.setAccessible(true);
         return f.get(object);
     }
+
 
 }
