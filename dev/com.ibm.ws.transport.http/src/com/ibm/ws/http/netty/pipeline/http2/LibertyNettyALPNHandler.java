@@ -25,7 +25,6 @@ import io.netty.handler.codec.http2.HttpToHttp2ConnectionHandler;
 import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler;
 import io.openliberty.http.netty.quiesce.QuiesceStrategy;
-import io.openliberty.http.netty.timeout.H2TimeoutHandler;
 import io.openliberty.http.netty.timeout.TimeoutHandler;
 import io.openliberty.netty.internal.impl.QuiesceHandler;
 
@@ -56,7 +55,6 @@ public class LibertyNettyALPNHandler extends ApplicationProtocolNegotiationHandl
             HttpToHttp2ConnectionHandler handler = codec.buildHttp2ConnectionHandler(httpConfig, ctx.channel());
             // HTTP2 to HTTP 1.1 and back pipeline
             ctx.pipeline().addAfter(HttpPipelineInitializer.HTTP_ALPN_HANDLER_NAME, null, handler);
-            ctx.pipeline().addAfter(HttpPipelineInitializer.HTTP_ALPN_HANDLER_NAME, "h2TimeoutHandler", new H2TimeoutHandler(httpConfig));
 
             QuiesceHandler quiesceHandler = ctx.pipeline().get(QuiesceHandler.class);
             if (quiesceHandler != null) {

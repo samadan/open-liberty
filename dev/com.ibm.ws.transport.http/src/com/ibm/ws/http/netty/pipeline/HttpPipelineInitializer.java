@@ -55,9 +55,7 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.ReferenceCountUtil;
 import io.openliberty.http.netty.channel.AllocatorContextSetter;
 import io.openliberty.http.netty.channel.LoggingRecvByteBufAllocator;
-import io.openliberty.http.netty.timeout.H2TimeoutHandler;
 import io.openliberty.http.netty.timeout.TimeoutHandler;
-import io.openliberty.http.netty.timeout.TimeoutUtils;
 import io.openliberty.netty.internal.ChannelInitializerWrapper;
 import io.openliberty.netty.internal.exception.NettyException;
 import io.openliberty.netty.internal.impl.NettyConstants;
@@ -272,11 +270,8 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
 
             @Override
             public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-
-                System.out.println("SAW FOLLOWING EVENT: " + evt);
                 if (evt instanceof PriorKnowledgeUpgradeEvent) {
                     ctx.pipeline().remove(NO_UPGRADE_OCURRED_HANDLER_NAME);
-                    TimeoutUtils.switchToH2Timeout(pipeline, httpConfig);
                 }
                 super.userEventTriggered(ctx, evt);
             }
