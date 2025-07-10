@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.openliberty.http.netty.timeout.TimeoutHandler;
 import io.openliberty.netty.internal.tcp.MaxOpenConnectionsHandler;
 
 /**
@@ -69,6 +70,7 @@ public final class TransportHandler extends ChannelDuplexHandler{
                 pipeline.remove(TransportHandler.this);
                 removeIfPresent(pipeline, HttpServerCodec.class);
                 removeIfPresent(pipeline, MaxOpenConnectionsHandler.class);
+                removeIfPresent(pipeline, TimeoutHandler.class);
 
                 if(pipeline.get(NettyServletUpgradeHandler.class) == null){
                     pipeline.addLast(new NettyServletUpgradeHandler(context.channel()));
