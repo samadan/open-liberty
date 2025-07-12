@@ -42,7 +42,8 @@ src: \
 	test-applications/testLib18.jar/src, \
 	test-applications/testRar1.rar/src, \
 	test-applications/testResourceAdaptor.jar/src, \
-	test-applications/testLibFileSet/src
+	test-applications/testLibFileSet/src, \
+	test-applications/testParentLast/src
 
 fat.project: true
 

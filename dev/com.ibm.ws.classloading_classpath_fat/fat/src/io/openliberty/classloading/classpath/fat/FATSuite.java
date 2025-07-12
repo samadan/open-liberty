@@ -52,6 +52,7 @@ import io.openliberty.classloading.classpath.test.war2.ClassPathDefaultLoaderSer
 import io.openliberty.classloading.classpath.test.war3.ClassPathDefaultLoaderServletTest3;
 import io.openliberty.classloading.classpath.util.TestUtils;
 import io.openliberty.classloading.lib.path.test.app.LibPathTestServlet;
+import io.openliberty.classloading.parentlast.test.app.ParentLastTestServlet;
 import junit.framework.AssertionFailedError;
 
 @RunWith(Suite.class)
@@ -62,7 +63,8 @@ import junit.framework.AssertionFailedError;
     ClassPathEarLoaderTests.class,
     ClassPathDefaultLoaderLibraryTests.class,
     ClassPathInvalidLoaderTests.class,
-    LibraryPathTest.class
+    LibraryPathTest.class,
+    ParentLastLibraryFeatureTests.class
 })
 public class FATSuite {
     static final String CLASSPATH_TEST_WAR_LOADER_SERVER = "classpathTestWarLoader";
@@ -72,6 +74,7 @@ public class FATSuite {
     static final String CLASSPATH_TEST_EAR_LOADER_SERVER = "classpathTestEarLoader";
     static final String PRIVATE_LIBRARY_TEST_SERVER = "privateLibraryTest";
     static final String LIB_FILESET_TEST_SERVER = "libPathTest";
+    static final String PARENT_LAST_TEST_SERVER = "parentLastTest";
 
     // ##### ARCHIVE NAMES #####
     // WAR archive names
@@ -79,6 +82,7 @@ public class FATSuite {
     public static final String TEST_CLASS_PATH2_APP = "testClassPath2";
     public static final String TEST_CLASS_PATH3_APP = "testClassPath3";
     public static final String TEST_LIB_FILESET_APP = "testLibFileSet";
+    public static final String TEST_PARENT_LAST_APP = "testParentLast";
 
     // EJB archive names
     public static final String TEST_EJB1 = "testEjb1";
@@ -155,6 +159,7 @@ public class FATSuite {
     static final WebArchive TEST_CLASS_PATH2_WAR;
     static final WebArchive TEST_CLASS_PATH3_WAR;
     static final WebArchive TEST_LIB_FILESET_WAR;
+    static final WebArchive TEST_PARENT_LAST_WAR;
 
     // EJB archives
     static final JavaArchive TEST_EJB1_JAR;
@@ -234,6 +239,9 @@ public class FATSuite {
             TEST_LIB_FILESET_WAR = ShrinkHelper.buildDefaultApp(TEST_LIB_FILESET_APP + ".war",
                                                                         LibPathTestServlet.class.getPackage().getName(),
                                                                         TestUtils.class.getPackage().getName());
+
+            TEST_PARENT_LAST_WAR = ShrinkHelper.buildDefaultApp(TEST_PARENT_LAST_APP + ".war",
+                                                                ParentLastTestServlet.class.getPackage().getName());
 
             TEST_RESOURCE_ADAPTOR_JAR = ShrinkHelper.buildJavaArchive(TEST_RESOURCE_ADAPTOR + ".jar",
                                                                       TestResourceAdapter.class.getPackage().getName()).

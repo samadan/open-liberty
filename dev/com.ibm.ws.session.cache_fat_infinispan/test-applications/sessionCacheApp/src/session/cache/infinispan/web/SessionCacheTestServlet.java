@@ -898,9 +898,17 @@ public class SessionCacheTestServlet extends FATServlet {
      */
     public void testStringBufferAppendWithoutSetAttribute(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String key = request.getParameter("key");
-        HttpSession session = request.getSession(true);
-        StringBuffer value = (StringBuffer) session.getAttribute(key);
-        value.append("Appended");
+        HttpSession session = request.getSession(true);     
+        if (session == null) {
+            // Retry getSession() as request.getSession(true) can not be null
+            System.out.println("Retry getSession() as request.getSession(true) can not be null, most likely due to slow machines.");
+            TimeUnit.SECONDS.sleep(5);
+            session = request.getSession(true);           
+        }        
+        if (session != null) {
+            StringBuffer value = (StringBuffer) session.getAttribute(key);
+            value.append("Appended");
+        }
     }
 
     public void testTimeoutExtensionA(HttpServletRequest request, HttpServletResponse response) throws Exception {

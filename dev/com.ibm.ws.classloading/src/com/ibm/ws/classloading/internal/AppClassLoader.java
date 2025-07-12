@@ -552,7 +552,9 @@ public class AppClassLoader extends ContainerClassLoader implements SpringLoader
         // Could not generate class - throw CNFE
         // Even if going to return null, still call getExceptionWithSuggestion so that
         // the appropriate info message is output to the message.log.
-        ClassNotFoundException toThrow = FeatureSuggestion.getExceptionWithSuggestion(cnfe, name, returnNull);
+        // If onlySeardchSelf this is a delegation in which case we do NOT want to log a feature suggestion.
+        // Doing so will cause the message to get logged before parent/gateway delegation when using parentLast delegation
+        ClassNotFoundException toThrow = onlySearchSelf ? cnfe : FeatureSuggestion.getExceptionWithSuggestion(cnfe, name, returnNull);
 
         if (returnNull) {
             return null;
