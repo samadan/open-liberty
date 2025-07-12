@@ -76,7 +76,8 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         COMPRESSION,
         SAMESITE,
         HEADERS,
-        ACCESS_LOG
+        ACCESS_LOG, 
+        TCP_OPTIONS
     }
 
     private final NettyChain chain;
@@ -128,7 +129,10 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         } else {
             setupUnsecurePipeline(pipeline);
         }
-        pipeline.remove(NettyConstants.INACTIVITY_TIMEOUT_HANDLER_NAME);
+        if(Objects.nonNull(pipeline.get(NettyConstants.INACTIVITY_TIMEOUT_HANDLER_NAME))){
+            pipeline.remove(NettyConstants.INACTIVITY_TIMEOUT_HANDLER_NAME);
+        }
+       
 
         Tr.exit(tc, "initChannel");
     }
@@ -300,6 +304,7 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
             pipeline.addAfter(HTTP_KEEP_ALIVE_HANDLER_NAME, HTTP_AGGREGATOR_HANDLER_NAME,
                               new LibertyHttpObjectAggregator(httpConfig.getMessageSizeLimit() == -1 ? maxContentLength : httpConfig.getMessageSizeLimit()));
             pipeline.addAfter(HTTP_AGGREGATOR_HANDLER_NAME, HTTP_REQUEST_HANDLER_NAME, new LibertyHttpRequestHandler());
+            pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, "timeoutHandler", new TimeoutHandler(httpConfig));
         }
 
         
@@ -311,7 +316,7 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
         if (httpConfig.useForwardingHeaders()) {
             pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, null, new RemoteIpHandler(httpConfig));
         }
-        pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, "timeoutHandler", new TimeoutHandler(httpConfig));
+        
     }
 
     public static class HttpPipelineBuilder {
@@ -356,6 +361,8 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
                     return "defaultHeaders".equalsIgnoreCase(id);
                 case SSL_OPTIONS:
                     return "defaultSSLOptions".equalsIgnoreCase(id);
+                case TCP_OPTIONS:
+                    return "defaultTCPOptions".equalsIgnoreCase(id);
                 default:
                     return false;
             }

@@ -24,6 +24,9 @@ import com.ibm.ws.http.channel.internal.HttpConfigConstants;
 import com.ibm.ws.http.channel.internal.HttpMessages;
 import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer.ConfigElement;
 
+import io.openliberty.transport.config.options.EndpointOption;
+import io.openliberty.http.options.TcpOption;
+
 /**
  * Configuration class for Netty-based HTTP channels.
  */
@@ -36,7 +39,7 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
     private boolean suppressHandshakeError;
     private int suppressHandshakeErrorCount;
 
-
+    Map<EndpointOption, Object> config;
     
 
     /**
@@ -52,6 +55,7 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
         this.useHeadersOptions = builder.useHeaders;
         this.useSameSiteOptions = builder.useSameSite;
 
+        config = new HashMap<EndpointOption, Object>();
         this.parseConfig(builder.options);
 
     }
@@ -95,7 +99,7 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
         parseSameSiteOptions(config);
 
         parseHttpOptions(config);
-
+        parseTCPOptions(config);
         
 
     }
@@ -274,8 +278,13 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
         }
     }
 
-   
+    public void parseTCPOptions(Map<String, Object> options){
+        config.putIfAbsent(TcpOption.INACTIVITY_TIMEOUT, TcpOption.INACTIVITY_TIMEOUT.parse(options));
+    }
 
+    public Object get(EndpointOption option){
+        return this.config.getOrDefault(option, option.getDefaultValue());
+    }
     
 
     public void disableRemoteIp() {
@@ -299,6 +308,7 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
         private Map<String, Object> forwardingOptions;
         private Map<String, Object> sameSiteOptions;
         private Map<String, Object> sslOptions;
+        private Map<String, Object> tcpOptions;
 
         public NettyConfigBuilder() {
             options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -314,6 +324,7 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
             forwardingOptions = Collections.emptyMap();
             sameSiteOptions = Collections.emptyMap();
             sslOptions = Collections.emptyMap();
+            tcpOptions = Collections.emptyMap();
 
         }
 
@@ -365,6 +376,11 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
                     break;
                 }
 
+                case TCP_OPTIONS: {
+                    this.tcpOptions = options;
+                    break;
+                }
+
                 default:
                     break;
             }
@@ -380,6 +396,7 @@ public class NettyHttpChannelConfig extends HttpChannelConfig {
             forwardingOptions.forEach(options::putIfAbsent);
             sameSiteOptions.forEach(options::putIfAbsent);
             sslOptions.forEach(options::putIfAbsent);
+            tcpOptions.forEach(options::putIfAbsent);
 
         }
 

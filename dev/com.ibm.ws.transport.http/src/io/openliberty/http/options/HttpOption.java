@@ -38,7 +38,7 @@ public enum HttpOption implements EndpointOption {
     THROW_IOE_FOR_INBOUND_CONNECTIONS("ThrowIOEForInboundConnections", null, Boolean.class, ConfigType.HTTP),
     DECOMPRESSION_RATIO_LIMIT("decompressionRatioLimit", 200, Integer.class, ConfigType.HTTP),
     DECOMPRESSION_TOLERANCE("decompressionTolerance", 3, Integer.class, ConfigType.HTTP),
-    HTTP2_CONNECTION_IDLE_TIMEOUT("http2ConnectionIdleTimeout", "0", String.class, ConfigType.HTTP2),
+    HTTP2_CONNECTION_IDLE_TIMEOUT("http2ConnectionIdleTimeout", 0, Integer.class, ConfigType.HTTP2),
     MAX_CONCURRENT_STREAMS("maxConcurrentStreams", 100, Integer.class, ConfigType.HTTP2),
     MAX_FRAME_SIZE("maxFrameSize", 57344, Integer.class, ConfigType.HTTP2),
     SETTINGS_INITIAL_WINDOW_SIZE("settingsInitialWindowSize", 65535, Integer.class, ConfigType.HTTP2),
