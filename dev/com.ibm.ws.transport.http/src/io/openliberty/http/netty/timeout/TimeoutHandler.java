@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -191,6 +192,8 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         long timeout = isH2(context) ? h2InactivityTimeout 
             : (phase == TimeoutType.READ) ? readTimeout : persistTimeout;
         
+
+        System.out.println(">>> Timeout is set to: " + timeout);
         if(context == null || timeout <= 0){
             return;
         }
@@ -200,6 +203,7 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         cancelTimer();
         ScheduledFuture<?> future = context.executor().schedule(timerTask, timeout, LEGACY_UNIT);
         currentTimeout.set(future);
+
     }
 
     private void timeoutFired(){
@@ -207,6 +211,7 @@ public class TimeoutHandler extends ChannelDuplexHandler{
                           phase, readRetried, isH2(context),
                           (isH2(context) ? "H2IdleTimeout" : (phase == TimeoutType.READ ? "ReadTimeout" : "PersistTimeout")));
 
+        System.out.println(">>> looking to fire a timeout");
         IOException exception;
         if (phase == TimeoutType.READ && !readRetried) {
             readRetried = true;
@@ -220,7 +225,7 @@ public class TimeoutHandler extends ChannelDuplexHandler{
             exception = (phase == TimeoutType.READ) ? 
                     new ReadTimeoutException(readTimeout, LEGACY_UNIT) : new PersistTimeoutException(persistTimeout, LEGACY_UNIT);
         }
-
+        System.out.println(">>> following exception to be thrown: "+exception);
         
         context.fireExceptionCaught(exception);
     }

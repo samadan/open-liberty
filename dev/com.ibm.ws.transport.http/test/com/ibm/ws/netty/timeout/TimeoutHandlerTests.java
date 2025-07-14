@@ -20,6 +20,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.openliberty.http.netty.timeout.TimeoutEventHandler;
 import io.openliberty.http.netty.timeout.TimeoutHandler;
 import io.openliberty.http.netty.timeout.TimeoutType;
+import io.openliberty.http.netty.timeout.exception.H2IdleTimeoutException;
 import io.openliberty.http.netty.timeout.exception.PersistTimeoutException;
 import io.openliberty.http.netty.timeout.exception.ReadTimeoutException;
 import io.openliberty.http.netty.timeout.exception.UnknownTimeoutException;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.*;
 
 import com.ibm.ws.http.channel.internal.HttpChannelConfig;
 import com.ibm.ws.http.netty.NettyHttpChannelConfig;
+import com.ibm.ws.http.netty.NettyHttpConstants;
 
 public class TimeoutHandlerTests {
 
@@ -87,6 +89,28 @@ public class TimeoutHandlerTests {
         TimeoutType phase = (TimeoutType) getPrivate(handler, "phase");
         assertEquals("Expected handler to be in PERSIST phase", TimeoutType.PERSIST, phase);
         channel.close();
+    }
+
+    @Test
+    public void switchToH2WithAttribute(){
+        NettyHttpChannelConfig config = mock(NettyHttpChannelConfig.class);
+        when(config.getReadTimeout()).thenReturn(2000);
+        when(config.getPersistTimeout()).thenReturn(1000);
+        when(config.getH2ConnectionIdleTimeout()).thenReturn(5000);
+        EmbeddedChannel channel = new EmbeddedChannel(new TimeoutHandler(config));
+
+        channel.attr(NettyHttpConstants.PROTOCOL).set(NettyHttpConstants.ProtocolName.HTTP2.name);
+
+        channel.writeInbound(Unpooled.EMPTY_BUFFER);
+        channel.advanceTimeBy(6000, TimeUnit.MILLISECONDS);
+        channel.runScheduledPendingTasks();
+
+
+        Throwable t = extractException(channel);
+        System.out.println(">>> Exception is: " + t);
+        assertTrue(t instanceof H2IdleTimeoutException);
+        channel.close();
+        
     }
 
 
