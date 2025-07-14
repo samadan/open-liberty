@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
+import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 import com.ibm.ws.http.channel.internal.HttpMessages;
 import com.ibm.ws.http.dispatcher.internal.HttpDispatcher;
 import com.ibm.ws.netty.upgrade.NettyServletUpgradeHandler;
@@ -58,6 +59,10 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
     private int jitAllocateSize = 0;
 
     private VirtualConnection vc = null;
+
+    static {
+        System.out.println("Build Jul11Morning FULL SyncChange");
+    }
     
     public NettyTCPReadRequestContext(NettyTCPConnectionContext connectionContext, Channel nettyChannel) {
 
@@ -107,6 +112,9 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
     public long read(long numBytes, int timeout) throws IOException {
         
         if (!nettyChannel.isActive()) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Found closed connection on read for channel: " + nettyChannel);
+            }
             throw new IOException("Netty channel is not active.");
         }
 
@@ -145,22 +153,35 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
 
         try {
             // Wait for the read operation to complete or timeout
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Waiting on read for channel: " + nettyChannel);
+            }
             return readFuture.get(60000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Interrupted exception on channel: " + nettyChannel);
+            }
             Thread.currentThread().interrupt();
             throw new IOException("Thread interrupted while reading.", e);
         } catch (ExecutionException e) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Exection exception on channel: " + nettyChannel);
+            }
             Throwable cause = e.getCause();
             if (cause instanceof IOException) {
                 throw (IOException) cause;
             }
             throw new IOException("Error occurred during read operation.", cause);
         } catch (TimeoutException e) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Timeout exception on channel: " + nettyChannel);
+            }
             throw new SocketTimeoutException("Read operation timed out.");
         }
     }
 
     @Override
+    @FFDCIgnore(EOFException.class)
     public VirtualConnection read(long numBytes, TCPReadCompletedCallback callback, boolean forceQueue, int timeout) {
                 
         //TODO: fix forceQueue
@@ -169,7 +190,7 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
 
         if (!nettyChannel.isActive()) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                Tr.debug(this, tc, "Channel became inactive, not queueing read! " + nettyChannel);
+                Tr.debug(this, tc, "Channel became inactive, not queueing async read! " + nettyChannel);
             }
             // Channel is not active, do not proceed with the callback
              return vc; // Return
@@ -188,6 +209,9 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
         
         if(timeout == -2) {
             // Immediate timeout hit, need to cancel all previous reads
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Calling immediate timeout on channel: " + nettyChannel);
+            }
             upgrade.immediateTimeout();
             return null;
         }
@@ -206,13 +230,22 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
             // If so and not forcequeue then send the data back
 
             // If so and forcequeue then do the callback on another thread
-        synchronized(upgrade) {
+        // synchronized(upgrade) {
             if (upgrade.containsQueuedData() && upgrade.queuedDataSize() >= numBytes) {
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc, "Found queued data on channel: " + nettyChannel);
+                }
                 if(!forceQueue) {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(this, tc, "Not force queue so setting to buffer and returning...");
+                    }
                     upgrade.setToBuffer();
                     return vc;
                 }
                 blockingTaskExecutor.submit(() -> {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(this, tc, "Running async read callback for channel: " + nettyChannel);
+                    }
                     upgrade.setToBuffer();
                     callback.complete(vc, this);
                 });
@@ -226,6 +259,9 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
                 // Channel is not active, call on error
                 HttpDispatcher.getExecutorService().execute(() -> {
                     try {
+                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                            Tr.debug(this, tc, "Running async read callback error channel closed for channel: " + nettyChannel);
+                        }
                         upgrade.getReadListener().error(vc, this, new EOFException("Connection closed: Read failed.  Possible end of stream encountered. local=" + nettyChannel.localAddress() + " remote=" + nettyChannel.remoteAddress()));
                     } catch (Exception e2) {
                         // Log or handle the exception
@@ -234,10 +270,23 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
                 });
                 return null; // Return
             }
-            upgrade.queueAsyncRead(timeout);
+            try {
+                upgrade.queueAsyncRead(timeout, numBytes);
+            } catch(EOFException e) {
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc, "EOF exception caught on channel: " + nettyChannel);
+                }
+                HttpDispatcher.getExecutorService().execute(() -> {
+                    try {
+                        upgrade.getReadListener().error(vc, this, e);
+                    } catch (Exception e2) {
+                        // Log or handle the exception
+                        e2.printStackTrace();
+                    }
+                });
+            }
             return null;
-        }
-        
+        // }
 
         
 //         blockingTaskExecutor.submit(() -> {

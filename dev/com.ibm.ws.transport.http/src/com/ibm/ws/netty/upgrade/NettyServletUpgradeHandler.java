@@ -138,6 +138,9 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
             }
 
             if (isReadingAsync) {
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc, "NettyServletUpgradeHandler ChannelInputShutdownEvent reading async found!!");
+                }
                 if (totalBytesRead < minBytesToRead) {
                     HttpDispatcher.getExecutorService().execute(() -> {
                         try {
@@ -159,9 +162,13 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                     });
                 }
                 isReadingAsync = false;
+                peerClosedConnection.getAndSet(true);
+                return;
             }
 
-
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "NettyServletUpgradeHandler ChannelInputShutdownEvent NOT reading async!!");
+            }
             peerClosedConnection.getAndSet(true);
             // If we have data, queue up read signaled
             if (queuedDataSize() > 0) {
@@ -202,11 +209,14 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(this, tc, "NettyServletUpgradeHandler channelRead called!! " + msg);
+        }
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
 
             try {
-                synchronized(this) {
+                // synchronized(this) {
                     buf.retain();
                     queue.add(buf);
                     long bytesRead = buf.readableBytes();
@@ -215,6 +225,9 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                     }
                     totalBytesRead += bytesRead;
                     if(isReadingAsync) {
+                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                            Tr.debug(this, tc, "NettyServletUpgradeHandler channelRead found async!!");
+                        }
                         if(totalBytesRead < minBytesToRead) {
                             return;
                         }
@@ -229,8 +242,9 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                             }
                         });
                         isReadingAsync = false;
+                        return;
                     }
-                }
+                // }
 
                 if (totalBytesRead >= minBytesToRead) {
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
@@ -261,11 +275,11 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(this, tc, "Inside immediate timeout! " + channel);
         }
-        synchronized(this) {
+        // synchronized(this) {
             if(isReadingAsync) {
                 cancelTimer();
                 if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(this, tc, "Timeout hit for channel " + channel);
+                    Tr.debug(this, tc, "Timeout hit for channel on async" + channel);
                 }
                 StringBuilder error = new StringBuilder();
                 error.append("Socket operation timed out before it could be completed local=");
@@ -289,6 +303,9 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                 isReadingAsync = false;
                 return;
             }
+        // }
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(this, tc, "NettyServletUpgradeHandler immediateTimeout NOT found async!!");
         }
         immediateTimeout.getAndSet(true);
         signalReadReady();
@@ -533,7 +550,14 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
         this.callback = callback;
     }
 
-    public void queueAsyncRead(long timeout){
+    public void queueAsyncRead(long timeout, long minBytesToRead) throws EOFException{
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "NettyServletUpgradeHandler called queueAsyncRead for channel: " + channel);
+        }
+        this.minBytesToRead = minBytesToRead;
+        if(peerClosedConnection.get() && totalBytesRead < minBytesToRead) {
+            throw new EOFException("Connection closed: Read failed.  Possible end of stream encountered. local=" + channel.localAddress() + " remote=" + channel.remoteAddress());
+        }
         this.isReadingAsync = true;
         if(timeout > 0)
             activateTimer(timeout);
