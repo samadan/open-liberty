@@ -2299,6 +2299,25 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
 
             response = ((NettyResponseMessage) getResponse()).getResponse();
 
+            // check compression and set up the Content-Encoding header if need be
+            if (null != this.compressHandler) {
+                ContentEncodingValues ce = this.compressHandler.getContentEncoding();
+                getResponse().setContentEncoding(ce);
+            }else {
+                String acceptEncoding = nettyContext.channel().attr(NettyHttpConstants.ACCEPT_ENCODING).get();
+                acceptEncoding = nettyRequest.headers().get(HttpHeaderKeys.HDR_ACCEPT_ENCODING.getName());
+                if (acceptEncoding != null) {
+                    ResponseCompressionHandler compressionHandler = new ResponseCompressionHandler(getHttpConfig(), nettyResponse, acceptEncoding);
+                    compressionHandler.setCurrentContentLength(getResponse().getContentLength());
+                    compressionHandler.process();
+                    if (compressionHandler.getEncoding() != null) {
+                        setupCompressionHandler(compressionHandler.getEncoding());
+                        ContentEncodingValues ce = this.compressHandler.getContentEncoding();
+                        getResponse().setContentEncoding(ce);
+                    }
+                }
+            }
+
             ((NettyResponseMessage) getResponse()).processCookies();
             HeaderHandler headerHandler = new HeaderHandler(myChannelConfig, response);
             headerHandler.complianceCheck();
@@ -2941,21 +2960,33 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
                 }
             }
             if (this.compressHandler != null) {
+                // Check if this is an SSE response
+                boolean isSSE = false;
+                if (getResponse().containsHeader(HttpHeaderKeys.HDR_CONTENT_TYPE)) {
+                    String contentType = getResponse().getHeader(HttpHeaderKeys.HDR_CONTENT_TYPE).asString();
+                    isSSE = contentType != null && contentType.toLowerCase().contains("text/event-stream");
+                }
                 List<WsByteBuffer> list = this.compressHandler.compress(buffers);
                 if (this.isFinalWrite) {
                     list.addAll(this.compressHandler.finish());
+                } else if (isSSE) {
+                    // For SSE, explicitly flush after compression to ensure data is sent
+                    // immediately
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(tc, "Compressing an SSE event");
+                    }
+                    List<WsByteBuffer> flushedList = this.compressHandler.flush(this.isFinalWrite);
+                    if (flushedList != null && !flushedList.isEmpty()) {
+                        list.addAll(flushedList);
+                    }
                 }
 
                 // put any created buffers onto the release list
                 if (0 < list.size()) {
                     buffers = new WsByteBuffer[list.size()];
                     list.toArray(buffers);
-                    storeAllocatedBuffers(buffers);
-                    String streamId = nettyResponse.headers().get(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), "-1");
-                    if (!streamId.equals("-1")) {
-                        clearPendingByteBuffers();
-                        addToPendingByteBuffer(buffers, list.size());
-                    }
+                    clearPendingByteBuffers();
+                    addToPendingByteBuffer(buffers, list.size());
                 } else {
                     buffers = null;
                     clearPendingByteBuffers();
@@ -3252,21 +3283,35 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
                 }
             }
             if (this.compressHandler != null) {
+                // Check if this is an SSE response
+                boolean isSSE = false;
+                if (getResponse().containsHeader(HttpHeaderKeys.HDR_CONTENT_TYPE)) {
+                    String contentType = getResponse().getHeader(HttpHeaderKeys.HDR_CONTENT_TYPE).asString();
+                    isSSE = contentType != null && contentType.toLowerCase().contains("text/event-stream");
+                }
                 List<WsByteBuffer> list = this.compressHandler.compress(buffers);
                 if (this.isFinalWrite) {
                     list.addAll(this.compressHandler.finish());
+                } else if (isSSE) {
+                    // For SSE, explicitly flush after compression to ensure data is sent
+                    // immediately
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(tc, "Compressing an SSE event");
+                    }
+                    List<WsByteBuffer> flushedList = this.compressHandler.flush(this.isFinalWrite);
+                    if (flushedList != null && !flushedList.isEmpty()) {
+                        list.addAll(flushedList);
+                    }
                 }
 
                 // put any created buffers onto the release list
                 if (0 < list.size()) {
                     buffers = new WsByteBuffer[list.size()];
                     list.toArray(buffers);
-                    storeAllocatedBuffers(buffers);
+                    // storeAllocatedBuffers(buffers);
                     String streamId = nettyResponse.headers().get(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), "-1");
-                    if (!streamId.equals("-1")) {
-                        clearPendingByteBuffers();
-                        addToPendingByteBuffer(buffers, list.size());
-                    }
+                    clearPendingByteBuffers();
+                    addToPendingByteBuffer(buffers, list.size());
                 } else {
                     buffers = null;
                     clearPendingByteBuffers();
