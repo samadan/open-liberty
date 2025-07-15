@@ -2952,7 +2952,6 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
             acceptEncoding = nettyRequest.headers().get(HttpHeaderKeys.HDR_ACCEPT_ENCODING.getName());
             if (this.compressHandler == null && acceptEncoding != null) {
                 ResponseCompressionHandler compressionHandler = new ResponseCompressionHandler(getHttpConfig(), nettyResponse, acceptEncoding);
-                // compressionHandler.setCurrentContentLength(GenericUtils.sizeOf(buffers));
                 compressionHandler.setCurrentContentLength(getResponse().getContentLength());
                 compressionHandler.process();
                 if (compressionHandler.getEncoding() != null) {
@@ -3275,7 +3274,6 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
             acceptEncoding = nettyRequest.headers().get(HttpHeaderKeys.HDR_ACCEPT_ENCODING.getName());
             if (this.compressHandler == null && acceptEncoding != null) {
                 ResponseCompressionHandler compressionHandler = new ResponseCompressionHandler(getHttpConfig(), nettyResponse, acceptEncoding);
-                // compressionHandler.setCurrentContentLength(GenericUtils.sizeOf(buffers));
                 compressionHandler.setCurrentContentLength(getResponse().getContentLength());
                 compressionHandler.process();
                 if (compressionHandler.getEncoding() != null) {
@@ -3308,7 +3306,6 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
                 if (0 < list.size()) {
                     buffers = new WsByteBuffer[list.size()];
                     list.toArray(buffers);
-                    // storeAllocatedBuffers(buffers);
                     String streamId = nettyResponse.headers().get(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), "-1");
                     clearPendingByteBuffers();
                     addToPendingByteBuffer(buffers, list.size());
