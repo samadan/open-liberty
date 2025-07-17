@@ -10,7 +10,9 @@
 package io.openliberty.http.netty.timeout;
 
 import com.ibm.ws.http.netty.NettyHttpChannelConfig;
+import com.ibm.ws.http.netty.NettyHttpConstants;
 
+import io.openliberty.http.netty.timeout.exception.H2IdleTimeoutException;
 import io.openliberty.http.netty.timeout.exception.PersistTimeoutException;
 import io.openliberty.http.netty.timeout.exception.ReadTimeoutException;
 import io.openliberty.http.options.TcpOption;
@@ -25,6 +27,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMessage;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.concurrent.ScheduledFuture;
 
@@ -36,6 +45,10 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     private final int readTimeout;
     private final int persistTimeout;
     private final int inactivityTimeout;
+    private final int h2InactivityTimeout;
+
+    private final boolean useKeepAlive;
+    private volatile boolean keepAliveRequested;
 
     private volatile TimeoutType phase = TimeoutType.READ;
     private volatile ChannelHandlerContext context;
@@ -52,6 +65,10 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         this.inactivityTimeout = (int) config.get(TcpOption.INACTIVITY_TIMEOUT);
         this.readTimeout = initTimeout(config.getReadTimeout());
         this.persistTimeout = initTimeout(config.getPersistTimeout());
+        this.h2InactivityTimeout = initTimeout(Math.toIntExact(config.getH2ConnCloseTimeout()*1000)); // this might be in seconds, and need converting
+        this.useKeepAlive = config.isKeepAliveEnabled();
+
+        System.out.printf("Timeouthandler ctor - read=%d ms, persist=%d ms, idle=%d ms, h2Idle=%d ms, keepAlive=%b%n", readTimeout, persistTimeout, inactivityTimeout, h2InactivityTimeout, useKeepAlive);
     }
 
     private int initTimeout(int timeout){
@@ -81,11 +98,21 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     @Override
     public void channelRead(ChannelHandlerContext context, Object message) throws Exception {
         if (message instanceof FullHttpRequest) {
-            cancelTimer();
-            phase = TimeoutType.READ;
-            readRetried = false;
+            keepAliveRequested = HttpUtil.isKeepAlive((HttpMessage)message);
+            System.out.println(">>> USE KEEPALIVE: " + keepAliveRequested);
+            resetReadTimer();
+        } else if(isH2(context)){
+            resetReadTimer();
         }
         super.channelRead(context, message);
+    }
+
+    private void resetReadTimer(){
+        System.out.printf("resetReadTImer - phase -> READ, keepAliveRequested=%b%n", keepAliveRequested);
+        cancelTimer();
+        phase = TimeoutType.READ;
+        readRetried = false;
+        activateTimer();
     }
 
     /**
@@ -101,25 +128,74 @@ public class TimeoutHandler extends ChannelDuplexHandler{
      */
     @Override
     public void write(ChannelHandlerContext context, Object message, ChannelPromise promise) throws Exception {
-        if(message instanceof FullHttpResponse || message instanceof LastHttpContent){
+        System.out.println(">>> WRITE and my protocol is: " + context.channel().attr(NettyHttpConstants.PROTOCOL).get());
+        System.out.printf("write() – msg=%s, proto=%s, channelOpen=%b%n",
+                          message.getClass().getSimpleName(),
+                          context.channel().attr(NettyHttpConstants.PROTOCOL).get(),
+                          context.channel().isOpen());
+
+        System.out.println(">>> JUMP HERE: "+context.pipeline().names());
+        
+
+        boolean isWsHandshake = false;
+
+        if (message instanceof HttpResponse) {
+            HttpHeaders h = ((HttpResponse) message).headers();
+            System.out.println("...headers: " + h.toString());
+            isWsHandshake = h.containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true) &&
+                h.contains(HttpHeaderNames.UPGRADE, "websocket", true);
+            keepAliveRequested = HttpUtil.isKeepAlive((HttpResponse) message);
+            clearKeepAliveIfNeeded(context, (HttpResponse)message);
+        }
+
+        System.out.printf("   headers parsed = wsHS=%b, respKeepAlive=%b%n", isWsHandshake, keepAliveRequested);
+
+
+
+        if(isH2(context) || message instanceof FullHttpResponse || message instanceof LastHttpContent){
+            boolean armKeepAlive = keepAliveRequested && useKeepAlive && !isWsHandshake && !isWebSocket(context) && context.channel().isActive();
+
+            System.out.printf("   [Timer] armPersist=%b (phase=%s) at %d ms%n", armKeepAlive, phase, (phase==TimeoutType.READ) ? readTimeout:persistTimeout);
             promise.addListener((ChannelFutureListener) future -> {
                 if(future.isSuccess()){
                     cancelTimer();
-                    phase = TimeoutType.PERSIST;
-                    activateTimer();
+                    if(armKeepAlive){
+                        phase = TimeoutType.PERSIST;
+                        activateTimer();
+                    }
+                    
                 }
             });
         }
         super.write(context, message, promise);
     }
 
+    private void clearKeepAliveIfNeeded(ChannelHandlerContext ctx, HttpMessage msg) {
+        // Any non-HTTP protocol (websocket / h2) ⇒ no keep-alive semantics
+        NettyHttpConstants.ProtocolName proto = NettyHttpConstants.ProtocolName.from(ctx.channel().attr(NettyHttpConstants.PROTOCOL).get());
+        if (proto != NettyHttpConstants.ProtocolName.HTTP1) {
+            keepAliveRequested = false;
+            return;
+        }
+
+        // Explicit Connection: close also kills keep-alive
+        if (msg.headers().contains(HttpHeaderNames.CONNECTION,
+                                   HttpHeaderValues.CLOSE, /* ignoreCase */ true)) {
+            keepAliveRequested = false;
+        }
+    }
+
     private void activateTimer(){
         
-        long timeout = (phase == TimeoutType.READ) ? readTimeout : persistTimeout;
+        
+        long timeout = isH2(context) ? h2InactivityTimeout 
+            : (phase == TimeoutType.READ) ? readTimeout : persistTimeout;
         
         if(context == null || timeout <= 0){
             return;
         }
+        System.out.printf("activateTimer – phase=%s, h2=%b, timeout=%d ms%n",
+                          phase, isH2(context), timeout);
         
         cancelTimer();
         ScheduledFuture<?> future = context.executor().schedule(timerTask, timeout, LEGACY_UNIT);
@@ -127,15 +203,25 @@ public class TimeoutHandler extends ChannelDuplexHandler{
     }
 
     private void timeoutFired(){
-        if(phase == TimeoutType.READ && !readRetried){
+        System.out.printf("timeoutFired – phase=%s, readRetried=%b, h2=%b → firing %s%n",
+                          phase, readRetried, isH2(context),
+                          (isH2(context) ? "H2IdleTimeout" : (phase == TimeoutType.READ ? "ReadTimeout" : "PersistTimeout")));
+
+        IOException exception;
+        if (phase == TimeoutType.READ && !readRetried) {
             readRetried = true;
             activateTimer();
             return;
         }
 
-        IOException exception = (phase == TimeoutType.READ) 
-                                ? new ReadTimeoutException(readTimeout, LEGACY_UNIT)
-                                : new PersistTimeoutException(persistTimeout, LEGACY_UNIT);
+        if(isH2(context)){
+            exception = new H2IdleTimeoutException(h2InactivityTimeout, LEGACY_UNIT);
+        } else{
+            exception = (phase == TimeoutType.READ) ? 
+                    new ReadTimeoutException(readTimeout, LEGACY_UNIT) : new PersistTimeoutException(persistTimeout, LEGACY_UNIT);
+        }
+
+        
         context.fireExceptionCaught(exception);
     }
 
@@ -144,5 +230,13 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         if(current != null){
             current.cancel(false); //Do not interrupt thread
         }
+    }
+
+    private static boolean isH2(ChannelHandlerContext context) {
+        return NettyHttpConstants.ProtocolName.from(context.channel().attr(NettyHttpConstants.PROTOCOL).get()) == NettyHttpConstants.ProtocolName.HTTP2;
+    }
+
+    private static boolean isWebSocket(ChannelHandlerContext context){
+        return NettyHttpConstants.ProtocolName.from(context.channel().attr(NettyHttpConstants.PROTOCOL).get()) == NettyHttpConstants.ProtocolName.WEBSOCKET;
     }
 }

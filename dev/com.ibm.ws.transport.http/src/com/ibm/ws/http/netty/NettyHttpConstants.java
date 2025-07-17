@@ -36,4 +36,24 @@ public class NettyHttpConstants {
     public static final AttributeKey<Integer> NUMBER_OF_HTTP_REQUESTS = AttributeKey.valueOf("numberOfHttpRequests");
     public static final AttributeKey<Integer> STREAMS_REFUSED = AttributeKey.valueOf("streamsRefused");
 
+    public enum ProtocolName {
+        HTTP1("HTTP1"),
+        HTTP2("HTTP2"),
+        WEBSOCKET("WS"),
+        UNKNOWN("UNKNOWN");
+
+        public final String protocol;
+
+        ProtocolName(String protocol) { this.protocol = protocol; }
+
+        /** Reverse-lookup from the string stored on the channel. */
+        public static ProtocolName from(String protocol) {
+            if (protocol == null)
+                return UNKNOWN;
+            for (ProtocolName p : values())
+                if (p.protocol.equals(protocol))
+                    return p;
+            return UNKNOWN;
+        }
+    }
 }

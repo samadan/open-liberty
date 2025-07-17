@@ -145,6 +145,7 @@ public class LibertyUpgradeCodec implements UpgradeCodecFactory {
                     if (quiesceHandler != null) {
                         quiesceHandler.setQuiesceTask(QuiesceStrategy.WEBSOCKET_CLOSE.getTask());
                     }
+                    ctx.channel().attr(NettyHttpConstants.PROTOCOL).set(NettyHttpConstants.ProtocolName.WEBSOCKET.name());
                 }
 
                 @Override

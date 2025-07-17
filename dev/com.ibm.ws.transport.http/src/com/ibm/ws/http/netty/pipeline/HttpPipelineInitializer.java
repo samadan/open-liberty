@@ -303,7 +303,12 @@ public class HttpPipelineInitializer extends ChannelInitializerWrapper {
             pipeline.addAfter(HTTP_KEEP_ALIVE_HANDLER_NAME, HTTP_AGGREGATOR_HANDLER_NAME,
                               new LibertyHttpObjectAggregator(httpConfig.getMessageSizeLimit() == -1 ? maxContentLength : httpConfig.getMessageSizeLimit()));
             pipeline.addAfter(HTTP_AGGREGATOR_HANDLER_NAME, HTTP_REQUEST_HANDLER_NAME, new LibertyHttpRequestHandler());
-            pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, "timeoutHandler", new TimeoutHandler(httpConfig));
+            if("websocket".equals(pipeline.channel().attr(NettyHttpConstants.PROTOCOL).get()) ){
+               System.out.println(">>> was websocket, reset status");
+               pipeline.channel().attr(NettyHttpConstants.PROTOCOL).set(null);
+            }else{
+                pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME, "timeoutHandler", new TimeoutHandler(httpConfig));
+            }
         }
 
         pipeline.addBefore(HTTP_DISPATCHER_HANDLER_NAME,"transportHandler", TransportHandler.INSTANCE);
