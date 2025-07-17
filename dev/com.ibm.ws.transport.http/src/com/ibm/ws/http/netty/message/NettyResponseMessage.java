@@ -188,20 +188,25 @@ public class NettyResponseMessage extends NettyBaseMessage implements HttpRespon
 
     @Override
     public void setContentEncoding(ContentEncodingValues value) {
-        //TODO delegate to pipeline
-
+        headers.set(HttpHeaderNames.CONTENT_ENCODING, value.getName());
     }
 
     @Override
     public void setContentEncoding(ContentEncodingValues[] values) {
-        // TODO delegate to pipeline
-
+        headers.remove(HttpHeaderNames.CONTENT_ENCODING);
+        for(ContentEncodingValues value : values){
+            headers.add(HttpHeaderNames.CONTENT_ENCODING, value.getName());
+        }
     }
 
     @Override
     public ContentEncodingValues[] getContentEncoding() {
-        // TODO delegate to pipeline
-        return null;
+        List<String> encodingHeaders = headers.getAll(HttpHeaderNames.CONTENT_ENCODING);
+        List<ContentEncodingValues> values = new ArrayList<ContentEncodingValues>();
+        for (String encoding : encodingHeaders) {
+            values.add(ContentEncodingValues.match(encoding, 0, encoding.length()));
+        }
+        return (ContentEncodingValues[]) values.toArray();
     }
 
     @Override
@@ -276,7 +281,6 @@ public class NettyResponseMessage extends NettyBaseMessage implements HttpRespon
     }
 
     public HttpHeaders getNettyTrailers() {
-        // TODO Auto-generated method stub)
         return trailers;
     }
 
@@ -576,7 +580,6 @@ public class NettyResponseMessage extends NettyBaseMessage implements HttpRespon
 
     @Override
     public StatusCodes getStatusCode() {
-        // TODO Auto-generated method stub
         return StatusCodes.getByOrdinal(getStatusCodeAsInt());
     }
 

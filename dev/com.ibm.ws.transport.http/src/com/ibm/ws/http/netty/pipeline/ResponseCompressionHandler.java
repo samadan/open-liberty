@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -44,7 +44,7 @@ public class ResponseCompressionHandler {
     private final HttpChannelConfig config;
     private final HttpResponse response;
     private final HttpHeaders headers;
-    private int currentContentLength = -1;
+    private long currentContentLength = -1;
 
     private String acceptEncodingHeader;
 
@@ -54,7 +54,7 @@ public class ResponseCompressionHandler {
 
     private boolean starEncodingParsed = Boolean.FALSE;
 
-    private final int contentLengthMinimum = 2048;
+    private final long contentLengthMinimum = 2048;
 
     public ResponseCompressionHandler(HttpChannelConfig config, HttpResponse response, String acceptEncodingHeader) {
         Objects.requireNonNull(config);
@@ -458,11 +458,11 @@ public class ResponseCompressionHandler {
         return result;
     }
 
-    private int getCurrentContentLength() {
+    private long getCurrentContentLength() {
         return currentContentLength;
     }
 
-    public void setCurrentContentLength(int length) {
+    public void setCurrentContentLength(long length) {
         currentContentLength = length;
     }
 
@@ -476,6 +476,7 @@ public class ResponseCompressionHandler {
         CharSequence mimeTypeChars = HttpUtil.getMimeType(response);
         String mimeType = null;
         String mimeTypeWildcard = null;
+
 
         if (Objects.nonNull(mimeTypeChars)) {
             mimeType = mimeTypeChars.toString();
