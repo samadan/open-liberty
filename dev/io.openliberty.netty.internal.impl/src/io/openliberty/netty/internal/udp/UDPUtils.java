@@ -68,16 +68,16 @@ public class UDPUtils {
 		return bs;
 	}
 
-	private static ChannelFuture bind(NettyFrameworkImpl framework, BootstrapExtended bootstrap, final Channel channel, String inetHost,
-			int inetPort, final int retryCount, final int retryDelay, ChannelFutureListener bindListener) {
-		ChannelFuture bindFuture = null;
+	private static ChannelFuture open(NettyFrameworkImpl framework, BootstrapExtended bootstrap, final Channel channel, String inetHost,
+			int inetPort, final int retryCount, final int retryDelay, ChannelFutureListener openListener) {
+		ChannelFuture openFuture = null;
 
 		final UDPConfigurationImpl config = ((UDPConfigurationImpl) bootstrap.getConfiguration());
 
 		if (config.isInboundChannel()) {
-			bindFuture = channel.bind(new InetSocketAddress(inetHost, inetPort));
+			openFuture = channel.bind(new InetSocketAddress(inetHost, inetPort));
 		} else {
-			bindFuture = channel.connect(new InetSocketAddress(inetHost, inetPort));
+			openFuture = channel.connect(new InetSocketAddress(inetHost, inetPort));
 		}
 
 		if (inetHost.equals("*")) {
@@ -85,13 +85,13 @@ public class UDPUtils {
 		}
 		final String newHost = inetHost;
 
-		if (bindListener != null) {
-			bindFuture.addListener(bindListener);
+		if (openListener != null) {
+			openFuture.addListener(openListener);
 		}
 
 		final String channelName = ((UDPConfigurationImpl) bootstrap.getConfiguration()).getExternalName();
 
-		bindFuture.addListener(future -> {
+		openFuture.addListener(future -> {
 			if (future.isSuccess()) {
 
 				// add the new channel to the set of active channels, and set a close future to
@@ -137,7 +137,7 @@ public class UDPUtils {
 				}
 			} else {
 				if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-					Tr.debug(tc, "bindHelper failed due to: " + future.cause().getMessage());
+					Tr.debug(tc, "open failed due to: " + future.cause().getMessage());
 				}
 
 				if (retryCount > 0) {
@@ -148,7 +148,7 @@ public class UDPUtils {
 						return;
 					}
 					if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-						Tr.debug(tc, "attempt to bind again after a wait of " + retryDelay + "ms; " + retryCount
+						Tr.debug(tc, "attempt to open again after a wait of " + retryDelay + "ms; " + retryCount
 								+ " attempts remaining");
 					}
 					// recurse until we either complete successfully or run out of retries;
@@ -160,7 +160,7 @@ public class UDPUtils {
 							Tr.debug(tc, "sleep caught InterruptedException.  will proceed.");
 						}
 					}
-					bind(framework, bootstrap, channel, newHost, inetPort, retryCount - 1, retryDelay, bindListener);
+					open(framework, bootstrap, channel, newHost, inetPort, retryCount - 1, retryDelay, openListener);
 				} else {
 					if(!channel.isOpen()) {
 						if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
@@ -180,7 +180,7 @@ public class UDPUtils {
 				}
 			}
 		});
-		return bindFuture;
+		return openFuture;
 	}
 
 	/**
@@ -190,16 +190,16 @@ public class UDPUtils {
 	 * @param bootstrap
 	 * @param inetHost
 	 * @param inetPort
-	 * @param bindListener
+	 * @param openListener
 	 * @return
 	 * @throws NettyException
 	 */
 	public static Channel startOutbound(NettyFrameworkImpl framework, BootstrapExtended bootstrap,
-			String inetHost, int inetPort, ChannelFutureListener bindListener) throws NettyException {
+			String inetHost, int inetPort, ChannelFutureListener openListener) throws NettyException {
 		if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-			Tr.debug(tc, "startOutbound (UDP): attempt to bind a channel at host " + inetHost + " port " + inetPort);
+			Tr.debug(tc, "startOutbound (UDP): attempt to connect to host " + inetHost + " port " + inetPort);
 		}
-		return startHelper(framework, bootstrap, inetHost, inetPort, bindListener);
+		return startHelper(framework, bootstrap, inetHost, inetPort, openListener);
 	}
 
 	/**
@@ -209,20 +209,20 @@ public class UDPUtils {
 	 * @param bootstrap
 	 * @param inetHost
 	 * @param inetPort
-	 * @param bindListener
+	 * @param openListener
 	 * @return
 	 * @throws NettyException
 	 */
 	public static Channel start(NettyFrameworkImpl framework, BootstrapExtended bootstrap, String inetHost,
-			int inetPort, ChannelFutureListener bindListener) throws NettyException {
+			int inetPort, ChannelFutureListener openListener) throws NettyException {
 		if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
 			Tr.debug(tc, "start (UDP): attempt to bind a channel at host " + inetHost + " port " + inetPort);
 		}
-		return startHelper(framework, bootstrap, inetHost, inetPort, bindListener);
+		return startHelper(framework, bootstrap, inetHost, inetPort, openListener);
 	}
 
 	private static Channel startHelper(NettyFrameworkImpl framework, BootstrapExtended bootstrap, String inetHost,
-			int inetPort, ChannelFutureListener bindListener) throws NettyException {
+			int inetPort, ChannelFutureListener openListener) throws NettyException {
 		if(framework.isStopping()){ // Framework already started and is no longer active
 			if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
 				Tr.debug(tc, "server is stopping, channel will not be started");
@@ -235,8 +235,8 @@ public class UDPUtils {
 				@Override
 				public ChannelFuture call() throws NettyException {
 					UDPConfigurationImpl config = (UDPConfigurationImpl) bootstrap.getConfiguration();
-					int bindRetryCount = config.getRetryCount();
-					int bindRetryInterval = config.getRetryInterval();
+					int retryCount = config.getRetryCount();
+					int retryInterval = config.getRetryInterval();
 					InetSocketAddress address = null;
 					String newHost = inetHost;
 					if (newHost.equals("*")) {
@@ -253,8 +253,8 @@ public class UDPUtils {
 								"local address unresolved for " + channelName + " - " + hostLogString + ":" + inetPort);
 					}
 
-					return bind(framework, bootstrap, channel, newHost, inetPort, bindRetryCount, bindRetryInterval,
-							bindListener);
+					return open(framework, bootstrap, channel, newHost, inetPort, retryCount, retryInterval,
+							openListener);
 				}
 			});
 			return channel;
