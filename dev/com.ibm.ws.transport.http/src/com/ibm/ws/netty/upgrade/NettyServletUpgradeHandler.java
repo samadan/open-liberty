@@ -38,6 +38,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.CoalescingBufferQueue;
 import io.netty.channel.VoidChannelPromise;
 import io.netty.channel.socket.ChannelInputShutdownEvent;
+import io.netty.channel.socket.ChannelInputShutdownReadComplete;
 import io.netty.util.concurrent.ScheduledFuture;
 import io.openliberty.netty.internal.impl.QuiesceState;
 
@@ -132,7 +133,7 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         // java.io.EOFException: Connection closed: Read failed.  Possible end of stream encountered. local=ip:port remote=ip:port
-        if (evt instanceof ChannelInputShutdownEvent) {
+        if (!peerClosedConnection.get() && (evt instanceof ChannelInputShutdownEvent || evt instanceof ChannelInputShutdownReadComplete)) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(this, tc, "NettyServletUpgradeHandler ChannelInputShutdownEvent kicked off for channel " + channel);
             }
@@ -267,8 +268,8 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 //        signalReadReady();
+        cancelTimer();
         super.channelInactive(ctx);
-
     }
 
     public void immediateTimeout() {
@@ -504,6 +505,7 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                 }
             }
         }
+        peerClosedConnection.getAndSet(true);
         super.close(ctx, promise);
     }
   
