@@ -60,10 +60,6 @@ public class NettyTCPReadRequestContext implements TCPReadRequestContext {
 
     private VirtualConnection vc = null;
 
-    static {
-        System.out.println("Build Jul11Morning FULL SyncChange");
-    }
-    
     public NettyTCPReadRequestContext(NettyTCPConnectionContext connectionContext, Channel nettyChannel) {
 
         this.connectionContext = connectionContext;
