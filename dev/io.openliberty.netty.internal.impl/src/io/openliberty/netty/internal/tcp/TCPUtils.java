@@ -12,6 +12,8 @@ package io.openliberty.netty.internal.tcp;
 import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
@@ -275,7 +277,13 @@ public class TCPUtils {
 			return null;
 		}else{
 			try {
-				Channel channel = bootstrap.register().channel();
+				Channel channel = AccessController.doPrivileged(
+                        new PrivilegedAction<ChannelFuture>() {
+                            @Override
+                            public ChannelFuture run() {
+                                return bootstrap.register();
+                            }
+                        }).channel();
 				framework.runWhenServerStarted(new Callable<ChannelFuture>() {
 					@Override
 					public ChannelFuture call() {

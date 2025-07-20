@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2023 IBM Corporation and others.
+ * Copyright (c) 2021, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,8 @@ package io.openliberty.netty.internal.udp;
 import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
@@ -221,7 +223,13 @@ public class UDPUtils {
 			return null;
 		}
 		try {
-			Channel channel = bootstrap.register().channel();
+			Channel channel = AccessController.doPrivileged(
+                    new PrivilegedAction<ChannelFuture>() {
+                        @Override
+                        public ChannelFuture run() {
+                            return bootstrap.register();
+                        }
+                    }).channel();
 			framework.runWhenServerStarted(new Callable<ChannelFuture>() {
 				@Override
 				public ChannelFuture call() throws NettyException {
