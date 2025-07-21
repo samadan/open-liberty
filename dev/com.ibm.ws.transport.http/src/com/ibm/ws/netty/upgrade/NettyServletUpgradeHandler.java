@@ -108,8 +108,10 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                 try {
                     getReadListener().error(vc, readContext, new SocketTimeoutException(error.toString()));
                 } catch (Exception e) {
-                    // Log or handle the exception
-                    e.printStackTrace();
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(this, tc,
+                                "NettyServletUpgradeHandler timeoutFired hit Exception on error callback: " + e);
+                    }
                 }
             });
             isReadingAsync = false;
@@ -147,8 +149,10 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                         try {
                             getReadListener().error(vc, readContext, new EOFException("Connection closed: Read failed.  Possible end of stream encountered. local=" + channel.localAddress() + " remote=" + channel.remoteAddress()));
                         } catch (Exception e) {
-                            // Log or handle the exception
-                            e.printStackTrace();
+                            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                                Tr.debug(this, tc,
+                                        "NettyServletUpgradeHandler userEventTriggered hit Exception on error callback: " + e);
+                            }
                         }
                     });
                 } else {
@@ -157,8 +161,10 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                             setToBuffer();
                             callback.complete(vc, readContext);
                         } catch (Exception e) {
-                            // Log or handle the exception
-                            e.printStackTrace();
+                            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                                Tr.debug(this, tc,
+                                        "NettyServletUpgradeHandler userEventTriggered hit Exception on complete callback: " + e);
+                            }
                         }
                     });
                 }
@@ -178,41 +184,12 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                 }
                 signalReadReady();
             }
-
-            // Lock thread and kick off immediate timeout
-            // Do immediate timeout to stop all read threads
-//            readLock.lock();
-//            immediateTimeout();
-//            try {
-//                // Do call back with error to stop wsoc link and destroy the rest
-//                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-//                    Tr.debug(this, tc, "NettyServletUpgradeHandler userEventTriggered doing error callback for thread on channel " + channel);
-//                }
-//                HttpDispatcher.getExecutorService().execute(() -> {
-//                    try {
-//                        callback.error(vc, readContext, new EOFException("Connection closed: Read failed.  Possible end of stream encountered. local=" + channel.localAddress()
-//                                                                         + " remote=" + channel.remoteAddress()));
-//                    } catch (Exception e) {
-//                        // Log or handle the exception
-//                        System.out.println("Error handling callback on remote closed connection! " + channel);
-//                        e.printStackTrace();
-//                    }
-//                });
-//            } finally {
-//                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-//                    Tr.debug(this, tc, "NettyServletUpgradeHandler userEventTriggered unlocking readLock for channel " + channel);
-//                }
-////                readLock.unlock();
-//            }
         }
         super.userEventTriggered(ctx, evt);
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(this, tc, "NettyServletUpgradeHandler channelRead called!! " + msg);
-        }
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
 
@@ -238,8 +215,10 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                                 setToBuffer();
                                 callback.complete(vc, readContext);
                             } catch (Exception e) {
-                                // Log or handle the exception
-                                e.printStackTrace();
+                                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                                    Tr.debug(this, tc,
+                                            "NettyServletUpgradeHandler channelRead hit Exception on complete callback: " + e);
+                                }
                             }
                         });
                         isReadingAsync = false;
@@ -267,7 +246,6 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-//        signalReadReady();
         cancelTimer();
         super.channelInactive(ctx);
     }
@@ -276,51 +254,52 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(this, tc, "Inside immediate timeout! " + channel);
         }
-        // synchronized(this) {
-            if(isReadingAsync) {
-                cancelTimer();
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(this, tc, "Timeout hit for channel on async" + channel);
-                }
-                StringBuilder error = new StringBuilder();
-                error.append("Socket operation timed out before it could be completed local=");
-                error.append(readContext.getInterface().getLocalAddress().getHostName()).append("/");
-                error.append(readContext.getInterface().getLocalAddress().getHostAddress()).append(":");
-                error.append(readContext.getInterface().getLocalPort());
-                error.append(" remote=");
-                error.append(readContext.getInterface().getRemoteAddress().getHostName()).append("/");
-                error.append(readContext.getInterface().getRemoteAddress().getHostAddress()).append(":");
-                error.append(readContext.getInterface().getRemotePort());
-
-                //throw new IOException("BETA - Timed out waiting on read");
-                HttpDispatcher.getExecutorService().execute(() -> {
-                    try {
-                        getReadListener().error(vc, readContext, new SocketTimeoutException(error.toString()));
-                    } catch (Exception e) {
-                        // Log or handle the exception
-                        e.printStackTrace();
-                    }
-                });
-                isReadingAsync = false;
-                return;
+        if(isReadingAsync) {
+            cancelTimer();
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Timeout hit for channel on async" + channel);
             }
-        // }
+            StringBuilder error = new StringBuilder();
+            error.append("Socket operation timed out before it could be completed local=");
+            error.append(readContext.getInterface().getLocalAddress().getHostName()).append("/");
+            error.append(readContext.getInterface().getLocalAddress().getHostAddress()).append(":");
+            error.append(readContext.getInterface().getLocalPort());
+            error.append(" remote=");
+            error.append(readContext.getInterface().getRemoteAddress().getHostName()).append("/");
+            error.append(readContext.getInterface().getRemoteAddress().getHostAddress()).append(":");
+            error.append(readContext.getInterface().getRemotePort());
+
+            HttpDispatcher.getExecutorService().execute(() -> {
+                try {
+                    getReadListener().error(vc, readContext, new SocketTimeoutException(error.toString()));
+                } catch (Exception e) {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(this, tc,
+                                "NettyServletUpgradeHandler immediateTimeout hit Exception on error callback: " + e);
+                    }
+                }
+            });
+            isReadingAsync = false;
+            return;
+        }
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(this, tc, "NettyServletUpgradeHandler immediateTimeout NOT found async!!");
         }
         immediateTimeout.getAndSet(true);
         signalReadReady();
-        // TODO Loop to make sure no others reads are taking place
         while (waitingThreads.get() > 0) { // Queue here until no queued threads are available
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(this, tc, "NettyServletUpgradeHandler immediateTimeout waiting to finish immediate timeout on channel: " + channel);
             }
-            // TODO If this is kept and not removed when disabling auto read, switch this logic to provide assertion of not running
+            // If this is kept and not removed when disabling auto read, switch this logic to provide assertion of not running
             // in the event loop and run a repeatable task with ScheduledExecutorService
             try {
                 Thread.sleep(500);
             } catch (Exception e) {
-                // TODO: handle exception
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc,
+                             "NettyServletUpgradeHandler immediateTimeout hit Exception on thread sleep: " + e);
+                }
             }
         }
         immediateTimeout.getAndSet(false);
@@ -456,7 +435,6 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
                 totalBytesRead -= bytes.length; // Adjust totalBytesRead
                 return bytes.length;
             } catch (RuntimeException e) {
-                // TODO: See how best to handle this exception
                 // Assume this is async and if we get a runtime exception we can
                 // assume the buffer was already release therefore no need to continue here
                 if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
