@@ -39,7 +39,7 @@ public class NettyHttpConstants {
     public enum ProtocolName {
         HTTP1("HTTP1"),
         HTTP2("HTTP2"),
-        WEBSOCKET("WS"),
+        WEBSOCKET("WebSocket"),
         UNKNOWN("UNKNOWN");
 
         public final String protocol;
