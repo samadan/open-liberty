@@ -314,7 +314,6 @@ public class NettyTCPWriteRequestContext implements TCPWriteRequestContext {
         verifyTimeout(timeout);
         boolean wasWritable = nettyChannel.isWritable();
         long totalWrittenBytes = 0;
-        // ChannelFuture lastWriteFuture = null;
         boolean hasContentLength = nettyChannel.hasAttr(NettyHttpConstants.CONTENT_LENGTH) && Objects.nonNull(nettyChannel.attr(NettyHttpConstants.CONTENT_LENGTH).get());
         // A write queue to run all the write events inside the eventloop to improve performance
         // Maybe we should see if this writequeue should belong to the class to improve performance?
@@ -387,7 +386,6 @@ public class NettyTCPWriteRequestContext implements TCPWriteRequestContext {
             });
 
             boolean stillWritable = nettyChannel.isWritable();
-            //nettyChannel.flush();
 
             if (Objects.isNull(callback)) {
                 // No callback so no need to queue anything else to run. We can just return null here meaning it went async

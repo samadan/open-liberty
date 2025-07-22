@@ -223,7 +223,6 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
             try {
                 body = provider.accessPage(host, local.getPort(), null, null);
             } catch (Throwable t) {
-                //                FFDCFilter.processException(t, getClass().getName() + ".loadErrorBody", "1");
                 if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                     Tr.debug(tc, "Exception while calling into provider, t=" + t);
                 }

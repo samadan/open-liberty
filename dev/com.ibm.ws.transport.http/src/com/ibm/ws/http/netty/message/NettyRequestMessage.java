@@ -219,7 +219,7 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
             // PK22096 - default to "/" if not found, should have caught empty
             // string inputs previously (http://host:port is valid)
             this.myURIBytes = SLASH;
-            if (tc.isDebugEnabled()) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(tc, "Defaulting to slash since no URI data found");
             }
             return;
