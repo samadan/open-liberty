@@ -10,7 +10,6 @@
 package com.ibm.ws.webcontainer.servlet31.fat.tests;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -214,7 +213,6 @@ public class UpgradeReadWriteTimeoutHttpUnit {
                             .waitForStringInLogUsingMark("test_Timeout_UpgradeWL : Timeout occurred during the test",
                                                          15000);
 
-            assertNotNull("Found null return from waitForStringInLogUsingMark!!", stringInLogs);
             assertEquals(true, stringInLogs.contains("test_Timeout_UpgradeWL : Timeout occurred during the test"));
 
             output.close();
