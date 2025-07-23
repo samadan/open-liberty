@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * Copyright (c) 2025 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *******************************************************************************/
 package com.ibm.ws.http.netty.pipeline.inbound;
 
 import io.netty.buffer.CompositeByteBuf;
@@ -64,10 +73,7 @@ public class LibertyHttpObjectAggregator extends SimpleChannelInboundHandler<Htt
 
                 if (msg instanceof LastHttpContent) {
                     HttpRequest request = ctx.channel().attr(CURRENT_REQUEST).get();
-
-                    FullHttpRequest fullRequest = new DefaultFullHttpRequest(request.protocolVersion(), request.method(), request.uri(), content);
-                    fullRequest.headers().set(request.headers());
-                    fullRequest.trailingHeaders().set(((LastHttpContent) msg).trailingHeaders());
+                    FullHttpRequest fullRequest = new DefaultFullHttpRequest(request.protocolVersion(), request.method(), request.uri(), content, request.headers(), ((LastHttpContent) msg).trailingHeaders());
 
                     ctx.fireChannelRead(fullRequest);
 

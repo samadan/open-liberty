@@ -62,9 +62,9 @@ public class HeaderHandler {
         }
 
         if (!headers.contains(HttpHeaderKeys.HDR_DATE.getName())) {
-
+            byte[] date = HttpDispatcher.getDateFormatter().getRFC1123TimeAsBytes(config.getDateHeaderRange());
             headers.set(HttpHeaderKeys.HDR_DATE.getName(),
-                        new String(HttpDispatcher.getDateFormatter().getRFC1123TimeAsBytes(config.getDateHeaderRange()), StandardCharsets.UTF_8));
+                            new String(date, StandardCharsets.UTF_8));
         }
 
         // If HTTP 1.0 remove the Transfer-Encoding header if it exists.

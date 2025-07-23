@@ -307,8 +307,6 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
 
         useNetty = ProductInfo.getBetaEdition() &&
                    MetatypeUtils.parseBoolean(config, NettyConstants.USE_NETTY, config.get(NettyConstants.USE_NETTY), true);
-    
-
 
         initializeChains();
 
