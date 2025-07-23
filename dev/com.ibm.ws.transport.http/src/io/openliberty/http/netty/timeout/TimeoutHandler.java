@@ -9,9 +9,14 @@
  *******************************************************************************/
 package io.openliberty.http.netty.timeout;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+
+import com.ibm.ws.http.channel.internal.HttpMessages;
 import com.ibm.ws.http.netty.NettyHttpChannelConfig;
 import com.ibm.ws.http.netty.NettyHttpConstants;
 import com.ibm.ws.http.netty.NettyHttpConstants.ProtocolName;
+import com.ibm.ws.http.netty.pipeline.inbound.HttpDispatcherHandler;
 
 import io.openliberty.http.netty.timeout.exception.H2IdleTimeoutException;
 import io.openliberty.http.netty.timeout.exception.PersistTimeoutException;
@@ -51,6 +56,8 @@ import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.ScheduledFuture;
 
 public class TimeoutHandler extends ChannelDuplexHandler{
+
+    private static final TraceComponent tc = Tr.register(TimeoutHandler.class, HttpMessages.HTTP_TRACE_NAME, HttpMessages.HTTP_BUNDLE);
 
     public static String NAME = "timeoutHandler";
 
@@ -117,28 +124,46 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         @Override
         public void handlerRemoved(ChannelHandlerContext context) throws Exception {
             cancel();
+            super.handlerRemoved(context);
         }
     
         @Override
         public void channelRead(ChannelHandlerContext context, Object message) throws Exception {
+            if(isRequestStart(message)){
+                cancel();
+                clientRequestedKeepAlive = shouldKeepAliveRequest(context, message);
+            }
+
+
             switch(phase){
                 case TCP_IDLE:
-                    if(isRequestStart(message)){
-                        cancel();
-                        arm(context, Phase.READ);
-                    }
+                    // if(isRequestStart(message)){
+                    //     System.out.println("request started, message is: " + message);
+                    //     cancel();
+                    //     clientRequestedKeepAlive = shouldKeepAliveRequest(context, message);
+                        
+                    // }
+                    arm(context, Phase.READ);
                     break;
                 case READ:
                     resetRead(context);
                     break;
                 default:
-            }
+                }
+
             super.channelRead(context, message);
+
+            System.out.println("Evaluating isRequestEnd for: " + message);
     
             if(isRequestEnd(message)){
                 cancel();
                 firstRequest = false;
-                clientRequestedKeepAlive = shouldKeepAliveRequest(context, message);              
+                // if(!clientRequestedKeepAlive) {
+                //     boolean temp = shouldKeepAliveRequest(context, message);
+                //     clientRequestedKeepAlive = temp ? temp : clientRequestedKeepAlive;
+                // }  
+                
+                System.out.println( "client requestedkeepalive set to: " + clientRequestedKeepAlive);
             }
         }
     
@@ -247,10 +272,13 @@ public class TimeoutHandler extends ChannelDuplexHandler{
                 case READ:
                     if (firstRequest && !readRetried) {
                         readRetried = true;
-                        arm(context, phase);
+                        arm(context, Phase.READ);
                         return;
                     }
-                    if(phase==Phase.TCP_IDLE){
+                    if(firstRequest){
+                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                            Tr.debug(tc, "The connection closed due to idle timeout");
+                        }
                         context.close();
                     }else{
                         context.fireExceptionCaught(new ReadTimeoutException(readTimeout, LEGACY_UNIT));
@@ -269,8 +297,10 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         }
     
         private static boolean isRequestStart(Object message){
-            return (message instanceof HttpRequest && !(message instanceof HttpContent))
-                || (message instanceof Http2HeadersFrame && !((Http2HeadersFrame) message).isEndStream());
+           // return (message instanceof HttpRequest && !(message instanceof HttpContent))
+           //     || (message instanceof Http2HeadersFrame && !((Http2HeadersFrame) message).isEndStream());
+                return (message instanceof HttpRequest)  
+                   || (message instanceof Http2HeadersFrame); // && !((Http2HeadersFrame) message).isEndStream());
         }
     
         private static boolean isRequestEnd(Object message){
@@ -298,11 +328,14 @@ public class TimeoutHandler extends ChannelDuplexHandler{
         }
     
         private static boolean shouldKeepAliveRequest(ChannelHandlerContext context, Object request){
+            System.out.println("shouldkeepaliverequest message is: " + request);
             ProtocolName proto = NettyHttpConstants.ProtocolName.from(context.channel().attr(NettyHttpConstants.PROTOCOL).get());
             if(proto == ProtocolName.HTTP2){
+                System.out.println("proto set to h2, returning false on client keep alive");
                 return false;
             }
             if(request instanceof HttpRequest){
+                System.out.println();
                 return HttpUtil.isKeepAlive((HttpRequest)request);
             }
             return false;
@@ -313,9 +346,7 @@ public class TimeoutHandler extends ChannelDuplexHandler{
             System.out.println("shouldKeepAliveResponse -> clientRequestedKeepAlive["+clientRequestedKeepAlive+"], protocol["+getProtocol(context)+"], useKeepAlive[" +useKeepAlive );
             System.err.println("Message is: [" + response+"]");
 
-            if(!clientRequestedKeepAlive){
-                return false;
-            }
+            
 
             ProtocolName proto = getProtocol(context);
             if(proto == ProtocolName.WEBSOCKET){
@@ -323,6 +354,10 @@ public class TimeoutHandler extends ChannelDuplexHandler{
             }
             if(proto == ProtocolName.HTTP2){
                 return true;
+            }
+
+            if (!clientRequestedKeepAlive) {
+                return false;
             }
             if(response instanceof HttpResponse){
                 //return HttpUtil.isKeepAlive((HttpResponse)response);
