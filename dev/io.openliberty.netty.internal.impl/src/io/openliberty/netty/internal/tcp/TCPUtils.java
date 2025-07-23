@@ -277,13 +277,18 @@ public class TCPUtils {
 			return null;
 		}else{
 			try {
-				Channel channel = AccessController.doPrivileged(
-                        new PrivilegedAction<ChannelFuture>() {
-                            @Override
-                            public ChannelFuture run() {
-                                return bootstrap.register();
-                            }
-                        }).channel();
+				Channel channel;
+				if (System.getSecurityManager() == null) {
+					channel = bootstrap.register().channel();
+				} else {
+					channel = AccessController.doPrivileged(
+							new PrivilegedAction<ChannelFuture>() {
+								@Override
+								public ChannelFuture run() {
+									return bootstrap.register();
+								}
+							}).channel();
+				}
 				framework.runWhenServerStarted(new Callable<ChannelFuture>() {
 					@Override
 					public ChannelFuture call() {
