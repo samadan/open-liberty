@@ -194,38 +194,35 @@ public class NettyServletUpgradeHandler extends ChannelDuplexHandler {
             ByteBuf buf = (ByteBuf) msg;
 
             try {
-                // synchronized(this) {
-                    buf.retain();
-                    queue.add(buf);
-                    long bytesRead = buf.readableBytes();
+                buf.retain();
+                queue.add(buf);
+                long bytesRead = buf.readableBytes();
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc, "NettyServletUpgradeHandler channelRead called for channel " + channel + " Adding bytes read: " + bytesRead);
+                }
+                totalBytesRead += bytesRead;
+                if(isReadingAsync) {
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                        Tr.debug(this, tc, "NettyServletUpgradeHandler channelRead called for channel " + channel + " Adding bytes read: " + bytesRead);
+                        Tr.debug(this, tc, "NettyServletUpgradeHandler channelRead found async!!");
                     }
-                    totalBytesRead += bytesRead;
-                    if(isReadingAsync) {
-                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                            Tr.debug(this, tc, "NettyServletUpgradeHandler channelRead found async!!");
-                        }
-                        if(totalBytesRead < minBytesToRead) {
-                            return;
-                        }
-                        cancelTimer();
-                        HttpDispatcher.getExecutorService().execute(() -> {
-                            try {
-                                setToBuffer();
-                                callback.complete(vc, readContext);
-                            } catch (Exception e) {
-                                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                                    Tr.debug(this, tc,
-                                            "NettyServletUpgradeHandler channelRead hit Exception on complete callback: " + e);
-                                }
-                            }
-                        });
-                        isReadingAsync = false;
+                    if(totalBytesRead < minBytesToRead) {
                         return;
                     }
-                // }
-
+                    cancelTimer();
+                    HttpDispatcher.getExecutorService().execute(() -> {
+                        try {
+                            setToBuffer();
+                            callback.complete(vc, readContext);
+                        } catch (Exception e) {
+                            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                                Tr.debug(this, tc,
+                                        "NettyServletUpgradeHandler channelRead hit Exception on complete callback: " + e);
+                            }
+                        }
+                    });
+                    isReadingAsync = false;
+                    return;
+                }
                 if (totalBytesRead >= minBytesToRead) {
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                         Tr.debug(this, tc, "NettyServletUpgradeHandler channelRead totalBytesRead greater than minimum bytes requested for channel " + channel);

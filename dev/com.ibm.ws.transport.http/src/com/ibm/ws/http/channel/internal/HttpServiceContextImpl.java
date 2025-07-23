@@ -3795,14 +3795,8 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
         }
         NettyResponseMessage resp = (NettyResponseMessage) getResponse();
         HttpHeaders trailers = resp.getNettyTrailers();
-        DefaultLastHttpContent lastContent;
-        if (trailers.isEmpty())
-            lastContent = new LastStreamSpecificHttpContent(Integer.valueOf(nettyResponse.headers().get(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(),
-                                                                                                        "-1")));
-        else {
-            lastContent = new LastStreamSpecificHttpContent(Integer.valueOf(nettyResponse.headers().get(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(),
+        DefaultLastHttpContent lastContent = new LastStreamSpecificHttpContent(Integer.valueOf(nettyResponse.headers().get(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(),
                                                                                                         "-1")), trailers);
-        }
         // Sending last http content since all data was written
         this.nettyContext.channel().eventLoop().execute(new Runnable() {
             @Override

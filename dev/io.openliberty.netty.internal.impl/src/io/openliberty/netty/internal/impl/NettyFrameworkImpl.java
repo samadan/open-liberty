@@ -9,6 +9,8 @@
  *******************************************************************************/
 package io.openliberty.netty.internal.impl;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -100,6 +102,8 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
 
 	private ScheduledExecutorService scheduledExecutorService = null;
 
+    private static final String EVENTLOOP_THREADS_PROPERTY = "io.openliberty.netty.eventloop.threads";
+
 
 	@Activate
 	protected void activate(ComponentContext context, Map<String, Object> config) {
@@ -113,11 +117,26 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
 		parentGroup = new NioEventLoopGroup(1);
 		// specify 0 for the "default" number of threads,
 		// (java.lang.Runtime.availableProcessors() * 2)
-		int threadNumbers = Integer.parseInt(System.getProperty("io.openliberty.netty.eventloop.threads", "0"));
-		if (threadNumbers < 0)
-			threadNumbers = 0; 
+		String eventloopThreadNumberProperty;
+		if (System.getSecurityManager() == null)
+			eventloopThreadNumberProperty = System.getProperty(EVENTLOOP_THREADS_PROPERTY, "0");
+		else
+			eventloopThreadNumberProperty = AccessController.doPrivileged(new PrivilegedAction<String>() {
+				@Override
+				public String run() {
+					return System.getProperty(EVENTLOOP_THREADS_PROPERTY, "0");
+				}
+			});
+		int threadNumber;
+		try {
+			threadNumber = Integer.parseInt(eventloopThreadNumberProperty);
+		} catch (NumberFormatException ex) {
+			threadNumber = 0;
+		}
+		if (threadNumber < 0)
+			threadNumber = 0; 
 
-		childGroup = new NioEventLoopGroup(threadNumbers);
+		childGroup = new NioEventLoopGroup(threadNumber);
 	}
 
 	@Deactivate
