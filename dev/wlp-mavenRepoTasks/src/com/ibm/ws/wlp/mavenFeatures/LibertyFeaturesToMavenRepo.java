@@ -262,9 +262,7 @@ public class LibertyFeaturesToMavenRepo extends Task {
 		model.setPackaging(type.getType());
 		setLicense(model, coordinates.getVersion(), true, feature.isRestrictedLicense(), Constants.WEBSPHERE_LIBERTY_FEATURES_GROUP_ID.equals(coordinates.getGroupId()));
 		boolean isWebsphereLiberty = Constants.WEBSPHERE_LIBERTY_FEATURES_GROUP_ID.equals(coordinates.getGroupId());
-		if (!isWebsphereLiberty){
-			setScmDevUrl(model);
-		}
+		setScmDevUrl(model, isWebsphereLiberty);
 
 		List<Dependency> dependencies = new ArrayList<Dependency>();
 		model.setDependencies(dependencies);
@@ -329,10 +327,11 @@ public class LibertyFeaturesToMavenRepo extends Task {
 			addDependency(dependencies,openLibertyCoordinates, Constants.ArtifactType.POM,"import");
 			model.setName(Constants.WEBSPHERE_LIBERTY_BOM);
 			model.setDescription(Constants.WEBSPHERE_LIBERTY_BOM);
+			setScmDevUrl(model, isWebsphereLiberty);
 		} else{
 			model.setName(Constants.OPEN_LIBERTY_BOM);
 			model.setDescription(Constants.OPEN_LIBERTY_BOM);
-			setScmDevUrl(model);
+			setScmDevUrl(model, isWebsphereLiberty);
 		}
 
 		File artifactDir = new File(outputDir, Utils.getRepositorySubpath(coordinates));
@@ -376,10 +375,11 @@ public class LibertyFeaturesToMavenRepo extends Task {
 			addDependency(dependencies, openLibertyCoordinates, Constants.ArtifactType.JSON,null);
 			model.setName(Constants.WEBSPHERE_LIBERTY_JSON);
 			model.setDescription(Constants.WEBSPHERE_LIBERTY_JSON);
+			setScmDevUrl(model, isWebsphereLiberty);
 		} else {
 			model.setName(Constants.OPEN_LIBERTY_JSON);
 			model.setDescription(Constants.OPEN_LIBERTY_JSON);
-			setScmDevUrl(model);
+			setScmDevUrl(model, isWebsphereLiberty);
 		}
 
 		File artifactDir = new File(outputDir, Utils.getRepositorySubpath(coordinates));
@@ -923,13 +923,18 @@ public class LibertyFeaturesToMavenRepo extends Task {
 	 *
 	 * @param model
 	 */
-	private static void setScmDevUrl(Model model){
+	private static void setScmDevUrl(Model model, boolean isWebsphereLiberty){
+		String connection = !isWebsphereLiberty ? Constants.OPEN_LIBERTY_SCM_CONNECTION : Constants.WEBSPHERE_LIBERTY_SCM_CONNECTION;
+		String scmUrl = !isWebsphereLiberty ? Constants.OPEN_LIBRETY_SCM_URL : Constants.WEBSPHERE_LIBRETY_SCM_URL;
+		String scmTag = !isWebsphereLiberty ? Constants.OPEN_LIBERTY_SCM_TAG : Constants.WEBSPHERE_LIBERTY_SCM_TAG;
+		String projectUrl = !isWebsphereLiberty ? Constants.OPEN_LIBERTY_URL : Constants.WEBSPHERE_LIBERTY_URL;
+
 		model.setScm(new Scm());
-		model.getScm().setConnection(Constants.OPEN_LIBERTY_SCM_CONNECTION);
-		model.getScm().setDeveloperConnection(Constants.OPEN_LIBERTY_SCM_CONNECTION);
-		model.getScm().setUrl(Constants.OPEN_LIBRETY_SCM_URL);
-		model.getScm().setTag(Constants.OPEN_LIBERTY_SCM_TAG);
-		model.setUrl(Constants.OPEN_LIBERTY_URL);
+		model.getScm().setConnection(connection);
+		model.getScm().setDeveloperConnection(connection);
+		model.getScm().setUrl(scmUrl);
+		model.getScm().setTag(scmTag);
+		model.setUrl(projectUrl);
 
 		Developer dev = new Developer();
 		dev.setId(Constants.DEV_ID);
