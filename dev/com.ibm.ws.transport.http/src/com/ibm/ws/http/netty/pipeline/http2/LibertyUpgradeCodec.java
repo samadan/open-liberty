@@ -47,6 +47,7 @@ import io.netty.handler.codec.http2.InboundHttp2ToHttpAdapterBuilder;
 import io.netty.util.AsciiString;
 import io.netty.util.ReferenceCountUtil;
 import io.openliberty.http.netty.quiesce.QuiesceStrategy;
+import io.openliberty.http.netty.timeout.TimeoutHandler;
 import io.openliberty.netty.internal.impl.QuiesceHandler;
 
 /**
@@ -102,7 +103,7 @@ public class LibertyUpgradeCodec implements UpgradeCodecFactory {
                 @Override
                 public void upgradeTo(ChannelHandlerContext ctx, io.netty.handler.codec.http.FullHttpRequest request) {
                     ctx.channel().attr(NettyHttpConstants.PROTOCOL).set("HTTP2");
-                    
+                    ctx.pipeline().get(TimeoutHandler.class).markProtocol(ctx.pipeline(), NettyHttpConstants.ProtocolName.HTTP2);
                     
                     // Call upgrade
                     super.upgradeTo(ctx, request);

@@ -58,6 +58,14 @@ public class LibertyNettyALPNHandler extends ApplicationProtocolNegotiationHandl
             // HTTP2 to HTTP 1.1 and back pipeline
             ctx.pipeline().addAfter(HttpPipelineInitializer.HTTP_ALPN_HANDLER_NAME, null, handler);
 
+            if (ctx.pipeline().get(TimeoutHandler.class) == null) {
+                TimeoutHandler h = new TimeoutHandler(httpConfig);
+
+                ctx.pipeline().addAfter(HttpPipelineInitializer.NETTY_HTTP_SERVER_CODEC, TimeoutHandler.NAME, h);
+                h.markProtocol(ctx.pipeline(), ProtocolName.HTTP2);
+
+            }
+
             QuiesceHandler quiesceHandler = ctx.pipeline().get(QuiesceHandler.class);
             if (quiesceHandler != null) {
                 quiesceHandler.setQuiesceTask(QuiesceStrategy.HTTP2_GOAWAY.getTask());
