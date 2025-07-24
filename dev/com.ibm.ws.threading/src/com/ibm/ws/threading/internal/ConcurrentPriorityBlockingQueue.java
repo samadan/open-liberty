@@ -385,30 +385,29 @@ public class ConcurrentPriorityBlockingQueue<T> extends AbstractQueue<T> impleme
 
     @Override
     public T poll() {
-        while (size.tryAcquire()) {
-            Head<T> head = currentHead.get();
-            T first = getFirstWithAction(head, null, REMOVE_FIRST_ITEM);
-            if (first != null) {
-                return first;
-            }
-            size.release(); // another thread is removing, put the permit back
-            Thread.yield();
+        Head<T> head = currentHead.get();
+        T first = getFirstWithAction(head, null, REMOVE_FIRST_ITEM);
+        if (first != null) {
+            size.reducePermits(1);
         }
-        return null;
+        return first;
     }
 
     @Override
     public T poll(long timeout, TimeUnit unit) throws InterruptedException {
+        T first = poll();
+        if (first != null) {
+            return first;
+        }
         for (long start = System.nanoTime(), remain = timeout = unit.toNanos(timeout); //
                         remain >= 0 && size.tryAcquire(remain, TimeUnit.NANOSECONDS); //
                         remain = timeout - (System.nanoTime() - start)) {
             Head<T> head = currentHead.get();
-            T first = getFirstWithAction(head, null, REMOVE_FIRST_ITEM);
+            first = getFirstWithAction(head, null, REMOVE_FIRST_ITEM);
             if (first != null) {
                 return first;
             }
             size.release(); // another thread is removing, put the permit back
-            Thread.yield();
         }
         return null;
     }
@@ -486,16 +485,20 @@ public class ConcurrentPriorityBlockingQueue<T> extends AbstractQueue<T> impleme
 
     @Override
     public T take() throws InterruptedException {
+        T first = poll();
+        if (first != null) {
+            return first;
+        }
+
         while (true) {
             size.acquire();
 
             Head<T> head = currentHead.get();
-            T first = getFirstWithAction(head, null, REMOVE_FIRST_ITEM);
+            first = getFirstWithAction(head, null, REMOVE_FIRST_ITEM);
             if (first != null) {
                 return first;
             }
             size.release(); // another thread is removing, put the permit back
-            Thread.yield();
         }
     }
 
