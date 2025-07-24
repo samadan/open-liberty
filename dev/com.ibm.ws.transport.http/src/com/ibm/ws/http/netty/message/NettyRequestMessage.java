@@ -390,7 +390,7 @@ public class NettyRequestMessage extends NettyBaseMessage implements HttpRequest
         String host = context.getLocalAddr().getCanonicalHostName();
         int port = context.getLocalPort();
 
-        return new StringBuffer(getScheme() + "://" + host + ":" + port + "/" + getRequestURI());
+        return new StringBuffer(getScheme() + "://" + host + ":" + port + getRequestURI());
 
     }
 
