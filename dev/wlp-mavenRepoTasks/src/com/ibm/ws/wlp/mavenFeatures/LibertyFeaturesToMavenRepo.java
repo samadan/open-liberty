@@ -350,8 +350,6 @@ public class LibertyFeaturesToMavenRepo extends Task {
 		} catch (IOException e) {
 			throw new MavenRepoGeneratorException("Could not write POM file " + targetFile, e);
 		}
-
-
 	}
 
 	private void generateJsonPom(File outputDir, String version, boolean isWebsphereLiberty) throws MavenRepoGeneratorException {
@@ -364,7 +362,7 @@ public class LibertyFeaturesToMavenRepo extends Task {
 		model.setVersion(coordinates.getVersion());
 		model.setPackaging(Constants.ArtifactType.JSON.getType());
 		setLicense(model, version, false, false, isWebsphereLiberty);
-
+		setScmDevUrl(model, isWebsphereLiberty);
 
 		List<Dependency> dependencies = new ArrayList<Dependency>();
 		model.setDependencies(dependencies);
@@ -375,11 +373,9 @@ public class LibertyFeaturesToMavenRepo extends Task {
 			addDependency(dependencies, openLibertyCoordinates, Constants.ArtifactType.JSON,null);
 			model.setName(Constants.WEBSPHERE_LIBERTY_JSON);
 			model.setDescription(Constants.WEBSPHERE_LIBERTY_JSON);
-			setScmDevUrl(model, isWebsphereLiberty);
 		} else {
 			model.setName(Constants.OPEN_LIBERTY_JSON);
 			model.setDescription(Constants.OPEN_LIBERTY_JSON);
-			setScmDevUrl(model, isWebsphereLiberty);
 		}
 
 		File artifactDir = new File(outputDir, Utils.getRepositorySubpath(coordinates));
@@ -392,7 +388,6 @@ public class LibertyFeaturesToMavenRepo extends Task {
 		} catch (IOException e) {
 			throw new MavenRepoGeneratorException("Could not write POM file " + targetFile, e);
 		}
-
 	}
 
 	/**
@@ -412,10 +407,10 @@ public class LibertyFeaturesToMavenRepo extends Task {
 		model.setVersion(coordinates.getVersion());
 		model.setPackaging(Constants.ArtifactType.ZIP.getType());
 		setLicense(model, version, false, false, isWebsphereLiberty);
+		setScmDevUrl(model, isWebsphereLiberty);
 
 		model.setName(name);
 		model.setDescription(name);
-
 
 		File artifactDir = new File(outputDir, Utils.getRepositorySubpath(coordinates));
 		File targetFile = new File(artifactDir, Utils.getFileName(coordinates, Constants.ArtifactType.POM));
@@ -430,10 +425,7 @@ public class LibertyFeaturesToMavenRepo extends Task {
 		} catch (IOException e) {
 			throw new MavenRepoGeneratorException("Could not write POM file " + targetFile, e);
 		}
-
 	}
-
-
 
 	private static void setLicense(Model model, String version, boolean feature, boolean restrictedLicense, boolean isWebsphereLiberty) {
 		License license = new License();
@@ -924,10 +916,10 @@ public class LibertyFeaturesToMavenRepo extends Task {
 	 * @param model
 	 */
 	private static void setScmDevUrl(Model model, boolean isWebsphereLiberty){
-		String connection = !isWebsphereLiberty ? Constants.OPEN_LIBERTY_SCM_CONNECTION : Constants.WEBSPHERE_LIBERTY_SCM_CONNECTION;
-		String scmUrl = !isWebsphereLiberty ? Constants.OPEN_LIBRETY_SCM_URL : Constants.WEBSPHERE_LIBRETY_SCM_URL;
-		String scmTag = !isWebsphereLiberty ? Constants.OPEN_LIBERTY_SCM_TAG : Constants.WEBSPHERE_LIBERTY_SCM_TAG;
-		String projectUrl = !isWebsphereLiberty ? Constants.OPEN_LIBERTY_URL : Constants.WEBSPHERE_LIBERTY_URL;
+		String connection = isWebsphereLiberty ? Constants.WEBSPHERE_LIBERTY_SCM_CONNECTION : Constants.OPEN_LIBERTY_SCM_CONNECTION;
+		String scmUrl = isWebsphereLiberty ? Constants.WEBSPHERE_LIBRETY_SCM_URL : Constants.OPEN_LIBRETY_SCM_URL;
+		String scmTag = isWebsphereLiberty ? Constants.WEBSPHERE_LIBERTY_SCM_TAG : Constants.OPEN_LIBERTY_SCM_TAG;
+		String projectUrl = isWebsphereLiberty ? Constants.WEBSPHERE_LIBERTY_URL : Constants.OPEN_LIBERTY_URL;
 
 		model.setScm(new Scm());
 		model.getScm().setConnection(connection);
