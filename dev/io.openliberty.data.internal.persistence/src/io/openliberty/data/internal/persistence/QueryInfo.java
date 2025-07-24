@@ -2938,9 +2938,7 @@ public class QueryInfo {
         for (int p = 0; p < numAttributeParams; p++) {
             if (constraints[p] != null) {
                 if (hasWhere) {
-                    q.append(compat.hasOrAnnotation(annosForAllParams[p]) //
-                                    ? " OR " //
-                                    : " AND ");
+                    q.append(" AND ");
                 } else {
                     q.append(" WHERE (");
                     hasWhere = true;

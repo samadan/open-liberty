@@ -57,7 +57,6 @@ import jakarta.data.repository.Repository;
 import jakarta.data.repository.Select;
 
 import io.openliberty.data.repository.Is;
-import io.openliberty.data.repository.Or;
 import io.openliberty.data.repository.function.ElementCount;
 import io.openliberty.data.repository.function.Extract;
 
@@ -130,26 +129,23 @@ public interface Reservations extends BasicRepository<Reservation, Long> {
 
     Stream<Reservation> findByStopOrStart(OffsetDateTime stop, OffsetDateTime start);
 
-    @Find
     @Select("location")
-    Stream<String> findByStopOrStartAtAnyOf(OffsetDateTime stop,
-                                            @Or @By("start") OffsetDateTime start1,
-                                            @Or @By("start") OffsetDateTime start2);
+    Stream<String> findByStopOrStartOrStart(OffsetDateTime stop,
+                                            OffsetDateTime start1,
+                                            OffsetDateTime start2);
 
-    @Find
     @Select("meetingID")
-    LongStream findByStopOrStartAtAnyOf(OffsetDateTime stop,
-                                        @Or @By("start") OffsetDateTime start1,
-                                        @Or @By("start") OffsetDateTime start2,
-                                        @Or @By("start") OffsetDateTime start3);
+    LongStream findByStopOrStartOrStartOrStart(OffsetDateTime stop,
+                                               OffsetDateTime start1,
+                                               OffsetDateTime start2,
+                                               OffsetDateTime start3);
 
     // Use a stream of record as the return type
-    @Find
     @Select("start")
     @Select("stop")
-    Stream<ReservedTimeSlot> findByStoppingAtAnyOf(@By("stop") OffsetDateTime stop1,
-                                                   @Or @By("stop") OffsetDateTime stop2,
-                                                   @Or @By("stop") OffsetDateTime stop3);
+    Stream<ReservedTimeSlot> findByStopOrStopOrStop(OffsetDateTime stop1,
+                                                    OffsetDateTime stop2,
+                                                    OffsetDateTime stop3);
 
     Page<Reservation> findByHostStartsWith(String hostPrefix, PageRequest pagination, Sort<Reservation> sort);
 

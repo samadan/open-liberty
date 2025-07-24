@@ -570,13 +570,15 @@ public class DataExperimentalServlet extends FATServlet {
      * Repository method with the Count keyword that counts how many matching entities there are.
      */
     // TODO enable once #29073 is fixed
-    // SELECT COUNT(o) FROM Town o WHERE (o.stateName=?1 AND id(o)<>?2 OR id(o)<>?3 AND o.name=?4)
+    // SELECT COUNT(o) FROM Town o WHERE (o.stateName=?1 AND id(o)<>?2)
     // is wrongly interpreted as:
-    // SELECT COUNT(STATENAME) FROM Town WHERE (((STATENAME = ?) AND (STATENAME <> ?)) OR ((STATENAME <> ?) AND (NAME = ?)))
-    // @Test
+    // SELECT COUNT(STATENAME) FROM Town WHERE (((STATENAME = ?) AND (STATENAME <> ?)))
+    //@Test
     public void testIdClassCountKeyword() {
-        assertEquals(2L, towns.countByStateButNotTown_Or_NotTownButWithTownName("Missouri", TownId.of("Kansas City", "Missouri"),
-                                                                                TownId.of("Rochester", "New York"), "Rochester"));
+        assertEquals(1L,
+                     towns.countByStateButNotTown("Missouri",
+                                                  TownId.of("Kansas City",
+                                                            "Missouri")));
     }
 
     /**
@@ -600,35 +602,6 @@ public class DataExperimentalServlet extends FATServlet {
     public void testIdClassFindByParametersUnannotated() {
         assertEquals(true, towns.isBiggerThan(100000, TownId.of("Rochester", "Minnesota")));
         assertEquals(false, towns.isBiggerThan(500000, TownId.of("Rochester", "Minnesota")));
-    }
-
-    /**
-     * Repository method with the Find keyword that queries based on multiple IdClass parameters.
-     */
-    // TODO enable once #29073 is fixed
-    // SELECT o FROM Town o WHERE (o.name=?1 AND id(o)<>?2) ORDER BY o.stateName
-    // is wrongly interpreted as:
-    // SELECT STATENAME, NAME, AREACODES, CHANGECOUNT, POPULATION FROM Town
-    //  WHERE ((NAME = ?) AND (STATENAME <> ?)) ORDER BY STATENAME
-    //@Test
-    public void testIdClassFindKeyword() {
-
-        assertEquals(List.of("Springfield Illinois",
-                             "Springfield Massachusetts",
-                             "Springfield Missouri",
-                             "Springfield Ohio"),
-                     towns.findByNameButNotId("Springfield", TownId.of("Springfield", "Oregon"))
-                                     .map(c -> c.name + ' ' + c.stateName)
-                                     .collect(Collectors.toList()));
-
-        assertEquals(List.of("Kansas City Missouri",
-                             "Rochester Minnesota",
-                             "Springfield Illinois"),
-                     towns.findByIdIsOneOf(TownId.of("Rochester", "Minnesota"),
-                                           TownId.of("springfield", "illinois"),
-                                           TownId.of("Kansas City", "Missouri"))
-                                     .map(c -> c.name + ' ' + c.stateName)
-                                     .collect(Collectors.toList()));
     }
 
     /**
@@ -888,15 +861,6 @@ public class DataExperimentalServlet extends FATServlet {
     }
 
     /**
-     * Test the Or annotation on a parameter-based query.
-     */
-    @Test
-    public void testOr() {
-        assertEquals(List.of(2L, 3L, 5L, 7L, 41L, 43L, 47L),
-                     primes.notWithinButBelow(10, 40, 50));
-    }
-
-    /**
      * Run queries that order results based on columns of type Year, YearMonth,
      * and MonthDay. Tests for the latter two are commented out because EclipseLink
      * uses the BLOB type for these columns, making it unable to order on them.
@@ -1033,18 +997,6 @@ public class DataExperimentalServlet extends FATServlet {
         assertEquals(2, shipments.statusBasedRemoval("CANCELED"));
 
         assertEquals(3, shipments.removeEverything());
-    }
-
-    /**
-     * Use a repository method that has both AND and OR keywords.
-     * The AND keywords should take precedence over OR and be computed first.
-     */
-    @Test
-    public void testPrecedenceOfAndOverOr() {
-        assertEquals(List.of(41L, 37L, 31L, 11L, 7L),
-                     primes.lessThanWithSuffixOrBetweenWithSuffix(40L, "even", 30L, 50L, "one")
-                                     .map(p -> p.numberId)
-                                     .collect(Collectors.toList()));
     }
 
     /**
@@ -1396,32 +1348,49 @@ public class DataExperimentalServlet extends FATServlet {
                                      .sorted()
                                      .collect(Collectors.toList()));
 
+        OffsetDateTime stop1;
+        OffsetDateTime stop2;
+        OffsetDateTime stop3;
+        OffsetDateTime start1;
+        OffsetDateTime start2;
+        OffsetDateTime start3;
+
+        stop1 = OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT);
+        start1 = OffsetDateTime.of(2022, 5, 25, 11, 0, 0, 0, CDT);
+        start2 = OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT);
         assertEquals(List.of("030-2 E314", "050-2 B125", "050-2 G105"),
-                     reservations.findByStopOrStartAtAnyOf(OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT),
-                                                           OffsetDateTime.of(2022, 5, 25, 11, 0, 0, 0, CDT),
-                                                           OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT))
+                     reservations.findByStopOrStartOrStart(stop1,
+                                                           start1,
+                                                           start2)
                                      .parallel()
                                      .sorted()
                                      .collect(Collectors.toList()));
 
+        stop1 = OffsetDateTime.of(2022, 5, 25, 11, 0, 0, 0, CDT);
+        start1 = OffsetDateTime.of(2022, 5, 25, 7, 30, 0, 0, CDT);
+        start2 = OffsetDateTime.of(2022, 5, 25, 11, 0, 0, 0, CDT);
+        start3 = OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT);
         assertEquals(List.of(10030004L, 10030005L, 10030006L, 10030009L),
-                     reservations.findByStopOrStartAtAnyOf(OffsetDateTime.of(2022, 5, 25, 11, 0, 0, 0, CDT),
-                                                           OffsetDateTime.of(2022, 5, 25, 7, 30, 0, 0, CDT),
-                                                           OffsetDateTime.of(2022, 5, 25, 11, 0, 0, 0, CDT),
-                                                           OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT))
+                     reservations.findByStopOrStartOrStartOrStart(stop1,
+                                                                  start1,
+                                                                  start2,
+                                                                  start3)
                                      .parallel()
                                      .sorted()
                                      .boxed()
                                      .collect(Collectors.toList()));
 
+        stop1 = OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT);
+        stop2 = OffsetDateTime.of(2022, 5, 25, 15, 0, 0, 0, CDT);
+        stop3 = OffsetDateTime.of(2022, 5, 25, 11, 0, 0, 0, CDT);
         assertEquals(List.of(OffsetDateTime.of(2022, 5, 25, 10, 0, 0, 0, CDT).toInstant(),
                              OffsetDateTime.of(2022, 5, 25, 10, 0, 0, 0, CDT).toInstant(),
                              OffsetDateTime.of(2022, 5, 25, 13, 0, 0, 0, CDT).toInstant(),
                              OffsetDateTime.of(2022, 5, 25, 13, 0, 0, 0, CDT).toInstant(),
                              OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT).toInstant()),
-                     reservations.findByStoppingAtAnyOf(OffsetDateTime.of(2022, 5, 25, 14, 0, 0, 0, CDT),
-                                                        OffsetDateTime.of(2022, 5, 25, 15, 0, 0, 0, CDT),
-                                                        OffsetDateTime.of(2022, 5, 25, 11, 0, 0, 0, CDT))
+                     reservations.findByStopOrStopOrStop(stop1,
+                                                         stop2,
+                                                         stop3)
                                      .map(r -> r.start().toInstant())
                                      .sorted()
                                      .collect(Collectors.toList()));

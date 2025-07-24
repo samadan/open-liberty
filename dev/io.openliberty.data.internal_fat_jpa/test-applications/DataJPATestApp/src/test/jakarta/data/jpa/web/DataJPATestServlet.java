@@ -1432,14 +1432,14 @@ public class DataJPATestServlet extends FATServlet {
                 throw x;
         }
 
-        // TODO report EclipseLink bug that occurs on the following
+        // TODO enable once issue #32204 is fixed in EclipseLink
         if (false)
             assertIterableEquals(List.of(345003450L, 678006780L),
                                  taxpayers.findByBankAccountsContains(AccountId.of(26122300, 410224))
                                                  .map(t -> t.ssn)
                                                  .collect(Collectors.toList()));
 
-        // TODO also fails with EclipseLink error
+        // TODO enable once issue #31558 is fixed in EclipseLink
         if (false)
             assertIterableEquals(List.of(789007890L),
                                  taxpayers.findByBankAccountsNotEmpty()
@@ -2572,6 +2572,40 @@ public class DataJPATestServlet extends FATServlet {
                              cities.withNameOf("Rochester")
                                              .map(c -> c.name + ' ' + c.stateName)
                                              .collect(Collectors.toList()));
+    }
+
+    /**
+     * Repository method with a Query based on multiple IdClass parameters.
+     */
+    // TODO enable once #29073 is fixed
+    // SELECT o FROM City o WHERE (o.name=?1 AND id(o)<>?2) ORDER BY o.stateName
+    // is wrongly interpreted as:
+    // SELECT STATENAME, NAME, AREACODES, CHANGECOUNT, POPULATION FROM City
+    //  WHERE ((NAME = ?) AND (STATENAME <> ?)) ORDER BY STATENAME
+    //@Test
+    public void testIdClassInQuery() {
+
+        assertEquals(List.of("Springfield Illinois",
+                             "Springfield Massachusetts",
+                             "Springfield Missouri",
+                             "Springfield Ohio"),
+                     cities.byNameButNotId("Springfield",
+                                           CityId.of("Springfield",
+                                                     "Oregon"))
+                                     .map(c -> c.name + ' ' + c.stateName)
+                                     .collect(Collectors.toList()));
+
+        assertEquals(List.of("Kansas City Missouri",
+                             "Rochester Minnesota",
+                             "Springfield Illinois"),
+                     cities.whereIdIsOneOf(CityId.of("Rochester",
+                                                     "Minnesota"),
+                                           CityId.of("springfield",
+                                                     "illinois"),
+                                           CityId.of("Kansas City",
+                                                     "Missouri"))
+                                     .map(c -> c.name + ' ' + c.stateName)
+                                     .collect(Collectors.toList()));
     }
 
     /**
@@ -4900,23 +4934,21 @@ public class DataJPATestServlet extends FATServlet {
 
         boolean updated;
         try {
-            // TODO Uncomment the following 3 lines of code to reproduce this EclipseLink error:
-            // jakarta.persistence.PersistenceException: Exception [EclipseLink-4002] ...
-            // Call: UPDATE WLPBusiness SET LATITUDE = ?, NAME = ? WHERE (ID = ?)
-            // ...
-            // Caused by: java.sql.SQLDataException: An attempt was made to get a data value of type 'DECIMAL' from a data value of type 'test.jakarta.data.jpa.web.Location'.
-            //   ...
-            //   at org.apache.derby.iapi.jdbc.BrokeredPreparedStatement.setObject(Unknown Source)
-            //   at com.ibm.ws.rsadapter.jdbc.WSJdbcPreparedStatement.setObject(WSJdbcPreparedStatement.java:1687)
-            //   at org.eclipse.persistence.internal.databaseaccess.DatabasePlatform.setParameterValueInDatabaseCall(DatabasePlatform.java:2462)
-            //   at org.eclipse.persistence.platform.database.DerbyPlatform.setParameterValueInDatabaseCall(DerbyPlatform.java:985)
-            //   at org.eclipse.persistence.internal.databaseaccess.DatabaseCall.prepareStatement(DatabaseCall.java:799)
-            //   at org.eclipse.persistence.internal.databaseaccess.DatabaseAccessor.basicExecuteCall(DatabaseAccessor.java:630)
+            // TODO enable once #32185 is fixed in EclipseLink
+            // jakarta.persistence.PersistenceException:
+            // Exception [EclipseLink-26] (Eclipse Persistence Services -
+            // 5.0.0-B08.v202505280949-dfc411d38767f696ce9f2741de051aef050cbeba):
+            // org.eclipse.persistence.exceptions.DescriptorException
+            // Exception Description: Trying to get value for instance variable [street]
+            //   of type [test.jakarta.data.jpa.web.Street] from the object
+            //   [test.jakarta.data.jpa.web.Location]. The specified object is not an
+            //   instance of the class or interface declaring the underlying field.
+            // Internal Exception: java.lang.IllegalArgumentException:
+            //   Can not get test.jakarta.data.jpa.web.Street field
+            //   test.jakarta.data.jpa.web.Address.street on test.jakarta.data.jpa.web.Location
             //Address newAddress = new Address("Rochester", "MN", 55901, 3605, new Street("US 52", "N"));
             //Location newLocation = new Location(newAddress, 44.05881f, -92.50556f);
             //assertEquals(true, businesses.updateWithJPQL(newLocation, "IBM", ibm.id));
-
-            // Jakarta Data was able to avoid the above error by generating a query to set each attribute individually,
 
             ibm.location.latitude = 44.05881f;
             ibm.location.longitude = -92.50556f;

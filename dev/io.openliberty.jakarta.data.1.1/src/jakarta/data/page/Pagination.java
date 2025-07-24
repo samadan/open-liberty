@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022,2024 IBM Corporation and others.
+ * Copyright (c) 2022,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -49,6 +49,11 @@ record Pagination(long page,
     }
 
     @Override
+    public PageRequest page(long pageNum) {
+        return new Pagination(pageNum, size, mode, type, requestTotal);
+    }
+
+    @Override
     public Pagination size(int maxPageSize) {
         return new Pagination(page, maxPageSize, mode, type, requestTotal);
     }
@@ -76,4 +81,5 @@ record Pagination(long page,
     public PageRequest withTotal() {
         return new Pagination(page, size, mode, type, true);
     }
+
 }

@@ -37,6 +37,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::isIBMJCEPlusFIPSAvailable, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -59,6 +60,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::isOpenJCEPlusFIPSAvailable, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -83,6 +85,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::isIBMJCEPlusFIPSProviderAvailable, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -109,6 +112,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::isOpenJCEPlusFIPSProviderAvailable, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -125,7 +129,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("IBMJCEPlusFIPS");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
-
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
             // Edge case where fipsLevel is 140-3, but isFips140_2Enabled returns true.
@@ -144,6 +148,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -160,6 +166,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("OpenJCEPlusFIPS");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -174,6 +181,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -190,6 +199,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("NO_PROVIDER_NAME");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -204,6 +214,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
             mock.verifyNoMoreInteractions();
         }
     }
@@ -219,6 +230,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getUseFipsProvider).thenReturn("false");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -232,6 +244,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getUseFipsProvider, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
             mock.verifyNoMoreInteractions();
         }
     }
@@ -247,6 +260,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getUseFipsProvider).thenReturn("abc");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -260,6 +274,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getUseFipsProvider, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -272,6 +288,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("IBMJCEPlusFIPS");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -282,6 +299,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
             mock.verifyNoMoreInteractions();
         }
     }
@@ -294,6 +312,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("OpenJCEPlusFIPS");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -304,6 +323,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
             mock.verifyNoMoreInteractions();
         }
     }
@@ -316,6 +336,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("NO_PROVIDER_NAME");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -326,6 +347,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
             mock.verifyNoMoreInteractions();
         }
     }
@@ -337,6 +359,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getUseFipsProvider).thenReturn("false");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -346,6 +369,7 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getUseFipsProvider, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
             mock.verifyNoMoreInteractions();
         }
     }
@@ -357,6 +381,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getUseFipsProvider).thenReturn("abc");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -366,6 +391,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getUseFipsProvider, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -378,6 +405,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("IBMJCEPlusFIPS");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -394,6 +422,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -406,6 +436,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("OpenJCEPlusFIPS");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -416,6 +447,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -428,6 +461,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("NO_PROVIDER_NAME");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -438,6 +472,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -449,6 +485,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getUseFipsProvider).thenReturn("false");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -458,6 +495,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getUseFipsProvider, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -469,6 +508,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getUseFipsProvider).thenReturn("abc");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -478,6 +518,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getUseFipsProvider, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -490,6 +532,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("IBMJCEPlusFIPS");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -505,6 +548,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -517,6 +562,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("OpenJCEPlusFIPS");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -527,6 +573,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -539,6 +587,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getFipsProviderName).thenReturn("NO_PROVIDER_NAME");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -549,6 +598,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getFipsProviderName, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -560,6 +611,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getUseFipsProvider).thenReturn("false");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -569,6 +621,8 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getUseFipsProvider, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }
@@ -580,6 +634,7 @@ public class CryptoUtilsTest {
             mock.when(CryptoUtils::getUseFipsProvider).thenReturn("abc");
             mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
             mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(false);
 
             CryptoUtils.fips140_3Checked = false;
             assertFalse("Expected FIPS 140-3 to be disabled, but was enabled.", CryptoUtils.isFips140_3Enabled());
@@ -589,6 +644,29 @@ public class CryptoUtilsTest {
             mock.verify(CryptoUtils::getUseFipsProvider, Mockito.times(1));
             mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
             mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
+            mock.verifyNoMoreInteractions();
+        }
+    }
+
+    @Test
+    public void testFipsEnabled_useEnhancedSecurityAlgorithms_true() {
+        try (MockedStatic<CryptoUtils> mock = Mockito.mockStatic(CryptoUtils.class)) {
+            mock.when(CryptoUtils::getFipsLevel).thenReturn("disabled");
+            mock.when(CryptoUtils::isFips140_3Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::isFips140_2Enabled).thenCallRealMethod();
+            mock.when(CryptoUtils::useEnhancedSecurityAlgorithms).thenReturn(true);
+
+            CryptoUtils.fips140_3Checked = false;
+            assertTrue("Expected FIPS 140-3 to be enabled, but was disabled.", CryptoUtils.isFips140_3Enabled());
+            assertFalse("Expected FIPS 140-2 to be disabled, but was enabled.", CryptoUtils.isFips140_2Enabled());
+
+            mock.verify(CryptoUtils::getFipsLevel, Mockito.times(1));
+            mock.verify(CryptoUtils::isFips140_3Enabled, Mockito.times(2));
+            mock.verify(CryptoUtils::isFips140_2Enabled, Mockito.times(1));
+            mock.verify(CryptoUtils::useEnhancedSecurityAlgorithms, Mockito.times(1));
+
             mock.verifyNoMoreInteractions();
         }
     }

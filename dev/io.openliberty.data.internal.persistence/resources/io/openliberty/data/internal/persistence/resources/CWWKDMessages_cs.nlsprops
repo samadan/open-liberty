@@ -64,7 +64,7 @@ CWWKD1008.ambig.rtrn.err.useraction=Aktualizujte metodu \u00falo\u017ei\u0161t\u
 
 CWWKD1009.lifecycle.param.err=CWWKD1009E: Metoda {0} rozhran\u00ed \u00falo\u017ei\u0161t\u011b {1} nem\u016f\u017ee m\u00edt parametry {2} , proto\u017ee metoda je anotov\u00e1na anotac\u00ed \u017eivotn\u00edho cyklu {3} . Metody \u00falo\u017ei\u0161t\u011b, kter\u00e9 jsou anotov\u00e1ny anotac\u00ed \u017eivotn\u00edho cyklu, mus\u00ed m\u00edt p\u0159esn\u011b 1 parametr, co\u017e mus\u00ed b\u00fdt entita nebo pole nebo seznam entity.
 CWWKD1009.lifecycle.param.err.explanation=Metody \u017eivotn\u00edho cyklu mus\u00ed m\u00edt jeden parametr entity.
-CWWKD1009.lifecycle.param.err.useraction=Aktualizujte metodu \u00falo\u017ei\u0161t\u011b tak, aby m\u011bla jeden parametr, kter\u00fdm je entita nebo pole seznamu entity.
+CWWKD1009.lifecycle.param.err.useraction=Aktualizujte metodu \u00falo\u017ei\u0161t\u011b tak, aby obsahovala jedin\u00fd parametr, kter\u00fdm je entita, pole entit nebo seznam entit.
 
 CWWKD1010.unknown.entity.attr=CWWKD1010E: Ve t\u0159\u00edd\u011b entit {1} nen\u00ed nalezen atribut entity s n\u00e1zvem {0} pro metodu {2} rozhran\u00ed \u00falo\u017ei\u0161t\u011b {3}. Platn\u00e9 n\u00e1zvy atribut\u016f pro entitu jsou: {4}.
 CWWKD1010.unknown.entity.attr.explanation=Metoda \u00falo\u017ei\u0161t\u011b se pokou\u0161\u00ed pou\u017e\u00edt atribut entity, kter\u00fd neexistuje.
@@ -83,9 +83,9 @@ CWWKD1013.cde.missing.param.anno=CWWKD1013E: Parametr {0} metody {1} rozhran\u00
 CWWKD1013.cde.missing.param.anno.explanation=Parametry metod repository count, delete a exists mus\u00ed odpov\u00eddat atribut\u016fm entit.
 CWWKD1013.cde.missing.param.anno.useraction=Aktualizujte metodu \u00falo\u017ei\u0161t\u011b tak, aby v\u0161echny parametry odpov\u00eddaly atribut\u016fm entit.
 
-CWWKD1014.upd.missing.param.anno=CWWKD1014E: Parametr {0} metody {1} rozhran\u00ed \u00falo\u017ei\u0161t\u011b {2} neodpov\u00edd\u00e1 atributu entity. Parametry, kter\u00e9 neodpov\u00eddaj\u00ed atributu entity, mus\u00ed m\u00edt jednu z anotac\u00ed parametr\u016f: {3}. Chcete-li definovat podm\u00ednku pro omezen\u00ed v\u00fdsledk\u016f dotazu, mus\u00ed b\u00fdt parametr opat\u0159en anotac\u00ed By a hodnota anotace By mus\u00ed b\u00fdt p\u0159i\u0159azena n\u00e1zvu atributu entity. P\u0159\u00edpadn\u011b m\u016f\u017eete povolit volbu -parameters compile a parametr pojmenovat stejn\u011b jako atribut entity.
-CWWKD1014.upd.missing.param.anno.explanation=Parametry metod aktualizace \u00falo\u017ei\u0161t\u011b mus\u00ed odpov\u00eddat atribut\u016fm entit.
-CWWKD1014.upd.missing.param.anno.useraction=Aktualizujte metodu \u00falo\u017ei\u0161t\u011b tak, aby v\u0161echny parametry odpov\u00eddaly atribut\u016fm entit.
+CWWKD1014.upd.missing.param.anno=CWWKD1014E: Metoda {0} \u00falo\u017ei\u0161t\u011b {1} nen\u00ed platnou metodou aktualizace \u017eivotn\u00edho cyklu, proto\u017ee metoda m\u00e1 parametry {2}. Metody \u00falo\u017ei\u0161t\u011b s anotac\u00ed \u017eivotn\u00edho cyklu mus\u00ed m\u00edt p\u0159esn\u011b 1 parametr, kter\u00fdm mus\u00ed b\u00fdt entita, pole entity nebo Seznam entity. Metoda {0} tak\u00e9 nen\u00ed platnou operac\u00ed aktualizace na z\u00e1klad\u011b parametr\u016f, proto\u017ee parametr metody {3} nem\u00e1 anotaci ( {4} ), kter\u00e1 ozna\u010duje n\u00e1zev atributu entity. P\u0159\u00edpadn\u011b m\u016f\u017eete povolit volbu -parameters compile a parametr pojmenovat stejn\u011b jako atribut entity.
+CWWKD1014.upd.missing.param.anno.explanation=Parametry metod aktualizace \u00falo\u017ei\u0161t\u011b mus\u00ed odpov\u00eddat atribut\u016fm entit. Alternativn\u011b mus\u00ed metody \u017eivotn\u00edho cyklu obsahovat jedin\u00fd parametr entity.
+CWWKD1014.upd.missing.param.anno.useraction=Aktualizujte metodu \u00falo\u017ei\u0161t\u011b tak, aby v\u0161echny parametry odpov\u00eddaly atribut\u016fm entit. P\u0159\u00edpadn\u011b aktualizujte metodu \u00falo\u017ei\u0161t\u011b tak, aby obsahovala jedin\u00fd parametr, kter\u00fdm je entita, pole entit nebo seznam entit.
 
 CWWKD1015.null.entity.param=CWWKD1015E: Metoda {0} rozhran\u00ed \u00falo\u017ei\u0161t\u011b {1} nem\u016f\u017ee p\u0159ijmout nulovou entitu.
 CWWKD1015.null.entity.param.explanation=Metody \u017eivotn\u00edho cyklu vy\u017eaduj\u00ed nenulovou instanci entity.
@@ -136,9 +136,7 @@ CWWKD1026.ignore.case.not.text=CWWKD1026E: Atribut {0} entity {1} nen\u00ed znak
 CWWKD1026.ignore.case.not.text.explanation=T\u0159\u00edd\u011bn\u00ed s ignorov\u00e1n\u00edm velk\u00fdch a mal\u00fdch p\u00edsmen je mo\u017en\u00e9 pouze u atribut\u016f entit, kter\u00e9 p\u0159edstavuj\u00ed text.
 CWWKD1026.ignore.case.not.text.useraction=Zajist\u011bte, aby byla krit\u00e9ria t\u0159\u00edd\u011bn\u00ed pou\u017eita na spr\u00e1vn\u00fd atribut entity, a odstra\u0148te pokyn ignorovat velikost p\u00edsmen, pokud atribut entity nep\u0159edstavuje text.
 
-CWWKD1027.anno.missing.attr.name=CWWKD1027E: Parametr {0} metody {1} rozhran\u00ed \u00falo\u017ei\u0161t\u011b {2} je opat\u0159en anotac\u00ed {3}, kter\u00e1 jako hodnotu neuv\u00e1d\u00ed n\u00e1zev atributu entity. Anotace mus\u00ed bu\u010f jako hodnotu uv\u00e1d\u011bt n\u00e1zev atributu entity, nebo mus\u00ed b\u00fdt povolena volba -parameters compile a parametr mus\u00ed m\u00edt stejn\u00fd n\u00e1zev jako atribut entity.
-CWWKD1027.anno.missing.attr.name.explanation=Parametry metod aktualizace \u00falo\u017ei\u0161t\u011b mus\u00ed odpov\u00eddat atribut\u016fm entit.
-CWWKD1027.anno.missing.attr.name.useraction=Aktualizujte metodu \u00falo\u017ei\u0161t\u011b tak, aby uv\u00e1d\u011bla atribut entity, ke kter\u00e9mu se parametr vztahuje.
+# TODO CWWKD1027 removed prior to GA of data-1.0 and can be reused
 
 CWWKD1028.first.exceeds.max=CWWKD1028E: Metoda {0} rozhran\u00ed \u00falo\u017ei\u0161t\u011b {1} vy\u017eaduje prvn\u00edch {2} v\u00fdsledk\u016f, co\u017e p\u0159ekra\u010duje maxim\u00e1ln\u00ed povolen\u00fd po\u010det v\u00fdsledk\u016f: {3} .
 CWWKD1028.first.exceeds.max.explanation=Maxim\u00e1ln\u00ed po\u010det v\u00fdsledk\u016f dotazu je omezen syst\u00e9mov\u00fdmi omezen\u00edmi a zadanou hodnotou.
@@ -486,3 +484,27 @@ CWWKD1111.unsupported.convert.useraction=Aktualizujte implementaci AttributeConv
 CWWKD1112.record.entity.verify.err=CWWKD1112W: T\u0159\u00edda entit pro z\u00e1znam {0} je definov\u00e1na, ale nemus\u00ed fungovat. Ov\u011b\u0159en\u00ed bajt\u016f t\u0159\u00eddy entit Jakarta Persistence, kter\u00e1 byla vygenerov\u00e1na pro t\u0159\u00eddu entit, se nezda\u0159ilo. Definovan\u00e1 t\u0159\u00edda entit je pou\u017e\u00edv\u00e1na jedn\u00edm nebo v\u00edce rozhran\u00edmi \u00falo\u017ei\u0161t\u011b ( {1} ) v artefaktu aplikace {2}. Chyba je n\u00e1sleduj\u00edc\u00ed: {3}.
 CWWKD1112.record.entity.verify.err.explanation=Pokud \u00falo\u017ei\u0161t\u011b pou\u017e\u00edv\u00e1 entitu z\u00e1znamu, je vygenerov\u00e1na entita Jakarta Persistence, kter\u00e1 reprezentuje entitu z\u00e1znamu. Ov\u011b\u0159en\u00ed bajt\u016f generovan\u00e9 t\u0159\u00eddy entit Jakarta Persistence se nezda\u0159ilo.
 CWWKD1112.record.entity.verify.err.useraction=Ov\u011b\u0159te, zda implementace z\u00e1znamov\u00e9 entity dodr\u017euje po\u017eadavky a konvence pro z\u00e1znamovou entitu.
+
+CWWKD1113.server.stopping=CWWKD1113I: Jedno nebo v\u00edce \u00falo\u017ei\u0161\u0165 ( {0} ) se neinicializovalo, proto\u017ee se server vyp\u00edn\u00e1.
+CWWKD1113.server.stopping.explanation=Server se vyp\u00edn\u00e1 a nepokus\u00ed se inicializovat \u00falo\u017ei\u0161t\u011b.
+CWWKD1113.server.stopping.useraction=Nen\u00ed pot\u0159eba \u017e\u00e1dn\u00e1 akce.
+
+CWWKD1114.app.stopping=CWWKD1114I: Jedno nebo v\u00edce \u00falo\u017ei\u0161\u0165 ( {0} ) se neinicializovalo, proto\u017ee aplikace {1} je ve stavu {2}.
+CWWKD1114.app.stopping.explanation=Aplikace se zastavuje nebo se zastavila a nepokus\u00ed se inicializovat \u00falo\u017ei\u0161t\u011b.
+CWWKD1114.app.stopping.useraction=Spus\u0165te aplikaci a zp\u0159\u00edstupn\u011bte \u00falo\u017ei\u0161t\u011b.
+
+CWWKD1115.app.unavailable=CWWKD1115E: Jedno nebo v\u00edce \u00falo\u017ei\u0161\u0165 ( {0} ) nebylo inicializov\u00e1no, proto\u017ee aplikace {1} nen\u00ed k dispozici.
+CWWKD1115.app.unavailable.explanation=Aplikace, kter\u00e1 definuje \u00falo\u017ei\u0161t\u011b, nen\u00ed k dispozici. \u00dalo\u017ei\u0161t\u011b nelze inicializovat.
+CWWKD1115.app.unavailable.useraction=Spus\u0165te aplikaci a zp\u0159\u00edstupn\u011bte \u00falo\u017ei\u0161t\u011b.
+
+CWWKD1116.resource.unavailable=CWWKD1116E: Jedno nebo v\u00edce \u00falo\u017ei\u0161\u0165 ( {0} ) se neinicializovalo, proto\u017ee prost\u0159edek {1} nebyl dostupn\u00fd b\u011bhem {2} sekund.
+CWWKD1116.resource.unavailable.explanation=Prost\u0159edek, kter\u00fd \u00falo\u017ei\u0161t\u011b vy\u017eaduj\u00ed, nebyl k dispozici.
+CWWKD1116.resource.unavailable.useraction=Ov\u011b\u0159te konfiguraci prost\u0159edk\u016f, kter\u00e9 \u00falo\u017ei\u0161t\u011b pou\u017e\u00edvaj\u00ed.
+
+CWWKD1117.anno.constraint.conflict=CWWKD1117E: Parametr {0} metody {1} rozhran\u00ed \u00falo\u017ei\u0161t\u011b {2} nelze opat\u0159it anotacemi: {3}. Jedna nebo v\u00edce anotac\u00ed nen\u00ed kompatibiln\u00ed s typem {4} parametru metody \u00falo\u017ei\u0161t\u011b.
+CWWKD1117.anno.constraint.conflict.explanation=Omezen\u00ed a jeho podtypy nelze kombinovat s jin\u00fdmi anotacemi parametr\u016f ne\u017e s anotac\u00ed By.
+CWWKD1117.anno.constraint.conflict.useraction=Odstra\u0148te konfliktn\u00ed anotaci nebo zadejte typ atributu entity m\u00edsto typu omezen\u00ed.
+
+CWWKD1118.param.anno.conflict=CWWKD1118E: Parametr {0} metody {1} rozhran\u00ed \u00falo\u017ei\u0161t\u011b {2} nelze opat\u0159it anotacemi: {3}. Dv\u011b nebo v\u00edce anotac\u00ed jsou ve vz\u00e1jemn\u00e9m rozporu.
+CWWKD1118.param.anno.conflict.explanation=Kombinace anotac\u00ed parametr\u016f nen\u00ed platn\u00e1.
+CWWKD1118.param.anno.conflict.useraction=Odstran\u011bn\u00ed jedn\u00e9 nebo v\u00edce konfliktn\u00edch anotac\u00ed z parametru metody \u00falo\u017ei\u0161t\u011b.

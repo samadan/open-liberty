@@ -343,12 +343,13 @@ public class ConcurrentPriorityBlockingQueue<T> extends AbstractQueue<T> impleme
             if (currentTailNext == end) {
                 // if we win the race to update the tail's next, the new item is added to the queue
                 if (currentTail.next.compareAndSet(end, newTail)) {
+                    // increase the queue size
+                    size.release();
+
                     // don't update the tail each time.  update the tail on a later insert into the queue
                     if (currentTail != startingTail) {
                         tail.compareAndSet(startingTail, newTail);
                     }
-                    // increase the queue size
-                    size.release();
                     return true;
                 }
 

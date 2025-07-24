@@ -93,6 +93,7 @@ public class DataErrPathsTest extends FATServletClient {
                                    "CWWKD1054E.*deleteFirst", // NonUniqueResultException
                                    "CWWKD1054E.*findBySSNBetweenAndNameNotNull", // NonUniqueResultException
                                    "CWWKD1054E.*findSSNAsLongBetween", // NonUniqueResultException
+                                   "CWWKD1074E.*findByAddressIgnoreCaseIn", // IgnoreCase and In combined
                                    "CWWKD1077E.*test.jakarta.data.errpaths.web.RepoWithoutDataStore",
                                    "CWWKD1078E.*test.jakarta.data.errpaths.web.InvalidNonJNDIRepo",
                                    "CWWKD1079E.*test.jakarta.data.errpaths.web.InvalidJNDIRepo",

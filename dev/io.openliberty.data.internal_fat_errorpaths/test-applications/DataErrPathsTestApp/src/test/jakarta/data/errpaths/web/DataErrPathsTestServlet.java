@@ -1093,6 +1093,27 @@ public class DataErrPathsTestServlet extends FATServlet {
     }
 
     /**
+     * Verify an appropriate error is raised for the invalid combination of the
+     * IgnoreCase and In keywords on a Query by Method Name method.
+     */
+    @Test
+    public void testIgnoreCaseIn() {
+        Set<String> addresses = Set.of("401 9th Ave NW, Rochester, MN 55901",
+                                       "88 23RD AVE SW, Rochester, MN 55902");
+        try {
+            List<Voter> found = voters.findByAddressIgnoreCaseIn(addresses);
+            fail("Should not be able to combine IgnoreCase and In keywords." +
+                 " Found: " + found);
+        } catch (UnsupportedOperationException x) {
+            if (x.getMessage() == null ||
+                !x.getMessage().startsWith("CWWKD1074E:") ||
+                !x.getMessage().contains("IgnoreCase") ||
+                !x.getMessage().contains("In"))
+                throw x;
+        }
+    }
+
+    /**
      * Verify an error is raised for a repository insert method with a parameter
      * that can insert multiple entities and a return type that can only return
      * one inserted entity.

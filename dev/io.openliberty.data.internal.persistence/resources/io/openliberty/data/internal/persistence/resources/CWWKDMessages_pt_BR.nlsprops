@@ -64,7 +64,7 @@ CWWKD1008.ambig.rtrn.err.useraction=Atualize o m\u00e9todo do reposit\u00f3rio p
 
 CWWKD1009.lifecycle.param.err=CWWKD1009E: O m\u00e9todo {0} da interface do reposit\u00f3rio {1} n\u00e3o pode ter par\u00e2metros {2} porque o m\u00e9todo \u00e9 anotado com a anota\u00e7\u00e3o de ciclo de vida {3}. Os m\u00e9todos de reposit\u00f3rio anotados com uma anota\u00e7\u00e3o de ciclo de vida devem ter exatamente um par\u00e2metro, que deve ser a entidade ou uma matriz ou lista da entidade.
 CWWKD1009.lifecycle.param.err.explanation=Os m\u00e9todos de ciclo de vida devem ter um \u00fanico par\u00e2metro de entidade.
-CWWKD1009.lifecycle.param.err.useraction=Atualize o m\u00e9todo do reposit\u00f3rio para ter um \u00fanico par\u00e2metro que seja uma entidade ou uma matriz de Lista da entidade.
+CWWKD1009.lifecycle.param.err.useraction=Atualize o m\u00e9todo do reposit\u00f3rio para ter um \u00fanico par\u00e2metro que seja uma entidade, uma matriz da entidade ou uma lista da entidade.
 
 CWWKD1010.unknown.entity.attr=CWWKD1010E: Um atributo de entidade chamado {0} n\u00e3o foi encontrado na classe de entidade {1} para o m\u00e9todo {2} da interface do reposit\u00f3rio {3}. Os nomes de atributos v\u00e1lidos para a entidade s\u00e3o: {4}.
 CWWKD1010.unknown.entity.attr.explanation=O m\u00e9todo de reposit\u00f3rio est\u00e1 tentando usar um atributo de entidade que n\u00e3o existe.
@@ -82,9 +82,9 @@ CWWKD1013.cde.missing.param.anno=CWWKD1013E: O par\u00e2metro {0} do m\u00e9todo
 CWWKD1013.cde.missing.param.anno.explanation=Os par\u00e2metros dos m\u00e9todos count, delete e exists do reposit\u00f3rio devem corresponder aos atributos da entidade.
 CWWKD1013.cde.missing.param.anno.useraction=Atualize o m\u00e9todo do reposit\u00f3rio de modo que todos os par\u00e2metros correspondam aos atributos da entidade.
 
-CWWKD1014.upd.missing.param.anno=CWWKD1014E: O par\u00e2metro {0} do m\u00e9todo {1} da interface do reposit\u00f3rio {2} n\u00e3o corresponde a um atributo de entidade. Os par\u00e2metros que n\u00e3o correspondem a um atributo de entidade devem ter uma das anota\u00e7\u00f5es de par\u00e2metro: {3}. Para definir uma condi\u00e7\u00e3o para a restri\u00e7\u00e3o dos resultados da consulta, o par\u00e2metro deve ser anotado com a anota\u00e7\u00e3o By e o valor da anota\u00e7\u00e3o By deve ser atribu\u00eddo ao nome do atributo da entidade. Como alternativa, ative a op\u00e7\u00e3o de compila\u00e7\u00e3o -parameters e d\u00ea ao par\u00e2metro o mesmo nome do atributo de entidade.
-CWWKD1014.upd.missing.param.anno.explanation=Os par\u00e2metros dos m\u00e9todos de atualiza\u00e7\u00e3o do reposit\u00f3rio devem corresponder aos atributos da entidade.
-CWWKD1014.upd.missing.param.anno.useraction=Atualize o m\u00e9todo do reposit\u00f3rio de modo que todos os par\u00e2metros correspondam aos atributos da entidade.
+CWWKD1014.upd.missing.param.anno=CWWKD1014E: O m\u00e9todo {0} do reposit\u00f3rio {1} n\u00e3o \u00e9 um m\u00e9todo v\u00e1lido de atualiza\u00e7\u00e3o do ciclo de vida porque o m\u00e9todo tem par\u00e2metros {2}. Os m\u00e9todos de reposit\u00f3rio anotados com uma anota\u00e7\u00e3o de ciclo de vida devem ter exatamente um par\u00e2metro, que deve ser a entidade, uma matriz da entidade ou uma lista da entidade. O m\u00e9todo {0} tamb\u00e9m n\u00e3o \u00e9 uma opera\u00e7\u00e3o v\u00e1lida de atualiza\u00e7\u00e3o baseada em par\u00e2metros porque o par\u00e2metro do m\u00e9todo {3} n\u00e3o tem uma anota\u00e7\u00e3o ( {4} ) que indique o nome do atributo da entidade. Como alternativa, ative a op\u00e7\u00e3o de compila\u00e7\u00e3o -parameters e d\u00ea ao par\u00e2metro o mesmo nome do atributo de entidade.
+CWWKD1014.upd.missing.param.anno.explanation=Os par\u00e2metros dos m\u00e9todos de atualiza\u00e7\u00e3o do reposit\u00f3rio devem corresponder aos atributos da entidade. Como alternativa, os m\u00e9todos de ciclo de vida devem ter um \u00fanico par\u00e2metro de entidade.
+CWWKD1014.upd.missing.param.anno.useraction=Atualize o m\u00e9todo do reposit\u00f3rio de modo que todos os par\u00e2metros correspondam aos atributos da entidade. Como alternativa, atualize o m\u00e9todo do reposit\u00f3rio para ter um \u00fanico par\u00e2metro que seja uma entidade, uma matriz da entidade ou uma lista da entidade.
 
 CWWKD1015.null.entity.param=CWWKD1015E: O m\u00e9todo {0} da interface do reposit\u00f3rio {1} n\u00e3o pode aceitar uma entidade nula.
 CWWKD1015.null.entity.param.explanation=Os m\u00e9todos de ciclo de vida exigem uma inst\u00e2ncia de entidade n\u00e3o nula.
@@ -135,9 +135,7 @@ CWWKD1026.ignore.case.not.text=CWWKD1026E: O atributo {0} da entidade {1} n\u00e
 CWWKD1026.ignore.case.not.text.explanation=A classifica\u00e7\u00e3o com mai\u00fasculas e min\u00fasculas ignorada s\u00f3 \u00e9 poss\u00edvel com atributos de entidade que representam texto.
 CWWKD1026.ignore.case.not.text.useraction=Certifique-se de que os crit\u00e9rios de classifica\u00e7\u00e3o sejam aplicados ao atributo de entidade correto e remova a instru\u00e7\u00e3o para ignorar o caso se o atributo de entidade n\u00e3o representar texto.
 
-CWWKD1027.anno.missing.attr.name=CWWKD1027E: O par\u00e2metro {0} do m\u00e9todo {1} da interface do reposit\u00f3rio {2} \u00e9 anotado com uma anota\u00e7\u00e3o {3} que n\u00e3o especifica um nome de atributo de entidade como seu valor. A anota\u00e7\u00e3o deve especificar o nome do atributo da entidade como seu valor, ou a op\u00e7\u00e3o de compila\u00e7\u00e3o -parameters deve estar ativada e o par\u00e2metro deve ter o mesmo nome do atributo da entidade.
-CWWKD1027.anno.missing.attr.name.explanation=Os par\u00e2metros dos m\u00e9todos de atualiza\u00e7\u00e3o do reposit\u00f3rio devem corresponder aos atributos da entidade.
-CWWKD1027.anno.missing.attr.name.useraction=Atualize o m\u00e9todo do reposit\u00f3rio para indicar o atributo de entidade ao qual o par\u00e2metro pertence.
+# TODO CWWKD1027 removed prior to GA of data-1.0 and can be reused
 
 CWWKD1028.first.exceeds.max=CWWKD1028E: O m\u00e9todo {0} da interface do reposit\u00f3rio {1} solicita os primeiros {2} resultados, o que excede o n\u00famero m\u00e1ximo permitido de resultados: {3}.
 CWWKD1028.first.exceeds.max.explanation=O n\u00famero m\u00e1ximo de resultados da consulta \u00e9 limitado pelas restri\u00e7\u00f5es do sistema e pelo valor especificado.
@@ -484,3 +482,27 @@ CWWKD1111.unsupported.convert.useraction=Atualize a implementa\u00e7\u00e3o do A
 CWWKD1112.record.entity.verify.err=CWWKD1112W: Uma classe de entidade para o registro {0} est\u00e1 definida, mas pode n\u00e3o funcionar. A verifica\u00e7\u00e3o dos bytes da classe de entidade Jakarta Persistence, que foi gerada para a classe de entidade, falhou. A classe de entidade definida \u00e9 usada por uma ou mais interfaces de reposit\u00f3rio ( {1} ) no artefato do aplicativo {2}. O erro \u00e9: {3}.
 CWWKD1112.record.entity.verify.err.explanation=Quando um reposit\u00f3rio usa uma entidade de registro, uma entidade do Jakarta Persistence \u00e9 gerada para representar a entidade de registro. A verifica\u00e7\u00e3o dos bytes da classe de entidade Jakarta Persistence gerada falhou.
 CWWKD1112.record.entity.verify.err.useraction=Verifique se a implementa\u00e7\u00e3o da entidade de registro est\u00e1 de acordo com os requisitos e conven\u00e7\u00f5es de uma entidade de registro.
+
+CWWKD1113.server.stopping=CWWKD1113I: Um ou mais reposit\u00f3rios ( {0} ) n\u00e3o foram inicializados porque o servidor est\u00e1 sendo desligado.
+CWWKD1113.server.stopping.explanation=O servidor est\u00e1 sendo desligado e n\u00e3o tentar\u00e1 inicializar os reposit\u00f3rios.
+CWWKD1113.server.stopping.useraction=Nenhuma a\u00e7\u00e3o \u00e9 necess\u00e1ria.
+
+CWWKD1114.app.stopping=CWWKD1114I: Um ou mais reposit\u00f3rios ( {0} ) n\u00e3o foram inicializados porque o aplicativo {1} est\u00e1 no estado {2}.
+CWWKD1114.app.stopping.explanation=O aplicativo est\u00e1 parando ou foi interrompido e n\u00e3o tentar\u00e1 inicializar os reposit\u00f3rios.
+CWWKD1114.app.stopping.useraction=Inicie o aplicativo para disponibilizar os reposit\u00f3rios.
+
+CWWKD1115.app.unavailable=CWWKD1115E: Um ou mais reposit\u00f3rios ( {0} ) n\u00e3o foram inicializados porque o aplicativo {1} n\u00e3o est\u00e1 dispon\u00edvel.
+CWWKD1115.app.unavailable.explanation=O aplicativo que define os reposit\u00f3rios n\u00e3o est\u00e1 dispon\u00edvel. Os reposit\u00f3rios n\u00e3o podem ser inicializados.
+CWWKD1115.app.unavailable.useraction=Inicie o aplicativo para disponibilizar os reposit\u00f3rios.
+
+CWWKD1116.resource.unavailable=CWWKD1116E: Um ou mais reposit\u00f3rios ( {0} ) n\u00e3o foram inicializados porque o recurso {1} n\u00e3o ficou dispon\u00edvel em {2} segundos.
+CWWKD1116.resource.unavailable.explanation=Um recurso que os reposit\u00f3rios exigem n\u00e3o ficou dispon\u00edvel.
+CWWKD1116.resource.unavailable.useraction=Verifique a configura\u00e7\u00e3o dos recursos que os reposit\u00f3rios usam.
+
+CWWKD1117.anno.constraint.conflict=CWWKD1117E: O par\u00e2metro {0} do m\u00e9todo {1} da interface do reposit\u00f3rio {2} n\u00e3o pode ser anotado com as anota\u00e7\u00f5es: {3}. Uma ou mais das anota\u00e7\u00f5es s\u00e3o incompat\u00edveis com o tipo {4} do par\u00e2metro do m\u00e9todo do reposit\u00f3rio.
+CWWKD1117.anno.constraint.conflict.explanation=A restri\u00e7\u00e3o e seus subtipos n\u00e3o podem ser combinados com anota\u00e7\u00f5es de par\u00e2metro que n\u00e3o sejam a anota\u00e7\u00e3o By.
+CWWKD1117.anno.constraint.conflict.useraction=Remova a anota\u00e7\u00e3o conflitante ou especifique o tipo de atributo de entidade em vez de um tipo de restri\u00e7\u00e3o.
+
+CWWKD1118.param.anno.conflict=CWWKD1118E: O par\u00e2metro {0} do m\u00e9todo {1} da interface do reposit\u00f3rio {2} n\u00e3o pode ser anotado com as anota\u00e7\u00f5es: {3}. Duas ou mais anota\u00e7\u00f5es entram em conflito entre si.
+CWWKD1118.param.anno.conflict.explanation=A combina\u00e7\u00e3o de anota\u00e7\u00f5es de par\u00e2metros n\u00e3o \u00e9 v\u00e1lida.
+CWWKD1118.param.anno.conflict.useraction=Remova uma ou mais das anota\u00e7\u00f5es conflitantes do par\u00e2metro do m\u00e9todo do reposit\u00f3rio.

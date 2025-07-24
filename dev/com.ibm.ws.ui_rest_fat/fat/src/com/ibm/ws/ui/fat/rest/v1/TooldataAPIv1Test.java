@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2022 IBM Corporation and others.
+ * Copyright (c) 2013, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ package com.ibm.ws.ui.fat.rest.v1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.net.HttpURLConnection;
@@ -49,8 +50,8 @@ public class TooldataAPIv1Test extends CommonRESTTest implements APIConstants {
     private final String tooldataExploreEntryURL = API_V1_TOOLDATA + "/com.ibm.websphere.appserver.adminCenter.tool.explore";
     private final String dataString = "{\"key\":\"value\"}";
     private final String dataString1 = "{\"key\":\"value1\"}";
-    private final String md51 = "a7353f7cddce808de0032747a0b7be50";
-    private final String md52 = "9ecb15df65a2ceddcb3b2c726f5aa522";
+    private final String etagCheckSum1 = isFIPSEnabledOnServer() ? "e43abcf3375244839c012f9633f95862d232a95b00d5bc7348b3098b9fed7f32" : "a7353f7cddce808de0032747a0b7be50";
+    private final String etagCheckSum2 = isFIPSEnabledOnServer() ? "dfada72ccc2244e8c7aef8f0dbe7c026a6553bc5bda3f7654f3d0b94dd51a23b" : "9ecb15df65a2ceddcb3b2c726f5aa522";
 
     public TooldataAPIv1Test() {
         super(c);
@@ -145,7 +146,7 @@ public class TooldataAPIv1Test extends CommonRESTTest implements APIConstants {
         CommonHttpsRequest connection = getHTTPRequestWithPostPlainText(tooldataExploreEntryURL, adminUser, adminPassword, dataString, 201);
 
         // check etag
-        checkETag(connection.getResponseHeaders(), md51);
+        checkETag(connection.getResponseHeaders(), etagCheckSum1);
 
         // post again should return 409 conflict
         getHTTPRequestWithPostPlainText(tooldataExploreEntryURL, adminUser, adminPassword, dataString, 409);
@@ -157,10 +158,10 @@ public class TooldataAPIv1Test extends CommonRESTTest implements APIConstants {
         getHTTPRequestWithPutPlainTextWithHeaderWithStringResponse(tooldataExploreEntryURL, adminUser, adminPassword, dataString, "If-Match", "fakemd5", 412);
 
         // put with correct etag should return 200
-        connection = getHTTPRequestWithPutPlainTextWithHeader(tooldataExploreEntryURL, adminUser, adminPassword, dataString1, "If-Match", md51, 200);
+        connection = getHTTPRequestWithPutPlainTextWithHeader(tooldataExploreEntryURL, adminUser, adminPassword, dataString1, "If-Match", etagCheckSum1, 200);
 
         // check returned etag
-        checkETag(connection.getResponseHeaders(), md52);
+        checkETag(connection.getResponseHeaders(), etagCheckSum2);
 
         // delete should return 200
         deleteWithStringResponse(tooldataExploreEntryURL, adminUser, adminPassword, 200);
@@ -180,7 +181,7 @@ public class TooldataAPIv1Test extends CommonRESTTest implements APIConstants {
         CommonHttpsRequest connection = getHTTPRequestWithPostPlainText(tooldataExploreEntryURL, readerUser, readerPassword, dataString, 201);
 
         // check etag
-        checkETag(connection.getResponseHeaders(), md51);
+        checkETag(connection.getResponseHeaders(), etagCheckSum1);
 
         // post again should return 409 conflict
         getHTTPRequestWithPostPlainText(tooldataExploreEntryURL, readerUser, readerPassword, dataString, 409);
@@ -193,10 +194,10 @@ public class TooldataAPIv1Test extends CommonRESTTest implements APIConstants {
         getHTTPRequestWithPutPlainTextWithHeaderWithStringResponse(tooldataExploreEntryURL, readerUser, readerPassword, dataString, "If-Match", "fakemd5", 412);
 
         // put with correct etag should return 200
-        connection = getHTTPRequestWithPutPlainTextWithHeader(tooldataExploreEntryURL, readerUser, readerPassword, dataString1, "If-Match", md51, 200);
+        connection = getHTTPRequestWithPutPlainTextWithHeader(tooldataExploreEntryURL, readerUser, readerPassword, dataString1, "If-Match", etagCheckSum1, 200);
 
         // check returned etag
-        checkETag(connection.getResponseHeaders(), md52);
+        checkETag(connection.getResponseHeaders(), etagCheckSum2);
 
         //delete should return 200
         strResponse = deleteWithStringResponse(tooldataExploreEntryURL, readerUser, readerPassword, 200);
@@ -238,7 +239,7 @@ public class TooldataAPIv1Test extends CommonRESTTest implements APIConstants {
      */
     @Test
     public void putTooldataWithNonAdminCredentials() throws Exception {
-        getHTTPRequestWithPutPlainTextWithHeader(tooldataExploreEntryURL, nonadminUser, nonadminPassword, dataString1, "If-Match", md51, 403);
+        getHTTPRequestWithPutPlainTextWithHeader(tooldataExploreEntryURL, nonadminUser, nonadminPassword, dataString1, "If-Match", etagCheckSum1, 403);
     }
 
     /**
@@ -264,6 +265,20 @@ public class TooldataAPIv1Test extends CommonRESTTest implements APIConstants {
 
         // make sure etag is correct
         assertEquals("Unexpected etag value.", expectedETagValue, list.get(0));
+    }
+
+    /**
+     * Determine if FIPS is enabled and supported on the test server
+     * Determines which etag checksum will be used for validation:
+     * MD5 when FIPS 140-3 is disabled, and SHA256 when FIPS 140-3 is enabled
+     */
+    private boolean isFIPSEnabledOnServer() {
+        try {
+            return FATSuite.server.isFIPS140_3EnabledAndSupported();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 }

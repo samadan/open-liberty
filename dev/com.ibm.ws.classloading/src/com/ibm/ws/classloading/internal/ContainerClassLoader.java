@@ -314,7 +314,11 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             return new ByteResourceInformation(container, this, className, this::getActualBytes, hook);
         }
 
+        @Trivial
         private byte[] getActualBytes() {
+            if (tc.isDebugEnabled()) {
+                Tr.debug(tc, "CCL: EntryUniversalResource.getActualBytes for " + resourceName);
+            }
             try {
                 try {
                     InputStream is = this.entry.adapt(InputStream.class);
@@ -828,6 +832,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             }
         }
 
+        @Trivial
         private void processContainer(Container c, Map<Integer, List<UniversalContainer>> map, int chop) {
             for (Entry e : c) {
                 try {
@@ -853,6 +858,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         }
 
         @Override
+        @Trivial
         synchronized public void updatePackageMap(Map<Integer, List<UniversalContainer>> map) {
             if (tc.isDebugEnabled())
                 Tr.debug(tc, "CCL: updating map for adaptable container with path " + this.container.getPath());
@@ -952,7 +958,11 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             return new ByteResourceInformation(container, this, className, this::getActualBytes, hook);
         }
 
+        @Trivial
         byte[] getActualBytes() {
+            if (tc.isDebugEnabled()) {
+                Tr.debug(tc, "CCL: ArtifactEntryUniversalResource.getActualBytes for " + resourceName);
+            }
             try {
                 InputStream is = this.entry.getInputStream();
                 return ContainerClassLoader.getBytes(is, (int) entry.getSize());
@@ -1329,6 +1339,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             addUniversalContainers(new ArtifactContainerUniversalContainer(container, hook));
         }
 
+        @Trivial
         private List<UniversalContainer> getUniversalContainersForPath(String path, List<UniversalContainer> classpath) {
             //if we have outstanding requests, then we should just use the classpath, else
             //we risk not seeing content on the classpath that we should see.
@@ -1696,6 +1707,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
          *
          * @return The byte[]
          */
+        @Trivial
         public byte[] getBytes() {
             return this.bytes;
         }
@@ -1717,10 +1729,12 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             return fromClassCache;
         }
 
+        @Trivial
         public byte[] getActualBytes() throws IOException {
             return actualBytes.get();
         }
 
+        @Trivial
         public void storeInClassCache(Class<?> clazz, byte[] definedBytes ) {
             if (fromClassCache || hook == null) {
                 return;
@@ -2120,6 +2134,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         }
     }
 
+    @Trivial
     Collection<Collection<URL>> getClassPath() {
         return smartClassPath.getClassPath();
     }

@@ -3942,6 +3942,19 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
+     * Test the Or keyword on a Query by Method Name query.
+     */
+    @Test
+    public void testOrKeyword() {
+        List<Long> l;
+        l = primes.findByNumberIdLessThanOrNumberIdGreaterThanAndNumberIdLessThan(10,
+                                                                                  40,
+                                                                                  50);
+        assertEquals(List.of(2L, 3L, 5L, 7L, 41L, 43L, 47L),
+                     l);
+    }
+
+    /**
      * Repository method where the page request type (Prime entity) differs
      * from the data type of the page that is returned (String) due to the use
      * of query language that asks for results to be returned a String
@@ -4190,6 +4203,19 @@ public class DataTestServlet extends FATServlet {
 
         assertEquals(List.of("forty-one", "thirty-seven"), // ordered by name
                      primes.matchAnyExceptLiteralValueThatLooksLikeANamedParameter("thirty-seven", 41));
+    }
+
+    /**
+     * Use a repository method that has both AND and OR keywords.
+     * The AND keywords should take precedence over OR and be computed first.
+     */
+    @Test
+    public void testPrecedenceOfAndOverOr() {
+        assertEquals(List.of(41L, 37L, 31L, 11L, 7L),
+                     primes.findByNumberIdLessThanAndNameEndsWithOrNumberIdGreaterThanEqualAndNumberIdLessThanEqualAndNameEndsWith//
+                     (40L, "even", 30L, 50L, "one")
+                                     .map(p -> p.numberId)
+                                     .collect(Collectors.toList()));
     }
 
     /**

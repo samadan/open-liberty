@@ -36,7 +36,6 @@ import io.openliberty.data.internal.version.QueryType;
 import io.openliberty.data.repository.Count;
 import io.openliberty.data.repository.Exists;
 import io.openliberty.data.repository.Is;
-import io.openliberty.data.repository.Or;
 import io.openliberty.data.repository.function.AbsoluteValue;
 import io.openliberty.data.repository.function.CharCount;
 import io.openliberty.data.repository.function.ElementCount;
@@ -359,15 +358,6 @@ public class Data_1_1 implements DataVersionCompatibility {
             Tr.debug(this, tc, "getUpdateAttributeAndOperation", aa, returnValue);
         }
         return returnValue;
-    }
-
-    @Override
-    @Trivial
-    public boolean hasOrAnnotation(Annotation[] annos) {
-        for (Annotation anno : annos)
-            if (anno instanceof Or)
-                return true;
-        return false;
     }
 
     @Override

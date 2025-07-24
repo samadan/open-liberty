@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 1997, 2022 IBM Corporation and others.
+ * Copyright (c) 1997, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -34,7 +34,7 @@ import com.ibm.ws.kernel.service.util.CpuInfo;
  * the buffer. The buffer contains a expedited FIFO buffer, whose objects
  * will be removed before objects in the main buffer.
  */
-public class BoundedBuffer<T> implements BlockingQueue<T>, AvailableProcessorsListener {
+public class BoundedBuffer<T> implements BlockingQueue<T>, AvailableProcessorsListener, ProcessorAwareQueue {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //
     // Implementation Note:  the buffer is implemented using a circular
@@ -180,8 +180,10 @@ public class BoundedBuffer<T> implements BlockingQueue<T>, AvailableProcessorsLi
         }
     }
 
-    private void waitGet_(long timeout) throws InterruptedException {
-        GetQueueLock getQueueLock = threadLocalGetLock.get();
+    private GetQueueLock waitGet_(GetQueueLock getQueueLock, long timeout) throws InterruptedException {
+        if (getQueueLock == null) {
+            getQueueLock = threadLocalGetLock.get();
+        }
         try {
             synchronized (getQueueLock) {
                 getQueueLock.setNotified(false);
@@ -195,7 +197,7 @@ public class BoundedBuffer<T> implements BlockingQueue<T>, AvailableProcessorsLi
                 waitingThreadLocks.remove(getQueueLock);
             }
         }
-
+        return getQueueLock;
     }
 
     private void notifyPut_() {
@@ -659,8 +661,9 @@ public class BoundedBuffer<T> implements BlockingQueue<T>, AvailableProcessorsLi
     public T take() throws InterruptedException {
         T old = poll();
 
+        GetQueueLock getQueueLock = null;
         while (old == null) {
-            waitGet_(-1);
+            getQueueLock = waitGet_(getQueueLock, -1);
             old = poll();
         }
 
@@ -683,6 +686,7 @@ public class BoundedBuffer<T> implements BlockingQueue<T>, AvailableProcessorsLi
         long endTimeMillis = System.currentTimeMillis() + unit.toMillis(timeout);
         long timeLeftMillis = endTimeMillis - System.currentTimeMillis();
         int spinctr = SPINS_TAKE_.get();
+        GetQueueLock getQueueLock = null;
 
         while (old == null && timeLeftMillis > 0) {
             while (size() <= 0 && timeLeftMillis > 0) {
@@ -693,7 +697,7 @@ public class BoundedBuffer<T> implements BlockingQueue<T>, AvailableProcessorsLi
                     spinctr--;
                 } else {
                     // block on lock
-                    waitGet_(timeLeftMillis);
+                    getQueueLock = waitGet_(getQueueLock, timeLeftMillis);
                 }
                 timeLeftMillis = endTimeMillis - System.currentTimeMillis();
             }
@@ -1577,6 +1581,7 @@ public class BoundedBuffer<T> implements BlockingQueue<T>, AvailableProcessorsLi
         }
     }
 
+    @Override
     public void removeFromAvailableProcessors() {
         if (!spinsTakeProp) {
             CpuInfo.removeAvailableProcessorsListener(this);

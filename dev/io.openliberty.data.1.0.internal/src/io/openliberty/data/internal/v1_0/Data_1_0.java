@@ -163,12 +163,6 @@ public class Data_1_0 implements DataVersionCompatibility {
 
     @Override
     @Trivial
-    public boolean hasOrAnnotation(Annotation[] annos) {
-        return false;
-    }
-
-    @Override
-    @Trivial
     public int inspectMethodParam(int p,
                                   Class<?> paramType,
                                   Annotation[] paramAnnos,

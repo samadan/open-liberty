@@ -38,6 +38,8 @@ steps:
   workType: Jenkins
   projectName: dheServerCheck
   timeoutInMinutes: 120
+  properties:
+    githubPRApi: "https://api.github.com/repos/OpenLiberty/open-liberty/pulls/${githubPRNumber}"
 
 - stepName: Code Checklist Creation
   workType: Jenkins

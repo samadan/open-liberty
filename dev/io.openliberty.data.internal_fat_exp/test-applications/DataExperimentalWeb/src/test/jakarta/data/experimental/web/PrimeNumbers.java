@@ -38,7 +38,6 @@ import jakarta.data.repository.Select;
 import io.openliberty.data.repository.Count;
 import io.openliberty.data.repository.Exists;
 import io.openliberty.data.repository.Is;
-import io.openliberty.data.repository.Or;
 import io.openliberty.data.repository.function.CharCount;
 import io.openliberty.data.repository.function.Trimmed;
 
@@ -70,20 +69,6 @@ public interface PrimeNumbers {
 
     @Exists
     boolean isFoundWith(long numberId, String hex);
-
-    @Find
-    @OrderBy(value = "numberId", descending = true)
-    Stream<PrimeNum> lessThanWithSuffixOrBetweenWithSuffix(@By(ID) @Is(LessThan) long numLessThan,
-                                                           @By("name") @Is(Suffixed) String firstSuffix,
-                                                           @Or @By(ID) @Is(GreaterThanEqual) long lowerLimit,
-                                                           @By(ID) @Is(LessThanEqual) long upperLimit,
-                                                           @By("name") @Is(Suffixed) String secondSuffix);
-
-    @Find
-    @OrderBy(ID)
-    List<Long> notWithinButBelow(@By(ID) @Is(LessThan) int rangeMin,
-                                 @Or @By(ID) @Is(GreaterThan) int rangeMax,
-                                 @By(ID) @Is(LessThan) int below);
 
     @Count
     int numEvenWithSumOfBits(int sumOfBits, boolean even);

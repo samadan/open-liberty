@@ -126,14 +126,6 @@ public interface DataVersionCompatibility {
     String[] getUpdateAttributeAndOperation(Annotation[] annos);
 
     /**
-     * True if any of the annotations represent Or.
-     *
-     * @param annos annotations on the method parameter. Must not be null.
-     * @return True if any of the annotations represent Or. Otherwise false.
-     */
-    boolean hasOrAnnotation(Annotation[] annos);
-
-    /**
      * Inspects the type and annotations of a method parameter to a parameter-based
      * Find/Delete/Update method to determine its meaning. Based on the meaning,
      * updates one or more of (attrNames, constraints, updateOps) at position p.

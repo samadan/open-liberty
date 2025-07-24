@@ -116,8 +116,8 @@ dependencies {
       project(':io.openliberty.org.apache.commons.codec'),
       'javax.xml.bind:jaxb-api:2.3.0'
     mojarra30 'org.glassfish:jakarta.faces:3.0.1'
-    myfaces30 'org.apache.myfaces.core:myfaces-api:3.0.2',
-      'org.apache.myfaces.core:myfaces-impl:3.0.2'
+    myfaces30 'org.apache.myfaces.core:myfaces-api:3.0.3',
+      'org.apache.myfaces.core:myfaces-impl:3.0.3'
     mojarra40 'org.glassfish:jakarta.faces:4.0.0'
     // Do not update since newer JS (in MyFaces 4.0.0-RC5+) is not supported 
     myfaces40 'org.apache.myfaces.core:myfaces-api:4.0.3',

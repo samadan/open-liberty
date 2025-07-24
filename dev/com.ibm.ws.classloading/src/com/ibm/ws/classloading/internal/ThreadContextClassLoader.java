@@ -245,6 +245,7 @@ public class ThreadContextClassLoader extends UnifiedClassLoader implements Keye
     // must be defined with the app loader so they have proper visibility to their
     // super classes.
     @Override
+    @Trivial
     public Class<?> publicDefineClass(String name, byte[] b, ProtectionDomain protectionDomain) {
         if (appLoader instanceof SpringLoader) {
             return ((SpringLoader) appLoader).publicDefineClass(name, b, protectionDomain);

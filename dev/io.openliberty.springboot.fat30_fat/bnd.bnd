@@ -105,5 +105,5 @@ src: \
   io.openliberty.springboot.fat30.jms.app;version=latest,\
   io.openliberty.org.testcontainers;version=latest,\
   io.openliberty.springboot.fat30.concurrency.app;version=latest,\
-  io.openliberty.springboot.fat30.validation.app;version=latest
- 
+  io.openliberty.springboot.fat30.validation.app;version=latest,\
+  io.openliberty.springboot.fat30.aop.app;version=latest

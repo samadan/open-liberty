@@ -8188,7 +8188,8 @@ public class LibertyServer implements LogMonitorClient {
         if (isFIPS140_3EnabledAndSupported(info) || isFIPS140_2EnabledAndSupported(info)) {
             this.configureLTPAKeys(info);
             Map<String, String> jvm_opts = this.getJvmOptionsAsMap();
-            Map<String, String> combined = new HashMap(jvm_opts);
+            // Use LinkedHashMap to ensure entry ordering to not break --add-module entries
+            Map<String, String> combined = new LinkedHashMap(jvm_opts);
             combined.putAll(this.getFipsJvmOptions(info, true));
             if (!combined.isEmpty() && !combined.equals(jvm_opts)) {
                 this.setJvmOptions(combined);

@@ -33,7 +33,7 @@ Export-Package: \
 	com.sun.jna.*;version="5.8.0",\
 	org.apache.commons.codec.*;version="1.16.1",\
 	org.apache.commons.compress.*;version="1.26.0",\
-	org.apache.commons.io.*;version="2.15.1",\
+	org.apache.commons.io.*;version="2.19.0",\
 	org.testcontainers.*;version="${testContainerVersion}";-split-package:=merge-last,\
 	org.rnorth.*;version="1.0.8",\
 	

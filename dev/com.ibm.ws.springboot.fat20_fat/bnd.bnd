@@ -72,5 +72,6 @@ src: \
   com.ibm.ws.kernel.security.thread;version=latest,\
   com.ibm.ws.springboot.fat20.websocket.app;version=latest,\
   com.ibm.ws.springboot.fat20.jms.app;version=latest,\
+  com.ibm.ws.springboot.fat20.aop.app;version=latest,\
   io.openliberty.org.testcontainers;version=latest,\
   com.ibm.ws.springboot.fat20.validation.app;version=latest

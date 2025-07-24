@@ -29,6 +29,12 @@ import com.ibm.ws.kernel.productinfo.ProductInfo;
 import com.ibm.ws.kernel.service.util.JavaInfo;
 
 public class CryptoUtils {
+    /**
+     * When set true, property 'use.enhanced.security.algorithms' will enable the FIPS algorithms
+     * even when FIPS isn't enabled at the JVM level.
+     */
+    private static final String PROPERTY_USE_ENHANCED_SECURITY_ALG = "use.enhanced.security.algorithms";
+
     private static final TraceComponent tc = Tr.register(CryptoUtils.class);
 
     private static boolean issuedBetaMessage = false;
@@ -85,8 +91,11 @@ public class CryptoUtils {
     public static final String SIGNATURE_ALGORITHM_SHA1WITHRSA = "SHA1withRSA";
     public static final String SIGNATURE_ALGORITHM_SHA256WITHRSA = "SHA256withRSA";
     public static final String SIGNATURE_ALGORITHM_SHA512WITHRSA = "SHA512withRSA";
-
+    public static final String RSA_SHA_512 = "RSA/SHA-512";
+    public static final String RSA_SHA_1 = "RSA/SHA-1";
     public static final String CRYPTO_ALGORITHM_RSA = "RSA";
+    public static final String SHA1PRNG = "SHA1PRNG";
+    public static final String HMACSHA1 = "HmacSHA1";
 
     public static final String ENCRYPT_ALGORITHM_DESEDE = "DESede";
     public static final String ENCRYPT_ALGORITHM_AES = "AES";
@@ -404,6 +413,14 @@ public class CryptoUtils {
         return "true".equals(getPropertyLowerCase("semeru.fips", "false"));
     }
 
+    protected static boolean useEnhancedSecurityAlgorithms() {
+        boolean isEnhancedSecurity = isRunningBetaMode() && Boolean.valueOf(getPropertyLowerCase(PROPERTY_USE_ENHANCED_SECURITY_ALG, "false"));
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "isEnhancedSecurity: " + (isEnhancedSecurity ? "enabled" : "disabled"));
+        }
+        return isEnhancedSecurity;
+    }
+
     public static boolean isFips140_3EnabledWithBetaGuard() {
         return isRunningBetaMode() && isFips140_3Enabled();
     }
@@ -439,6 +456,16 @@ public class CryptoUtils {
                     Tr.error(tc, "FIPS_140_3ENABLED_ERROR");
                 }
             }
+
+            if (!fips140_3Enabled) {
+                fips140_3Enabled = useEnhancedSecurityAlgorithms();
+                if (fips140_3Enabled) {
+                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                        Tr.debug(tc, "fips140_3Enabled set to true by useEnhancedSecurityAlgorithms()");
+                    }
+                }
+            }
+
             fips140_3Checked = true;
             return fips140_3Enabled;
         }

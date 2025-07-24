@@ -40,7 +40,7 @@ public class Utils {
 
     static {
         try {
-            messagedigest = CryptoUtils.isFips140_3EnabledWithBetaGuard() ? MessageDigest.getInstance("SHA-256") : MessageDigest.getInstance(CryptoUtils.MESSAGE_DIGEST_ALGORITHM_MD5);
+            messagedigest = CryptoUtils.isFips140_3EnabledWithBetaGuard() ? MessageDigest.getInstance(CryptoUtils.MESSAGE_DIGEST_ALGORITHM_SHA_256) : MessageDigest.getInstance(CryptoUtils.MESSAGE_DIGEST_ALGORITHM_MD5);
         } catch (NoSuchAlgorithmException e) {
             //should not happen
             throw new RuntimeException(e);

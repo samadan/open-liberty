@@ -84,7 +84,9 @@ import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
                 ConcurrencyAppTests20.class,
                 ConcurrencyAppTests20War.class,
                 ValidationTests20.class,
-                ValidationTests20War.class
+                ValidationTests20War.class,
+                AopWebAppTests20.class,
+                AopSpringBootAppTests20.class
 
 })
 

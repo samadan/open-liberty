@@ -78,8 +78,8 @@ commons-cli:commons-cli:1.5.0
 commons-codec:commons-codec:1.16.1
 commons-collections:commons-collections:3.2.2
 commons-digester:commons-digester:2.1
-commons-fileupload:commons-fileupload:1.5
-commons-io:commons-io:2.15.1
+commons-fileupload:commons-fileupload:1.6.0
+commons-io:commons-io:2.19.0
 commons-lang:commons-lang:2.4
 commons-logging:commons-logging:1.2
 commons-net:commons-net:3.6
@@ -252,9 +252,9 @@ io.smallrye.config:smallrye-config-core:2.5.1
 io.smallrye.config:smallrye-config-core:3.3.0
 io.smallrye.config:smallrye-config:2.5.1
 io.smallrye.config:smallrye-config:3.3.0
-io.smallrye.reactive:mutiny-reactive-streams-operators-jakarta:2.5.6
-io.smallrye.reactive:mutiny-zero-flow-adapters:1.0.0
-io.smallrye.reactive:mutiny:2.5.6
+io.smallrye.reactive:mutiny-reactive-streams-operators-jakarta:2.7.0
+io.smallrye.reactive:mutiny-zero-flow-adapters:1.1.1
+io.smallrye.reactive:mutiny:2.7.0
 io.smallrye.reactive:smallrye-reactive-converter-api:3.0.1
 io.smallrye.reactive:smallrye-reactive-messaging-api:4.16.0
 io.smallrye.reactive:smallrye-reactive-messaging-provider:4.16.0
@@ -501,12 +501,12 @@ org.apache.maven:maven-model:3.5.0
 org.apache.maven:maven-model:3.6.3
 org.apache.myfaces.core:myfaces-api:2.2.12
 org.apache.myfaces.core:myfaces-api:2.3.11
-org.apache.myfaces.core:myfaces-api:3.0.2
+org.apache.myfaces.core:myfaces-api:3.0.3
 org.apache.myfaces.core:myfaces-api:4.0.3
 org.apache.myfaces.core:myfaces-api:4.1.1
 org.apache.myfaces.core:myfaces-impl:2.2.12
 org.apache.myfaces.core:myfaces-impl:2.3.11
-org.apache.myfaces.core:myfaces-impl:3.0.2
+org.apache.myfaces.core:myfaces-impl:3.0.3
 org.apache.myfaces.core:myfaces-impl:4.0.3
 org.apache.myfaces.core:myfaces-impl:4.1.1
 org.apache.neethi:neethi:3.1.1
@@ -596,6 +596,7 @@ org.eclipse.jetty:jetty-util:9.2.2.v20140723
 org.eclipse.jetty:jetty-util:9.4.39.v20210325
 org.eclipse.jetty:jetty-util:9.4.7.RC0
 org.eclipse.jetty:jetty-websocket:8.2.0.v20160908
+org.eclipse.jnosql.communication:jnosql-communication-semistructured:1.1.4
 org.eclipse.jnosql.mapping:jnosql-mapping-semistructured:1.1.4
 org.eclipse.microprofile.config:microprofile-config-api:1.1
 org.eclipse.microprofile.config:microprofile-config-api:1.2.1
@@ -827,6 +828,7 @@ org.jboss.weld:weld-osgi-bundle:4.0.3.Final
 org.jboss.weld:weld-osgi-bundle:5.1.1.SP2
 org.jboss.weld:weld-osgi-bundle:6.0.2.Final
 org.jboss.weld:weld-porting-package-tck:6.0.0.Final
+org.jctools:jctools-core:4.0.5
 org.jetbrains.kotlin:kotlin-stdlib-common:1.9.0
 org.jetbrains.kotlin:kotlin-stdlib:1.9.0
 org.jetbrains:annotations:13.0

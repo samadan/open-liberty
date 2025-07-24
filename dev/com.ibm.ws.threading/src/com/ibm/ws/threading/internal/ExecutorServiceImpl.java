@@ -214,6 +214,9 @@ public final class ExecutorServiceImpl implements WSExecutorService, ThreadQuies
 
     public static boolean isBeta = Boolean.valueOf(System.getProperty("com.ibm.ws.beta.edition"));
 
+    // Default to use BoundedBuffer, but make it possible to easily switch to using ConcurrentPriorityBlockingQueue
+    public static final boolean useBoundedBuffer = Boolean.valueOf(System.getProperty("io.openliberty.threading.useBoundedBuffer", "true"));
+
     /**
      * Create a thread pool executor with the configured attributes from this
      * component config.
@@ -262,14 +265,14 @@ public final class ExecutorServiceImpl implements WSExecutorService, ThreadQuies
         // ... and then make sure maxThreads is not smaller than coreThreads ...
         maxThreads = Math.max(coreThreads, maxThreads);
 
-        BlockingQueue<Runnable> workQueue = new ConcurrentPriorityBlockingQueue<Runnable>();
+        BlockingQueue<Runnable> workQueue = useBoundedBuffer ? new BoundedBuffer<Runnable>(Runnable.class, 1000, 1000) : new ConcurrentPriorityBlockingQueue<Runnable>();
 
         RejectedExecutionHandler rejectedExecutionHandler = new ExpandPolicy(workQueue, this);
 
         if (threadPool != null) {
             BlockingQueue<Runnable> queue = threadPool.getQueue();
-            if (queue instanceof BoundedBuffer) {
-                ((BoundedBuffer<Runnable>) queue).removeFromAvailableProcessors();
+            if (queue instanceof ProcessorAwareQueue) {
+                ((ProcessorAwareQueue) queue).removeFromAvailableProcessors();
             }
         }
         threadPool = new ThreadPoolExecutor(coreThreads, maxThreads, 0, TimeUnit.MILLISECONDS, workQueue, threadFactory != null ? threadFactory : new ThreadFactoryImpl(poolName, threadGroupName), rejectedExecutionHandler);

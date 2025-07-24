@@ -25,22 +25,14 @@ import java.util.HashSet;
 import java.util.stream.Stream;
 
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import com.ibm.websphere.simplicity.log.Log;
 
-import componenttest.containers.ImageBuilder;
 import componenttest.containers.TestContainerSuite;
 import componenttest.topology.database.container.DatabaseContainerFactory;
 import componenttest.topology.database.container.DatabaseContainerType;
 
 public class TxTestContainerSuite extends TestContainerSuite {
-
-    public static final String POSTGRES_DB = "testdb";
-    public static final String POSTGRES_USER = "postgresUser";
-    public static final String POSTGRES_PASS = "superSecret";
-    
-    public static final DockerImageName POSTGRES_SSL = ImageBuilder.build("postgres-ssl:17.0.0.1").getDockerImageName();
 
     private static DatabaseContainerType databaseContainerType;
     public static JdbcDatabaseContainer<?> testContainer;

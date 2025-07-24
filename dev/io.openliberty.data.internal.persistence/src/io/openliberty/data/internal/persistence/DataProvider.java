@@ -402,44 +402,61 @@ public class DataProvider implements //
         }
     }
 
+    /**
+     * This method is notified when component metadata is created.
+     * Eagerly requests processing of repositories from modules that have EJBs
+     * instead of waiting for the application to start.
+     */
     @Override
     @Trivial
     public void componentMetaDataCreated(MetaDataEvent<ComponentMetaData> event) {
         ComponentMetaData metadata = event.getMetaData();
         J2EEName jeeName = metadata.getJ2EEName();
-
-        boolean isEJBmetadata = metadata instanceof IdentifiableComponentMetaData i &&
-                                i.getPersistentIdentifier().startsWith("EJB");
-
-        // Jakarta Data repositories can be in modules, applications, or libraries,
-        // but never in components.
-        if (metadata.getJ2EEName().getComponent() == null)
-            componentMetadatasForModules.put(jeeName, metadata);
+        String appName = jeeName.getApplication();
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
             Tr.debug(this, tc, "componentMetaDataCreated " + jeeName, metadata);
 
-        String appName = jeeName.getApplication();
-
-        Set<FutureEMBuilder> processed = futureEMBuildersInEJB.get(appName);
+        // Jakarta Data repositories can be in modules, applications, or libraries,
+        // but never in components.
+        if (jeeName.getComponent() == null)
+            componentMetadatasForModules.put(jeeName, metadata);
 
         // TODO it would be more direct to map from appName+moduleName -> FutureEMBuilder,
         // but we would need to take into account the difference in module names
         // including or not including .jar at the end.
         Set<FutureEMBuilder> futures = futureEMBuilders.get(appName);
 
-        if (futures != null && isEJBmetadata)
+        if (futures != null && // repositories are defined somewhere in the app
+            metadata instanceof IdentifiableComponentMetaData i &&
+            i.getPersistentIdentifier().startsWith("EJB")) {
+
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
+                Tr.debug(tc, i.getPersistentIdentifier() + " is an EJB");
+
+            Set<FutureEMBuilder> processed = futureEMBuildersInEJB.get(appName);
+
             for (FutureEMBuilder futureEMBuilder : futures) {
-                // only complete the future here if the module matches, since an EJB may be in a separate module
-                if (futureEMBuilder.jeeName.getModule() != null && futureEMBuilder.jeeName.getModule().equals(jeeName.getModule())) {
-                    // This delays createEMBuilder until restore.
-                    // While this works by avoiding all connections to the data source, it does make restore much slower.
-                    // TODO figure out how to do more work on restore without having to make a connection to the data source
+                // only request completion of processing here if the module matches
+                // and if we haven't already requested completion
+                String m = futureEMBuilder.jeeName.getModule();
+                if (m != null && m.equals(jeeName.getModule()) &&
+                    (processed == null || !processed.contains(futureEMBuilder))) {
 
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
-                        Tr.debug(this, tc, "completing futureEMBuilder " + futureEMBuilder, futureEMBuilder.jeeName, metadata);
+                        Tr.debug(this, tc,
+                                 "request completion of " + futureEMBuilder,
+                                 futureEMBuilder.jeeName,
+                                 metadata);
 
-                    CheckpointPhase.onRestore(() -> futureEMBuilder.completeAsync(futureEMBuilder::createEMBuilder, executor));
+                    // Allow CheckpointPhase to override the eager processing and
+                    // defer it to restore (in order to avoid DataSource access
+                    // prior to application start).
+                    // TODO This is undesirable because it slows down restore and
+                    // makes checkpoint/restore less useful.
+                    CheckpointPhase.onRestore(() -> futureEMBuilder //
+                                    .completeAsync(futureEMBuilder::createEMBuilder,
+                                                   executor));
 
                     if (processed == null) {
                         processed = new ConcurrentSkipListSet<>();
@@ -451,9 +468,8 @@ public class DataProvider implements //
 
                     processed.add(futureEMBuilder);
                 }
-
             }
-
+        }
     }
 
     @Override

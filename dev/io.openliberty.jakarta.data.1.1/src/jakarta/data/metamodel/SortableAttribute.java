@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023,2024 IBM Corporation and others.
+ * Copyright (c) 2023,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -19,7 +19,22 @@ import jakarta.data.Sort;
  */
 public interface SortableAttribute<T> extends Attribute<T> {
 
-    Sort<T> asc();
+    default Sort<T> asc() {
+        return Sort.asc(name());
+    }
 
-    Sort<T> desc();
+    default Sort<T> desc() {
+        return Sort.desc(name());
+    }
+
+    static <T, V> SortableAttribute<T> of(Class<T> entityClass,
+                                          String name,
+                                          Class<V> attributeType) {
+        if (entityClass == null ||
+            name == null ||
+            attributeType == null)
+            throw new NullPointerException();
+
+        return new SortableAttributeRecord<>(entityClass, name, attributeType);
+    }
 }
