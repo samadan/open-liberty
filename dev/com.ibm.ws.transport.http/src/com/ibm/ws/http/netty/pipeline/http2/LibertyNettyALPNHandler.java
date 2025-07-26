@@ -12,6 +12,7 @@ package com.ibm.ws.http.netty.pipeline.http2;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.http.netty.NettyHttpChannelConfig;
+import com.ibm.ws.http.netty.NettyHttpConstants.ProtocolName;
 import com.ibm.ws.http.netty.pipeline.CRLFValidationHandler;
 import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer;
 import com.ibm.ws.http.netty.pipeline.inbound.LibertyHttpObjectAggregator;
@@ -24,6 +25,7 @@ import io.netty.handler.codec.http.HttpServerKeepAliveHandler;
 import io.netty.handler.codec.http2.HttpToHttp2ConnectionHandler;
 import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler;
+import io.netty.util.Timeout;
 import io.openliberty.http.netty.quiesce.QuiesceStrategy;
 import io.openliberty.http.netty.timeout.TimeoutHandler;
 import io.openliberty.netty.internal.impl.QuiesceHandler;
@@ -56,6 +58,14 @@ public class LibertyNettyALPNHandler extends ApplicationProtocolNegotiationHandl
             // HTTP2 to HTTP 1.1 and back pipeline
             ctx.pipeline().addAfter(HttpPipelineInitializer.HTTP_ALPN_HANDLER_NAME, null, handler);
 
+            if (ctx.pipeline().get(TimeoutHandler.class) == null) {
+                TimeoutHandler h = new TimeoutHandler(httpConfig);
+
+                ctx.pipeline().addAfter(HttpPipelineInitializer.NETTY_HTTP_SERVER_CODEC, TimeoutHandler.NAME, h);
+                h.markProtocol(ctx.pipeline(), ProtocolName.HTTP2);
+
+            }
+
             QuiesceHandler quiesceHandler = ctx.pipeline().get(QuiesceHandler.class);
             if (quiesceHandler != null) {
                 quiesceHandler.setQuiesceTask(QuiesceStrategy.HTTP2_GOAWAY.getTask());
@@ -72,7 +82,14 @@ public class LibertyNettyALPNHandler extends ApplicationProtocolNegotiationHandl
             }
             ctx.pipeline().addAfter(HttpPipelineInitializer.HTTP_ALPN_HANDLER_NAME, HttpPipelineInitializer.NETTY_HTTP_SERVER_CODEC,
                                     new HttpServerCodec(8192, Integer.MAX_VALUE, httpConfig.getIncomingBodyBufferSize()));
-            ctx.pipeline().addAfter(HttpPipelineInitializer.HTTP_ALPN_HANDLER_NAME, "timeoutHandler", new TimeoutHandler(httpConfig));
+
+            if(ctx.pipeline().get(TimeoutHandler.class)==null){
+                TimeoutHandler h = new TimeoutHandler(httpConfig);
+
+                ctx.pipeline().addAfter(HttpPipelineInitializer.NETTY_HTTP_SERVER_CODEC, TimeoutHandler.NAME, h);
+                h.markProtocol(ctx.pipeline(), ProtocolName.HTTP1);
+
+            }   
             ctx.pipeline().addBefore(HttpPipelineInitializer.NETTY_HTTP_SERVER_CODEC, HttpPipelineInitializer.CRLF_VALIDATION_HANDLER, CRLFValidationHandler.INSTANCE);
             ctx.pipeline().addAfter(HttpPipelineInitializer.NETTY_HTTP_SERVER_CODEC, HttpPipelineInitializer.HTTP_KEEP_ALIVE_HANDLER_NAME, new HttpServerKeepAliveHandler());
             //TODO: this is a very large number, check best practice

@@ -38,6 +38,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.TooLongHttpHeaderException;
 import io.netty.handler.codec.http2.Http2Connection;
 import io.netty.handler.codec.http2.Http2Exception.StreamException;
+import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.handler.codec.http2.Http2Error;
 import io.netty.handler.codec.http2.Http2Stream;
 import io.netty.handler.codec.http2.HttpConversionUtil;
@@ -171,7 +172,10 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(tc, "The connection closed due to idle timeout");
             }
-            sendErrorMessage(cause); 
+            if(cause instanceof ReadTimeoutException){
+                sendErrorMessage(cause);
+            }
+             
         }
         context.close();
     }
