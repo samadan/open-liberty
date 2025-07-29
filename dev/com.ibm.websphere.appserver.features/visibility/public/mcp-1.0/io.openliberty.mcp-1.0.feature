@@ -1,0 +1,18 @@
+-include= ~${workspace}/cnf/resources/bnd/feature.props
+symbolicName=io.openliberty.mcp-1.0
+visibility=public
+IBM-App-ForceRestart: install, \
+ uninstall
+IBM-API-Package: \
+ io.openliberty.mcp, \
+ io.openliberty.mcp.annotations
+IBM-ShortName: mcp-1.0
+Subsystem-Name: Model Context Protocol 1.0
+-features=com.ibm.websphere.appserver.servlet-6.0;ibm.tolerates:=6.1,\
+ io.openliberty.cdi-4.0;ibm.tolerates:=4.1
+-bundles=io.openliberty.mcp, \
+ io.openliberty.mcp.internal
+kind=noship
+edition=full
+WLP-Activation-Type: parallel
+WLP-InstantOn-Enabled: true
