@@ -6,9 +6,6 @@
  * http://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package com.ibm.ws.http.channel.internal.outbound;
 
@@ -168,13 +165,9 @@ public class HttpOutputStreamImpl extends HttpOutputStreamConnectWeb {
      */
     @Override
     public void clear() {
-        // CLear the output buffers if Netty is not in use. Netty will clear when buffer conversion is used
-//        if (null != this.output && !((HttpInboundServiceContextImpl) isc).getHttpConfig().useNetty()) {
         if (null != this.output) {
             for (int i = 0; i < this.output.length; i++) {
                 if (null != this.output[i]) {
-                    // Will only release the buffers if Netty is not in use
-//                    if (!((HttpInboundServiceContextImpl) isc).getHttpConfig().useNetty())
                     this.output[i].release();
                     this.output[i] = null;
                 }
@@ -513,7 +506,6 @@ public class HttpOutputStreamImpl extends HttpOutputStreamConnectWeb {
         }
 
         if ((isc != null) && (isc instanceof HttpInboundServiceContextImpl)) {
-            // if (!((HttpInboundServiceContextImpl) isc).getHttpConfig().useNetty()) {
             if (this.isc.getResponse() == null) {
                 IOException x = new IOException("response Object(s) (e.g. getObjectFactory()) are null");
                 throw x;
@@ -585,7 +577,6 @@ public class HttpOutputStreamImpl extends HttpOutputStreamConnectWeb {
             this.bufferedCount = 0;
             this.outputIndex = 0;
             // Note: this logic only works for sync writes
-//            if (writingBody && !((HttpInboundServiceContextImpl) isc).getHttpConfig().useNetty()) {
             if (writingBody) {
                 this.output[0].clear();
                 for (int i = 1; i < this.output.length; i++) {

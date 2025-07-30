@@ -672,68 +672,6 @@ public class AsyncWriteListenerHttpUnit {
         return total;
 
     }
-//    private int connectSendExpectDataSizeInResponse(int expectedResponseSize, String testToCall) throws Exception {
-//        String urlString;
-//        if (testToCall.equals("TestWriteFromFilter_AftersetWL")) {
-//            urlString = "http://" + server.getHostname() + ":" + server.getHttpDefaultPort() + WRITE_LISTENER__FILTER_SERVLET_URL;
-//        } else {
-//            urlString = "http://" + server.getHostname() + ":" + server.getHttpDefaultPort() + WRITE_LISTENER_SERVLET_URL;
-//        }
-//
-//        URL url = new URL(urlString);
-//        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-//        con.setRequestMethod("POST");
-//        con.setRequestProperty("TestToCall", testToCall);
-//        con.setRequestProperty("ContentSizeSent", Integer.toString(expectedResponseSize));
-//        con.setDoOutput(true);
-//        con.setDoInput(true);
-//
-//        LOG.info("\nRequest URL: " + urlString);
-//
-//        try {
-//            LOG.info("Start reading the response. Expected response size: " + expectedResponseSize);
-//
-//            int responseCode = con.getResponseCode();
-//            LOG.info("HTTP Response Code: " + responseCode);
-//            if (responseCode != HttpURLConnection.HTTP_OK) {
-//                LOG.info("HTTP Response Code: " + responseCode);
-//                return 0; // Handle the error as needed
-//            }
-//
-//            int total = 0;
-//            StringBuilder sb = new StringBuilder();
-//            byte[] dataBytes = new byte[8192];
-//            int readLen;
-//
-//            try (InputStream data = con.getInputStream()) {
-//                while ((readLen = data.read(dataBytes)) != -1) {
-//                    total += readLen;
-//                    sb.append(new String(dataBytes, 0, readLen));
-//                }
-//            }
-//
-//            LOG.info(total + " bytes read for the response.");
-//            if (total != expectedResponseSize) {
-//                LOG.info("Response data: " + sb.toString());
-//            }
-//
-//            LOG.info("Actual response size: " + sb.length());
-//
-//            return total;
-//        } catch (IOException e) {
-//            LOG.info("Error reading response: " + e.getMessage());
-//
-//            StringWriter sw = new StringWriter();
-//            PrintWriter pw = new PrintWriter(sw);
-//            e.printStackTrace(pw);
-//            LOG.info("Stack:\n" + sw.toString());
-//
-//            e.printStackTrace();
-//            return 0; // Handle the error as needed
-//        } finally {
-//            con.disconnect();
-//        }
-//    }
 
     /**
      * @param ExpectdResponseSize
@@ -800,26 +738,6 @@ public class AsyncWriteListenerHttpUnit {
     private int checkDataSizeinResponse(HttpURLConnection con, int ExpectdResponseSize) throws Exception {
 
         LOG.info("Start reading the response.  Expected response size : " + ExpectdResponseSize);
-//        String line = "";
-//        java.io.InputStream data = con.getInputStream();
-//
-//        BufferedReader rd = new BufferedReader(new InputStreamReader(data));
-//        StringBuilder sb = new StringBuilder();
-//        while ((line = rd.readLine()) != null) {
-//            sb.append(line);
-//        }
-//        int total = sb.toString().length();
-//
-//        LOG.info(total + " bytes read for the resposne.");
-//        if (total != ExpectdResponseSize) {
-//            LOG.info("Response data : " + sb.toString());
-//        }
-//        con.disconnect();
-//
-//        //assertEquals(ExpectdResponseSize, total);
-//
-//        LOG.info("End reading the response.  Expected response size : " + ExpectdResponseSize);
-//        return total;
 
         Objects.requireNonNull(con, "HttpURLConnection cannot be null");
         boolean testPassed = Boolean.FALSE;

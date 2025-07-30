@@ -6,9 +6,6 @@
  * http://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package com.ibm.ws.http.channel.internal;
 
@@ -3008,7 +3005,6 @@ public abstract class HttpServiceContextImpl implements HttpServiceContext, FFDC
             boolean complete = false;
             HttpResponseMessage msg = getResponse();
             if (!isPartialBody() && !getRequest().getMethod().equals(MethodValues.HEAD.getName())) {
-//                complete = true;
                 msg.setContentLength(GenericUtils.sizeOf(buffers));
             } else if (addedCompressionContentLength || (!msg.isChunkedEncodingSet() && msg.getContentLength() == HttpGenerics.NOT_SET)) {
                 HttpUtil.setTransferEncodingChunked(nettyResponse, true);
