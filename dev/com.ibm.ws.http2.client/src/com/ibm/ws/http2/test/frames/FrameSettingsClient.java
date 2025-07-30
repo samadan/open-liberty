@@ -6,9 +6,6 @@
  * http://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package com.ibm.ws.http2.test.frames;
 
@@ -49,7 +46,6 @@ public class FrameSettingsClient extends com.ibm.ws.http.channel.h2internal.fram
         urlEncoder = Base64.getUrlEncoder();
 
         // Get the local settings for the handler.
-//        Http2Settings settings = Http2Settings.defaultSettings();
         Http2Settings settings = new Http2Settings();
 
         // Serialize the payload of the SETTINGS frame
@@ -65,9 +61,6 @@ public class FrameSettingsClient extends com.ibm.ws.http.channel.h2internal.fram
 
     public String getBase64UrlPayload() {
         return io.netty.handler.codec.base64.Base64.encode(frame, io.netty.handler.codec.base64.Base64Dialect.URL_SAFE).toString(io.netty.util.CharsetUtil.UTF_8);
-//        urlEncoder = Base64.getUrlEncoder();
-//        System.out.println(urlEncoder.encodeToString(payload()));
-//        return urlEncoder.encodeToString(payload());
     }
 
     private byte[] payload() {
