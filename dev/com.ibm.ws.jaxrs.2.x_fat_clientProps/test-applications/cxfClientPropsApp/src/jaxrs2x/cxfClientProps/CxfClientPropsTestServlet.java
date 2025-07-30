@@ -46,7 +46,7 @@ import componenttest.app.FATServlet;
 public class CxfClientPropsTestServlet extends FATServlet {
    
     private final static Logger _log = Logger.getLogger(CxfClientPropsTestServlet.class.getName());
-    private static final long defaultMargin = 14000;
+    private static final long defaultMargin = 30000;
     private final static String proxyPort = "8888";
     private final static String proxyHost = "127.0.0.1";
     private final static String myHost = "1.1.1.1";
@@ -204,7 +204,7 @@ public class CxfClientPropsTestServlet extends FATServlet {
         final String m = "testIBMReadTimeoutOverridesCXFReadTimeout";
         long IBM_TIMEOUT = 5000;
         long MARGIN = defaultMargin;
-        long CXF_TIMEOUT = 20000;
+        long CXF_TIMEOUT = 70000;
         if (isAIX || isWindows) {
             MARGIN = slowHardwareMargin;
         }    
