@@ -27,7 +27,6 @@ import componenttest.rules.repeater.RepeatTests;
 public class FATSuite {
     @ClassRule
     public static RepeatTests r = RepeatTests.withoutModification()
-                    .andWith(FeatureReplacementAction.BETA_OPTION())
                     .andWith(FeatureReplacementAction.EE8_FEATURES());
 
     /**

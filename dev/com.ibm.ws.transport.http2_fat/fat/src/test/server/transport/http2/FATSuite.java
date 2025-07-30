@@ -10,7 +10,6 @@
 package test.server.transport.http2;
 
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -18,8 +17,6 @@ import org.junit.runners.Suite.SuiteClasses;
 import com.ibm.ws.fat.util.FatLogHandler;
 
 import componenttest.custom.junit.runner.AlwaysPassesTest;
-import componenttest.rules.repeater.FeatureReplacementAction;
-import componenttest.rules.repeater.RepeatTests;
 
 /**
  * HTTP/2 Tests
@@ -62,9 +59,5 @@ public class FATSuite {
     public static void generateHelpFile() {
         FatLogHandler.generateHelpFile();
     }
-
-    // Run with no modifications to the server besides enabling Beta and running netty
-    @ClassRule
-    public static RepeatTests r = RepeatTests.withoutModification().andWith(FeatureReplacementAction.BETA_OPTION());
 
 }
