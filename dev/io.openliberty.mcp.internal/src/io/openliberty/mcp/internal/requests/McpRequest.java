@@ -11,6 +11,8 @@ package io.openliberty.mcp.internal.requests;
 
 import io.openliberty.mcp.internal.RequestMethod;
 import jakarta.json.JsonObject;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 
 public record McpRequest(String jsonrpc,
                          String id,
@@ -31,5 +33,11 @@ public record McpRequest(String jsonrpc,
 //    Returns the enum value of the supported tool methods
     public RequestMethod getRequestMethod() {
         return RequestMethod.getForMethodName(method);
+    }
+
+    public <T> T getParams(Class<T> type) {
+        Jsonb jsonb = JsonbBuilder.create();
+        String json = jsonb.toJson(params);
+        return jsonb.fromJson(json, type);
     }
 }

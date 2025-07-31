@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 import io.openliberty.mcp.internal.requests.McpRequest;
-import io.openliberty.mcp.internal.requests.McpToolCallRequest;
+import io.openliberty.mcp.internal.requests.McpToolCallParams;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
@@ -54,7 +54,7 @@ public class McpServlet extends HttpServlet {
         // TODO: validate headers/contentType etc.
         McpRequest request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
         switch (request.getRequestMethod()) {
-            case TOOLS_CALL -> callTool((McpToolCallRequest) request, resp.getWriter());
+            case TOOLS_CALL -> callTool(request, resp.getWriter());
             default -> throw new IllegalArgumentException("Unexpected value: " + request.getRequestMethod());
         }
     }
@@ -63,13 +63,14 @@ public class McpServlet extends HttpServlet {
      * @param request
      * @return
      */
-    private void callTool(McpToolCallRequest request, Writer writer) {
+    private void callTool(McpRequest request, Writer writer) {
+        McpToolCallParams params = request.getParams(McpToolCallParams.class);
         CreationalContext<Void> cc = bm.createCreationalContext(null);
-        Object bean = bm.getReference(request.getBean(), request.getBean().getBeanClass(), cc);
+        Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         ToolResponse response;
         try {
-            Object result = request.getMethod().invoke(bean, request.getArguments());
-            response = ToolResponse.createFor(request.getId(), result);
+            Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
+            response = ToolResponse.createFor(request.id(), result);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
