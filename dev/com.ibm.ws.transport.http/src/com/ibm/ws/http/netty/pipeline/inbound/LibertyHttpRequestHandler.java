@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import com.ibm.ws.http.netty.NettyHttpConstants;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.ChannelInputShutdownEvent;
+import io.netty.channel.socket.ChannelInputShutdownReadComplete;
 import io.netty.handler.codec.http.FullHttpRequest;
 
 /**
@@ -73,7 +74,7 @@ public class LibertyHttpRequestHandler extends SimpleChannelInboundHandler<FullH
 
     @Override
     public void userEventTriggered(ChannelHandlerContext context, Object evt) throws Exception {
-        if (evt instanceof ChannelInputShutdownEvent) {
+        if (!peerClosedConnection && (evt instanceof ChannelInputShutdownEvent || evt instanceof ChannelInputShutdownReadComplete)) {
             synchronized (context.channel().attr(NettyHttpConstants.HANDLING_REQUEST)) {
                 // If handling request we just need to wait until processing finishes to handle the closing
                 // else we should close the channel up now
@@ -81,7 +82,6 @@ public class LibertyHttpRequestHandler extends SimpleChannelInboundHandler<FullH
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                         Tr.debug(this, tc, "Peer closed the connection while we were handling a request, ending the connection after finishing processing");
                     }
-                    peerClosedConnection = true;
                 } else {
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                         Tr.debug(this, tc, "Peer closed the connection and there was no request being handled, closing the channel");
@@ -89,6 +89,7 @@ public class LibertyHttpRequestHandler extends SimpleChannelInboundHandler<FullH
                     context.close();
                     return;
                 }
+                peerClosedConnection = true;
             }
         }
         super.userEventTriggered(context, evt);
