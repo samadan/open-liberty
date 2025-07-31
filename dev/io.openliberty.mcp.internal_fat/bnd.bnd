@@ -16,11 +16,14 @@ javac.target: 17
 src: \
     fat/src
 
-fat.project: true
+fat.project: true 
+
 
 tested.features: \
     jsonb-3.0
 
 -buildpath: \
 	io.openliberty.jakarta.cdi.4.0;version=latest,\
-	io.openliberty.mcp;version=latest
+	io.openliberty.mcp;version=latest,\
+	org.json:json;version=20080701,\
+	org.skyscreamer:jsonassert
