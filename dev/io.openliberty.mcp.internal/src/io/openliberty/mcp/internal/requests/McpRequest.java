@@ -10,31 +10,26 @@
 package io.openliberty.mcp.internal.requests;
 
 import io.openliberty.mcp.internal.RequestMethod;
-import io.openliberty.mcp.internal.requests.parsers.McpRequestParser;
-import jakarta.json.bind.annotation.JsonbTypeDeserializer;
+import jakarta.json.JsonObject;
 
-@JsonbTypeDeserializer(McpRequestParser.class)
-public class McpRequest {
+public record McpRequest(String jsonrpc,
+                         String id,
+                         String method,
+                         JsonObject params) {
+    public McpRequest {
+        if (jsonrpc == null || !jsonrpc.equals("2.0"))
+            throw new IllegalArgumentException("jsonrpc field must be present. Only JSONRPC 2.0 is currently supported");
+        if (id == null || id.isBlank())
+            throw new IllegalArgumentException("id field must be present and not empty");
+        if (method == null || method.isBlank())
+            throw new IllegalArgumentException("method must be present and not empty");
+        if (params == null)
+            throw new IllegalArgumentException("Params field must be present");
 
-    private String id;
-    private RequestMethod requestMethod;
-
-    /**
-     * @param id
-     * @param requestMethod
-     */
-    public McpRequest(String id, RequestMethod requestMethod) {
-        super();
-        this.id = id;
-        this.requestMethod = requestMethod;
     }
 
-    public String getId() {
-        return id;
-    }
-
+//    Returns the enum value of the supported tool methods
     public RequestMethod getRequestMethod() {
-        return requestMethod;
+        return RequestMethod.getForMethodName(method);
     }
-
 }
