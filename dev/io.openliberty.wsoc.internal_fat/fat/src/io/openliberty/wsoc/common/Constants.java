@@ -47,8 +47,8 @@ public class Constants {
     static int[] directTimeouts = {
                                     15000, //SHORT
                                     15000, //CONNECT
-                                    60000, //DEFAULT
-                                    80000, //LONG
+                                    25000, //DEFAULT
+                                    45000, //LONG
                                     120000 //EXTRUN_SHORT
     };
 
