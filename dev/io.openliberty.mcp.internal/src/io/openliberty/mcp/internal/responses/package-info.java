@@ -7,23 +7,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat;
-
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-
-import io.openliberty.mcp.internal.fat.lifecycle.LifecycleTest;
-import io.openliberty.mcp.internal.fat.tool.ToolTest;
-
 /**
  *
  */
-@RunWith(Suite.class)
-@SuiteClasses({
-                LifecycleTest.class,
-                ToolTest.class
-})
-public class FATSuite {
-
-}
+@com.ibm.websphere.ras.annotation.TraceOptions(traceGroup = "MCP")
+package io.openliberty.mcp.internal.responses;

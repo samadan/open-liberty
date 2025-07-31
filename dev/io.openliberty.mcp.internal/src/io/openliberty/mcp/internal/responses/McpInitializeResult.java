@@ -7,8 +7,17 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
+package io.openliberty.mcp.internal.responses;
+
+import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
+
 /**
- *
+ * The result of an initialization request
  */
-@com.ibm.websphere.ras.annotation.TraceOptions(traceGroup = "MCP")
-package io.openliberty.mcp.internal.requests.parsers;
+public record McpInitializeResult(String protocolVersion,
+                                  ServerCapabilities capabilities,
+                                  ServerInfo serverInfo,
+                                  String instructions) {
+
+    public record ServerInfo(String name, String title, String version) {}
+}

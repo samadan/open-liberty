@@ -19,7 +19,8 @@ import java.util.NoSuchElementException;
 public enum RequestMethod {
 
     TOOLS_CALL("tools/call"),
-    TOOLS_LIST("tools/list");
+    TOOLS_LIST("tools/list"),
+    INITIALIZE("initialize");
 
     private static final Map<String, RequestMethod> METHODS_BY_NAME;
     private final String methodName;
