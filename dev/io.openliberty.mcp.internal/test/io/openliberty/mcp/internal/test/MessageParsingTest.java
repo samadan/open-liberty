@@ -63,7 +63,7 @@ public class MessageParsingTest {
         McpRequest request = jsonb.fromJson(reader, McpRequest.class);
         assertThat(request.id(), equalTo("2"));
         assertThat(request.getRequestMethod(), equalTo(RequestMethod.TOOLS_CALL));
-        McpToolCallParams toolCallRequest = request.getParams(McpToolCallParams.class);
+        McpToolCallParams toolCallRequest = request.getParams(McpToolCallParams.class, jsonb);
         assertThat(toolCallRequest.getArguments(jsonb), arrayContaining("Hello"));
     }
 }

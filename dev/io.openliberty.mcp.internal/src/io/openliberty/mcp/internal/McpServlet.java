@@ -64,7 +64,7 @@ public class McpServlet extends HttpServlet {
      * @return
      */
     private void callTool(McpRequest request, Writer writer) {
-        McpToolCallParams params = request.getParams(McpToolCallParams.class);
+        McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
         CreationalContext<Void> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         ToolResponse response;
