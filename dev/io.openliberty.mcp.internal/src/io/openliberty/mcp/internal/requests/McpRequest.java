@@ -10,31 +10,45 @@
 package io.openliberty.mcp.internal.requests;
 
 import io.openliberty.mcp.internal.RequestMethod;
-import io.openliberty.mcp.internal.requests.parsers.McpRequestParser;
-import jakarta.json.bind.annotation.JsonbTypeDeserializer;
+import jakarta.json.JsonObject;
+import jakarta.json.bind.Jsonb;
 
-@JsonbTypeDeserializer(McpRequestParser.class)
-public class McpRequest {
+public record McpRequest(String jsonrpc,
+                         String id,
+                         String method,
+                         JsonObject params) {
+    public McpRequest {
+        if (jsonrpc == null || !jsonrpc.equals("2.0"))
+            throw new IllegalArgumentException("jsonrpc field must be present. Only JSONRPC 2.0 is currently supported");
+        if (id == null || id.isBlank())
+            throw new IllegalArgumentException("id field must be present and not empty");
+        if (method == null || method.isBlank())
+            throw new IllegalArgumentException("method must be present and not empty");
+        if (params == null)
+            throw new IllegalArgumentException("Params field must be present");
 
-    private String id;
-    private RequestMethod requestMethod;
+    }
+
+//    Returns the enum value of the supported tool methods
+    /**
+     * Converts the string value of the method from an MCP request into a matching enum value
+     *
+     * @return the matching {@link RequestMethod} enum value
+     */
+    public RequestMethod getRequestMethod() {
+        return RequestMethod.getForMethodName(method);
+    }
 
     /**
-     * @param id
-     * @param requestMethod
+     * Deserialises the MCP request params value from JSON into an object of the specified type
+     *
+     * @param <T> the target type to map the JSON into
+     * @param type the class we want to deserialise the JSON into
+     * @param jsonb the jsonb deserialiser to convert the JSON string into an object
+     * @return
      */
-    public McpRequest(String id, RequestMethod requestMethod) {
-        super();
-        this.id = id;
-        this.requestMethod = requestMethod;
+    public <T> T getParams(Class<T> type, Jsonb jsonb) {
+        String json = jsonb.toJson(params);
+        return jsonb.fromJson(json, type);
     }
-
-    public String getId() {
-        return id;
-    }
-
-    public RequestMethod getRequestMethod() {
-        return requestMethod;
-    }
-
 }
