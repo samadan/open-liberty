@@ -444,12 +444,28 @@ public class ConcurrentPriorityBlockingQueue<T> extends AbstractQueue<T> impleme
         return getFirstWithAction(head, null, GET_FIRST_ITEM);
     }
 
+    private int getAndDecrementIfNotEmpty() {
+        while (true) {
+            int currentSize = size.get();
+            if (currentSize <= 0 || size.compareAndSet(currentSize, currentSize - 1)) {
+                return currentSize;
+            }
+        }
+    }
+
     @Override
     public T poll() {
-        Head<T> head = currentHead.get();
-        T first = getFirstWithAction(head, null, REMOVE_FIRST_ITEM);
-        if (first != null) {
-            size.getAndDecrement();
+        T first = null;
+
+        // Gets and decrement if size is not <= 0
+        if (getAndDecrementIfNotEmpty() > 0) {
+            Head<T> head = currentHead.get();
+            first = getFirstWithAction(head, null, REMOVE_FIRST_ITEM);
+            // Since we decrement size before removing the first item, if one isn't found due to
+            // a concurrent remove happening, we need to increment the size again
+            if (first == null) {
+                size.getAndIncrement();
+            }
         }
         return first;
     }
