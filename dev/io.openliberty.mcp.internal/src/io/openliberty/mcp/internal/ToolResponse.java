@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class ToolResponse {
 
-    private final String jsonrcp = "2.0";
+    private final String jsonrpc = "2.0";
     private final String id;
     private final Result result;
 
@@ -36,8 +36,8 @@ public class ToolResponse {
         result = new Result();
     }
 
-    public String getJsonrcp() {
-        return jsonrcp;
+    public String getJsonrpc() {
+        return jsonrpc;
     }
 
     public String getId() {
