@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2021 IBM Corporation and others.
+ * Copyright (c) 2017, 2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -52,6 +52,8 @@ public class ReadListenerGetTrailers implements ReadListener {
 
         pw.println("ReadListenerGetTrailers onDataAvailable method called");
 
+        // This should have the same functionality as Legacy once we implement
+        // https://github.com/OpenLiberty/open-liberty/issues/30702
         if(!usingNetty){
             if (request.isTrailerFieldsReady()) {
                 pw.println("FAIL : isTrailerFieldsReady() returned true before data was read.");
