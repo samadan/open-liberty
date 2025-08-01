@@ -54,11 +54,41 @@ public class ToolTest extends FATServletClient {
     }
 
     @Test
-    public void testEcho() throws Exception {
+    public void testEchoWithNumberIdType() throws Exception {
         String request = """
                           {
                           "jsonrpc": "2.0",
                           "id": 2,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST").run(String.class);
+        JSONObject jsonResponse = new JSONObject(response);
+
+        // Lenient mode tests
+        JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 2}", response, false);
+        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
+
+        // Strict Mode tests
+        String expectedResponseString = """
+                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testEchoWithStringIdType() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
                           "method": "tools/call",
                           "params": {
                             "name": "echo",
@@ -78,7 +108,7 @@ public class ToolTest extends FATServletClient {
 
         // Strict Mode tests
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
