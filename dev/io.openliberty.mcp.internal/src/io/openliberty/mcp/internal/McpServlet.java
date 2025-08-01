@@ -64,31 +64,44 @@ public class McpServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, JSONRPCException {
         McpRequest request = null;
         try {
-            // TODO: validate headers/contentType etc.
-            try {
-                String accept = req.getHeader("Accept");
-                if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
-                    || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
-                    resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
-                    resp.setContentType("application/json");
-                    return;
-                } ;
-                request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
-            } catch (JsonbException e) {
-                throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR);
-            }
-
-            switch (request.getRequestMethod()) {
-                case TOOLS_CALL -> callTool(request, resp.getWriter());
-                case TOOLS_LIST -> listTools(request, resp.getWriter());
-                case INITIALIZE -> initialize(request, resp.getWriter());
-                default -> throw new JSONRPCException(JSONRPCErrorCode.INVALID_REQUEST);
-            }
+            String accept = req.getHeader("Accept");
+            if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
+                || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
+                resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+                resp.setContentType("application/json");
+                throw new RuntimeException("Misisng accept header");
+            } ;
+            request = toRequest(req);
+            callRequest(request, resp);
         } catch (JSONRPCException e) {
             ToolResponse response = ToolResponse.createFor(request == null ? "" : request.id(), e.getErrorCode());
             jsonb.toJson(response, resp.getWriter());
         } catch (Exception e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+    }
+
+    public McpRequest toRequest(HttpServletRequest req) throws IOException, JSONRPCException {
+        McpRequest request = null;
+        // TODO: validate headers/contentType etc.
+        try {
+            request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
+        } catch (JsonbException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR);
+        } catch (IllegalArgumentException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_REQUEST);
+        }
+        return request;
+    }
+
+    protected void callRequest(McpRequest request, HttpServletResponse resp)
+                    throws JSONRPCException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
+        switch (request.getRequestMethod()) {
+            case TOOLS_CALL -> callTool(request, resp.getWriter());
+            case TOOLS_LIST -> listTools(request, resp.getWriter());
+            case INITIALIZE -> initialize(request, resp.getWriter());
+            default -> throw new JSONRPCException(JSONRPCErrorCode.INVALID_REQUEST);
         }
 
     }
@@ -101,9 +114,8 @@ public class McpServlet extends HttpServlet {
      * @throws IllegalArgumentException
      * @throws IllegalAccessException
      */
-    private void callTool(McpRequest request, HttpServletResponse resp)
+    private void callTool(McpRequest request, Writer writer)
                     throws JSONRPCException, IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        Writer writer = resp.getWriter();
         McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
         CreationalContext<Void> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
