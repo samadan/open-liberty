@@ -11,10 +11,13 @@ package io.openliberty.mcp.internal;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
@@ -26,6 +29,7 @@ import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
+import jakarta.json.bind.JsonbException;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -57,40 +61,56 @@ public class McpServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String accept = req.getHeader("Accept");
-        if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
-            || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
-            resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
-            resp.setContentType("application/json");
-            return;
-        } ;
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, JSONRPCException {
+        McpRequest request = null;
+        try {
+            // TODO: validate headers/contentType etc.
+            try {
+                String accept = req.getHeader("Accept");
+                if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
+                    || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+                    resp.setContentType("application/json");
+                    return;
+                } ;
+                request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
+            } catch (JsonbException e) {
+                throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR);
+            }
 
-        McpRequest request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
-        switch (request.getRequestMethod()) {
-            case TOOLS_CALL -> callTool(request, resp.getWriter());
-            case TOOLS_LIST -> listTools(request, resp.getWriter());
-            case INITIALIZE -> initialize(request, resp.getWriter());
-            default -> throw new IllegalArgumentException("Unexpected value: " + request.getRequestMethod());
+            switch (request.getRequestMethod()) {
+                case TOOLS_CALL -> callTool(request, resp.getWriter());
+                case TOOLS_LIST -> listTools(request, resp.getWriter());
+                case INITIALIZE -> initialize(request, resp.getWriter());
+                default -> throw new JSONRPCException(JSONRPCErrorCode.INVALID_REQUEST);
+            }
+        } catch (JSONRPCException e) {
+            ToolResponse response = ToolResponse.createFor(request == null ? "" : request.id(), e.getErrorCode());
+            jsonb.toJson(response, resp.getWriter());
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
+
     }
 
     /**
      * @param request
      * @return
+     * @throws IOException
+     * @throws InvocationTargetException
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
      */
-    private void callTool(McpRequest request, Writer writer) {
+    private void callTool(McpRequest request, HttpServletResponse resp)
+                    throws JSONRPCException, IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Writer writer = resp.getWriter();
         McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
         CreationalContext<Void> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
-        ToolResponse response;
-        try {
-            Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
-            response = ToolResponse.createFor(request.id(), result);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
+        ToolResponse response = ToolResponse.createFor(request.id(), result);
         jsonb.toJson(response, writer);
+
     }
 
     /**

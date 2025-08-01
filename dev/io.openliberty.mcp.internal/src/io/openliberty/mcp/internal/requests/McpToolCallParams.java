@@ -14,6 +14,8 @@ import java.lang.reflect.Method;
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
@@ -71,7 +73,7 @@ public class McpToolCallParams {
         }
 
         if (argsProcessed != metadata.arguments().size()) {
-            throw new IllegalArgumentException("Wrong args passed");
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_REQUEST);
         }
 
         return results;

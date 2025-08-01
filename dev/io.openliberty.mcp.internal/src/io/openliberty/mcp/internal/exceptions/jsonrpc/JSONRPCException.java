@@ -13,7 +13,18 @@ package io.openliberty.mcp.internal.exceptions.jsonrpc;
  *
  */
 public class JSONRPCException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+    private JSONRPCErrorCode errorCode;
+
     public JSONRPCException(JSONRPCErrorCode errorCode) {
         super(errorCode.getMessage());
     }
+
+    /**
+     * @return the errorCode
+     */
+    public JSONRPCErrorCode getErrorCode() {
+        return errorCode;
+    }
+
 }
