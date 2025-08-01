@@ -504,8 +504,6 @@ public class Http2Client {
                     }
                 }
                 isTestDone.set(true);
-//                h2Connection.close();
-//                blockUntilConnectionIsDone.countDown();
             }
         }
 
@@ -524,8 +522,6 @@ public class Http2Client {
             // if we've received a GOAWAY from the server, we shouldn't care about incomplete streams
             receivedExpectedGoAway = true;
             isTestDone.set(true);
-//            h2Connection.close();
-//            blockUntilConnectionIsDone.countDown();
 
         }
 
