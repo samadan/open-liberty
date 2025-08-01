@@ -54,6 +54,29 @@ public class ToolTest extends FATServletClient {
         server.stopServer();
     }
 
+    //Utility test method
+
+//    private String postJsonRpc(String jsonBody) throws Exception {
+//        return new HttpRequest(server, "/toolTest/mcp")
+//                                                       .jsonBody(jsonBody)
+//                                                       .method("POST")
+//                                                       .run(String.class);
+//    }
+
+    // with headers
+    private String postJsonRpc(String jsonBody) throws Exception {
+        HttpRequest request = new HttpRequest(server, "/toolTest/mcp")
+                                                                      .requestProp("Accept", "application/json, text/event-stream")
+                                                                      .jsonBody(jsonBody)
+                                                                      .method("POST");
+
+        String response = request.run(String.class);
+
+        System.out.println("Content-Type Header: " + request.getResponseHeaders().get("Content-Type"));
+
+        return response;
+    }
+
     @Test
     public void postJsonRpc() throws Exception {
         String jsonBody = "{ \"jsonrpc\": \"2.0\", \"method\": \"tools.call\", \"id\": 1 }";
