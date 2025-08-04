@@ -11,6 +11,8 @@ package io.openliberty.mcp.internal;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.LinkedList;
+import java.util.List;
 
 import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
@@ -55,6 +57,7 @@ public class McpServlet extends HttpServlet {
         McpRequest request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
         switch (request.getRequestMethod()) {
             case TOOLS_CALL -> callTool(request, resp.getWriter());
+            case TOOLS_LIST -> listTools(request, resp.getWriter());
             default -> throw new IllegalArgumentException("Unexpected value: " + request.getRequestMethod());
         }
     }
@@ -77,4 +80,25 @@ public class McpServlet extends HttpServlet {
         jsonb.toJson(response, writer);
     }
 
+    /**
+     * @param request
+     * @return
+     */
+    private void listTools(McpRequest request, Writer writer) {
+        CreationalContext<Void> cc = bm.createCreationalContext(null);
+        ToolRegistry toolRegistry = ToolRegistry.get();
+
+        List<ToolDescription> response = new LinkedList();
+
+        if (toolRegistry.hasTools()) {
+            for (ToolMetadata tmd : toolRegistry.getAllTools()) {
+                response.add(new ToolDescription(tmd));
+            }
+            jsonb.toJson(response, writer);
+        } else {
+            // give back an empty response
+        }
+        // Debug only
+        System.out.println(jsonb.toJson(response));
+    }
 }
