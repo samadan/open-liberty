@@ -25,9 +25,6 @@
     		<compression/>
     </httpEndpoint>
 
-<logging traceSpecification="HTTPChannel=all:HTTPDispatcher=all:Netty=all" traceFileName="trace.log" maxFileSize="100" maxFiles="10" traceFormat="BASIC" />
-
-   
     <application location="EndpointInformation.war" />
 
 </server>

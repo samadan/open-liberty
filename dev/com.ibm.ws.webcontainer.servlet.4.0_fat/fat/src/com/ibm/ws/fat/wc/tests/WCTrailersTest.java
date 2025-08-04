@@ -1,14 +1,11 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2021 IBM Corporation and others.
+ * Copyright (c) 2017, 2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
  * 
  * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package com.ibm.ws.fat.wc.tests;
 
@@ -72,6 +69,7 @@ public class WCTrailersTest {
         server.startServer(WCTrailersTest.class.getSimpleName() + ".log");
         // Go through Logs and check if Netty is being used
         // Wait for endpoints to finish loading and get the endpoint started messages
+        // This shouldn't be necessary after we implement https://github.com/OpenLiberty/open-liberty/issues/30702
         server.waitForStringInLog("CWWKO0219I.*");
         List<String> test = server.findStringsInLogs("CWWKO0219I.*");
         LOG.info("Got port list...... " + Arrays.toString(test.toArray()));
