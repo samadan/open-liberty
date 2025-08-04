@@ -77,9 +77,9 @@ public class McpServlet extends HttpServlet {
         if (accept == null || !acceptContains(accept, "applicationjson") || !acceptContains(accept, "text/event-stream")) {
             resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
             resp.setContentType("application/json");
+            return;
         } ;
 
-        // early return
         McpRequest request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
         switch (request.getRequestMethod()) {
             case TOOLS_CALL -> callTool(request, resp.getWriter());
