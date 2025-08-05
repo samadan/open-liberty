@@ -99,6 +99,6 @@ public class McpServlet extends HttpServlet {
             // give back an empty response
         }
         // Debug only
-        System.out.println(jsonb.toJson(response));
+        //System.out.println(jsonb.toJson(response));
     }
 }
