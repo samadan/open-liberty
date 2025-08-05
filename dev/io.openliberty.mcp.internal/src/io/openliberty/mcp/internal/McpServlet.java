@@ -59,11 +59,13 @@ public class McpServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String accept = req.getHeader("Accept");
-        if (accept == null || !HeaderValidation.acceptContains(accept, "application/json") || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
+        if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
+                || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
             resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
             resp.setContentType("application/json");
             return;
-        } ;
+        }
+        ;
 
         McpRequest request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
         switch (request.getRequestMethod()) {
