@@ -7,16 +7,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat.tool;
+package io.openliberty.mcp.internal.test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-/**
- *
- */
+import io.openliberty.mcp.internal.HeaderValidation;
+
 public class AcceptHeader {
     @Test
     public void testAcceptHeaderExactlyRequired() {

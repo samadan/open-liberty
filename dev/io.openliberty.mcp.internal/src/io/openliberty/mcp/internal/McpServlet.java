@@ -56,25 +56,10 @@ public class McpServlet extends HttpServlet {
         super.doGet(req, resp);
     }
 
-    // Helper method
-    private boolean acceptContains(String acceptHeader, String mime) {
-        if (acceptHeader == null)
-            return false;
-        String target = mime.toLowerCase(java.util.Locale.ROOT);
-        for (String part : acceptHeader.split(",")) {
-            String value = part.trim().toLowerCase(java.util.Locale.ROOT);
-            if (value.startsWith(target))
-                return true;
-        }
-        return false;
-    }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // TODO: validate headers/contentType etc.
-
         String accept = req.getHeader("Accept");
-        if (accept == null || !acceptContains(accept, "applicationjson") || !acceptContains(accept, "text/event-stream")) {
+        if (accept == null || !HeaderValidation.acceptContains(accept, "application/json") || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
             resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
             resp.setContentType("application/json");
             return;
