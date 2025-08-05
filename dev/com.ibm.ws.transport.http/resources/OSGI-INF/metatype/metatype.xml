@@ -79,7 +79,6 @@
         <AD name="%endpoint.protocolVersion" description="%endpoint.protocolVersion.desc"
             id="protocolVersion" required="false" type="String"/> 
             
-        <!-- NO DEFAULT NETTY ENABLEMENT VALUE: SPECIFICATION IS OPTIONAL -->
         <AD name="internal" description="internal use only"
         	id="useNettyTransport" required="false" type="Boolean" default="true"/>
 
