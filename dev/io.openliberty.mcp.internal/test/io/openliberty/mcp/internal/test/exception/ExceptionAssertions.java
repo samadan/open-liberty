@@ -19,6 +19,9 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
+
 public class ExceptionAssertions {
 
     public static void assertThrows(ThrowingRunnable code, Matcher<? super Throwable> matcher) {
@@ -51,8 +54,8 @@ public class ExceptionAssertions {
      */
     public static class ExceptionMatcher extends TypeSafeDiagnosingMatcher<Throwable> {
 
-        private Class<? extends Throwable> type;
-        private final List<String> messageIncludes = new ArrayList<>();
+        protected Class<? extends Throwable> type;
+        protected final List<String> messageIncludes = new ArrayList<>();
 
         private ExceptionMatcher() {
             super(Throwable.class);
@@ -106,11 +109,55 @@ public class ExceptionAssertions {
             for (String messagePart : messageIncludes) {
                 if (!t.getMessage().contains(messagePart)) {
                     result = false;
-                    desc.appendText("message was ").appendValue(t.getMessage()).appendText("\n");
+                    desc.appendText("message was").appendValue(t.getMessage()).appendText("\n");
                     break;
                 }
             }
             return result;
         }
+    }
+
+    public static class JSONRPCExceptionMatcher extends ExceptionMatcher {
+        private JSONRPCErrorCode errorCode;
+
+        public JSONRPCExceptionMatcher(JSONRPCErrorCode errorCode) {
+            super();
+            this.errorCode = errorCode;
+        }
+
+        @Override
+        public ExceptionMatcher ofType(Class<? extends Throwable> type) {
+            super.type = type;
+            return this;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        protected boolean matchesSafely(Throwable t, Description desc) {
+            boolean result = true;
+            if (type != null) {
+                if (!type.isInstance(t)) {
+                    result = false;
+                    desc.appendText("type was ").appendValue(t.getClass()).appendText("\n");
+                }
+            }
+
+            for (String messagePart : messageIncludes) {
+                if (!t.getMessage().contains(messagePart)) {
+                    result = false;
+                    desc.appendText("message was").appendValue(t.getMessage()).appendText("\n");
+                    break;
+                }
+            }
+
+            JSONRPCException jsonRpcException = (JSONRPCException) t;
+            if (jsonRpcException.getErrorCode() != errorCode) {
+                result = false;
+                desc.appendText("eeror code was").appendValue(jsonRpcException.getErrorCode().getCode()).appendText("\n");
+
+            }
+            return result;
+        }
+
     }
 }
