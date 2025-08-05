@@ -20,11 +20,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.openliberty.mcp.annotations.Tool;
+import io.openliberty.mcp.internal.Capabilities.ClientCapabilities;
+import io.openliberty.mcp.internal.Capabilities.Elicitation;
+import io.openliberty.mcp.internal.Capabilities.Roots;
+import io.openliberty.mcp.internal.Capabilities.Sampling;
 import io.openliberty.mcp.internal.Literals;
 import io.openliberty.mcp.internal.RequestMethod;
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
+import io.openliberty.mcp.internal.requests.McpInitializeParams;
+import io.openliberty.mcp.internal.requests.McpInitializeParams.ClientInfo;
 import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
 import jakarta.json.bind.Jsonb;
@@ -107,4 +113,44 @@ public class MessageParsingTest {
         jsonb.fromJson(reader, McpRequest.class);
     }
 
+    @Test
+    public void parseInitilizationMessage() {
+        Jsonb jsonb = JsonbBuilder.create();
+        var reader = new StringReader("""
+                        {
+                          "jsonrpc": "2.0",
+                          "id": "1",
+                          "method": "initialize",
+                          "params": {
+                            "protocolVersion": "2024-11-05",
+                            "capabilities": {
+                              "roots": {
+                                "listChanged": true
+                              },
+                              "sampling": {},
+                              "elicitation": {}
+                            },
+                            "clientInfo": {
+                              "name": "ExampleClient",
+                              "title": "Example Client Display Name",
+                              "version": "1.0.0"
+                            }
+                          }
+                        }
+                        """);
+
+        McpRequest request = jsonb.fromJson(reader, McpRequest.class);
+        assertThat(request.id(), equalTo("1"));
+        assertThat(request.getRequestMethod(), equalTo(RequestMethod.INITIALIZE));
+        McpInitializeParams params = request.getParams(McpInitializeParams.class, jsonb);
+        assertThat(params.getProtocolVersion(), equalTo("2024-11-05"));
+        assertThat(params.getCapabilities(),
+                   equalTo(ClientCapabilities.of(new Roots(true),
+                                                 new Sampling(),
+                                                 new Elicitation())));
+        assertThat(params.getClientInfo(),
+                   equalTo(new ClientInfo("ExampleClient",
+                                          "Example Client Display Name",
+                                          "1.0.0")));
+    }
 }

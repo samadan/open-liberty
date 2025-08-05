@@ -14,8 +14,13 @@ import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
+import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
+import io.openliberty.mcp.internal.responses.McpInitializeResult;
+import io.openliberty.mcp.internal.responses.McpInitializeResult.ServerInfo;
+import io.openliberty.mcp.internal.responses.McpResponse;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
@@ -58,6 +63,7 @@ public class McpServlet extends HttpServlet {
         switch (request.getRequestMethod()) {
             case TOOLS_CALL -> callTool(request, resp.getWriter());
             case TOOLS_LIST -> listTools(request, resp.getWriter());
+            case INITIALIZE -> initialize(request, resp.getWriter());
             default -> throw new IllegalArgumentException("Unexpected value: " + request.getRequestMethod());
         }
     }
@@ -101,4 +107,25 @@ public class McpServlet extends HttpServlet {
         // Debug only
         //System.out.println(jsonb.toJson(response));
     }
+
+    /**
+     * @param request
+     * @param writer
+     * @return
+     */
+    private void initialize(McpRequest request, Writer writer) {
+        McpInitializeParams params = request.getParams(McpInitializeParams.class, jsonb);
+        // TODO validate protocol
+        // TODO store client capabilities
+        // TODO store client info
+
+        ServerCapabilities caps = ServerCapabilities.of(new Capabilities.Tools(false));
+
+        // TODO: provide a way for the user to set server info
+        ServerInfo info = new ServerInfo("test-server", "Test Server", "0.1");
+        McpInitializeResult result = new McpInitializeResult("2025-06-18", caps, info, null);
+        McpResponse response = new McpResponse(request.id(), result);
+        jsonb.toJson(response, writer);
+    }
+
 }
