@@ -24,10 +24,26 @@ import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 
 public class ToolDescription {
 
-    public String name;
-    public String title;
-    public String description;
-    public InputSchemaObject inputSchema;
+    private final String name;
+    private final String title;
+    private final String description;
+    private final InputSchemaObject inputSchema;
+
+    public String getName() {
+        return name;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public InputSchemaObject getInputSchema() {
+        return inputSchema;
+    }
 
     public ToolDescription(ToolMetadata toolMetadata) {
 
@@ -59,8 +75,6 @@ public class ToolDescription {
 
             tempProperties.put(key, tempSchemaPrimitive);
             tempRequired.add(key);
-
-            System.out.println("key: " + key + ", Type: " + type.getTypeName());
         }
 
         inputSchema = new InputSchemaObject("object", tempProperties, tempRequired);
