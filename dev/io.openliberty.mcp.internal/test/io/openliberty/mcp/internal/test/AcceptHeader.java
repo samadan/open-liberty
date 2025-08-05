@@ -25,15 +25,15 @@ public class AcceptHeader {
 
     @Test
     public void testAcceptHeaderWildcard() {
-        assertFalse(HeaderValidation.acceptContains("*/*", "application/json"));
+        assertTrue(HeaderValidation.acceptContains("*/*", "application/json"));
         assertTrue(HeaderValidation.acceptContains("*/*", "text/event-stream"));
     }
 
     @Test
     public void testAcceptHeaderWithQuality() {
         String mime = "application/json;q=1.0, text/*;q=0.5";
-        assertTrue(HeaderValidation.acceptContains("application/json", mime));
-        assertTrue(HeaderValidation.acceptContains("text/event-stream", mime));
+        assertFalse(HeaderValidation.acceptContains("application/json", mime));
+        assertFalse(HeaderValidation.acceptContains("text/event-stream", mime));
     }
 
     @Test

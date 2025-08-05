@@ -10,7 +10,6 @@
 package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
-import static org.junit.Assert.assertEquals;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -67,23 +66,13 @@ public class ToolTest extends FATServletClient {
         HttpRequest request = new HttpRequest(server, "/toolTest/mcp")
                                                                       .requestProp("Accept", "application/json")
                                                                       .jsonBody(jsonBody)
-                                                                      .method("POST");
+                                                                      .method("POST")
+                                                                      .expectCode(406);
 
-        int statusCode = -1;
-        String contentType = null;
-        String response = null;
-        try {
-            response = request.run(String.class);
-        } catch (Exception e) {
-            statusCode = request.getResponseCode();
-            contentType = request.getResponseHeaders().get("Content-Type");
-
-            System.out.println("Expected failure due to incorrect Accept header.");
-            System.out.println("Status Code: " + statusCode);
-            System.out.println("Content-Type Header: " + contentType);
-            System.out.println("Raw Response: " + response);
-        }
-        assertEquals(406, statusCode);
+        String response = request.run(String.class);
+        System.out.println("Expected failure due to incorrect Accept header.");
+        System.out.println("Content-Type Header: " + request.getResponseHeaders().get("Content-Type"));
+        System.out.println("Raw Response: " + response);
     }
 
     @Test
