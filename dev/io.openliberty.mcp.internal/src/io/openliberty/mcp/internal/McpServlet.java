@@ -56,19 +56,6 @@ public class McpServlet extends HttpServlet {
         super.doGet(req, resp);
     }
 
-    // Helper method
-    private boolean acceptContains(String acceptHeader, String mime) {
-        if (acceptHeader == null)
-            return false;
-        String target = mime.toLowerCase(java.util.Locale.ROOT);
-        for (String part : acceptHeader.split(",")) {
-            String value = part.trim().toLowerCase(java.util.Locale.ROOT);
-            if (value.startsWith(target))
-                return true;
-        }
-        return false;
-    }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String accept = req.getHeader("Accept");
