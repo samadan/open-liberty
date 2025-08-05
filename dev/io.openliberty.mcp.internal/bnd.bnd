@@ -44,5 +44,5 @@ WS-TraceGroup: MCP
     io.openliberty.org.eclipse.yasson.3.0;version=latest,\
     io.openliberty.org.eclipse.parsson.1.1;version=latest,\
     io.openliberty.mcp;version=latest,\
-	org.json:json;version=20080701,\
-	org.skyscreamer:jsonassert
+    org.json:json;version=20080701,\
+    org.skyscreamer:jsonassert

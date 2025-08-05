@@ -85,7 +85,6 @@ public class McpServlet extends HttpServlet {
      * @return
      */
     private void listTools(McpRequest request, Writer writer) {
-        CreationalContext<Void> cc = bm.createCreationalContext(null);
         ToolRegistry toolRegistry = ToolRegistry.get();
 
         List<ToolDescription> response = new LinkedList();
@@ -98,7 +97,5 @@ public class McpServlet extends HttpServlet {
         } else {
             // give back an empty response
         }
-        // Debug only
-        //System.out.println(jsonb.toJson(response));
     }
 }
