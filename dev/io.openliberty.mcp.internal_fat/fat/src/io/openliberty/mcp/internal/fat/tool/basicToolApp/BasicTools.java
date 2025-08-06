@@ -41,4 +41,11 @@ public class BasicTools {
     public boolean toggle(@ToolArg(name = "value", description = "boolean value") boolean value) {
         return !value;
     }
+
+    /*
+     * @Tool(name = "subtract", title = "Subtraction calculator", description = "Minus number 2 from number 1")
+     * public int subtract(@ToolArg(name = "num1", description = "") int number1, @ToolArg(name = "num2", description = "") int number2) {
+     * return number1 - number2;
+     * }
+     */
 }

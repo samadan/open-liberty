@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 
 // TODO "cursor": "optional-cursor-value" (pagination after Tech Exchange)
@@ -23,8 +24,8 @@ import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 
 public class ToolDescription {
 
-    private final String name;
-    private final String title;
+    private String name;
+    private String title;
     private final String description;
     private final InputSchemaObject inputSchema;
 
@@ -50,39 +51,50 @@ public class ToolDescription {
         this.title = toolMetadata.annotation().title();
         this.description = toolMetadata.annotation().description();
 
-        Map<String, ArgumentMetadata> argumentMap = toolMetadata.arguments();
-
-        InputSchemaPrimitive tempSchemaPrimitive;
-        LinkedList<String> tempRequired = new LinkedList<>();
-        Map<String, InputSchemaPrimitive> tempProperties = new HashMap<>();
-
-        for (String key : argumentMap.keySet()) {
-            Type type = argumentMap.get(key).type();
-
-            if (type.equals(String.class))
-                tempSchemaPrimitive = new InputSchemaPrimitive("string", "temp desc");
-            else if (type.equals(float.class) || type.equals(double.class))
-                tempSchemaPrimitive = new InputSchemaPrimitive("number", "temp desc");
-            else if (type.equals(int.class))
-                tempSchemaPrimitive = new InputSchemaPrimitive("integer", "temp desc");
-            else if (type.equals(boolean.class))
-                tempSchemaPrimitive = new InputSchemaPrimitive("boolean", "temp desc");
-            else
-                tempSchemaPrimitive = new InputSchemaPrimitive(type.getTypeName(), "type conversion for this type is currently not supported");
-            //else if (type.equals(Object.class)) {
-            // TODO
-            //}
-
-            tempProperties.put(key, tempSchemaPrimitive);
-            tempRequired.add(key);
+        if (title.equals(Tool.BLANK_TITLE)) {
+            title = null;
         }
 
-        inputSchema = new InputSchemaObject("object", tempProperties, tempRequired);
+        Map<String, ArgumentMetadata> argumentMap = toolMetadata.arguments();
+        Map<String, InputSchemaPrimitives> primitiveInputSchemaMap = new HashMap<>();
+        LinkedList<String> requiredParameterList = new LinkedList<>();
+
+        for (String argumentName : argumentMap.keySet()) {
+            primitiveInputSchemaMap.put(argumentName, buildPrimitiveInputSchema(argumentMap.get(argumentName)));
+            requiredParameterList.add(argumentName);
+        }
+
+        inputSchema = new InputSchemaObject("object", primitiveInputSchemaMap, requiredParameterList);
     }
 
-    public record InputSchema(List<InputSchemaObject> objs, List<InputSchemaPrimitive> primitives) {}
+    private InputSchemaPrimitives buildPrimitiveInputSchema(ArgumentMetadata argumentMetadata) {
 
-    public record InputSchemaObject(String type, Map<String, InputSchemaPrimitive> properties, List<String> required) {}
+        Type type = argumentMetadata.type();
+        String argumentDescription = argumentMetadata.description();
+        if (argumentDescription.equals("")) {
+            argumentDescription = null;
+        }
 
-    public record InputSchemaPrimitive(String type, String description) {}
+        InputSchemaPrimitives tempSchemaPrimitive;
+        if (type.equals(String.class)) {
+            tempSchemaPrimitive = new InputSchemaPrimitives("string", argumentDescription);
+        } else if (type.equals(float.class) || type.equals(double.class))
+            tempSchemaPrimitive = new InputSchemaPrimitives("number", argumentDescription);
+        else if (type.equals(int.class))
+            tempSchemaPrimitive = new InputSchemaPrimitives("integer", argumentDescription);
+        else if (type.equals(boolean.class))
+            tempSchemaPrimitive = new InputSchemaPrimitives("boolean", argumentDescription);
+        else
+            tempSchemaPrimitive = new InputSchemaPrimitives(type.getTypeName(), argumentDescription);
+        //else if (type.equals(Object.class)) {
+        // TODO Implement this using the InputSchema record
+        //}
+        return tempSchemaPrimitive;
+    }
+
+    public record InputSchema(List<InputSchemaObject> objs, List<InputSchemaPrimitives> primitives) {}
+
+    public record InputSchemaObject(String type, Map<String, InputSchemaPrimitives> properties, List<String> required) {}
+
+    public record InputSchemaPrimitives(String type, String description) {}
 }

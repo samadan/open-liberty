@@ -457,11 +457,11 @@ public class ToolTest extends FATServletClient {
                                                     "type": "object",
                                                     "properties": {
                                                         "num1": {
-                                                            "description": "temp desc",
+                                                            "description": "first number",
                                                             "type": "integer"
                                                         },
                                                         "num2": {
-                                                            "description": "temp desc",
+                                                            "description": "second number",
                                                             "type": "integer"
                                                         }
                                                     },
@@ -479,7 +479,7 @@ public class ToolTest extends FATServletClient {
                                                     "type": "object",
                                                     "properties": {
                                                         "input": {
-                                                            "description": "temp desc",
+                                                            "description": "input to echo",
                                                             "type": "string"
                                                         }
                                                     },

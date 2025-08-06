@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import io.openliberty.mcp.annotations.Tool;
 import jakarta.enterprise.inject.spi.CDI;
 
 public class ToolRegistry {
@@ -50,9 +49,6 @@ public class ToolRegistry {
 
     public void addTool(ToolMetadata tool) {
         String name = tool.annotation().name();
-        if (name.equals(Tool.ELEMENT_NAME)) {
-            name = tool.method().getJavaMember().getName();
-        }
         tools.put(name, tool);
     }
 
