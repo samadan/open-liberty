@@ -69,7 +69,6 @@ public final class TransportHandler extends ChannelDuplexHandler{
                 ChannelPipeline pipeline = context.pipeline();
                 pipeline.remove(TransportHandler.this);
                 removeIfPresent(pipeline, HttpServerCodec.class);
-                removeIfPresent(pipeline, MaxOpenConnectionsHandler.class);
                 removeIfPresent(pipeline, TimeoutHandler.class);
 
                 if(pipeline.get(NettyServletUpgradeHandler.class) == null){
