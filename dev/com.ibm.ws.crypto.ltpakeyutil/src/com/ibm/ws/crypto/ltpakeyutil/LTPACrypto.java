@@ -1106,7 +1106,8 @@ final class LTPACrypto {
             for (p = null;;) {
                 for (q = null;;) {
                     if (q == null) {
-                        random(b, 1, len);
+                        byte[] seed = CryptoUtils.generateRandomBytes(len);
+                        System.arraycopy(seed, 0, b, 1, len);
                         b[1] |= 0xC0;
                         b[len] |= 1;
                         q = new BigInteger(b);
