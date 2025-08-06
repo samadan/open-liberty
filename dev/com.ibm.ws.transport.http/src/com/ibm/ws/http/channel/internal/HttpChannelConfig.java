@@ -1797,7 +1797,9 @@ public class HttpChannelConfig {
                         int hashcode = headerName.trim().toLowerCase().hashCode();
                         if (!this.configuredHeadersToRemove.containsKey(hashcode)) {
                             this.configuredHeadersToRemove.put(hashcode, headerName);
-                            Tr.event(tc, "Headers remove configuration: parsed name [" + headerName + "]");
+                            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                                Tr.event(tc, "Headers remove configuration: parsed name [" + headerName + "]");
+                            }
 
                         }
                     }
@@ -2496,12 +2498,15 @@ public class HttpChannelConfig {
      */
     private int rangeLimit(int size, int min, int max) {
         if (size < min) {
-            Tr.debug(tc, "Config: " + size + " too small");
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Config: " + size + " too small");
+            }
 
             return min;
         } else if (size > max) {
-            Tr.debug(tc, "Config: " + size + " too large");
-
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Config: " + size + " too large");
+            }
             return max;
         }
         return size;
