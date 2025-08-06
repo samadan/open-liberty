@@ -521,7 +521,6 @@ public class HttpOutputStreamImpl extends HttpOutputStreamConnectWeb {
 
                 this.isc.getResponse().setCommitted();
             }
-            // }
         }
 
         if (this.ignoreFlush) {

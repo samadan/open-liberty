@@ -569,7 +569,6 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
         }
 
         // Make sure to initialize the response in case of an early-return-error message
-        //((NettyHttpRequestImpl) this.request).init(this.nettyRequest, this.nettyContext.channel(), this.isc);
         this.request.init(nettyRequest, isc);
         this.response.init(isc);
         linkIsReady = true;
