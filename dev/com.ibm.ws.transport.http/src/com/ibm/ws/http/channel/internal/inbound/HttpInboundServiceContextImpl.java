@@ -6,9 +6,6 @@
  * http://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package com.ibm.ws.http.channel.internal.inbound;
 
@@ -980,11 +977,6 @@ public class HttpInboundServiceContextImpl extends HttpServiceContextImpl implem
             Tr.debug(tc, "logFinalResponse", c, c.getAccessLog(), c.getAccessLog().isStarted(), numBytesWritten);
         }
 
-//        if (this.getHttpConfig().useNetty()) {
-//            this.bytesWritten = numBytesWritten;
-//            this.nettyContext.write(this);
-//        } else {
-
         // exit if access logging is disabled
         if (!getHttpConfig().getAccessLog().isStarted()) {
             return;
@@ -1002,8 +994,6 @@ public class HttpInboundServiceContextImpl extends HttpServiceContextImpl implem
             return;
         }
         getHttpConfig().getAccessLog().log(getRequest(), getResponse(), getRequestVersion().getName(), null, getRemoteAddr().getHostAddress(), numBytesWritten);
-
-//        }
     }
 
     /**

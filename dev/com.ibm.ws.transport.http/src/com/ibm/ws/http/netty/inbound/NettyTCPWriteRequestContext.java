@@ -46,7 +46,6 @@ import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.StreamSpecificHttpContent;
 import io.netty.handler.stream.ChunkedInput;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import io.openliberty.http.netty.stream.WsByteBufferChunkedInput;
 
 /**
  *

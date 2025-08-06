@@ -29,8 +29,6 @@ import com.ibm.wsspi.http.channel.compression.GzipInputHandler;
 import com.ibm.wsspi.http.channel.compression.IdentityInputHandler;
 import com.ibm.wsspi.http.channel.values.ContentEncodingValues;
 
-import io.openliberty.http.netty.stream.WsByteBufferChunkedInput;
-
 public class HttpContentDecompressor {
 
     /** RAS tracing variable */
