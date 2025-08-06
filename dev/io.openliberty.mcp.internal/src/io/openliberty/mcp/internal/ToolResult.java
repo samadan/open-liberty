@@ -7,20 +7,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat.tool.basicToolApp;
+package io.openliberty.mcp.internal;
 
-import io.openliberty.mcp.annotations.Tool;
-import io.openliberty.mcp.annotations.ToolArg;
-import jakarta.enterprise.context.ApplicationScoped;
+import java.util.List;
 
 /**
  *
  */
-@ApplicationScoped
-public class BasicTools {
-
-    @Tool(name = "echo", title = "Echoes the input", description = "Returns the input unchanged")
-    public String echo(@ToolArg(name = "input") String input) {
-        return input;
-    }
-}
+public record ToolResult(List<ToolDescription> tools) {}

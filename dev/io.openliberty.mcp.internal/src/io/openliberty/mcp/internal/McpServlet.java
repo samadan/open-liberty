@@ -93,15 +93,16 @@ public class McpServlet extends HttpServlet {
     private void listTools(McpRequest request, Writer writer) {
         ToolRegistry toolRegistry = ToolRegistry.get();
 
-        List<ToolDescription> response = new LinkedList();
+        List<ToolDescription> response = new LinkedList<>();
 
         if (toolRegistry.hasTools()) {
             for (ToolMetadata tmd : toolRegistry.getAllTools()) {
                 response.add(new ToolDescription(tmd));
             }
-            jsonb.toJson(response, writer);
-        } else {
-            // give back an empty response
+            ToolResult toolResult = new ToolResult(response);
+            int json_response_id = 1;
+            McpResponse mcpResponse = new McpResponse(json_response_id, toolResult);
+            jsonb.toJson(mcpResponse, writer);
         }
     }
 

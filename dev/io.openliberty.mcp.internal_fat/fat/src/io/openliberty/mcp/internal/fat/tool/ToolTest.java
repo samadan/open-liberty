@@ -28,8 +28,6 @@ import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
-import jakarta.json.bind.Jsonb;
-import jakarta.json.bind.JsonbBuilder;
 
 /**
  *
@@ -130,114 +128,39 @@ public class ToolTest extends FATServletClient {
 
         String response = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST").run(String.class);
         JSONObject jsonResponse = new JSONObject(response);
-        Jsonb jsonb = JsonbBuilder.create();
-        String responseString = jsonb.toJson(jsonResponse);
 
         // Lenient mode tests
         //JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 1}", response, false);
         //JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
 
-        // Strict Mode tests
         String expectedString = """
-                        [
-                            {
-                                "description": "Get current weather information for a location",
-                                "inputSchema": {
-                                    "properties": {
-                                        "temperature": {
-                                            "description": "temp desc",
-                                            "type": "number"
-                                        },
-                                        "humidity": {
-                                            "description": "temp desc",
-                                            "type": "integer"
-                                        },
-                                        "location": {
-                                            "description": "temp desc",
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "temperature",
-                                        "humidity",
-                                        "location"
-                                    ],
-                                    "type": "object"
-                                },
-                                "name": "get_weather",
-                                "title": "Weather Information Provider"
-                            },
-                            {
-                                "description": "Does a Boolean And Operation on two boolean variables",
-                                "inputSchema": {
-                                    "properties": {
-                                        "var2": {
-                                            "description": "temp desc",
-                                            "type": "boolean"
-                                        },
-                                        "var1": {
-                                            "description": "temp desc",
-                                            "type": "boolean"
-                                        }
-                                    },
-                                    "required": [
-                                        "var2",
-                                        "var1"
-                                    ],
-                                    "type": "object"
-                                },
-                                "name": "Boolean And Operator",
-                                "title": "Boolean And Operator"
-                            },
-                            {
-                                "description": "Can subtract two integers",
-                                "inputSchema": {
-                                    "properties": {
-                                        "number1": {
-                                            "description": "temp desc",
-                                            "type": "integer"
-                                        },
-                                        "number2": {
-                                            "description": "temp desc",
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "required": [
-                                        "number1",
-                                        "number2"
-                                    ],
-                                    "type": "object"
-                                },
-                                "name": "Subtraction Calculator",
-                                "title": "The Calculator Subtraction Tool"
-                            },
-                            {
-                                "description": "Can add two floating point numbers",
-                                "inputSchema": {
-                                    "properties": {
-                                        "number2": {
-                                            "description": "temp desc",
-                                            "type": "number"
-                                        },
-                                        "number1": {
-                                            "description": "temp desc",
-                                            "type": "number"
-                                        }
-                                    },
-                                    "required": [
-                                        "number1",
-                                        "number2"
-                                    ],
-                                    "type": "object"
-                                },
-                                "name": "Addition Calculator",
-                                "title": "The Calculator Addition Tool"
-                            }
-                        ]
+                         {
+                             "id": 1,
+                             "jsonrpc": "2.0",
+                             "result": {
+                                 "tools": [
+                                     {
+                                         "name": "echo",
+                                         "description": "Returns the input unchanged",
+                                         "title": "Echoes the input",
+                                         "inputSchema": {
+                                             "type": "object",
+                                             "properties": {
+                                                 "input": {
+                                                     "description": "temp desc",
+                                                     "type": "string"
+                                                 }
+                                             },
+                                             "required": ["input"]
+                                         }
+                                     }
+                                 ]
+                             }
+                         }
                         """;
 
         // Lenient mode test (false boolean in 3rd parameter
-        JSONAssert.assertEquals(expectedString, response, false);
+        JSONAssert.assertEquals(expectedString, jsonResponse.toString(), false);
     }
 
 }
