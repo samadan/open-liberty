@@ -27,8 +27,8 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
-import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
+import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
 /**
  *
@@ -56,23 +56,32 @@ public class ToolTest extends FATServletClient {
 
     @Test
     public void postJsonRpc() throws Exception {
-        String jsonBody = """
-                            {
-                                "jsonrpc": "2.0",
-                                "method": "tools.call",
-                                "id": 1
+        String request = """
+                          {
+                            "jsonrpc": "2.0",
+                            "id": "2",
+                            "method": "tools/call",
+                            "params": {
+                              "name": "echo",
+                              "arguments": {
+                                "input": "Hello"
+                              }
                             }
+                          }
                         """;
-        HttpRequest request = new HttpRequest(server, "/toolTest/mcp")
-                                                                      .requestProp("Accept", "application/json")
-                                                                      .jsonBody(jsonBody)
-                                                                      .method("POST")
-                                                                      .expectCode(406);
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
-        String response = request.run(String.class);
-        System.out.println("Expected failure due to incorrect Accept header.");
-        System.out.println("Content-Type Header: " + request.getResponseHeaders().get("Content-Type"));
-        System.out.println("Raw Response: " + response);
+        JSONObject jsonResponse = new JSONObject(response);
+
+        // Lenient mode tests
+        JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": \"2\"}", response, false);
+        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
+
+        // Strict Mode tests
+        String expectedResponseString = """
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
     @Test
@@ -91,11 +100,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = new HttpRequest(server, "/toolTest/mcp")
-                                                                  .requestProp("Accept", "application/json, text/event-stream")
-                                                                  .jsonBody(request)
-                                                                  .method("POST")
-                                                                  .run(String.class);
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
         JSONObject jsonResponse = new JSONObject(response);
         // Lenient mode tests
@@ -125,11 +130,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = new HttpRequest(server, "/toolTest/mcp")
-                                                                  .requestProp("Accept", "application/json, text/event-stream")
-                                                                  .jsonBody(request)
-                                                                  .method("POST")
-                                                                  .run(String.class);
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
         JSONObject jsonResponse = new JSONObject(response);
 
