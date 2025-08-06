@@ -77,7 +77,11 @@ public class LifecycleTest {
                         }
                         """;
 
-        String response = new HttpRequest(server, "/lifecycleTest/mcp").jsonBody(request).method("POST").run(String.class);
+        String response = new HttpRequest(server, "/lifecycleTest/mcp")
+                                                                       .requestProp("Accept", "application/json, text/event-stream")
+                                                                       .jsonBody(request)
+                                                                       .method("POST")
+                                                                       .run(String.class);
         String expectedResponse = """
                         {
                           "jsonrpc": "2.0",
