@@ -19,6 +19,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import com.ibm.websphere.simplicity.ShrinkHelper;
 
@@ -180,7 +181,7 @@ public class ToolTest extends FATServletClient {
                         """;
 
         // Lenient mode test (false boolean in 3rd parameter
-        JSONAssert.assertEquals(expectedString, jsonResponse.toString(), false);
+        JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);
     }
 
 }
