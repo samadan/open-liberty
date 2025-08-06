@@ -2207,8 +2207,14 @@ public class HttpRequestMessageImpl extends HttpBaseMessageImpl implements HttpR
         return true;
     }
 
+    /**
+     * Obtains the request end time by leveraging the recorded start of the response. 
+     * The service context marks the start of the response time when it is done 
+     * processing the request, so the start of the response coincides with the end 
+     * time for the request.
+     */
     @Override
     public long getEndTime() {
-        this.getServiceContext().getResponseStartTime();
+        return this.getServiceContext().getResponseStartTime();
     }
 }
