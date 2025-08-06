@@ -129,10 +129,6 @@ public class ToolTest extends FATServletClient {
         String response = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST").run(String.class);
         JSONObject jsonResponse = new JSONObject(response);
 
-        // Lenient mode tests
-        //JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 1}", response, false);
-        //JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
-
         String expectedString = """
                                 {
                                     "id": 1,

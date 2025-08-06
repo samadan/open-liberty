@@ -100,8 +100,7 @@ public class McpServlet extends HttpServlet {
                 response.add(new ToolDescription(tmd));
             }
             ToolResult toolResult = new ToolResult(response);
-            int json_response_id = 1;
-            McpResponse mcpResponse = new McpResponse(json_response_id, toolResult);
+            McpResponse mcpResponse = new McpResponse(request.id(), toolResult);
             jsonb.toJson(mcpResponse, writer);
         }
     }
