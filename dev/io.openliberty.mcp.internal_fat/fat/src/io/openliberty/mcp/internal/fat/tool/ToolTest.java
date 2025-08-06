@@ -158,7 +158,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST").run(String.class);
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         JSONObject jsonResponse = new JSONObject(response);
 
         String expectedString = """
