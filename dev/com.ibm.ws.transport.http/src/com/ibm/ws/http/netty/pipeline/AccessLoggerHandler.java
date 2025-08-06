@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 
 /**
- *
+ * Netty pipeline handler that produces Liberty access-log entries.
+ * 
+ * This is intended to be placed directly after the HTTP codec but before the dispatcher
+ * handles the response. The start-time is captured as early as the request is begun and 
+ * the log is written once per response is final.
+ * 
  */
 public class AccessLoggerHandler extends ChannelDuplexHandler {
 
@@ -31,6 +36,10 @@ public class AccessLoggerHandler extends ChannelDuplexHandler {
         this.config = config;
     }
 
+    /**
+     * When the {@link HttpInboundServiceContextImpl} context is passed down to this handler, this will write
+     * a single access-log line, then forward the message down to the next pipeline handler.
+     */
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
 
@@ -42,6 +51,10 @@ public class AccessLoggerHandler extends ChannelDuplexHandler {
 
     }
 
+    /**
+     * Marks the request-start time on the first pass through so that elapsed time can be
+     * measured when the response is logged.
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (!ctx.channel().hasAttr(NettyHttpConstants.REQUEST_START_TIME)) {
@@ -50,11 +63,6 @@ public class AccessLoggerHandler extends ChannelDuplexHandler {
             ctx.channel().attr(NettyHttpConstants.REQUEST_START_TIME).set(startTime);
         }
         super.channelRead(ctx, msg);
-    }
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        super.channelInactive(ctx);
     }
 
 }

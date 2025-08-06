@@ -2209,6 +2209,6 @@ public class HttpRequestMessageImpl extends HttpBaseMessageImpl implements HttpR
 
     @Override
     public long getEndTime() {
-        return 0;
+        this.getServiceContext().getResponseStartTime();
     }
 }

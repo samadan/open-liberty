@@ -144,12 +144,6 @@ class TCPLoggingHandler extends LoggingHandler{
 	}
 	
 	@Override
-    public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        // Log or dump caller information before closing
-      super.close(ctx, promise);
-    }
-	
-	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
 			Tr.event(ctx.channel(), tc, "SocketChannel closed, local: " + ctx.channel().localAddress() + " remote: " + ctx.channel().remoteAddress());

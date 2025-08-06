@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,17 @@ import io.netty.channel.Channel;
 import io.netty.handler.ssl.SslHandler;
 
 /**
- *
+ * Netty specific implementation of {@link TCPConnectionContext} created by
+ * {@code HttpInboundServiceContextImpl#createConnectionContext(...)}. 
+ * 
+ * This acts an adapter to expose the read and write interfaces used by the 
+ * pipeline:
+ * -> {@link #getReadInterface()} returns a {@link NettyTCPReadRequextContext}
+ * -> {@link #getWriteInterface()} returns a {@link NettyTCPWriteRequestContext}
+ * 
+ * This also stores the connection's associated {@link VirtualConnection} so that both the
+ * read and write context can work consistently with the underlying HTTP transport and
+ * container code. 
  */
 public class NettyTCPConnectionContext implements TCPConnectionContext {
 
@@ -54,16 +64,25 @@ public class NettyTCPConnectionContext implements TCPConnectionContext {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TCPReadRequestContext getReadInterface() {
         return readContext;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TCPWriteRequestContext getWriteInterface() {
         return writeContext;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public InetAddress getRemoteAddress() {
         InetSocketAddress remoteAddress = (InetSocketAddress) nettyChannel.remoteAddress();
@@ -71,6 +90,9 @@ public class NettyTCPConnectionContext implements TCPConnectionContext {
         return remoteAddress.getAddress();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getRemotePort() {
 
@@ -78,6 +100,9 @@ public class NettyTCPConnectionContext implements TCPConnectionContext {
         return remoteAddress.getPort();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public InetAddress getLocalAddress() {
         InetSocketAddress localAddress = (InetSocketAddress) nettyChannel.localAddress();
@@ -85,12 +110,20 @@ public class NettyTCPConnectionContext implements TCPConnectionContext {
         return localAddress.getAddress();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getLocalPort() {
         InetSocketAddress localAddress = (InetSocketAddress) nettyChannel.localAddress();
         return localAddress.getPort();
     }
 
+    /**
+     * {@inheritDoc}
+     * The returned {@link SSLConnectionLink} may be {@code null} when the Netty pipeline
+     * is not operating in secure HTTP.
+     */
     @Override
     public SSLConnectionContext getSSLContext() {
         return sslContext;
