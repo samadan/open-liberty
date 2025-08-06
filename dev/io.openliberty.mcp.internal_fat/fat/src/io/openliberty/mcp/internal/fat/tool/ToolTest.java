@@ -134,29 +134,53 @@ public class ToolTest extends FATServletClient {
         //JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
 
         String expectedString = """
-                         {
-                             "id": 1,
-                             "jsonrpc": "2.0",
-                             "result": {
-                                 "tools": [
-                                     {
-                                         "name": "echo",
-                                         "description": "Returns the input unchanged",
-                                         "title": "Echoes the input",
-                                         "inputSchema": {
-                                             "type": "object",
-                                             "properties": {
-                                                 "input": {
-                                                     "description": "temp desc",
-                                                     "type": "string"
-                                                 }
-                                             },
-                                             "required": ["input"]
-                                         }
-                                     }
-                                 ]
-                             }
-                         }
+                                {
+                                    "id": 1,
+                                    "jsonrpc": "2.0",
+                                    "result": {
+                                        "tools": [
+                                            {
+                                                "name": "add",
+                                                "description": "Returns the sum of the two inputs",
+                                                "title": "Addition calculator",
+                                                "inputSchema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "num1": {
+                                                            "description": "temp desc",
+                                                            "type": "integer"
+                                                        },
+                                                        "num2": {
+                                                            "description": "temp desc",
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "num1",
+                                                        "num2"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "name": "echo",
+                                                "description": "Returns the input unchanged",
+                                                "title": "Echoes the input",
+                                                "inputSchema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "input": {
+                                                            "description": "temp desc",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "input"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
                         """;
 
         // Lenient mode test (false boolean in 3rd parameter

@@ -20,7 +20,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class BasicTools {
 
     @Tool(name = "echo", title = "Echoes the input", description = "Returns the input unchanged")
-    public String echo(@ToolArg(name = "input") String input) {
+    public String echo(@ToolArg(name = "input", description = "input to echo") String input) {
         return input;
+    }
+
+    @Tool(name = "add", title = "Addition calculator", description = "Returns the sum of the two inputs")
+    public int add(@ToolArg(name = "num1", description = "first number") int number1, @ToolArg(name = "num2", description = "second number") int number2) {
+        return number1 + number2;
     }
 }
