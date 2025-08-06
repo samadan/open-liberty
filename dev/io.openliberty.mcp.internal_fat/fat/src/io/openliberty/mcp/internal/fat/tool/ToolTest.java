@@ -19,6 +19,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import com.ibm.websphere.simplicity.ShrinkHelper;
 
@@ -111,6 +112,76 @@ public class ToolTest extends FATServletClient {
                         {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testToolList() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/list",
+                          "params": {
+                            "cursor": "optional-cursor-value"
+                          }
+                        }
+                        """;
+
+        String response = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST").run(String.class);
+        JSONObject jsonResponse = new JSONObject(response);
+
+        String expectedString = """
+                                {
+                                    "id": 1,
+                                    "jsonrpc": "2.0",
+                                    "result": {
+                                        "tools": [
+                                            {
+                                                "name": "add",
+                                                "description": "Returns the sum of the two inputs",
+                                                "title": "Addition calculator",
+                                                "inputSchema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "num1": {
+                                                            "description": "temp desc",
+                                                            "type": "integer"
+                                                        },
+                                                        "num2": {
+                                                            "description": "temp desc",
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "num1",
+                                                        "num2"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "name": "echo",
+                                                "description": "Returns the input unchanged",
+                                                "title": "Echoes the input",
+                                                "inputSchema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "input": {
+                                                            "description": "temp desc",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "input"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                        """;
+
+        // Lenient mode test (false boolean in 3rd parameter
+        JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);
     }
 
 }

@@ -17,9 +17,8 @@ import java.util.Map;
 
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 
-// TODO add all primitives
-// TODO "cursor": "optional-cursor-value"
-// TODO build object of objects
+// TODO "cursor": "optional-cursor-value" (pagination after Tech Exchange)
+// TODO build object of objects (we will probably build a schema generator for this) so we could delete the InputSchema object
 // TODO method parameter descriptions needs to be defined in the tool annotation
 
 public class ToolDescription {
@@ -59,6 +58,7 @@ public class ToolDescription {
 
         for (String key : argumentMap.keySet()) {
             Type type = argumentMap.get(key).type();
+
             if (type.equals(String.class))
                 tempSchemaPrimitive = new InputSchemaPrimitive("string", "temp desc");
             else if (type.equals(float.class) || type.equals(double.class))
