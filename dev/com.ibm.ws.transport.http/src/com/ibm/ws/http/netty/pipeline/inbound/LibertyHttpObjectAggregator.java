@@ -50,6 +50,7 @@ public class LibertyHttpObjectAggregator extends SimpleChannelInboundHandler<Htt
 
             ctx.channel().attr(COMPOSITE_CONTENT).set(null);
             ctx.channel().attr(CURRENT_REQUEST).set(null);
+            return;
         }
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
