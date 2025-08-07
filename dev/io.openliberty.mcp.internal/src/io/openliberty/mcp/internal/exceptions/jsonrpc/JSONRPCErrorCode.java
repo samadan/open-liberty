@@ -12,12 +12,13 @@ package io.openliberty.mcp.internal.exceptions.jsonrpc;
 /**
  *
  */
+//@JsonbTypeAdapter(JSONRPCErrorCode.JSONRPCErrorCodeAdapter.class)
 public enum JSONRPCErrorCode {
     PARSE_ERROR(-32700, "Parse error"),
-    INVALID_REQUEST(-32600, "Invalid Request"),
+    INVALID_REQUEST(-32600, "Invalid request"),
     METHOD_NOT_FOUND(-32601, "Method not found"),
-    INVALID_PARAMS(-32602, "Invalid Params"),
-    INTERNAL_ERROR(-32603, "Internal Error");
+    INVALID_PARAMS(-32602, "Invalid params"),
+    INTERNAL_ERROR(-32603, "Internal error");
 
     private int code;
     private String message;
@@ -40,5 +41,46 @@ public enum JSONRPCErrorCode {
     public String getMessage() {
         return message;
     }
+
+//    public class JSONRPCErrorCodeAdapter implements JsonbAdapter<JSONRPCErrorCode, JSONRPCErrorCode.JSONRPCErrorCodeBase> {
+//
+//        /** {@inheritDoc} */
+//        @Override
+//        public JSONRPCErrorCode adaptFromJson(JSONRPCErrorCodeBase arg0) throws Exception {
+//            return null;
+//        }
+//
+//        /** {@inheritDoc} */
+//        @Override
+//        public JSONRPCErrorCodeBase adaptToJson(JSONRPCErrorCode arg0) throws Exception {
+//            return new JSONRPCErrorCodeBase(arg0.getCode(), arg0.getMessage());
+//        }
+//    }
+//
+//    public class JSONRPCErrorCodeBase {
+//        private int code;
+//        private String message;
+//
+//        @JsonbCreator
+//        private JSONRPCErrorCodeBase(@JsonbProperty("code") int code, @JsonbProperty("message") String message) {
+//            this.code = code;
+//            this.message = message;
+//        }
+//
+//        /**
+//         * @return the code
+//         */
+//        public int getCode() {
+//            return code;
+//        }
+//
+//        /**
+//         * @return the message
+//         */
+//        public String getMessage() {
+//            return message;
+//        }
+
+//    }
 
 }

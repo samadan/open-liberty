@@ -12,6 +12,10 @@ package io.openliberty.mcp.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
+import jakarta.json.bind.annotation.JsonbCreator;
+import jakarta.json.bind.annotation.JsonbProperty;
+
 /**
  *
  */
@@ -19,21 +23,24 @@ public class ToolResponse {
 
     private final String jsonrpc = "2.0";
     private final Object id;
-    private final Result result;
+    private Result result;
+    private Error error;
 
-    public static ToolResponse createFor(Object id, Object result) {
-        if (result instanceof String s) {
-            ToolResponse response = new ToolResponse(id);
-            response.result.content.add(new TextContent(s));
-            return response;
-        } else {
-            throw new RuntimeException("TODO: handle non-string responses");
-        }
+    public static ToolResponse createSuccess(Object id, String output) {
+        ToolResponse response = new ToolResponse(id);
+        response.result = new Result();
+        response.result.content.add(new TextContent(output));
+        return response;
+    }
+
+    public static ToolResponse createError(Object id, JSONRPCException e) {
+        ToolResponse response = new ToolResponse(id);
+        response.error = new Error(e.getErrorCode().getCode(), e.getErrorCode().getMessage(), e.getData());
+        return response;
     }
 
     public ToolResponse(Object id) {
         this.id = id;
-        result = new Result();
     }
 
     public String getJsonrpc() {
@@ -48,12 +55,51 @@ public class ToolResponse {
         return result;
     }
 
+    public Error getError() {
+        return error;
+    }
+
     public static class Result {
         public List<Content> getContent() {
             return content;
         }
 
         private List<Content> content = new ArrayList<>();
+    }
+
+    public static class Error {
+        private int code;
+        private String message;
+        private Object data;
+
+        @JsonbCreator
+        private Error(@JsonbProperty("code") int code, @JsonbProperty("message") String message, @JsonbProperty("code") Object data) {
+            this.code = code;
+            this.message = message;
+            this.data = data;
+        }
+
+        /**
+         * @return the code
+         */
+        public int getCode() {
+            return code;
+        }
+
+        /**
+         * @return the message
+         */
+        public String getMessage() {
+            return message;
+        }
+
+        /**
+         * @return the data
+         */
+        public Object getData() {
+            return data;
+        }
+
     }
 
     public static abstract class Content {
