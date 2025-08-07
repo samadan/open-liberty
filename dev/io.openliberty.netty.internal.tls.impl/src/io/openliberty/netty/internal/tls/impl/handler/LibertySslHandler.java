@@ -126,14 +126,11 @@ public class LibertySslHandler extends SslHandler {
 
         if (!suppressLogError) {
             if (logCount <= maxLogEntries) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.error(tc, "handshake.failure", ssle, remoteAddr.getHostAddress(), remotePort, localAddr.getHostAddress(), localPort);
-                }
+                Tr.error(tc, "handshake.failure", ssle, remoteAddr.getHostAddress(), remotePort, localAddr.getHostAddress(), localPort);
             } else if (!loggingStopped.get() && (logCount > maxLogEntries)) {
                 loggingStopped.set(true);
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.info(tc, "handshake.failure.stop.logging");
-                }
+                Tr.info(tc, "handshake.failure.stop.logging");
+                
             }
         }
     }
