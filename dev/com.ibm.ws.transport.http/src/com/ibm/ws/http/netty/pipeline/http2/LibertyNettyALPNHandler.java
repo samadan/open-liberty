@@ -31,7 +31,7 @@ import io.openliberty.http.netty.timeout.TimeoutHandler;
 import io.openliberty.netty.internal.impl.QuiesceHandler;
 
 /**
- * ALPN Handler for negotiating what protocol to use
+ * ALPN Handler for negotiating what protocol to use for SSL negotiation
  */
 public class LibertyNettyALPNHandler extends ApplicationProtocolNegotiationHandler {
 
@@ -40,7 +40,7 @@ public class LibertyNettyALPNHandler extends ApplicationProtocolNegotiationHandl
     private final NettyHttpChannelConfig httpConfig;
 
     /**
-     * Default to HTTP 2.0 for now
+     * Default to HTTP 1.1
      */
     public LibertyNettyALPNHandler(NettyHttpChannelConfig httpConfig) {
         super(ApplicationProtocolNames.HTTP_1_1);

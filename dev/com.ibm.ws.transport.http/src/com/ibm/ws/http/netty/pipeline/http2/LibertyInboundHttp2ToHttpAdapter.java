@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,10 @@ import io.netty.handler.codec.http2.Http2Stream;
 import io.netty.handler.codec.http2.InboundHttp2ToHttpAdapter;
 
 /**
- *
+ * An extension of {@link InboundHttp2ToHttpAdapter} for Liberty specific functionality.
+ * Specifically the {@link processHeadersBegin()} for necessary header verification to
+ * launch stream errors handled further in the pipeline to match the same behavior as
+ * before.
  */
 public class LibertyInboundHttp2ToHttpAdapter extends InboundHttp2ToHttpAdapter {
 
@@ -58,7 +61,6 @@ public class LibertyInboundHttp2ToHttpAdapter extends InboundHttp2ToHttpAdapter 
         } catch (NullPointerException e) {
             throw Http2Exception.streamError(stream.id(), Http2Error.PROTOCOL_ERROR, e.getMessage());
         } catch (Exception e2) {
-            e2.printStackTrace();
             throw e2;
         }
     }
@@ -82,7 +84,6 @@ public class LibertyInboundHttp2ToHttpAdapter extends InboundHttp2ToHttpAdapter 
         }
         ctx.fireExceptionCaught(Http2Exception.streamError(streamId, code,
                                                            "HTTP/2 to HTTP layer caught stream reset"));
-
     }
 
 }

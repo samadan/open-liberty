@@ -16,17 +16,17 @@ import com.ibm.wsspi.channelfw.exception.ChainException;
 import com.ibm.wsspi.channelfw.exception.ChannelException;
 
 /**
- *
+ * An implementation of {@link InboundVirtualConnectionFactory} to be used in a Netty context
+ * creating {@link NettyVirtualConnectionImpl} objects to be used for wrapping around calls
+ * on {@link VirtualConnection} methods.
  */
 public class NettyVirtualConnectionFactoryImpl implements InboundVirtualConnectionFactory {
 
     public NettyVirtualConnectionFactoryImpl() {
-
     }
 
     @Override
     public String getName() {
-
         return "inbound";
     }
 
@@ -37,7 +37,6 @@ public class NettyVirtualConnectionFactoryImpl implements InboundVirtualConnecti
 
     @Override
     public void destroy() throws ChannelException, ChainException {
-
     }
 
     @Override
