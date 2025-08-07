@@ -18,7 +18,9 @@ import com.ibm.wsspi.channelfw.VirtualConnection;
 import io.netty.channel.Channel;
 
 /**
- *
+ * An implementation of the SPI {@link ConnectionLink} to wrap around a Netty channel
+ * for above implementations calling on this object. Specifically the {@link #close()}
+ * method was needed to be implemented for proper behavior.
  */
 public class NettyConnectionLink implements ConnectionLink {
     

@@ -215,51 +215,25 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
         super.init(nettyVc);
     }
 
-    // TODO Check if this is still being used
-    public NettyServletUpgradeHandler prepareForUpgrade() {
+    public void prepareForUpgrade() {
         HttpServerKeepAliveHandler handler = nettyContext.channel().pipeline().get(HttpServerKeepAliveHandler.class);
         if (handler != null) {
             // Need to remove to keep connection open
             nettyContext.channel().pipeline().remove(handler);
         }
 
-        //nettyContext.channel().pipeline().remove(InactivityTimeoutHandler.class);
-
         // Add Inbound handler to accumulate data which will not belong to HTTP but rather the upgrade protocol
         HttpToHttp2ConnectionHandler http2Handler = nettyContext.channel().pipeline().get(HttpToHttp2ConnectionHandler.class);
 
         if (this.nettyContext.pipeline().get(NettyServletUpgradeHandler.class) == null) {
-
             NettyServletUpgradeHandler upgradeHandler = new NettyServletUpgradeHandler(nettyContext.channel());
-
             upgradeHandler.setVC(vc);
             if (http2Handler == null) { // In HTTP 1.1
-                HttpServerCodec httpHandler = nettyContext.channel().pipeline().get(HttpServerCodec.class);
-                if (httpHandler == null) {
-                    // throw new UnsupportedOperationException("Can't deal with this");
-                }
-
-                // nettyContext.channel().pipeline().addBefore(nettyContext.channel().pipeline().context(httpHandler).name(), "ServletUpgradeHandler", upgradeHandler);
-                //nettyContext.channel().pipeline().addLast(new WebSocketServerProtocolHandler("/websocket")); // Handles the WebSocket upgrade and control frames
                 nettyContext.channel().pipeline().addLast("ServletUpgradeHandler", upgradeHandler);
-
-                // nettyContext.channel().pipeline().remove(LibertyHttpObjectAggregator.class);
-
-                // if(nettyContext.channel().pipeline().get(HttpDispatcherHandler.class)
-                // nettyContext.channel().pipeline().remove(HttpDispatcherHandler.class);
             } else { // In HTTP2
                 nettyContext.channel().pipeline().addBefore(nettyContext.channel().pipeline().context(http2Handler).name(), "ServletUpgradeHandler", upgradeHandler);
             }
-            return upgradeHandler;
         }
-
-        return this.nettyContext.pipeline().get(NettyServletUpgradeHandler.class);
-    }
-
-    public Channel getUpgradedChannel() {
-        if (nettyContext.channel().pipeline().get(NettyServletUpgradeHandler.class) == null)
-            throw new IllegalStateException("Cannot get upgraded channel without setting it up for upgrade first!");
-        return this.nettyContext.channel();
     }
 
     public void nettyClose(VirtualConnection conn, Exception e) {

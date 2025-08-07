@@ -307,7 +307,6 @@ public class NettyTlsProviderImpl implements NettyTlsProvider {
     }
     
     private ClientAuth getClientAuth(SSLConfig config) {
-    	// TODO Besides client auth we should also check cipher suite order with Constants.SSLPROP_ENFORCE_CIPHER_ORDER
     	boolean clientAuth = getBooleanProperty(SSLPROP_CLIENT_AUTHENTICATION, config);
     	if(clientAuth)
     		return ClientAuth.REQUIRE;
