@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
+import static org.junit.Assert.assertNull;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -27,6 +28,7 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
+import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
 import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
@@ -36,183 +38,231 @@ import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 @RunWith(FATRunner.class)
 public class ToolTest extends FATServletClient {
 
-    @Server("mcp-server")
-    public static LibertyServer server;
+	@Server("mcp-server")
+	public static LibertyServer server;
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "toolTest.war")
-                                   .addPackage(BasicTools.class.getPackage());
+	@BeforeClass
+	public static void setup() throws Exception {
+		WebArchive war = ShrinkWrap.create(WebArchive.class, "toolTest.war").addPackage(BasicTools.class.getPackage());
 
-        ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
+		ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
-        server.startServer();
-    }
+		server.startServer();
+	}
 
-    @AfterClass
-    public static void teardown() throws Exception {
-        server.stopServer();
-    }
+	@AfterClass
+	public static void teardown() throws Exception {
+		server.stopServer();
+	}
 
-    @Test
-    public void postJsonRpc() throws Exception {
-        String request = """
-                          {
-                            "jsonrpc": "2.0",
-                            "id": "2",
-                            "method": "tools/call",
-                            "params": {
-                              "name": "echo",
-                              "arguments": {
-                                "input": "Hello"
-                              }
-                            }
-                          }
-                        """;
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+	@Test
+	public void testMissingAcceptHeader() throws Exception {
+		String request = """
+				{
+				  "jsonrpc": "2.0",
+				  "id": 1,
+				  "method": "tools/call",
+				  "params": {
+				    "name": "echo",
+				    "arguments": {
+				      "input": "Hello"
+				    }
+				  }
+				}
+				""";
 
-        JSONObject jsonResponse = new JSONObject(response);
+		HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST")
+				.expectCode(406);
 
-        // Lenient mode tests
-        JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": \"2\"}", response, false);
-        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
+		String response = JsonRequest.run(String.class);
+		assertNull("Expected no response body for 406 Not Acceptable", response);
+	}
 
-        // Strict Mode tests
-        String expectedResponseString = """
-                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
-                        """;
-        JSONAssert.assertEquals(expectedResponseString, response, true);
-    }
+	@Test
+	public void testIncorrectAcceptHeader() throws Exception {
+		String request = """
+				{
+				  "jsonrpc": "2.0",
+				  "id": 1,
+				  "method": "tools/call",
+				  "params": {
+				    "name": "echo",
+				    "arguments": {
+				      "input": "Hello"
+				    }
+				  }
+				}
+				""";
 
-    @Test
-    public void testEchoWithNumberIdType() throws Exception {
-        String request = """
-                          {
-                          "jsonrpc": "2.0",
-                          "id": 2,
-                          "method": "tools/call",
-                          "params": {
-                            "name": "echo",
-                            "arguments": {
-                              "input": "Hello"
-                            }
-                          }
-                        }
-                        """;
+		HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json")
+				.jsonBody(request).method("POST").expectCode(406);
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+		String response = JsonRequest.run(String.class);
+		assertNull("Expected no response body for 406 Not Acceptable due to incorrect Accept header", response);
+	}
 
-        JSONObject jsonResponse = new JSONObject(response);
-        // Lenient mode tests
-        JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 2}", response, false);
-        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
+	@Test
+	public void postJsonRpc() throws Exception {
+		String request = """
+				  {
+				    "jsonrpc": "2.0",
+				    "id": "2",
+				    "method": "tools/call",
+				    "params": {
+				      "name": "echo",
+				      "arguments": {
+				        "input": "Hello"
+				      }
+				    }
+				  }
+				""";
+		String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
-        // Strict Mode tests
-        String expectedResponseString = """
-                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
-                        """;
-        JSONAssert.assertEquals(expectedResponseString, response, true);
-    }
+		JSONObject jsonResponse = new JSONObject(response);
 
-    @Test
-    public void testEchoWithStringIdType() throws Exception {
-        String request = """
-                          {
-                          "jsonrpc": "2.0",
-                          "id": "2",
-                          "method": "tools/call",
-                          "params": {
-                            "name": "echo",
-                            "arguments": {
-                              "input": "Hello"
-                            }
-                          }
-                        }
-                        """;
+		// Lenient mode tests
+		JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": \"2\"}", response, false);
+		JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse,
+				false);
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+		// Strict Mode tests
+		String expectedResponseString = """
+				{"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+				""";
+		JSONAssert.assertEquals(expectedResponseString, response, true);
+	}
 
-        JSONObject jsonResponse = new JSONObject(response);
+	@Test
+	public void testEchoWithNumberIdType() throws Exception {
+		String request = """
+				  {
+				  "jsonrpc": "2.0",
+				  "id": 2,
+				  "method": "tools/call",
+				  "params": {
+				    "name": "echo",
+				    "arguments": {
+				      "input": "Hello"
+				    }
+				  }
+				}
+				""";
 
-        // Lenient mode tests
-        JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": \"2\"}", response, false);
-        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
+		String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
-        // Strict Mode tests
-        String expectedResponseString = """
-                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
-                        """;
-        JSONAssert.assertEquals(expectedResponseString, response, true);
-    }
+		JSONObject jsonResponse = new JSONObject(response);
+		// Lenient mode tests
+		JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 2}", response, false);
+		JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse,
+				false);
 
-    @Test
-    public void testToolList() throws Exception {
-        String request = """
-                        {
-                          "jsonrpc": "2.0",
-                          "id": 1,
-                          "method": "tools/list",
-                          "params": {
-                            "cursor": "optional-cursor-value"
-                          }
-                        }
-                        """;
+		// Strict Mode tests
+		String expectedResponseString = """
+				{"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+				""";
+		JSONAssert.assertEquals(expectedResponseString, response, true);
+	}
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-        JSONObject jsonResponse = new JSONObject(response);
+	@Test
+	public void testEchoWithStringIdType() throws Exception {
+		String request = """
+				  {
+				  "jsonrpc": "2.0",
+				  "id": "2",
+				  "method": "tools/call",
+				  "params": {
+				    "name": "echo",
+				    "arguments": {
+				      "input": "Hello"
+				    }
+				  }
+				}
+				""";
 
-        String expectedString = """
-                                {
-                                    "id": 1,
-                                    "jsonrpc": "2.0",
-                                    "result": {
-                                        "tools": [
-                                            {
-                                                "name": "add",
-                                                "description": "Returns the sum of the two inputs",
-                                                "title": "Addition calculator",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "num1": {
-                                                            "description": "temp desc",
-                                                            "type": "integer"
-                                                        },
-                                                        "num2": {
-                                                            "description": "temp desc",
-                                                            "type": "integer"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "num1",
-                                                        "num2"
-                                                    ]
-                                                }
-                                            },
-                                            {
-                                                "name": "echo",
-                                                "description": "Returns the input unchanged",
-                                                "title": "Echoes the input",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "input": {
-                                                            "description": "temp desc",
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "input"
-                                                    ]
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                        """;
+		String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
-        // Lenient mode test (false boolean in 3rd parameter
-        JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);
-    }
+		JSONObject jsonResponse = new JSONObject(response);
+
+		// Lenient mode tests
+		JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": \"2\"}", response, false);
+		JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse,
+				false);
+
+		// Strict Mode tests
+		String expectedResponseString = """
+				{"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+				""";
+		JSONAssert.assertEquals(expectedResponseString, response, true);
+	}
+
+	@Test
+	public void testToolList() throws Exception {
+		String request = """
+				{
+				  "jsonrpc": "2.0",
+				  "id": 1,
+				  "method": "tools/list",
+				  "params": {
+				    "cursor": "optional-cursor-value"
+				  }
+				}
+				""";
+
+		String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+		JSONObject jsonResponse = new JSONObject(response);
+
+		String expectedString = """
+				        {
+				            "id": 1,
+				            "jsonrpc": "2.0",
+				            "result": {
+				                "tools": [
+				                    {
+				                        "name": "add",
+				                        "description": "Returns the sum of the two inputs",
+				                        "title": "Addition calculator",
+				                        "inputSchema": {
+				                            "type": "object",
+				                            "properties": {
+				                                "num1": {
+				                                    "description": "temp desc",
+				                                    "type": "integer"
+				                                },
+				                                "num2": {
+				                                    "description": "temp desc",
+				                                    "type": "integer"
+				                                }
+				                            },
+				                            "required": [
+				                                "num1",
+				                                "num2"
+				                            ]
+				                        }
+				                    },
+				                    {
+				                        "name": "echo",
+				                        "description": "Returns the input unchanged",
+				                        "title": "Echoes the input",
+				                        "inputSchema": {
+				                            "type": "object",
+				                            "properties": {
+				                                "input": {
+				                                    "description": "temp desc",
+				                                    "type": "string"
+				                                }
+				                            },
+				                            "required": [
+				                                "input"
+				                            ]
+				                        }
+				                    }
+				                ]
+				            }
+				        }
+				""";
+
+		// Lenient mode test (false boolean in 3rd parameter
+		JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);
+	}
 
 }

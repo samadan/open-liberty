@@ -17,19 +17,8 @@ import componenttest.topology.utils.HttpRequest;
  */
 public class HttpTestUtils {
 
-    public static String callMCP(LibertyServer server, String path, String jsonRequestBody) throws Exception {
-        return new HttpRequest(server, path + "/mcp")
-                                                     .requestProp("Accept", "application/json, text/event-stream")
-                                                     .jsonBody(jsonRequestBody)
-                                                     .method("POST")
-                                                     .run(String.class);
-    };
-
-    public static String falseCallMCP(LibertyServer server, String path, String jsonRequestBody) throws Exception {
-        return new HttpRequest(server, path + "/mcp")
-                                                     .requestProp("Accept", "application/json")
-                                                     .jsonBody(jsonRequestBody)
-                                                     .method("POST")
-                                                     .run(String.class);
-    };
+	public static String callMCP(LibertyServer server, String path, String jsonRequestBody) throws Exception {
+		return new HttpRequest(server, path + "/mcp").requestProp("Accept", "application/json, text/event-stream")
+				.jsonBody(jsonRequestBody).method("POST").run(String.class);
+	};
 };
