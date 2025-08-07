@@ -19,6 +19,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.ibm.ws.ffdc.annotation.FFDCIgnore;
+
 /**
  * This BlockingQueue implementation takes the concepts from the DoubleQueue and ConcurrentLinkedQueue
  * and combines them together. The logic in this class is largely from both of those classes
@@ -121,6 +123,7 @@ public class ConcurrentPriorityBlockingQueue<T> extends AbstractQueue<T> impleme
         }
     }
 
+    @FFDCIgnore(InterruptedException.class)
     private GetQueueLock waitGet_(GetQueueLock getQueueLock, long timeout) throws InterruptedException {
         if (getQueueLock == null) {
             getQueueLock = threadLocalGetLock.get();
@@ -132,6 +135,10 @@ public class ConcurrentPriorityBlockingQueue<T> extends AbstractQueue<T> impleme
                 waitingThreadLocks.add(getQueueLock);
                 getQueueLock.wait(timeout == -1 ? 0 : timeout);
             }
+        } catch (InterruptedException ie) {
+            // clear the interrupted flag on the thread
+            Thread.interrupted();
+            throw ie;
         } finally {
             if (!getQueueLock.isNotified()) {
                 // we either timed out or were interrupted, so remove ourselves from the queue...  it's okay if a producer already has the
