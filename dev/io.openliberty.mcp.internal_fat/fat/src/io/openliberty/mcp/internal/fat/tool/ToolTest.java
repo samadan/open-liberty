@@ -262,7 +262,7 @@ public class ToolTest extends FATServletClient {
                         "data":[
                             "Missing arguments in params"
                             ],
-                        "message":"invalid params"},
+                        "message":"Invalid params"},
                         "id":"2",
                         "jsonrpc":"2.0"}
                         """;
@@ -293,7 +293,7 @@ public class ToolTest extends FATServletClient {
                         "data":[
                             "0 arguments processed, expected 1"
                             ],
-                        "message": "invalid params"},
+                        "message": "Invalid params"},
                         "id":"2",
                         "jsonrpc":"2.0"}
                         """;

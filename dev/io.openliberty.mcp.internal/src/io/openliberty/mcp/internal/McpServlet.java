@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.ibm.ws.ffdc.annotation.FFDCIgnore;
+
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
@@ -70,6 +72,7 @@ public class McpServlet extends HttpServlet {
     }
 
     @Override
+    @FFDCIgnore(JSONRPCException.class)
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, JSONRPCException {
         McpRequest request = null;
         try {
@@ -92,6 +95,7 @@ public class McpServlet extends HttpServlet {
 
     }
 
+    @FFDCIgnore(JsonException.class)
     public McpRequest toRequest(HttpServletRequest req) throws IOException, JSONRPCException {
         McpRequest request = null;
         // TODO: validate headers/contentType etc.
@@ -151,8 +155,9 @@ public class McpServlet extends HttpServlet {
      * @throws IllegalArgumentException
      * @throws IllegalAccessException
      */
-    private void callTool(McpRequest request, Writer writer)
-                    throws JSONRPCException, IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+
+    @FFDCIgnore(JSONRPCException.class)
+    private void callTool(McpRequest request, Writer writer) {
         McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
         CreationalContext<Void> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
