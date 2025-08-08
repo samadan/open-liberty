@@ -89,7 +89,7 @@ public class McpServlet extends HttpServlet {
             request = toRequest(req);
             callRequest(request, resp);
         } catch (JSONRPCException e) {
-            McpResponse mcpResponse = new McpErrorResponse(request == null ? "" : request.getId(), e);
+            McpResponse mcpResponse = new McpErrorResponse(request == null ? "" : request.id(), e);
             jsonb.toJson(mcpResponse, resp.getWriter());
         } catch (Exception e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -173,7 +173,7 @@ public class McpServlet extends HttpServlet {
         McpResponse mcpResponse;
         try {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
-            mcpResponse = new McpResultResponse(request.getId(), new ToolResponseResult(result));
+            mcpResponse = new McpResultResponse(request.id(), new ToolResponseResult(result));
         } catch (JSONRPCException e) {
             throw e;
         } catch (Exception e) {
@@ -197,7 +197,7 @@ public class McpServlet extends HttpServlet {
                 response.add(new ToolDescription(tmd));
             }
             ToolResult toolResult = new ToolResult(response);
-            McpResponse mcpResponse = new McpResultResponse(request.getId(), toolResult);
+            McpResponse mcpResponse = new McpResultResponse(request.id(), toolResult);
             jsonb.toJson(mcpResponse, writer);
         }
     }
@@ -218,7 +218,7 @@ public class McpServlet extends HttpServlet {
         // TODO: provide a way for the user to set server info
         ServerInfo info = new ServerInfo("test-server", "Test Server", "0.1");
         McpInitializeResult result = new McpInitializeResult("2025-06-18", caps, info, null);
-        McpResponse response = new McpResultResponse(request.getId(), result);
+        McpResponse response = new McpResultResponse(request.id(), result);
         jsonb.toJson(response, writer);
     }
 

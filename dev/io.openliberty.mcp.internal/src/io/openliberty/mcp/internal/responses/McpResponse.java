@@ -9,13 +9,11 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.responses;
 
-import jakarta.json.bind.annotation.JsonbTypeAdapter;
-
 /**
  * An MCP Response message
  *
  */
-@JsonbTypeAdapter(McpResponseAdapter.class)
+//@JsonbTypeAdapter(McpResponseAdapter.class)
 public abstract class McpResponse {
     String jsonrpc;
     Object id;

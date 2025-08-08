@@ -42,45 +42,4 @@ public enum JSONRPCErrorCode {
         return message;
     }
 
-//    public class JSONRPCErrorCodeAdapter implements JsonbAdapter<JSONRPCErrorCode, JSONRPCErrorCode.JSONRPCErrorCodeBase> {
-//
-//        /** {@inheritDoc} */
-//        @Override
-//        public JSONRPCErrorCode adaptFromJson(JSONRPCErrorCodeBase arg0) throws Exception {
-//            return null;
-//        }
-//
-//        /** {@inheritDoc} */
-//        @Override
-//        public JSONRPCErrorCodeBase adaptToJson(JSONRPCErrorCode arg0) throws Exception {
-//            return new JSONRPCErrorCodeBase(arg0.getCode(), arg0.getMessage());
-//        }
-//    }
-//
-//    public class JSONRPCErrorCodeBase {
-//        private int code;
-//        private String message;
-//
-//        @JsonbCreator
-//        private JSONRPCErrorCodeBase(@JsonbProperty("code") int code, @JsonbProperty("message") String message) {
-//            this.code = code;
-//            this.message = message;
-//        }
-//
-//        /**
-//         * @return the code
-//         */
-//        public int getCode() {
-//            return code;
-//        }
-//
-//        /**
-//         * @return the message
-//         */
-//        public String getMessage() {
-//            return message;
-//        }
-
-//    }
-
 }
