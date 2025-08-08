@@ -94,7 +94,6 @@ public class AsyncWriteListenerHttpUnit {
 
         // Start the server and use the class name so we can find logs easily.
         server.startServer(AsyncWriteListenerHttpUnit.class.getSimpleName() + ".log");
-        server.waitForStringInLogUsingMark("CWWKO0219I*");
 
         if (FATSuite.isWindows) {
             FATSuite.setDynamicTrace(server, "*=info=enabled");
