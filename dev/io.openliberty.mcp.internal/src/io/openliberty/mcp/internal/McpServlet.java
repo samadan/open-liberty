@@ -188,7 +188,7 @@ public class McpServlet extends HttpServlet {
                 response.add(new ToolDescription(tmd));
             }
             ToolResult toolResult = new ToolResult(response);
-            McpResponse mcpResponse = new McpResponse(request.id(), toolResult);
+            McpResponse mcpResponse = new McpResponse(request.getId(), toolResult);
             jsonb.toJson(mcpResponse, writer);
         }
     }
@@ -209,7 +209,7 @@ public class McpServlet extends HttpServlet {
         // TODO: provide a way for the user to set server info
         ServerInfo info = new ServerInfo("test-server", "Test Server", "0.1");
         McpInitializeResult result = new McpInitializeResult("2025-06-18", caps, info, null);
-        McpResponse response = new McpResponse(request.id(), result);
+        McpResponse response = new McpResponse(request.getId(), result);
         jsonb.toJson(response, writer);
     }
 
