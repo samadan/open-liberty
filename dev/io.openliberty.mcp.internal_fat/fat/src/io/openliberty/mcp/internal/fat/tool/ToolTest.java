@@ -117,7 +117,6 @@ public class ToolTest extends FATServletClient {
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
         JSONObject jsonResponse = new JSONObject(response);
-
         // Lenient mode tests
         JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": \"2\"}", response, false);
         JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
@@ -146,7 +145,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         JSONObject jsonResponse = new JSONObject(response);
         // Lenient mode tests
         JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 2}", response, false);
@@ -177,7 +175,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -202,7 +199,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         String expectedResponseString = """
                         {"error":{"code":-32600,
                         "data":[
@@ -230,7 +226,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         String expectedResponseString = """
                         {"error":{"code":-32700,
                         "message":"Parse error",
@@ -256,7 +251,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
@@ -287,7 +281,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
@@ -318,7 +311,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         String expectedResponseString = """
                         {"error":{"code":-32601,
                         "data":[
@@ -347,7 +339,6 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         JSONObject jsonResponse = new JSONObject(response);
-
         String expectedString = """
                                 {
                                     "id": 1,

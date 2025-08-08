@@ -25,14 +25,17 @@ import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
+import io.openliberty.mcp.internal.responses.McpErrorResponse;
 import io.openliberty.mcp.internal.responses.McpInitializeResult;
 import io.openliberty.mcp.internal.responses.McpInitializeResult.ServerInfo;
 import io.openliberty.mcp.internal.responses.McpResponse;
+import io.openliberty.mcp.internal.responses.McpResultResponse;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.json.JsonException;
+import jakarta.json.JsonNumber;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import jakarta.json.JsonString;
@@ -86,9 +89,8 @@ public class McpServlet extends HttpServlet {
             request = toRequest(req);
             callRequest(request, resp);
         } catch (JSONRPCException e) {
-            ToolResponse response = ToolResponse.createError(request == null ? "" : request.getId(), e);
-            System.out.println("response output " + response);
-            jsonb.toJson(response, resp.getWriter());
+            McpResponse mcpResponse = new McpErrorResponse(request == null ? "" : request.getId(), e);
+            jsonb.toJson(mcpResponse, resp.getWriter());
         } catch (Exception e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
@@ -143,8 +145,15 @@ public class McpServlet extends HttpServlet {
 
         if (!errors.isEmpty())
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_REQUEST, errors);
+        Object idObj = null;
 
-        return new McpRequest(jsonrpc, id, method, params);
+        if (id.getValueType().equals(JsonValue.ValueType.STRING)) {
+            idObj = ((JsonString) id).getString();
+        } else if (id.getValueType().equals(JsonValue.ValueType.NUMBER)) {
+            idObj = ((JsonNumber) id).numberValue();
+        }
+
+        return new McpRequest(jsonrpc, idObj, method, params);
     }
 
     /**
@@ -161,16 +170,16 @@ public class McpServlet extends HttpServlet {
         McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
         CreationalContext<Void> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
-        ToolResponse response;
+        McpResponse mcpResponse;
         try {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
-            response = ToolResponse.createSuccess(request.getId(), (String) result);
+            mcpResponse = new McpResultResponse(request.getId(), new ToolResponseResult(result));
         } catch (JSONRPCException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        jsonb.toJson(response, writer);
+        jsonb.toJson(mcpResponse, writer);
 
     }
 
@@ -188,7 +197,7 @@ public class McpServlet extends HttpServlet {
                 response.add(new ToolDescription(tmd));
             }
             ToolResult toolResult = new ToolResult(response);
-            McpResponse mcpResponse = new McpResponse(request.getId(), toolResult);
+            McpResponse mcpResponse = new McpResultResponse(request.getId(), toolResult);
             jsonb.toJson(mcpResponse, writer);
         }
     }
@@ -209,7 +218,7 @@ public class McpServlet extends HttpServlet {
         // TODO: provide a way for the user to set server info
         ServerInfo info = new ServerInfo("test-server", "Test Server", "0.1");
         McpInitializeResult result = new McpInitializeResult("2025-06-18", caps, info, null);
-        McpResponse response = new McpResponse(request.getId(), result);
+        McpResponse response = new McpResultResponse(request.getId(), result);
         jsonb.toJson(response, writer);
     }
 

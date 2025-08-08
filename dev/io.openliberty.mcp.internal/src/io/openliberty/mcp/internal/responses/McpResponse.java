@@ -9,26 +9,32 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.responses;
 
+import jakarta.json.bind.annotation.JsonbTypeAdapter;
+
 /**
  * An MCP Response message
+ *
  */
-public record McpResponse(String jsonrpc,
-                          Object id,
-                          Object result) {
+@JsonbTypeAdapter(McpResponseAdapter.class)
+public abstract class McpResponse {
+    String jsonrpc;
+    Object id;
 
-    public McpResponse(Object id, Object result) {
-        this("2.0", id, result);
-    }
-
-    public McpResponse {
+    public McpResponse(String jsonrpc, Object id) {
         if (jsonrpc == null || !jsonrpc.equals("2.0"))
             throw new IllegalArgumentException("jsonrpc field must be present. Only JSONRPC 2.0 is currently supported");
         if (id == null || !(id instanceof String || id instanceof Number))
             throw new IllegalArgumentException("id must be a string or number");
-        if (id instanceof String && ((String) id).isBlank())
-            throw new IllegalArgumentException("id must not be empty");
-        if (result == null)
-            throw new IllegalArgumentException("Result field must be present");
+
+        this.jsonrpc = jsonrpc;
+        this.id = id;
     }
 
+    public String getJsonrpc() {
+        return jsonrpc;
+    }
+
+    public Object getId() {
+        return id;
+    }
 }
