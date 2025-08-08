@@ -26,7 +26,7 @@ public class McpResponseAdapter implements JsonbAdapter<McpResponse, JsonObject>
         String jsonrpc = arg0.getString("jsonrpc");
         JsonValue id = arg0.get("id");
         if (arg0.containsKey("result")) {
-            return new McpResultResponse(id, arg0.getJsonObject("data"));
+            return new McpResultResponse(id, arg0.getJsonObject("result"));
         } else if (arg0.containsKey("error")) {
             McpErrorResponse.Error error = new McpErrorResponse.Error(
                                                                       arg0.getJsonObject("error").getInt("code"),
