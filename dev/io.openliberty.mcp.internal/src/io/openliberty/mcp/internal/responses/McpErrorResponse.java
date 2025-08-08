@@ -54,7 +54,7 @@ public class McpErrorResponse extends McpResponse {
         private Object data;
 
         @JsonbCreator
-        Error(@JsonbProperty("code") int code, @JsonbProperty("message") String message, @JsonbProperty("code") Object data) {
+        Error(@JsonbProperty("code") int code, @JsonbProperty("message") String message, @JsonbProperty("data") Object data) {
             this.code = code;
             this.message = message;
             this.data = data;
