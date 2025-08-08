@@ -10,10 +10,14 @@
 package io.openliberty.mcp.internal.requests;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
@@ -49,6 +53,9 @@ public class McpToolCallParams {
     }
 
     public Object[] getArguments(Jsonb jsonb) {
+        if (this.arguments == null) {
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, new ArrayList<>(Arrays.asList("Missing arguments in params")));
+        }
         if (parsedArguments == null) {
             parsedArguments = parseArguments(arguments, jsonb);
         }
@@ -71,7 +78,8 @@ public class McpToolCallParams {
         }
 
         if (argsProcessed != metadata.arguments().size()) {
-            throw new IllegalArgumentException("Wrong args passed");
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS,
+                                       new ArrayList<>(Arrays.asList(String.valueOf(argsProcessed) + " arguments processed, expected " + metadata.arguments().size())));
         }
 
         return results;
