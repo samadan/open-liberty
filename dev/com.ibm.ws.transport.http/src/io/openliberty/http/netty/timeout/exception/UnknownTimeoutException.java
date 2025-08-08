@@ -9,7 +9,6 @@
  *******************************************************************************/
 package io.openliberty.http.netty.timeout.exception;
 
-import io.openliberty.http.netty.timeout.TimeoutEventHandler;
 import io.openliberty.http.netty.timeout.TimeoutType;
 
 /**
