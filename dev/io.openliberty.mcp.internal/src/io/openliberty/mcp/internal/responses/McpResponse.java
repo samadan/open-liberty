@@ -13,7 +13,6 @@ package io.openliberty.mcp.internal.responses;
  * An MCP Response message
  *
  */
-//@JsonbTypeAdapter(McpResponseAdapter.class)
 public abstract class McpResponse {
     String jsonrpc;
     Object id;

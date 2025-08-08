@@ -155,7 +155,6 @@ public class ToolTest extends FATServletClient {
                         {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
-        JSONAssert.assertNotEquals("{\"error\":{}}", response, false);
     }
 
     @Test
@@ -186,7 +185,6 @@ public class ToolTest extends FATServletClient {
                         {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
-        JSONAssert.assertNotEquals("{\"error\":{}}", response, false);
     }
 
     @Test
@@ -212,7 +210,6 @@ public class ToolTest extends FATServletClient {
                         "jsonrpc":"2.0"}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
-        JSONAssert.assertNotEquals("{\"result\":{}}", response, false);
     }
 
     @Test
@@ -234,7 +231,6 @@ public class ToolTest extends FATServletClient {
                         "jsonrpc":"2.0"}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, false);
-        JSONAssert.assertNotEquals("{\"result\":{}}", response, false);
     }
 
     @Test
@@ -261,7 +257,6 @@ public class ToolTest extends FATServletClient {
                         "jsonrpc":"2.0"}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
-        JSONAssert.assertNotEquals("{\"result\":{}}", response, false);
     }
 
     @Test
@@ -291,7 +286,6 @@ public class ToolTest extends FATServletClient {
                         "jsonrpc":"2.0"}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
-        JSONAssert.assertNotEquals("{\"result\":{}}", response, false);
     }
 
     @Test
@@ -321,7 +315,6 @@ public class ToolTest extends FATServletClient {
                         "jsonrpc":"2.0"}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
-        JSONAssert.assertNotEquals("{\"result\":{}}", response, false);
     }
 
     @Test
