@@ -65,7 +65,10 @@ public class McpToolCallParams {
             ArgumentMetadata argMetadata = metadata.arguments().get(argName);
             if (argMetadata != null) {
                 String json = jsonb.toJson(argValue);
-                results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
+
+                Object typedArgument = parseArgumentPrimitiveType(json);
+
+                results[argMetadata.index()] = jsonb.fromJson(json, typedArgument.getClass());
                 argsProcessed++;
             }
         }
@@ -75,6 +78,35 @@ public class McpToolCallParams {
         }
 
         return results;
+    }
+
+    private Object parseArgumentPrimitiveType(String stringInput) {
+
+        if (stringInput == null || stringInput.isEmpty()) {
+            return null;
+        }
+
+        if (stringInput.equalsIgnoreCase("true") || stringInput.equalsIgnoreCase("false")) {
+            return Boolean.parseBoolean(stringInput);
+        }
+
+        try {
+            return Integer.parseInt(stringInput);
+        } catch (NumberFormatException ignored) {}
+
+        try {
+            return Double.parseDouble(stringInput);
+        } catch (NumberFormatException ignored) {}
+
+        try {
+            return Float.parseFloat(stringInput);
+        } catch (NumberFormatException ignored) {}
+
+        if (stringInput.length() == 1) {
+            return stringInput.charAt(0);
+        }
+
+        return stringInput;
     }
 
     public Bean<?> getBean() {

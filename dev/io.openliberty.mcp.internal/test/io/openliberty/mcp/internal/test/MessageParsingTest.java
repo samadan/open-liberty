@@ -153,4 +153,46 @@ public class MessageParsingTest {
                                           "Example Client Display Name",
                                           "1.0.0")));
     }
+
+    @Test
+    public void parseIntArgumentType() {
+        Jsonb jsonb = JsonbBuilder.create();
+        StringReader reader = new StringReader("""
+                        {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": 12345
+                            }
+                          }
+                        }
+                        """);
+        McpRequest request = jsonb.fromJson(reader, McpRequest.class);
+        McpToolCallParams toolCallRequest = request.getParams(McpToolCallParams.class, jsonb);
+        assertThat(toolCallRequest.getArguments(jsonb), arrayContaining(12345));
+    }
+
+    @Test
+    public void parseBooleanArgumentType() {
+        Jsonb jsonb = JsonbBuilder.create();
+        StringReader reader = new StringReader("""
+                        {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": true
+                            }
+                          }
+                        }
+                        """);
+        McpRequest request = jsonb.fromJson(reader, McpRequest.class);
+        McpToolCallParams toolCallRequest = request.getParams(McpToolCallParams.class, jsonb);
+        assertThat(toolCallRequest.getArguments(jsonb), arrayContaining(true));
+    }
 }

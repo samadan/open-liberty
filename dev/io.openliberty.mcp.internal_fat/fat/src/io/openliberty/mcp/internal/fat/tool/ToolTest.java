@@ -113,4 +113,34 @@ public class ToolTest extends FATServletClient {
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
+    @Test
+    public void testEchoWithIntegerInputArgs() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": 2,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": 12345
+                            }
+                          }
+                        }
+                        """;
+
+        String response = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST").run(String.class);
+        JSONObject jsonResponse = new JSONObject(response);
+
+        // Lenient mode tests
+        JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 2}", response, false);
+        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\": 12345}]}}", jsonResponse, false);
+
+        // Strict Mode tests
+        String expectedResponseString = """
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": 12345}]}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
 }
