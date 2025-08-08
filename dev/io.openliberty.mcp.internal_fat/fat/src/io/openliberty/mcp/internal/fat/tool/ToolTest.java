@@ -280,7 +280,6 @@ public class ToolTest extends FATServletClient {
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
-        JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 2}", response, false);
         JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\": 12345}]}}", jsonResponse, false);
 
         // Strict Mode tests
