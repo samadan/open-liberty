@@ -194,13 +194,6 @@ public class NettyChain extends HttpChain {
             Tr.entry(this, tc, "Starting Netty Channel: " + endpointName + ", Current state: " + state.get() + ", Enabled: " + enabled);
         }
 
-        // if (currentConfig == null || !currentConfig.complete() || !enabled || FrameworkState.isStopping()) {
-        //     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-        //         Tr.debug(this, tc, "Cannot start channel due to incomplete configuration or disabled state");
-        //     }
-        //     return;
-        // }
-
         if (state.compareAndSet(ChainState.STOPPED, ChainState.STARTING) || state.compareAndSet(ChainState.UNINITIALIZED, ChainState.STARTING)) {
             try {
                 Map<String, Object> httpOptions = new HashMap<>(owner.getHttpOptions());
