@@ -25,8 +25,8 @@ import com.ibm.websphere.simplicity.ShrinkHelper;
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
-import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
+import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
 /**
  *
@@ -77,7 +77,8 @@ public class LifecycleTest {
                         }
                         """;
 
-        String response = new HttpRequest(server, "/lifecycleTest/mcp").jsonBody(request).method("POST").run(String.class);
+        String response = HttpTestUtils.callMCP(server, "/lifecycleTest", request);
+
         String expectedResponse = """
                         {
                           "jsonrpc": "2.0",

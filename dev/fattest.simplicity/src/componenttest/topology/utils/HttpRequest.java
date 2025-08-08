@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2024 IBM Corporation and others.
+ * Copyright (c) 2017, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -54,6 +54,7 @@ public class HttpRequest {
     private String json = null;
     private String basicAuth = null;
     private final Map<String, String> props = new HashMap<String, String>();
+    private final Map<String, String> responseHeaders = new HashMap<>();
     private Integer timeout;
     private boolean silent = false;
     private int responseCode = -1;
@@ -234,6 +235,11 @@ public class HttpRequest {
                 Log.info(c, "run", "Sending HTTP Request: " + request.getName() + " " + url);
             }
             httpClient.executeMethod(request);
+
+            for (org.apache.commons.httpclient.Header header : request.getResponseHeaders()) {
+                responseHeaders.put(header.getName(), header.getValue());
+            }
+
             /*
              * Check for the expected response code.
              */
@@ -272,6 +278,10 @@ public class HttpRequest {
 
     public int getResponseCode() {
         return responseCode;
+    }
+
+    public Map<String, String> getResponseHeaders() {
+        return responseHeaders;
     }
 
     private void printResponseContents(String contents) {

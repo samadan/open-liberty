@@ -58,7 +58,14 @@ public class McpServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // TODO: validate headers/contentType etc.
+        String accept = req.getHeader("Accept");
+        if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
+            || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
+            resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+            resp.setContentType("application/json");
+            return;
+        } ;
+
         McpRequest request = jsonb.fromJson(req.getInputStream(), McpRequest.class);
         switch (request.getRequestMethod()) {
             case TOOLS_CALL -> callTool(request, resp.getWriter());
@@ -93,15 +100,15 @@ public class McpServlet extends HttpServlet {
     private void listTools(McpRequest request, Writer writer) {
         ToolRegistry toolRegistry = ToolRegistry.get();
 
-        List<ToolDescription> response = new LinkedList();
+        List<ToolDescription> response = new LinkedList<>();
 
         if (toolRegistry.hasTools()) {
             for (ToolMetadata tmd : toolRegistry.getAllTools()) {
                 response.add(new ToolDescription(tmd));
             }
-            jsonb.toJson(response, writer);
-        } else {
-            // give back an empty response
+            ToolResult toolResult = new ToolResult(response);
+            McpResponse mcpResponse = new McpResponse(request.id(), toolResult);
+            jsonb.toJson(mcpResponse, writer);
         }
     }
 

@@ -54,7 +54,7 @@ public class MCPServerToolsListTest {
                                                           "number2", new ArgumentMetadata(double.class, 1));
         registry.addTool(new ToolMetadata(additionTool, null, null, arguments2));
 
-        // Addition Tool
+        // Subtraction Tool
         Tool subtractionTool = Literals.tool("Subtraction Calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
         Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0),
                                                           "number2", new ArgumentMetadata(int.class, 1));
@@ -158,11 +158,11 @@ public class MCPServerToolsListTest {
                                 "description": "Can add two floating point numbers",
                                 "inputSchema": {
                                     "properties": {
-                                        "number1": {
+                                        "number2": {
                                             "description": "temp desc",
                                             "type": "number"
                                         },
-                                        "number2": {
+                                        "number1": {
                                             "description": "temp desc",
                                             "type": "number"
                                         }
