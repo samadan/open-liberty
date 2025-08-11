@@ -1709,14 +1709,6 @@ public class H2FATDriverServlet extends FATServlet {
         CountDownLatch blockUntilConnectionIsDone = new CountDownLatch(1);
         Http2Client h2Client = getDefaultH2Client(request, response, blockUntilConnectionIsDone);
 
-        // Netty expecting a reset stream because the headers sent back exceed the 128 the number specified by the settings
-        // Legacy HTTP2 apparently does not do this check 
-        // See https://github.com/OpenLiberty/open-liberty/issues/29561
-        // if (USING_NETTY) {
-        //     FrameRstStream rstFrame = new FrameRstStream(3, PROTOCOL_ERROR, false);
-        //     h2Client.addExpectedFrame(rstFrame);
-        // } else
-        //     addSecondExpectedHeaders(h2Client);
         addSecondExpectedHeaders(h2Client);
         setupDefaultUpgradedConnection(h2Client, HEADERS_ONLY_URI);
 
@@ -1965,8 +1957,6 @@ public class H2FATDriverServlet extends FATServlet {
         if (USING_NETTY) {
             FrameRstStream rstFrame = new FrameRstStream(3, PROTOCOL_ERROR, false);
             h2Client.addExpectedFrame(rstFrame);
-            // FrameGoAway errorFrame = new FrameGoAway(0, "Protocol error: Padding should not be larger than payload length.".getBytes(), PROTOCOL_ERROR, 2147483647, false);
-            // h2Client.addExpectedFrame(errorFrame);
         } else {
             FrameGoAway errorFrame = new FrameGoAway(0, "HEADERS frame must have a header block fragment".getBytes(), COMPRESSION_ERROR, 1, false);
             h2Client.addExpectedFrame(errorFrame);
@@ -1976,24 +1966,6 @@ public class H2FATDriverServlet extends FATServlet {
         byte[] errorBytes = "Error".getBytes();
         FrameHeadersClient frameHeadersToSend = new FrameHeadersClient(3, errorBytes, 0, 0, 0, true, true, false, false, false, false);
         h2Client.sendFrame(frameHeadersToSend);
-
-//        if (USING_NETTY) {
-//            // Payload length in CHFW is not set as expected. It is set to 85 when it wanted to be 34
-//            String dataString = "000022010d00000003328286141e2f4832546573744d6f64756c652f483248656164657273416e64426f64790000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-//            byte[] b = parseHexBinary(dataString);
-//            h2Client.sendBytes(b);
-//        } else {
-//            // create headers to send over to the server; note that the end headers flag IS NOT set
-//            List<HeaderEntry> firstHeadersToSend = new ArrayList<HeaderEntry>();
-//            firstHeadersToSend.add(new HeaderEntry(new H2HeaderField(":method", "GET"), HpackConstants.LiteralIndexType.NEVERINDEX, false));
-//            firstHeadersToSend.add(new HeaderEntry(new H2HeaderField(":scheme", "http"), HpackConstants.LiteralIndexType.NEVERINDEX, false));
-//            firstHeadersToSend.add(new HeaderEntry(new H2HeaderField(":path", HEADERS_AND_BODY_URI), HpackConstants.LiteralIndexType.NEVERINDEX, false));
-//
-//            //PayloadLength: 34, pad length: 50
-//            FrameHeadersClient frameHeadersToSend = new FrameHeadersClient(3, null, 0, 50, 0, true, true, true, false, false, false);
-//            frameHeadersToSend.setHeaderEntries(firstHeadersToSend);
-//            h2Client.sendFrame(frameHeadersToSend);
-//        }
 
         blockUntilConnectionIsDone.await();
         handleErrors(h2Client, testName);
@@ -3587,19 +3559,7 @@ public class H2FATDriverServlet extends FATServlet {
         CountDownLatch blockUntilConnectionIsDone = new CountDownLatch(1);
         Http2Client h2Client = getDefaultH2Client(request, response, blockUntilConnectionIsDone);
 
-        if (USING_NETTY) {
-            // Netty does not expect an error code back so just look for the last data frame
-//            h2Client.addExpectedFrame(new FrameData(1, new byte[] {}, 0, true, false, false));
-//            List<H2HeaderField> firstHeadersReceived = new ArrayList<H2HeaderField>();
-//            firstHeadersReceived.add(new H2HeaderField(":status", "200"));
-//            firstHeadersReceived.add(new H2HeaderField("x-powered-by", "Servlet/4.0"));
-//            firstHeadersReceived.add(new H2HeaderField("date", ".*")); //regex because date will vary
-//            // cannot assume language of test machine
-//            firstHeadersReceived.add(new H2HeaderField("content-language", ".*"));
-//            FrameHeadersClient frameHeaders = new FrameHeadersClient(1, null, 0, 0, 15, true, true, false, true, false, false);
-//            frameHeaders.setHeaderFields(firstHeadersReceived);
-//            h2Client.addExpectedFrame(frameHeaders);
-        } else {
+        if (!USING_NETTY) {
             int NO_ERROR = 0x0;
             FrameGoAway errorFrame = new FrameGoAway(0, null, NO_ERROR, 1, false);
             h2Client.addExpectedFrame(errorFrame);

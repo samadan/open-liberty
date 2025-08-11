@@ -343,18 +343,6 @@ public class DataFrameTests extends H2FATDriverServlet {
         FrameWindowUpdate streamUpdateFrame = new FrameWindowUpdate(3, 502, false);
         h2Client.addExpectedFrame(streamUpdateFrame);
 
-//        if (USING_NETTY) {
-//            h2Client.addExpectedFrame(new FrameSettings(0, -1, -1, 200, 1000, 57344, -1, false));
-//            FrameHeaders headers = addFirstExpectedHeaders(h2Client);
-//            h2Client.sendUpgradeHeader(HEADERS_ONLY_URI);
-//            h2Client.sendClientPrefaceFollowedBySettingsFrame(EMPTY_SETTINGS_FRAME);
-//            h2Client.waitFor(headers);
-//        } else {
-//            FrameWindowUpdate connectionUpdateFrame = new FrameWindowUpdate(0, 2, false);
-//            h2Client.addExpectedFrame(connectionUpdateFrame);
-//            setupDefaultUpgradedConnection(h2Client);
-//        }
-
         if (!USING_NETTY) {
             FrameWindowUpdate connectionUpdateFrame = new FrameWindowUpdate(0, 2, false);
             h2Client.addExpectedFrame(connectionUpdateFrame);
@@ -415,16 +403,6 @@ public class DataFrameTests extends H2FATDriverServlet {
         h2Client.addExpectedFrame(stream3UpdateFrame);
         h2Client.addExpectedFrame(stream7UpdateFrame);
         // connection window size is large, so no window_udpates are expected on stream 0
-
-//        if (USING_NETTY) {
-//            h2Client.addExpectedFrame(new FrameSettings(0, -1, -1, 200, 1000, 57344, -1, false));
-//            FrameHeaders headers = addFirstExpectedHeaders(h2Client);
-//            h2Client.sendUpgradeHeader(HEADERS_ONLY_URI);
-//            h2Client.sendClientPrefaceFollowedBySettingsFrame(EMPTY_SETTINGS_FRAME);
-//            h2Client.waitFor(headers);
-//        } else {
-//            setupDefaultUpgradedConnection(h2Client);
-//        }
 
         h2Client.addExpectedFrame(new FrameSettings(0, -1, -1, 100, 1000, 57344, -1, false));
         FrameHeaders headers = addFirstExpectedHeaders(h2Client);
