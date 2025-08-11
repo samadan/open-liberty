@@ -15,42 +15,17 @@ import java.util.List;
 /**
  *
  */
-public class ToolResponse {
+public class ToolResponseResult {
 
-    private final String jsonrpc = "2.0";
-    private final Object id;
-    private final Result result;
-
-    public static ToolResponse createFor(Object id, Object result) {
-        ToolResponse response = new ToolResponse(id);
-        response.result.content.add(new TextContent(result));
-        return response;
+    public ToolResponseResult(Object result) {
+        content.add(new TextContent(result));
     }
 
-    public ToolResponse(Object id) {
-        this.id = id;
-        result = new Result();
+    public List<Content> getContent() {
+        return content;
     }
 
-    public String getJsonrpc() {
-        return jsonrpc;
-    }
-
-    public Object getId() {
-        return id;
-    }
-
-    public Result getResult() {
-        return result;
-    }
-
-    public static class Result {
-        public List<Content> getContent() {
-            return content;
-        }
-
-        private List<Content> content = new ArrayList<>();
-    }
+    private List<Content> content = new ArrayList<>();
 
     public static abstract class Content {
         private final String type;

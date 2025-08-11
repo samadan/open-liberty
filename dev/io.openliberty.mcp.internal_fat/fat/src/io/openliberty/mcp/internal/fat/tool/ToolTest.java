@@ -117,7 +117,6 @@ public class ToolTest extends FATServletClient {
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
         JSONObject jsonResponse = new JSONObject(response);
-
         // Lenient mode tests
         JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": \"2\"}", response, false);
         JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}}", jsonResponse, false);
@@ -146,7 +145,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         JSONObject jsonResponse = new JSONObject(response);
         // Lenient mode tests
         JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 2}", response, false);
@@ -176,7 +174,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -186,6 +183,136 @@ public class ToolTest extends FATServletClient {
         // Strict Mode tests
         String expectedResponseString = """
                         {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testEchoWithInvalidRequestException() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "1.0",
+                          "id": false
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"error":{"code":-32600,
+                        "data":[
+                            "jsonrpc field must be present. Only JSONRPC 2.0 is currently supported",
+                            "id must be a string or number",
+                            "method must be present and not empty",
+                            "params field must be present and not empty"
+                            ],
+                        "message":"Invalid request"},
+                        "id":"",
+                        "jsonrpc":"2.0"}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testEchoWithParseErrorException() throws Exception {
+        String request = """
+                          }
+                          "jsonrpc": "1.0",
+                          "id": false,
+                          {
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"error":{"code":-32700,
+                        "message":"Parse error",
+                        "data":["Invalid token=CURLYCLOSE at (line no=1, column no=3, offset=2). Expected tokens are: [CURLYOPEN, SQUAREOPEN, STRING, NUMBER, TRUE, FALSE, NULL]"]},
+                        "id":"",
+                        "jsonrpc":"2.0"}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, false);
+    }
+
+    @Test
+    public void testEchoWithInvalidParamsException() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo"
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"error":{"code":-32602,
+                        "data":[
+                            "Missing arguments in params"
+                            ],
+                        "message":"Invalid params"},
+                        "id":"2",
+                        "jsonrpc":"2.0"}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testEchoWithInvalidParamsArgumentMismatchException() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                                "other": "Hello"
+                              }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"error":{"code":-32602,
+                        "data":[
+                            "0 arguments processed, expected 1"
+                            ],
+                        "message": "Invalid params"},
+                        "id":"2",
+                        "jsonrpc":"2.0"}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testEchoWithMethodNotFoundException() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "call/tools",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"error":{"code":-32601,
+                        "data":[
+                            "call/tools not found"
+                            ],
+                        "message":"Method not found"},
+                        "id":"2",
+                        "jsonrpc":"2.0"}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -205,7 +332,6 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         JSONObject jsonResponse = new JSONObject(response);
-
         String expectedString = """
                                 {
                                     "id": 1,
