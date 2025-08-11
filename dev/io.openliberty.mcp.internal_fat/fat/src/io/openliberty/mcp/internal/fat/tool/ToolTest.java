@@ -484,7 +484,7 @@ public class ToolTest extends FATServletClient {
 
         // Strict Mode tests
         String expectedResponseString = """
-                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": 300}]}}
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": 300}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
