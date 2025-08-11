@@ -10,9 +10,11 @@
 package io.openliberty.mcp.internal.requests;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
@@ -66,7 +68,7 @@ public class McpToolCallParams {
     private Object[] parseArguments(JsonObject arguments2, Jsonb jsonb) {
         JsonObject argsObject = arguments2.asJsonObject();
         Object[] results = new Object[metadata.arguments().size()];
-        int argsProcessed = 0;
+        HashSet<String> argsProcessed = new HashSet<>();
         for (var entry : argsObject.entrySet()) {
             String argName = entry.getKey();
             JsonValue argValue = entry.getValue();
@@ -74,16 +76,22 @@ public class McpToolCallParams {
             if (argMetadata != null) {
                 String json = jsonb.toJson(argValue);
                 results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
-                argsProcessed++;
+                argsProcessed.add(argName);
             }
         }
 
-        if (argsProcessed != metadata.arguments().size()) {
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS,
-                                       new ArrayList<>(Arrays.asList(String.valueOf(argsProcessed) + " arguments processed, expected " + metadata.arguments().size())));
+        if (argsProcessed.size() != metadata.arguments().size()) {
+            List<String> data = generateArgumentMismatchData(argsProcessed, metadata.arguments().keySet());
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
         }
 
         return results;
+    }
+
+    public List<String> generateArgumentMismatchData(Set<String> processed, Set<String> expected) {
+        SetUtils.SetView<String> missing = SetUtils.difference(expected, processed);
+        SetUtils.SetView<String> extra = SetUtils.difference(processed, expected);
+        return List.of("args " + extra.toSet() + "passed but not found in method", "args " + missing.toSet() + "were expected by the method");
     }
 
     public Bean<?> getBean() {
