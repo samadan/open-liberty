@@ -104,7 +104,7 @@ public class AsyncWriteListenerHttpUnit {
     public static void testCleanup() throws Exception {
         // test cleanup
         if (server != null && server.isStarted()) {
-            server.stopServer("SRVE0918E:.*", "SRVE8015E:.*", "SRVE9007E:.*", "SRVE9009E:.*", "SRVE9005E:.*", "SRVE8015E:.*", "SRVE8055E*");
+            server.stopServer("SRVE0918E:.*", "SRVE8015E:.*", "SRVE9007E:.*", "SRVE9009E:.*", "SRVE9005E:.*", "SRVE8015E:.*");
         }
     }
 
