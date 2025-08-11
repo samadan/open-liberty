@@ -187,9 +187,6 @@ public class LibertyHttpRequestHandler extends SimpleChannelInboundHandler<FullH
             return;
         }
 
-        if (!draining && !context.channel().config().isAutoRead() && requestQueue.remainingCapacity() > 0) {
-            resumeReading(context);
-        }
         FullHttpRequest nextRequest = requestQueue.poll();
         if (nextRequest == null) {
             requestHandlerContext.channel().attr(NettyHttpConstants.HANDLING_REQUEST).set(false);
@@ -199,8 +196,13 @@ public class LibertyHttpRequestHandler extends SimpleChannelInboundHandler<FullH
                     Tr.debug(this, tc, "No additional requests remaining. Closing channel.");
                 }
                 context.close();
+            } else if(!context.channel().config().isAutoRead()){
+                resumeReading(context);
             }
             return;
+        }
+        if(!draining && !context.channel().config().isAutoRead() && requestQueue.remainingCapacity()>0){
+            resumeReading(context);
         }
         requestHandlerContext.channel().attr(NettyHttpConstants.HANDLING_REQUEST).set(true);
         requestHandlerContext.fireChannelRead(nextRequest);
