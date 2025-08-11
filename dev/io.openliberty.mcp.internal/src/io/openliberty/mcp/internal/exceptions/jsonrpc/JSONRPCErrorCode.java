@@ -10,9 +10,11 @@
 package io.openliberty.mcp.internal.exceptions.jsonrpc;
 
 /**
+ * Enum to map standard JSONRPC errors
  *
+ * @param code
+ * @param message
  */
-//@JsonbTypeAdapter(JSONRPCErrorCode.JSONRPCErrorCodeAdapter.class)
 public enum JSONRPCErrorCode {
     PARSE_ERROR(-32700, "Parse error"),
     INVALID_REQUEST(-32600, "Invalid request"),

@@ -16,8 +16,11 @@ import java.util.List;
  *
  */
 public class ToolResponseResult {
+    private boolean isError = false;
 
-    public ToolResponseResult(Object result) {
+    public ToolResponseResult(Object result, boolean isError) {
+        this.isError = isError;
+
         if (result instanceof String s) {
             content.add(new TextContent(s));
         } else {
@@ -27,6 +30,13 @@ public class ToolResponseResult {
 
     public List<Content> getContent() {
         return content;
+    }
+
+    /**
+     * @return the isError
+     */
+    public boolean getIsError() {
+        return isError;
     }
 
     private List<Content> content = new ArrayList<>();

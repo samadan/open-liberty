@@ -15,10 +15,10 @@ package io.openliberty.mcp.internal.responses;
 public class McpResultResponse extends McpResponse {
 
     /**
-     * @param jsonrpc
      * @param id
+     * @param result
      */
-    Object result;
+    private Object result;
 
     public McpResultResponse(Object id, Object result) {
         super("2.0", id);
