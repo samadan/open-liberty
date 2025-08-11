@@ -50,10 +50,14 @@ public class MessageParsingTest {
         Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0));
         registry.addTool(new ToolMetadata(testTool, null, null, arguments));
 
-        Tool addtestTool = Literals.tool("add", "Add", "Addition calculator");
+        Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
         Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0),
                                                             "num2", new ArgumentMetadata(Integer.class, 1));
-        registry.addTool(new ToolMetadata(addtestTool, null, null, additionArgs));
+        registry.addTool(new ToolMetadata(addTestTool, null, null, additionArgs));
+
+        Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
+        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0));
+        registry.addTool(new ToolMetadata(toogleTestTool, null, null, booleanArgs));
 
     }
 
@@ -180,6 +184,27 @@ public class MessageParsingTest {
         McpRequest request = jsonb.fromJson(reader, McpRequest.class);
         McpToolCallParams toolCallRequest = request.getParams(McpToolCallParams.class, jsonb);
         assertThat(toolCallRequest.getArguments(jsonb), arrayContaining(111, 222));
+    }
+
+    @Test
+    public void parseBooleanArgumentType() {
+        Jsonb jsonb = JsonbBuilder.create();
+        StringReader reader = new StringReader("""
+                        {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "toggle",
+                            "arguments": {
+                              "input": true
+                            }
+                          }
+                        }
+                        """);
+        McpRequest request = jsonb.fromJson(reader, McpRequest.class);
+        McpToolCallParams toolCallRequest = request.getParams(McpToolCallParams.class, jsonb);
+        assertThat(toolCallRequest.getArguments(jsonb), arrayContaining(true));
     }
 
 }

@@ -415,7 +415,4 @@ public class ToolTest extends FATServletClient {
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
-
-
-
 }
