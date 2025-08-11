@@ -27,14 +27,12 @@ import io.netty.handler.codec.http.HttpScheme;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.Http2CodecUtil.SimpleChannelPromiseAggregator;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.internal.UnstableApi;
 
 /**
  * Translates HTTP/1.x object writes into HTTP/2 frames.
  * <p>
  * See {@link InboundHttp2ToHttpAdapter} to get translation from HTTP/2 frames to HTTP/1.x objects.
  */
-@UnstableApi
 public class HttpToHttp2ConnectionHandler extends Http2ConnectionHandler {
 
     private final boolean validateHeaders;
@@ -134,6 +132,8 @@ public class HttpToHttp2ConnectionHandler extends Http2ConnectionHandler {
                 // Write the data
                 final ByteBuf content = ((HttpContent) msg).content();
                 endStream = isLastContent && trailers.isEmpty();
+                // Liberty specific change for sending out data for a different stream than the current stream id
+                // for parallel stream handling
                 if(msg instanceof StreamSpecificHttpContent)
                 	encoder.writeData(ctx, ((StreamSpecificHttpContent)msg).streamId, content, 0, endStream, promiseAggregator.newPromise());
                 else if(msg instanceof LastStreamSpecificHttpContent)

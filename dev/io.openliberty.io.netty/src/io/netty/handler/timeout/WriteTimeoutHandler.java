@@ -68,6 +68,8 @@ public class WriteTimeoutHandler extends ChannelOutboundHandlerAdapter {
     private static final long MIN_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(1);
 
     private long timeoutNanos;
+
+    // Liberty variables
     private boolean closeConnection;
 
     /**
@@ -106,6 +108,8 @@ public class WriteTimeoutHandler extends ChannelOutboundHandlerAdapter {
      *        write timeout
      * @param unit
      *        the {@link TimeUnit} of {@code timeout}
+     * @param closeConnection
+     *        flag to control whether to close the connection on a timeout or set failure to the promise
      */
     public WriteTimeoutHandler(long timeout, TimeUnit unit, boolean closeConnection) {
         setTimeout(timeout, unit);
@@ -229,16 +233,12 @@ public class WriteTimeoutHandler extends ChannelOutboundHandlerAdapter {
             // See https://github.com/netty/netty/issues/2159
             if (!promise.isDone()) {
                 try {
+                    // Liberty specific change to control not closing the connection when a write timeout occurs
                     if (closeConnection)
                         writeTimedOut(ctx);
                     else {
                         promise.tryFailure(new SocketTimeoutException("Write timed out!!"));
                     }
-                    // if (!closeConnection) {
-                    //     // Don't actually close the connection but do setFailure to the promise
-                    //     promise.setFailure(new SocketTimeoutException("Write timed out!!"));
-                    // }else
-                    //     writeTimedOut(ctx);
                 } catch (Throwable t) {
                     ctx.fireExceptionCaught(t);
                 }
