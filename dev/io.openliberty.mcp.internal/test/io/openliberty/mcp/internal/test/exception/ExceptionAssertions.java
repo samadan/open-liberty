@@ -51,8 +51,8 @@ public class ExceptionAssertions {
      */
     public static class ExceptionMatcher extends TypeSafeDiagnosingMatcher<Throwable> {
 
-        private Class<? extends Throwable> type;
-        private final List<String> messageIncludes = new ArrayList<>();
+        protected Class<? extends Throwable> type;
+        protected final List<String> messageIncludes = new ArrayList<>();
 
         private ExceptionMatcher() {
             super(Throwable.class);
@@ -106,7 +106,7 @@ public class ExceptionAssertions {
             for (String messagePart : messageIncludes) {
                 if (!t.getMessage().contains(messagePart)) {
                     result = false;
-                    desc.appendText("message was ").appendValue(t.getMessage()).appendText("\n");
+                    desc.appendText("message was").appendValue(t.getMessage()).appendText("\n");
                     break;
                 }
             }

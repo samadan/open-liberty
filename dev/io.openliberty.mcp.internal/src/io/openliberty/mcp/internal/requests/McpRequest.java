@@ -17,19 +17,6 @@ public record McpRequest(String jsonrpc,
                          Object id,
                          String method,
                          JsonObject params) {
-    public McpRequest {
-        if (jsonrpc == null || !jsonrpc.equals("2.0"))
-            throw new IllegalArgumentException("jsonrpc field must be present. Only JSONRPC 2.0 is currently supported");
-        if (id == null || !(id instanceof String || id instanceof Number))
-            throw new IllegalArgumentException("id must be a string or number");
-        if (id instanceof String && ((String) id).isBlank())
-            throw new IllegalArgumentException("id must not be empty");
-        if (method == null || method.isBlank())
-            throw new IllegalArgumentException("method must be present and not empty");
-        if (params == null)
-            throw new IllegalArgumentException("Params field must be present");
-
-    }
 
 //    Returns the enum value of the supported tool methods
     /**
@@ -38,7 +25,7 @@ public record McpRequest(String jsonrpc,
      * @return the matching {@link RequestMethod} enum value
      */
     public RequestMethod getRequestMethod() {
-        return RequestMethod.getForMethodName(method);
+        return RequestMethod.getForMethodName(this.method);
     }
 
     /**
@@ -50,7 +37,8 @@ public record McpRequest(String jsonrpc,
      * @return
      */
     public <T> T getParams(Class<T> type, Jsonb jsonb) {
-        String json = jsonb.toJson(params);
+        String json = jsonb.toJson(this.params);
         return jsonb.fromJson(json, type);
     }
+
 }
