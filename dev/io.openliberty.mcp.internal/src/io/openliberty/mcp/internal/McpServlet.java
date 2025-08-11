@@ -9,11 +9,10 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,19 +32,12 @@ import io.openliberty.mcp.internal.responses.McpResultResponse;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
-import jakarta.json.Json;
 import jakarta.json.JsonException;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonReader;
-import jakarta.json.JsonString;
-import jakarta.json.JsonValue;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -102,10 +94,10 @@ public class McpServlet extends HttpServlet {
         McpRequest request = null;
         // TODO: validate headers/contentType etc.
         try {
-            ServletInputStream is = req.getInputStream();
-            request = convertToValidMCPRequest(is);
+            BufferedReader re = req.getReader();
+            request = McpRequest.createValidMCPRequest(re);
         } catch (JsonbException | JsonException e) {
-            throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR, new ArrayList<>(Arrays.asList(e.getMessage())));
+            throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR, List.of(e.getMessage()));
         }
         return request;
     }
@@ -116,56 +108,12 @@ public class McpServlet extends HttpServlet {
             case TOOLS_CALL -> callTool(request, resp.getWriter());
             case TOOLS_LIST -> listTools(request, resp.getWriter());
             case INITIALIZE -> initialize(request, resp.getWriter());
-            default -> throw new JSONRPCException(JSONRPCErrorCode.METHOD_NOT_FOUND, new ArrayList<>(Arrays.asList(String.valueOf(request.getRequestMethod() + " not found"))));
+            default -> throw new JSONRPCException(JSONRPCErrorCode.METHOD_NOT_FOUND, List.of(String.valueOf(request.getRequestMethod() + " not found")));
         }
 
     }
 
-    public McpRequest convertToValidMCPRequest(ServletInputStream is) throws JsonException, JSONRPCException, IOException {
-        JsonReader reader = Json.createReader(is);
-        JsonObject requestJson = reader.readObject();
-        String jsonrpc = requestJson.getString("jsonrpc", null);
-        JsonValue id = requestJson.getOrDefault("id", null);
-        String method = requestJson.getString("method", null);
-        JsonObject params = requestJson.getJsonObject("params");
-
-        ArrayList<String> errors = new ArrayList<>();
-
-        if (jsonrpc == null || !jsonrpc.equals("2.0"))
-            errors.add("jsonrpc field must be present. Only JSONRPC 2.0 is currently supported");
-        if (id.getValueType().equals(JsonValue.ValueType.NULL) || !(id.getValueType().equals(JsonValue.ValueType.STRING)
-                                                                    || (id.getValueType().equals(JsonValue.ValueType.NUMBER))))
-            errors.add("id must be a string or number");
-        if (id.getValueType().equals(JsonValue.ValueType.STRING) && ((JsonString) id).getString().isBlank())
-            errors.add("id must not be empty");
-        if (method == null || method.isBlank())
-            errors.add("method must be present and not empty");
-        if (params == null)
-            errors.add("params field must be present and not empty");
-
-        if (!errors.isEmpty())
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_REQUEST, errors);
-        Object idObj = null;
-
-        if (id.getValueType().equals(JsonValue.ValueType.STRING)) {
-            idObj = ((JsonString) id).getString();
-        } else if (id.getValueType().equals(JsonValue.ValueType.NUMBER)) {
-            idObj = ((JsonNumber) id).numberValue();
-        }
-
-        return new McpRequest(jsonrpc, idObj, method, params);
-    }
-
-    /**
-     * @param request
-     * @return
-     * @throws IOException
-     * @throws InvocationTargetException
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     */
-
-    @FFDCIgnore(JSONRPCException.class)
+    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpRequest request, Writer writer) {
         McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
         CreationalContext<Void> cc = bm.createCreationalContext(null);
@@ -173,11 +121,15 @@ public class McpServlet extends HttpServlet {
         McpResponse mcpResponse;
         try {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
-            mcpResponse = new McpResultResponse(request.id(), new ToolResponseResult(result));
+            mcpResponse = new McpResultResponse(request.id(), new ToolResponseResult(result, false));
         } catch (JSONRPCException e) {
             throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            mcpResponse = new McpResultResponse(request.id(), new ToolResponseResult(e.getCause().getMessage(), true));;
+        } catch (IllegalAccessException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
+        } catch (IllegalArgumentException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
         }
         jsonb.toJson(mcpResponse, writer);
 
