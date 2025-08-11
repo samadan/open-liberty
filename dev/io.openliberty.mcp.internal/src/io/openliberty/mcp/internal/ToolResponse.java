@@ -22,13 +22,9 @@ public class ToolResponse {
     private final Result result;
 
     public static ToolResponse createFor(Object id, Object result) {
-        if (result instanceof String s) {
-            ToolResponse response = new ToolResponse(id);
-            response.result.content.add(new TextContent(s));
-            return response;
-        } else {
-            throw new RuntimeException("TODO: handle non-string responses");
-        }
+        ToolResponse response = new ToolResponse(id);
+        response.result.content.add(new TextContent(result));
+        return response;
     }
 
     public ToolResponse(Object id) {
@@ -57,7 +53,7 @@ public class ToolResponse {
     }
 
     public static abstract class Content {
-        private String type;
+        private final String type;
 
         public Content(String type) {
             this.type = type;
@@ -70,13 +66,13 @@ public class ToolResponse {
 
     public static class TextContent extends Content {
 
-        public String getText() {
+        public Object getText() {
             return text;
         }
 
-        private String text;
+        private final Object text;
 
-        public TextContent(String text) {
+        public TextContent(Object text) {
             super("text");
             this.text = text;
         }

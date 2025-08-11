@@ -265,7 +265,7 @@ public class ToolTest extends FATServletClient {
         String request = """
                           {
                           "jsonrpc": "2.0",
-                          "id": 2,
+                          "id": "2",
                           "method": "tools/call",
                           "params": {
                             "name": "add",
@@ -283,11 +283,13 @@ public class ToolTest extends FATServletClient {
         // Lenient mode tests
         JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\": 300}]}}", jsonResponse, false);
 
-//        // Strict Mode tests
-//        String expectedResponseString = """
-//                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": "300"}]}}
-//                        """;
-//        JSONAssert.assertEquals(expectedResponseString, response, true);
+        // Strict Mode tests
+        String expectedResponseString = """
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": 300}]}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
     }
+
+
 
 }
