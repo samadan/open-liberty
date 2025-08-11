@@ -491,7 +491,6 @@ public class CookieTests {
             HttpCookie cookie = message.getCookie("ISO88591");
             assertThat(cookie, notNullValue());
             assertThat(cookie.getValue(), is("Mayagüez"));
-            //assertThat(cookie.getValue(), is("MayagÃ¼ez"));
         }
 
         @Test
