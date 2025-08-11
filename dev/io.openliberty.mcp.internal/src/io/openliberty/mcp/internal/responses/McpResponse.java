@@ -14,8 +14,8 @@ package io.openliberty.mcp.internal.responses;
  *
  */
 public abstract class McpResponse {
-    String jsonrpc;
-    Object id;
+    private String jsonrpc;
+    private Object id;
 
     public McpResponse(String jsonrpc, Object id) {
         if (jsonrpc == null || !jsonrpc.equals("2.0"))

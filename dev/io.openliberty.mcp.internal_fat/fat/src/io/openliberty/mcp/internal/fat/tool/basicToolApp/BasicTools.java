@@ -21,6 +21,14 @@ public class BasicTools {
 
     @Tool(name = "echo", title = "Echoes the input", description = "Returns the input unchanged")
     public String echo(@ToolArg(name = "input", description = "input to echo") String input) {
+        if (input.equals("throw error")) {
+            throw new RuntimeException("Method call caused runtime exception");
+        }
+        return input;
+    }
+
+    @Tool(name = "privateEcho", title = "Echoes the input", description = "Returns the input unchanged")
+    private String privateEcho(@ToolArg(name = "input", description = "input to echo") String input) {
         return input;
     }
 

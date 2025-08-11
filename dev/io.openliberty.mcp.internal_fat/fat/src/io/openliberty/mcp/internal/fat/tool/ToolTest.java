@@ -123,7 +123,7 @@ public class ToolTest extends FATServletClient {
 
         // Strict Mode tests
         String expectedResponseString = """
-                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -152,7 +152,7 @@ public class ToolTest extends FATServletClient {
 
         // Strict Mode tests
         String expectedResponseString = """
-                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -182,7 +182,7 @@ public class ToolTest extends FATServletClient {
 
         // Strict Mode tests
         String expectedResponseString = """
-                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}]}}
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -376,6 +376,23 @@ public class ToolTest extends FATServletClient {
                                                         "input"
                                                     ]
                                                 }
+                                            },
+                                            {
+                                                "name": "privateEcho",
+                                                "description": "Returns the input unchanged",
+                                                "title": "Echoes the input",
+                                                "inputSchema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "input": {
+                                                            "description": "temp desc",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "input"
+                                                    ]
+                                                }
                                             }
                                         ]
                                     }
@@ -384,6 +401,62 @@ public class ToolTest extends FATServletClient {
 
         // Lenient mode test (false boolean in 3rd parameter
         JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);
+    }
+
+    @Test
+    public void testEchoMethodCallError() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": 2,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "throw error"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        JSONObject jsonResponse = new JSONObject(response);
+
+        String expectedResponseString = """
+                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Method call caused runtime exception"}], "isError": true}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testprivateMethodAccessError() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": 2,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "privateEcho",
+                            "arguments": {
+                              "input": "throw error"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        JSONObject jsonResponse = new JSONObject(response);
+
+        String expectedResponseString = """
+                        {"error":{"code":-32603,
+                        "data":[
+                            "Could not call privateEcho"
+                            ],
+                        "message":"Internal error"},
+                        "id":2,
+                        "jsonrpc":"2.0"}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
     @Test

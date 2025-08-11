@@ -13,6 +13,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.equalTo;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
 
@@ -29,13 +30,14 @@ import io.openliberty.mcp.internal.RequestMethod;
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpInitializeParams.ClientInfo;
 import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
+import jakarta.json.JsonException;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
-import jakarta.json.bind.JsonbException;
 
 /**
  *
@@ -104,8 +106,8 @@ public class MessageParsingTest {
         assertThat(request.id(), equalTo("2"));
     }
 
-    @Test(expected = JsonbException.class)
-    public void validateFalseIdType() {
+    @Test(expected = JSONRPCException.class)
+    public void validateFalseIdType() throws JsonException, JSONRPCException, IOException {
         Jsonb jsonb = JsonbBuilder.create();
         StringReader reader = new StringReader("""
                         {
@@ -120,7 +122,68 @@ public class MessageParsingTest {
                           }
                         }
                         """);
-        jsonb.fromJson(reader, McpRequest.class);
+
+        McpRequest.createValidMCPRequest(reader);
+    }
+
+    @Test(expected = JSONRPCException.class)
+    public void validateInvalidJSONRPCType() throws JsonException, JSONRPCException, IOException {
+        Jsonb jsonb = JsonbBuilder.create();
+        StringReader reader = new StringReader("""
+                        {
+                          "jsonrpc": "1.0",
+                          "id": 2,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """);
+
+        McpRequest.createValidMCPRequest(reader);
+    }
+
+    @Test(expected = JSONRPCException.class)
+    public void validateEmptyId() throws JsonException, JSONRPCException, IOException {
+        Jsonb jsonb = JsonbBuilder.create();
+        StringReader reader = new StringReader("""
+                        {
+                          "jsonrpc": "2.0",
+                          "id": "",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """);
+
+        McpRequest.createValidMCPRequest(reader);
+    }
+
+    @Test(expected = JSONRPCException.class)
+    public void validateMissingMethod() throws JsonException, JSONRPCException, IOException {
+        Jsonb jsonb = JsonbBuilder.create();
+        StringReader reader = new StringReader("""
+                        {
+                          "jsonrpc": "2.0",
+                          "id": "",
+                          "method": "",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """);
+
+        McpRequest.createValidMCPRequest(reader);
     }
 
     @Test

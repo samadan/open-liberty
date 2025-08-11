@@ -16,13 +16,23 @@ import java.util.List;
  *
  */
 public class ToolResponseResult {
+    private boolean isError = false;
 
-    public ToolResponseResult(Object result) {
+    public ToolResponseResult(Object result, boolean isError) {
+        this.isError = isError;
+
         content.add(new TextContent(result));
     }
 
     public List<Content> getContent() {
         return content;
+    }
+
+    /**
+     * @return the isError
+     */
+    public boolean getIsError() {
+        return isError;
     }
 
     private List<Content> content = new ArrayList<>();
