@@ -18,7 +18,6 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.http.channel.internal.CallbackIDs;
 import com.ibm.ws.http.channel.internal.HttpMessages;
-import com.ibm.ws.http.dispatcher.internal.HttpDispatcher;
 import com.ibm.wsspi.channelfw.VirtualConnection;
 import com.ibm.wsspi.http.channel.exception.HttpInvalidMessageException;
 import com.ibm.wsspi.http.logging.DebugLog;
@@ -91,13 +90,7 @@ public class HttpISCWriteCallback implements TCPWriteCompletedCallback {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(tc, "Calling write complete callback of app channel.");
             }
-            int status = mySC.getResponse().getStatusCodeAsInt();
-            boolean isTemporaryStatus = HttpDispatcher.useEE7Streams() && status == 101 ? false: (100<=status && 200 > status);
-                
-            
-            
-            
-            if (isTemporaryStatus) {
+            if (mySC.getResponseImpl().isTemporaryStatusCode()) {
                 // allow other responses to follow a temporary one
                 if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                     Tr.debug(tc, "Temp response sent, resetting send flags");

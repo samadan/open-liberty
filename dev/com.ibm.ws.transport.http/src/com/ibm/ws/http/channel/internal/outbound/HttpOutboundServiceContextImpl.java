@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2024 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,6 @@ import com.ibm.ws.http.channel.internal.HttpObjectFactory;
 import com.ibm.ws.http.channel.internal.HttpRequestMessageImpl;
 import com.ibm.ws.http.channel.internal.HttpResponseMessageImpl;
 import com.ibm.ws.http.channel.internal.HttpServiceContextImpl;
-import com.ibm.ws.http.dispatcher.internal.HttpDispatcher;
 import com.ibm.wsspi.bytebuffer.WsByteBuffer;
 import com.ibm.wsspi.channelfw.InterChannelCallback;
 import com.ibm.wsspi.channelfw.VirtualConnection;
@@ -551,7 +550,7 @@ public class HttpOutboundServiceContextImpl extends HttpServiceContextImpl imple
         setAppReadCallback(cb);
 
         // check for an existing final response
-        if (headersParsed() && !isTemporaryStatusCode()) {
+        if (headersParsed() && !getResponseImpl().isTemporaryStatusCode()) {
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(tc, "earlyRead: Final response already received.");
             }
@@ -728,7 +727,7 @@ public class HttpOutboundServiceContextImpl extends HttpServiceContextImpl imple
                 // this scenario means we just need a "handshake" so continue
                 return;
             }
-            if (!isTemporaryStatusCode()) {
+            if (!getResponseImpl().isTemporaryStatusCode()) {
                 // received a final response
                 return;
             }
@@ -1174,7 +1173,7 @@ public class HttpOutboundServiceContextImpl extends HttpServiceContextImpl imple
             if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                 Tr.debug(tc, "Response headers already parsed");
             }
-            if (this.bTempResponsesUsed || !isTemporaryStatusCode()) {
+            if (this.bTempResponsesUsed || !getResponseImpl().isTemporaryStatusCode()) {
                 // app channel wants to see all the responses
                 if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
                     Tr.exit(tc, "finishRequestMessage(sync): already parsed");
@@ -1272,12 +1271,7 @@ public class HttpOutboundServiceContextImpl extends HttpServiceContextImpl imple
             // if a temp response and using temps, return out. If temp and not
             // using temps, keep reading for final
             if (headersParsed()) {
-                
-                
-                
-                
-                
-                if (this.bTempResponsesUsed || !isTemporaryStatusCode()) {
+                if (this.bTempResponsesUsed || !getResponseImpl().isTemporaryStatusCode()) {
                     // app channel wants to see all the responses
                     if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
                         Tr.exit(tc, "finishRequestMessage(async): already parsed");
@@ -1407,7 +1401,7 @@ public class HttpOutboundServiceContextImpl extends HttpServiceContextImpl imple
         VirtualConnection vc = null;
         do {
             this.numResponsesReceived++;
-            if (!isTemporaryStatusCode()) {
+            if (!getResponseImpl().isTemporaryStatusCode()) {
                 // a final response message was received
                 if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
                     Tr.debug(tc, "Notifying app channel of final response.");
@@ -2307,7 +2301,7 @@ public class HttpOutboundServiceContextImpl extends HttpServiceContextImpl imple
     final protected HttpBaseMessageImpl getMessageBeingSent() {
         return getRequestImpl();
     }
-    
+
     @Override
     protected HttpBaseMessage getCurrentMessage() {
         return getRequest();
@@ -2710,7 +2704,4 @@ public class HttpOutboundServiceContextImpl extends HttpServiceContextImpl imple
         return retBuf;
 
     }
-    
-    
-    
 }
