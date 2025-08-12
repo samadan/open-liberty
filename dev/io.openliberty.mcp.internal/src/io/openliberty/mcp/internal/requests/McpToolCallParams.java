@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.requests;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -93,7 +94,14 @@ public class McpToolCallParams {
         Set<String> extra = new HashSet<>(processed);
         missing.removeAll(extra);
         extra.removeAll(missingTmp);
-        return List.of("args " + extra + " passed but not found in method", "args " + missing + " were expected by the method");
+        ArrayList<String> data = new ArrayList<>();
+        if (!extra.isEmpty()) {
+            data.add("args " + extra + " passed but not found in method");
+        }
+        if (!missing.isEmpty()) {
+            data.add("args " + missing + " were expected by the method");
+        }
+        return !data.isEmpty() ? data : null;
     }
 
     public Bean<?> getBean() {
