@@ -14,8 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.collections4.SetUtils;
-
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
@@ -76,11 +74,12 @@ public class McpToolCallParams {
             if (argMetadata != null) {
                 String json = jsonb.toJson(argValue);
                 results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
-                argsProcessed.add(argName);
+
             }
+            argsProcessed.add(argName);
         }
 
-        if (argsProcessed.size() != metadata.arguments().size()) {
+        if (!argsProcessed.equals(metadata.arguments().keySet())) {
             List<String> data = generateArgumentMismatchData(argsProcessed, metadata.arguments().keySet());
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
         }
@@ -89,9 +88,12 @@ public class McpToolCallParams {
     }
 
     public List<String> generateArgumentMismatchData(Set<String> processed, Set<String> expected) {
-        SetUtils.SetView<String> missing = SetUtils.difference(expected, processed);
-        SetUtils.SetView<String> extra = SetUtils.difference(processed, expected);
-        return List.of("args " + extra.toSet() + "passed but not found in method", "args " + missing.toSet() + "were expected by the method");
+        Set<String> missing = new HashSet<>(expected);
+        Set<String> missingTmp = new HashSet<>(missing);
+        Set<String> extra = new HashSet<>(processed);
+        missing.removeAll(extra);
+        extra.removeAll(missingTmp);
+        return List.of("args " + extra + " passed but not found in method", "args " + missing + " were expected by the method");
     }
 
     public Bean<?> getBean() {
