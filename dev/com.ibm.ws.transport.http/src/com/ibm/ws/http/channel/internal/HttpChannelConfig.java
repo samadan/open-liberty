@@ -1322,7 +1322,7 @@ public class HttpChannelConfig {
                 }
             }
             if (this.useSameSiteConfig() && (TraceComponent.isAnyTracingEnabled()) && (tc.isEventEnabled())) {
-                Tr.event(tc, "Http Channel Config: SameSite Strict configuration parsed.");
+                Tr.event(tc, "Http Channel Config: SameSite Partitioned configuration parsed.");
             }
         }
     }
@@ -2196,9 +2196,9 @@ public class HttpChannelConfig {
     protected void parsev0CookieDateRFC1123compat(Object option) {
         if (Objects.nonNull(option)) {
             this.v0CookieDateRFC1123compat = convertBoolean(option);
-            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-                Tr.event(tc, "Config: v0CookieDateRFC1123compat is " + isv0CookieDateRFC1123compat() + " this = " + this);
-            }
+        }
+        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            Tr.event(tc, "Config: v0CookieDateRFC1123compat is " + isv0CookieDateRFC1123compat() + " this = " + this);
         }
     }
 
