@@ -459,4 +459,33 @@ public class ToolTest extends FATServletClient {
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
+    @Test
+    public void testAddWithIntegerInputArgs() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "add",
+                            "arguments": {
+                              "num1": 100,
+                              "num2": 200
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        JSONObject jsonResponse = new JSONObject(response);
+
+        // Lenient mode tests
+        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\": 300}]}}", jsonResponse, false);
+
+        // Strict Mode tests
+        String expectedResponseString = """
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": 300}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
 }

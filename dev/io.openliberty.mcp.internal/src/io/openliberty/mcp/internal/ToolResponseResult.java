@@ -21,11 +21,7 @@ public class ToolResponseResult {
     public ToolResponseResult(Object result, boolean isError) {
         this.isError = isError;
 
-        if (result instanceof String s) {
-            content.add(new TextContent(s));
-        } else {
-            throw new RuntimeException("TODO: handle non-string responses");
-        }
+        content.add(new TextContent(result));
     }
 
     public List<Content> getContent() {
@@ -42,7 +38,7 @@ public class ToolResponseResult {
     private List<Content> content = new ArrayList<>();
 
     public static abstract class Content {
-        private String type;
+        private final String type;
 
         public Content(String type) {
             this.type = type;
@@ -55,13 +51,13 @@ public class ToolResponseResult {
 
     public static class TextContent extends Content {
 
-        public String getText() {
+        public Object getText() {
             return text;
         }
 
-        private String text;
+        private final Object text;
 
-        public TextContent(String text) {
+        public TextContent(Object text) {
             super("text");
             this.text = text;
         }
