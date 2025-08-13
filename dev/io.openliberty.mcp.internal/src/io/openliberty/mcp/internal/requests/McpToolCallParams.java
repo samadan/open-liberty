@@ -90,10 +90,9 @@ public class McpToolCallParams {
 
     public List<String> generateArgumentMismatchData(Set<String> processed, Set<String> expected) {
         Set<String> missing = new HashSet<>(expected);
-        Set<String> missingTmp = new HashSet<>(missing);
+        missing.removeAll(processed);
         Set<String> extra = new HashSet<>(processed);
-        missing.removeAll(extra);
-        extra.removeAll(missingTmp);
+        extra.removeAll(expected);
         ArrayList<String> data = new ArrayList<>();
         if (!extra.isEmpty()) {
             data.add("args " + extra + " passed but not found in method");
