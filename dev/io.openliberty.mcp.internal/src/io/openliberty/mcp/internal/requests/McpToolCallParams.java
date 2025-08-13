@@ -11,8 +11,9 @@ package io.openliberty.mcp.internal.requests;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
@@ -66,7 +67,7 @@ public class McpToolCallParams {
     private Object[] parseArguments(JsonObject arguments2, Jsonb jsonb) {
         JsonObject argsObject = arguments2.asJsonObject();
         Object[] results = new Object[metadata.arguments().size()];
-        int argsProcessed = 0;
+        HashSet<String> argsProcessed = new HashSet<>();
         for (var entry : argsObject.entrySet()) {
             String argName = entry.getKey();
             JsonValue argValue = entry.getValue();
@@ -74,16 +75,33 @@ public class McpToolCallParams {
             if (argMetadata != null) {
                 String json = jsonb.toJson(argValue);
                 results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
-                argsProcessed++;
+
             }
+            argsProcessed.add(argName);
         }
 
-        if (argsProcessed != metadata.arguments().size()) {
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS,
-                                       new ArrayList<>(Arrays.asList(String.valueOf(argsProcessed) + " arguments processed, expected " + metadata.arguments().size())));
+        if (!argsProcessed.equals(metadata.arguments().keySet())) {
+            List<String> data = generateArgumentMismatchData(argsProcessed, metadata.arguments().keySet());
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
         }
 
         return results;
+    }
+
+    public List<String> generateArgumentMismatchData(Set<String> processed, Set<String> expected) {
+        Set<String> missing = new HashSet<>(expected);
+        Set<String> missingTmp = new HashSet<>(missing);
+        Set<String> extra = new HashSet<>(processed);
+        missing.removeAll(extra);
+        extra.removeAll(missingTmp);
+        ArrayList<String> data = new ArrayList<>();
+        if (!extra.isEmpty()) {
+            data.add("args " + extra + " passed but not found in method");
+        }
+        if (!missing.isEmpty()) {
+            data.add("args " + missing + " were expected by the method");
+        }
+        return !data.isEmpty() ? data : null;
     }
 
     public Bean<?> getBean() {
