@@ -1236,8 +1236,8 @@ public class HttpChannelConfig {
             if (aLog != null) {
                 this.accessLogger = aLog;
             }
-            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-                Tr.event(tc, "Config: using logging service", accessLogger);
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Config: using logging service", accessLogger);
             }
         }
     }
@@ -1277,7 +1277,7 @@ public class HttpChannelConfig {
                     addSameSiteAttribute(s, HttpConfigConstants.SameSite.LAX);
                 }
             }
-            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            if (this.useSameSiteConfig() && (TraceComponent.isAnyTracingEnabled()) && (tc.isEventEnabled())) {
                 Tr.event(tc, "Http Channel Config: SameSite Lax configuration parsed.");
             }
         }
@@ -1291,7 +1291,7 @@ public class HttpChannelConfig {
                 for (String s : cookies) {
                     addSameSiteAttribute(s, HttpConfigConstants.SameSite.NONE);
                 }
-                if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                if (this.useSameSiteConfig() && (TraceComponent.isAnyTracingEnabled()) && (tc.isEventEnabled())) {
                     Tr.event(tc, "Http Channel Config: SameSite None configuration parsed.");
                 }
             }
@@ -1305,7 +1305,7 @@ public class HttpChannelConfig {
                 for (String s : cookies) {
                     addSameSiteAttribute(s, HttpConfigConstants.SameSite.STRICT);
                 }
-                if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                if (this.useSameSiteConfig() && (TraceComponent.isAnyTracingEnabled()) && (tc.isEventEnabled())) {
                     Tr.event(tc, "Http Channel Config: SameSite Strict configuration parsed.");
                 }
             }
@@ -2157,8 +2157,8 @@ public class HttpChannelConfig {
         // PK53193 - allow this to be disabled
         if (Objects.nonNull(option)) {
             this.bEnableSmugglingProtection = convertBoolean(option);
-            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-                Tr.event(tc, "Config: request smuggling protection is " + this.bEnableSmugglingProtection);
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "Config: request smuggling protection is " + this.bEnableSmugglingProtection);
             }
         }
     }
@@ -2196,9 +2196,9 @@ public class HttpChannelConfig {
     protected void parsev0CookieDateRFC1123compat(Object option) {
         if (Objects.nonNull(option)) {
             this.v0CookieDateRFC1123compat = convertBoolean(option);
-            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-                Tr.event(tc, "Config: v0CookieDateRFC1123compat is " + isv0CookieDateRFC1123compat() + " this = " + this);
-            }
+        }
+        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            Tr.event(tc, "Config: v0CookieDateRFC1123compat is " + isv0CookieDateRFC1123compat() + " this = " + this);
         }
     }
 
@@ -2390,7 +2390,6 @@ public class HttpChannelConfig {
      */
 
     protected void parseDecompressionTolerance(Object option) {
-
         if (Objects.nonNull(option)) {
             try {
                 this.decompressionTolerance = convertInteger(option);
