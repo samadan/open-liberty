@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2024 IBM Corporation and others.
+ * Copyright (c) 2018, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -140,7 +140,7 @@ public class Http2Client {
     }
 
     public void sendUpgradeHeader(String requestUri, HTTPUtils.HTTPMethod httpMethod, String body, FrameSettingsClient settingsFrame) {
-        String h1_upgradeHeader = new String(httpMethod.name() + " " + requestUri + " HTTP/1.1 \r\n" + "Host: " + hostName + ":" + httpDefaultPort
+        String h1_upgradeHeader = new String(httpMethod.name() + " " + requestUri + " HTTP/1.1\r\n" + "Host: " + hostName + ":" + httpDefaultPort
                                              + "\r\nConnection: Upgrade, HTTP2-Settings\r\nUpgrade: h2c\r\nHTTP2-Settings: " + settingsFrame.getBase64UrlPayload() + "\r\n\r\n");
 
         if (body != null && !body.isEmpty())
