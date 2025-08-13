@@ -29,7 +29,6 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
-
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -307,6 +306,7 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
 
         useNetty = ProductInfo.getBetaEdition() &&
                    MetatypeUtils.parseBoolean(config, NettyConstants.USE_NETTY, config.get(NettyConstants.USE_NETTY), true);
+
 
         initializeChains();
 
@@ -1341,6 +1341,15 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
     /** {@inheritDoc} */
     @Override
     public void resume() throws PauseableComponentException {
+        if (useNetty) {
+            nettyResume();
+
+        } else {
+            legacyResume();
+        }
+    }
+
+    private void nettyResume() throws PauseableComponentException {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             Tr.entry(this, tc, "resume");
         }
@@ -1358,13 +1367,35 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
             }
             logChainStates();
             verifyResumedChainStates();
-            
+
         } catch (Throwable t) {
             throw new PauseableComponentException(t);
-        } finally{
+        } finally {
             if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
                 Tr.exit(this, tc, "resume");
             }
+        }
+    }
+
+    private void legacyResume() throws PauseableComponentException {
+        try {
+            // Start the HTTP and HTTPS chains.
+            // By the time this method exits, requests that target this endpoint will be accepted (CWWKO0219I:
+            // TCP Channel *** has been started and is now listening for requests on host ***  (IPv6) port ***.).
+            processHttpChainWork(true, true);
+
+            // Check the state of the HTTP chains. The expectation is that the HTTP and HTTPS chains states are either STARTED
+            // or UNINITIALIZED (disabled).
+            int httpChainState = httpChain.getChainState();
+            int httpsChainState = httpSecureChain.getChainState();
+            if (!(httpChainState == ChainState.STARTED.val && httpsChainState == ChainState.UNINITIALIZED.val ||
+                  httpChainState == ChainState.UNINITIALIZED.val && httpsChainState == ChainState.STARTED.val ||
+                  httpChainState == ChainState.STARTED.val && httpsChainState == ChainState.STARTED.val)) {
+                throw new PauseableComponentException("The request to resume HTTP endpoint " + name + " did not complete successfully. HTTPChain: " + httpChain.toString()
+                                                      + ". HTTPSChain: " + httpSecureChain.toString());
+            }
+        } catch (Throwable t) {
+            throw new PauseableComponentException(t);
         }
     }
 
@@ -1379,56 +1410,25 @@ public class HttpEndpointImpl implements RuntimeUpdateListener, PauseableCompone
         int httpChainState = ChainState.UNINITIALIZED.val;
         int httpsChainState = ChainState.UNINITIALIZED.val;
 
-        long startTime = System.currentTimeMillis();
-        long timeout = 10000; // TODO - testing with ten seconds, but probably want this to be more aggressive
+        httpChainState = httpChain.getChainState();
+        httpsChainState = httpsChain.getChainState();
 
-        while (System.currentTimeMillis() - startTime < timeout) {
-            httpChainState = httpChain.getChainState();
-            httpsChainState = httpsChain.getChainState();
+        boolean isValid = (httpChainState == ChainState.STARTED.val && httpsChainState == ChainState.UNINITIALIZED.val) ||
+                          (httpChainState == ChainState.UNINITIALIZED.val && httpsChainState == ChainState.STARTED.val) ||
+                          (httpChainState == ChainState.STARTED.val && httpsChainState == ChainState.STARTED.val);
 
-            boolean isValid = 
-                (httpChainState == ChainState.STARTED.val && httpsChainState == ChainState.UNINITIALIZED.val) ||
-                (httpChainState == ChainState.UNINITIALIZED.val && httpsChainState == ChainState.STARTED.val) ||
-                (httpChainState == ChainState.STARTED.val && httpsChainState == ChainState.STARTED.val);
-
-            if (isValid) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(this, tc, "Chain states verified successfully - HTTP: " + ChainState.printState(httpChainState) 
-                        + ", HTTPS: " + ChainState.printState(httpsChainState));
-                }
-                if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-                    Tr.exit(this, tc, "verifyResumedChainStates");
-                }
-                return;
+        if (isValid) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Chain states verified successfully - HTTP: " + ChainState.printState(httpChainState)
+                                   + ", HTTPS: " + ChainState.printState(httpsChainState));
             }
-
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(this, tc, "Chain state verification was interrupted");
-                }
-                break;
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
+                Tr.exit(this, tc, "verifyResumedChainStates");
             }
+            return;
         }
-
-        // If we've reached here, the timeout has expired without reaching a valid state
-        PauseableComponentException exception = new PauseableComponentException("The request to resume HTTP endpoint " + name + 
-            " did not complete successfully within the timeout period. HTTPChain: " + httpChain.toString() + 
-            ". HTTPSChain: " + httpsChain.toString());
-
-        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(this, tc, "Chain states after resume - HTTP: " + ChainState.printState(httpChainState) 
-                 + ", HTTPS: " + ChainState.printState(httpsChainState));
-        }
-
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-            Tr.exit(this, tc, "verifyResumedChainStates", exception);
-        }
-
-        throw exception;
     }
+
 
     private void performChecks() throws IllegalStateException {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
