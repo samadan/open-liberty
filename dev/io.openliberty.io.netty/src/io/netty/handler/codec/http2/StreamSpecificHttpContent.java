@@ -17,7 +17,8 @@ import io.netty.handler.codec.http.DefaultHttpContent;
 
 
 /**
- * Custom class for writing data frame to specific streams
+ * Liberty specific class for writing data frame to specific streams
+ * to help with parallel stream handling
  */
 public class StreamSpecificHttpContent extends DefaultHttpContent {
 	
