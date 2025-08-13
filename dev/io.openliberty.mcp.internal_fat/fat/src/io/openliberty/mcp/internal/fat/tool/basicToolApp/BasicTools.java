@@ -36,4 +36,9 @@ public class BasicTools {
     public int add(@ToolArg(name = "num1", description = "first number") int number1, @ToolArg(name = "num2", description = "second number") int number2) {
         return number1 + number2;
     }
+
+    @Tool(name = "toggle", title = "Boolean toggle", description = "toggles the boolean input")
+    public boolean toggle(@ToolArg(name = "value", description = "boolean value") boolean value) {
+        return !value;
+    }
 }

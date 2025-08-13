@@ -188,23 +188,60 @@ public class ToolTest extends FATServletClient {
     }
 
     @Test
-    public void testEchoWithInvalidRequestException() throws Exception {
+    public void testEchoWithInvalidJsonRPCVersion() throws Exception {
         String request = """
                           {
                           "jsonrpc": "1.0",
-                          "id": false
+                          "id": "2",
+                          "method": "call/tools"
                         }
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
                         {"error":{"code":-32600,
-                        "data":[
-                            "jsonrpc field must be present. Only JSONRPC 2.0 is currently supported",
-                            "id must be a string or number",
-                            "method must be present and not empty",
-                            "params field must be present and not empty"
-                            ],
+                        "data": "jsonrpc field must be present. Only JSONRPC 2.0 is currently supported",
+                        "message":"Invalid request"},
+                        "id":"",
+                        "jsonrpc":"2.0"}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testEchoWithInvalidIdType() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": false,
+                          "method": "call/tools"
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"error":{"code":-32600,
+                        "data": "id must be a string or number",
+                        "message":"Invalid request"},
+                        "id":"",
+                        "jsonrpc":"2.0"}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testEchoWithEmptyMethod() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2"
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"error":{"code":-32600,
+                        "data": "method must be present and not empty",
                         "message":"Invalid request"},
                         "id":"",
                         "jsonrpc":"2.0"}
@@ -394,6 +431,23 @@ public class ToolTest extends FATServletClient {
                                                         "input"
                                                     ]
                                                 }
+                                            },
+                                            {
+                                                "name": "toggle",
+                                                "description": "toggles the boolean input",
+                                                "title": "Boolean toggle",
+                                                "inputSchema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "description": "temp desc",
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "value"
+                                                    ]
+                                                }
                                             }
                                         ]
                                     }
@@ -486,6 +540,35 @@ public class ToolTest extends FATServletClient {
         // Strict Mode tests
         String expectedResponseString = """
                         {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": 300}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testToggleWithBooleanArgs() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "toggle",
+                            "arguments": {
+                              "value": true
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        JSONObject jsonResponse = new JSONObject(response);
+
+        // Lenient mode tests
+        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\": false}]}}", jsonResponse, false);
+
+        // Strict Mode tests
+        String expectedResponseString = """
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": false}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }

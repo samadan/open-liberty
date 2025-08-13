@@ -12,12 +12,34 @@ package io.openliberty.mcp.internal.fat.utils;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.HttpRequest;
 
+import java.net.http.HttpResponse;
+
 /**
  *
  */
 public class HttpTestUtils {
 
+    /**
+     * Call MCP server, and get the String response body
+     */
     public static String callMCP(LibertyServer server, String path, String jsonRequestBody) throws Exception {
         return new HttpRequest(server, path + "/mcp").requestProp("Accept", "application/json, text/event-stream").jsonBody(jsonRequestBody).method("POST").run(String.class);
-    };
-};
+    }
+
+    /**
+     * Call MCP server notification endpoint, and provide an expected response code. No response body is returned
+     * If the expected status code is different from the response code, and exception is thrown
+     */
+    public static void callMCPNotification(LibertyServer server,
+                                           String path,
+                                           String jsonRequestBody,
+                                           int expectedResponseCode) throws Exception {
+
+        new HttpRequest(server, path + "/mcp")
+                .requestProp("Accept", "application/json, text/event-stream")
+                .jsonBody(jsonRequestBody)
+                .method("POST")
+                .expectCode(expectedResponseCode)
+                .run(HttpResponse.class);
+    }
+}

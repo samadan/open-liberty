@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.fat.lifecycle.tests;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
+import static org.junit.Assert.*;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -28,6 +29,7 @@ import componenttest.topology.impl.LibertyServer;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
 import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
+
 /**
  *
  */
@@ -40,7 +42,7 @@ public class LifecycleTest {
     @BeforeClass
     public static void setup() throws Exception {
         WebArchive war = ShrinkWrap.create(WebArchive.class, "lifecycleTest.war")
-                                   .addPackage(BasicTools.class.getPackage());
+                .addPackage(BasicTools.class.getPackage());
 
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
@@ -101,4 +103,15 @@ public class LifecycleTest {
         JSONAssert.assertEquals(expectedResponse, response, JSONCompareMode.STRICT);
     }
 
+    @Test
+    public void testClientInitializedNotification() throws Exception {
+        String request = """
+                         {
+                           "jsonrpc": "2.0",
+                           "method": "notifications/initialized"
+                         }
+                        """;
+
+        HttpTestUtils.callMCPNotification(server, "/lifecycleTest", request, 202);
+    }
 }
