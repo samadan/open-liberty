@@ -14,8 +14,7 @@ package com.ibm.ws.springboot.support.fat;
 
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.AfterClass;
 import org.junit.runner.RunWith;
 
 import componenttest.annotation.MinimumJavaLevel;
@@ -23,16 +22,11 @@ import componenttest.custom.junit.runner.FATRunner;
 
 @RunWith(FATRunner.class)
 @MinimumJavaLevel(javaLevel = 17)
-public class CommonWebServerTests40 extends CommonWebServerTests {
+public class ErrorPage40Test extends ErrorPageBaseTest {
 
-    @After
-    public void stopTestServer() throws Exception {
-        String methodName = testName.getMethodName();
-        if ((methodName != null) && methodName.contains(DEFAULT_HOST_WITH_APP_PORT)) {
-            super.stopServer(true, "CWWKT0015W");
-        } else {
-            super.stopServer();
-        }
+    @AfterClass
+    public static void stopTestServer() throws Exception {
+        server.stopServer("Exception: Thrown on purpose for FAT test", "SRVE0777E: Exception thrown by application class");
     }
 
     /**
@@ -50,17 +44,5 @@ public class CommonWebServerTests40 extends CommonWebServerTests {
     @Override
     public String getApplication() {
         return SPRING_BOOT_40_APP_BASE;
-    }
-
-    @Test
-    public void testBasicSpringBootApplication40() throws Exception {
-        testBasicSpringBootApplication();
-    }
-
-    @Test
-    public void testDefaultHostWithAppPort40() throws Exception {
-        // A variation of 'testBasicSpringBootApplication40'.
-        // The different behavior is triggered by the test name.
-        testBasicSpringBootApplication();
     }
 }

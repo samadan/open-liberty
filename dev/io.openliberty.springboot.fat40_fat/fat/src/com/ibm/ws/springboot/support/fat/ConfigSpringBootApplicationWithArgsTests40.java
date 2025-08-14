@@ -12,36 +12,21 @@
  *******************************************************************************/
 package com.ibm.ws.springboot.support.fat;
 
+import java.util.List;
 import java.util.Set;
 
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.ibm.websphere.simplicity.config.SpringBootApplication;
+
 import componenttest.annotation.MinimumJavaLevel;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.topology.utils.HttpUtils;
 
 @RunWith(FATRunner.class)
 @MinimumJavaLevel(javaLevel = 17)
-public class CommonWebServerTests40 extends CommonWebServerTests {
-
-    @After
-    public void stopTestServer() throws Exception {
-        String methodName = testName.getMethodName();
-        if ((methodName != null) && methodName.contains(DEFAULT_HOST_WITH_APP_PORT)) {
-            super.stopServer(true, "CWWKT0015W");
-        } else {
-            super.stopServer();
-        }
-    }
-
-    /**
-     * Override: Web applications use springboot and servlet.
-     *
-     * @return The features provisioned in the test server. This
-     *         implementation always answers "springBoot-4.0" and
-     *         "servlet-6.1`".
-     */
+public class ConfigSpringBootApplicationWithArgsTests40 extends AbstractSpringTests {
     @Override
     public Set<String> getFeatures() {
         return getWebFeatures();
@@ -52,15 +37,25 @@ public class CommonWebServerTests40 extends CommonWebServerTests {
         return SPRING_BOOT_40_APP_BASE;
     }
 
-    @Test
-    public void testBasicSpringBootApplication40() throws Exception {
-        testBasicSpringBootApplication();
+    @Override
+    public AppConfigType getApplicationConfigType() {
+        return AppConfigType.SPRING_BOOT_APP_TAG;
+    }
+
+    @Override
+    public void modifyAppConfiguration(SpringBootApplication appConfig) {
+        List<String> appArgs = appConfig.getApplicationArguments();
+        appArgs.add("--myapp.arg1=value1");
+        appArgs.add("--myapp.arg2=value2");
     }
 
     @Test
-    public void testDefaultHostWithAppPort40() throws Exception {
-        // A variation of 'testBasicSpringBootApplication40'.
-        // The different behavior is triggered by the test name.
-        testBasicSpringBootApplication();
+    public void testSpringAppArg1() throws Exception {
+        HttpUtils.findStringInUrl(server, "/getAppProp?key=myapp.arg1", "value1");
+    }
+
+    @Test
+    public void testSpringAppArg2() throws Exception {
+        HttpUtils.findStringInUrl(server, "/getAppProp?key=myapp.arg2", "value2");
     }
 }
