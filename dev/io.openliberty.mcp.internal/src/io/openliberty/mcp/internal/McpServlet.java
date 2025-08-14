@@ -16,6 +16,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
@@ -48,6 +50,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class McpServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+    private static final TraceComponent tc = Tr.register(McpServlet.class);
 
     private Jsonb jsonb;
 
@@ -116,7 +119,7 @@ public class McpServlet extends HttpServlet {
     @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpRequest request, Writer writer) {
         McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
-        CreationalContext<Void> cc = bm.createCreationalContext(null);
+        CreationalContext<Object> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         McpResponse mcpResponse;
         try {
@@ -130,6 +133,12 @@ public class McpServlet extends HttpServlet {
             throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
         } catch (IllegalArgumentException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
+        } finally {
+            try {
+                cc.release();
+            } catch (Exception ex) {
+                Tr.warning(tc, "Failed to release bean: " + ex);
+            }
         }
         jsonb.toJson(mcpResponse, writer);
 

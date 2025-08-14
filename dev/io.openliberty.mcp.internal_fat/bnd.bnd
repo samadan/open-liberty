@@ -29,4 +29,5 @@ tested.features: \
 	org.skyscreamer:jsonassert,\
 	com.ibm.ws.logging;version=latest,\
 	com.ibm.websphere.appserver.spi.logging,\
-	com.ibm.ws.logging.core
+	com.ibm.ws.logging.core,\
+	io.openliberty.jakarta.annotation.3.0
