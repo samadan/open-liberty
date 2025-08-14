@@ -249,7 +249,9 @@ public class HttpRequest {
             }
             if (!expectedResponseCode.contains(responseCode)) {
                 Log.info(c, "run", "Got unexpected response code: " + responseCode);
-                throw new Exception("Unexpected response: " + responseCode);
+                String responseBody = request.getResponseBodyAsString();
+                Log.info(c, "run", "Response body: " + responseBody);
+                throw new Exception("Unexpected response: " + responseCode + "\nResponse Body: " + responseBody);
             }
 
             String responseBody = request.getResponseBodyAsString();
