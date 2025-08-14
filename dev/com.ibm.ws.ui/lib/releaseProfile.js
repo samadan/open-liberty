@@ -13,7 +13,7 @@
 
 var dojoVersion = '1.13.10';
 var gridxVersion = '1.3.9';
-var idxVersion = '1.5.2.6';
+var idxVersion = '1.5.2.6_2';
 
 var profile = {
     action : 'release',
