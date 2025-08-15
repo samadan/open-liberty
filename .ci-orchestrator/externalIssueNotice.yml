@@ -18,9 +18,9 @@ triggers:
       description: "Number of new issue opened by the external contributor"
 
 steps:
-- stepName: Slack Notification
+- stepName: New Issue Notice
   workType: Jenkins
-  projectName: slackNotify
+  projectName: externalContribNewIssueNotify
   timeoutInMinutes: 120
   properties:
     githubIssueApi: "https://api.github.com/repos/OpenLiberty/open-liberty/issues/${githubIssueNumber}"  
