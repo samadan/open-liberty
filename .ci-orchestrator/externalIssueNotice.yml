@@ -1,0 +1,26 @@
+type: pipeline_definition
+product: Liberty
+name: Open Liberty External Contributor New Issues Notification
+description: "Creates notification for a new issue opened by an external contributor"
+triggers:
+- type: github
+  description: "Runs a pipeline that notifies of a new issue opened by an external contributor"
+  triggerName: "external-contributor-new-issue"
+  triggerRank: 50
+  groups: ["LibertyDev"]
+  #TODO: We shouldn't need to rely on a comment. The label should be enough trigger. How to detect that?
+  #keyword: "!external-contrib-new-issue"
+  #aliasKeywords:
+  #  - "#external-contrib-new-issue"
+  propertyDefinitions:
+    - name: githubIssueNumber
+      isRequired: true
+      description: "Number of new issue opened by the external contributor"
+
+steps:
+- stepName: Slack Notification
+  workType: Jenkins
+  projectName: slackNotify
+  timeoutInMinutes: 120
+  properties:
+    githubIssueApi: "https://api.github.com/repos/OpenLiberty/open-liberty/issues/${githubIssueNumber}"  
