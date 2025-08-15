@@ -23,4 +23,4 @@ steps:
   projectName: externalContribNewIssueNotify
   timeoutInMinutes: 120
   properties:
-    githubIssueApi: "https://api.github.com/repos/OpenLiberty/open-liberty/issues/${githubIssueNumber}"  
+    githubIssueApi: "https://api.github.com/repos/OpenLiberty/open-liberty/issues/${githubIssueNumber}"
