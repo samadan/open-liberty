@@ -13,7 +13,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
 
@@ -107,8 +106,7 @@ public class MessageParsingTest {
     }
 
     @Test(expected = JSONRPCException.class)
-    public void validateFalseIdType() throws JsonException, JSONRPCException, IOException {
-        Jsonb jsonb = JsonbBuilder.create();
+    public void validateFalseIdType() throws JsonException, JSONRPCException {
         StringReader reader = new StringReader("""
                         {
                           "jsonrpc": "2.0",
@@ -127,8 +125,7 @@ public class MessageParsingTest {
     }
 
     @Test(expected = JSONRPCException.class)
-    public void validateInvalidJSONRPCType() throws JsonException, JSONRPCException, IOException {
-        Jsonb jsonb = JsonbBuilder.create();
+    public void validateInvalidJSONRPCType() throws JsonException, JSONRPCException {
         StringReader reader = new StringReader("""
                         {
                           "jsonrpc": "1.0",
@@ -147,8 +144,7 @@ public class MessageParsingTest {
     }
 
     @Test(expected = JSONRPCException.class)
-    public void validateEmptyId() throws JsonException, JSONRPCException, IOException {
-        Jsonb jsonb = JsonbBuilder.create();
+    public void validateEmptyId() throws JsonException, JSONRPCException {
         StringReader reader = new StringReader("""
                         {
                           "jsonrpc": "2.0",
@@ -167,8 +163,7 @@ public class MessageParsingTest {
     }
 
     @Test(expected = JSONRPCException.class)
-    public void validateMissingMethod() throws JsonException, JSONRPCException, IOException {
-        Jsonb jsonb = JsonbBuilder.create();
+    public void validateMissingMethod() throws JsonException, JSONRPCException {
         StringReader reader = new StringReader("""
                         {
                           "jsonrpc": "2.0",
@@ -225,6 +220,22 @@ public class MessageParsingTest {
                    equalTo(new ClientInfo("ExampleClient",
                                           "Example Client Display Name",
                                           "1.0.0")));
+    }
+
+    @Test
+    public void parseInitializedNotification() throws Exception {
+        McpRequest request;
+        try (Jsonb jsonb = JsonbBuilder.create()) {
+            var reader = new StringReader("""
+                    {
+                      "jsonrpc": "2.0",
+                      "method": "notifications/initialized"
+                    }
+                    """);
+
+            request = jsonb.fromJson(reader, McpRequest.class);
+            assertThat(request.getRequestMethod(), equalTo(RequestMethod.INITIALIZED));
+        }
     }
 
     @Test

@@ -101,4 +101,15 @@ public class LifecycleTest {
         JSONAssert.assertEquals(expectedResponse, response, JSONCompareMode.STRICT);
     }
 
+    @Test
+    public void testClientInitializedNotification() throws Exception {
+        String request = """
+                         {
+                           "jsonrpc": "2.0",
+                           "method": "notifications/initialized"
+                         }
+                        """;
+
+        HttpTestUtils.callMCPNotification(server, "/lifecycleTest", request);
+    }
 }

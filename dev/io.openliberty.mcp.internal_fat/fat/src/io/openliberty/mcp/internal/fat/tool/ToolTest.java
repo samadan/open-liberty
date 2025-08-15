@@ -201,9 +201,8 @@ public class ToolTest extends FATServletClient {
                         {"error":{"code":-32600,
                         "data":[
                             "jsonrpc field must be present. Only JSONRPC 2.0 is currently supported",
-                            "id must be a string or number",
                             "method must be present and not empty",
-                            "params field must be present and not empty"
+                            "id must be a string or number"
                             ],
                         "message":"Invalid request"},
                         "id":"",
@@ -394,6 +393,23 @@ public class ToolTest extends FATServletClient {
                                                         "input"
                                                     ]
                                                 }
+                                            },
+                                            {
+                                                "name": "toggle",
+                                                "description": "toggles the boolean input",
+                                                "title": "Boolean toggle",
+                                                "inputSchema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "description": "temp desc",
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "value"
+                                                    ]
+                                                }
                                             }
                                         ]
                                     }
@@ -486,6 +502,30 @@ public class ToolTest extends FATServletClient {
         // Strict Mode tests
         String expectedResponseString = """
                         {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": 300}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testToggleWithBooleanArgs() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "toggle",
+                            "arguments": {
+                              "value": true
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text": false}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }

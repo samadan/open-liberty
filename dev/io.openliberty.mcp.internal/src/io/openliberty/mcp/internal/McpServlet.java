@@ -111,6 +111,7 @@ public class McpServlet extends HttpServlet {
             case TOOLS_CALL -> callTool(request, resp.getWriter());
             case TOOLS_LIST -> listTools(request, resp.getWriter());
             case INITIALIZE -> initialize(request, resp.getWriter());
+            case INITIALIZED -> initialized(resp);
             default -> throw new JSONRPCException(JSONRPCErrorCode.METHOD_NOT_FOUND, List.of(String.valueOf(request.getRequestMethod() + " not found")));
         }
 
@@ -181,6 +182,10 @@ public class McpServlet extends HttpServlet {
         McpInitializeResult result = new McpInitializeResult("2025-06-18", caps, info, null);
         McpResponse response = new McpResultResponse(request.id(), result);
         jsonb.toJson(response, writer);
+    }
+
+    private void initialized(HttpServletResponse response) {
+        response.setStatus(HttpServletResponse.SC_ACCEPTED);
     }
 
 }
