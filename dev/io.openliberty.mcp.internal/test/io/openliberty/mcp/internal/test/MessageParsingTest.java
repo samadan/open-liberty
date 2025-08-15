@@ -9,6 +9,16 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.io.StringReader;
+import java.util.Map;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.Capabilities.ClientCapabilities;
 import io.openliberty.mcp.internal.Capabilities.Elicitation;
@@ -27,15 +37,6 @@ import io.openliberty.mcp.internal.requests.McpToolCallParams;
 import jakarta.json.JsonException;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.io.StringReader;
-import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.equalTo;
 
 /**
  *

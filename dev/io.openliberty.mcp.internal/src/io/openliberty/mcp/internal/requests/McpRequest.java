@@ -9,12 +9,19 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.requests;
 
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+
 import io.openliberty.mcp.internal.RequestMethod;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.MCPRequestValidationException;
-import jakarta.json.*;
+import jakarta.json.Json;
+import jakarta.json.JsonException;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
 import jakarta.json.bind.Jsonb;
-
-import java.io.Reader;
 
 public record McpRequest(String jsonrpc,
                          Object id,
@@ -48,20 +55,28 @@ public record McpRequest(String jsonrpc,
 
         JsonObject requestJson = Json.createReader(reader).readObject();
 
+        List<String> errors = new ArrayList<>();
+
         String jsonRpc = requestJson.getString("jsonrpc", null);
         JsonValue id = requestJson.getOrDefault("id", null);
         String method = requestJson.getString("method", null);
         JsonObject params = requestJson.getJsonObject("params");
 
-        validateJsonRpc(jsonRpc);
-        validateMethod(method);
+        validateJsonRpc(jsonRpc, errors);
+        validateMethod(method, errors);
 
         if (id == null) {
+            if (!errors.isEmpty()) {
+                throw new MCPRequestValidationException(errors);
+            }
             return createMCPNotificationRequest(jsonRpc, method, params);
         }
 
-        Object idObj = parseAndValidateId(id);
+        Object idObj = parseAndValidateId(id, errors);
 
+        if (!errors.isEmpty()) {
+            throw new MCPRequestValidationException(errors);
+        }
         return new McpRequest(jsonRpc, idObj, method, params);
     }
 
@@ -71,35 +86,34 @@ public record McpRequest(String jsonrpc,
         return new McpRequest(jsonRpc, null, method, params);
     }
 
-    private static void validateJsonRpc(String jsonRpc) throws MCPRequestValidationException {
+    private static void validateJsonRpc(String jsonRpc, List<String> errors) {
         if (!"2.0".equals(jsonRpc)) {
-            throw new MCPRequestValidationException("jsonrpc field must be present. Only JSONRPC 2.0 is currently supported");
+            errors.add("jsonrpc field must be present. Only JSONRPC 2.0 is currently supported");
         }
     }
 
-    private static void validateMethod(String method) throws MCPRequestValidationException {
+    private static void validateMethod(String method, List<String> errors) {
         if (method == null || method.isBlank()) {
-            throw new MCPRequestValidationException("method must be present and not empty");
+            errors.add("method must be present and not empty");
         }
     }
 
-    private static Object parseAndValidateId(JsonValue id) throws MCPRequestValidationException {
-        JsonValue.ValueType idValueType = id.getValueType();
+    private static Object parseAndValidateId(JsonValue id, List<String> errors) {
 
-        if (idValueType != JsonValue.ValueType.STRING &&  idValueType != JsonValue.ValueType.NUMBER) {
-            throw new MCPRequestValidationException("id must be a string or number");
-        }
-
-        if (idValueType == JsonValue.ValueType.STRING) {
-            String idString = ((JsonString) id).getString();
-
-            if (idString.isBlank()) {
-                throw new MCPRequestValidationException("id must not be empty");
+        return switch (id.getValueType()) {
+            case NUMBER -> ((JsonNumber) id).numberValue();
+            case STRING -> {
+                String idString = ((JsonString) id).getString();
+                if (idString.isBlank()) {
+                    errors.add("id must not be empty");
+                    yield null;
+                }
+                yield idString;
             }
-            return idString;
-        }
-
-        return ((JsonNumber) id).numberValue();
+            default -> {
+                errors.add("id must be a string or number");
+                yield null;
+            }
+        };
     }
-
 }

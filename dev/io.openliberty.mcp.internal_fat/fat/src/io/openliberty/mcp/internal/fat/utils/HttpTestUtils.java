@@ -12,7 +12,7 @@ package io.openliberty.mcp.internal.fat.utils;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.HttpRequest;
 
-import java.net.http.HttpResponse;
+import static org.junit.Assert.assertNull;
 
 /**
  *
@@ -27,19 +27,19 @@ public class HttpTestUtils {
     }
 
     /**
-     * Call MCP server notification endpoint, and provide an expected response code. No response body is returned
-     * If the expected status code is different from the response code, and exception is thrown
+     * Call MCP server notification endpoint, and provide a 202 expected response code. No response body is returned
+     * If a response body is returned, or a response code that is not 202, and exception is thrown
      */
     public static void callMCPNotification(LibertyServer server,
                                            String path,
-                                           String jsonRequestBody,
-                                           int expectedResponseCode) throws Exception {
+                                           String jsonRequestBody) throws Exception {
 
-        new HttpRequest(server, path + "/mcp")
+        String response = new HttpRequest(server, path + "/mcp")
                 .requestProp("Accept", "application/json, text/event-stream")
                 .jsonBody(jsonRequestBody)
                 .method("POST")
-                .expectCode(expectedResponseCode)
-                .run(HttpResponse.class);
+                .expectCode(202)
+                .run(String.class);
+        assertNull("Notification request received a response", response);
     }
 }

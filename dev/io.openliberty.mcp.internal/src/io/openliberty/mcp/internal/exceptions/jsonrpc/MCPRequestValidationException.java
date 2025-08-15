@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.exceptions.jsonrpc;
 
 import java.io.Serial;
+import java.util.List;
 
 /**
  *
@@ -17,18 +18,8 @@ import java.io.Serial;
 public class MCPRequestValidationException extends JSONRPCException {
     @Serial
     private static final long serialVersionUID = -62283199421949679L;
-    private final String data;
 
-    public MCPRequestValidationException(String data) {
-        super(JSONRPCErrorCode.INVALID_REQUEST, data);
-        this.data = data;
+    public MCPRequestValidationException(List<String> errors) {
+        super(JSONRPCErrorCode.INVALID_REQUEST, errors);
     }
-
-    /**
-     * @return string data
-     */
-    public String getData() {
-        return data;
-    }
-
 }
