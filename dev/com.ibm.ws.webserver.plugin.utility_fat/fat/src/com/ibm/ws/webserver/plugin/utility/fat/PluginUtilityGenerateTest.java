@@ -204,7 +204,7 @@ public class PluginUtilityGenerateTest {
     @Test
     public void verifyDigestAlgorithmsWhenFIPSEnabled() throws Exception {
 
-        final String methodName = "testPluginUtilityRemoteGenerate";
+        final String methodName = "verifyDigestAlgorithmsWhenFIPSEnabled";
         Log.entering(c, methodName);
 
         if(CryptoUtils.isFips140_3EnabledWithBetaGuard()){
@@ -327,13 +327,13 @@ public class PluginUtilityGenerateTest {
         env.put("JVM_ARGS", "-Dcom.ibm.webserver.plugin.utility.autoAcceptCertificates=" + AUTO_ACCEPT_CERTIFICATES);
         env.put("JAVA_HOME", server.getMachineJavaJDK());
 
-        return runCommandWithReturnednOutput(server, serverId, cluster, targetPath, env);
+        return runCommandWithReturnedOutput(server, serverId, cluster, targetPath, env);
     }
     
     
     private void runCommand(LibertyServer server, String serverId, String cluster,String targetPath, Properties env) throws Exception {
 
-        String outputResult = runCommandWithReturnednOutput(server,serverId,cluster,targetPath,env);
+        String outputResult = runCommandWithReturnedOutput(server,serverId,cluster,targetPath,env);
 
         Log.info(c, "runCommand", "Resulting output : \n" + outputResult);
 
@@ -342,7 +342,7 @@ public class PluginUtilityGenerateTest {
     /*
      * Used to return commnand output in order to verify Digest Alogrithms used. 
      */
-    private String runCommandWithReturnednOutput(LibertyServer server, String serverId, String cluster,String targetPath, Properties env) throws Exception {
+    private String runCommandWithReturnedOutput(LibertyServer server, String serverId, String cluster,String targetPath, Properties env) throws Exception {
 
         String pluginUtilityCommand = server.getInstallRoot() + "/bin/pluginUtility";
 

@@ -137,7 +137,7 @@ public class PromptX509TrustManager implements X509TrustManager {
         }
         logger.fine("None of the default trust managers trusts the certificate...");
 
-        // Compute the full MD5 digest. This does not have to be perfectly unique,
+        // Compute the full MD5 or SHA256 digest. This does not have to be perfectly unique,
         // it just has to be unique enough to know if we've seen this certificate
         // before. If we have, we do not have to prompt again. This entire class
         // will eventually be replaced when we have a client-side SSL solution.
