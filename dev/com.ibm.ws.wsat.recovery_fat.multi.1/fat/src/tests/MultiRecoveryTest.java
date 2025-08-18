@@ -23,7 +23,6 @@ import java.net.URL;
 
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -64,7 +63,7 @@ public class MultiRecoveryTest {
 
     // Pending rationalization...
     private String[] DEFAULT_TOLERATED_MSGS = new String[] { ".*" };
-    protected static String[] toleratedMsgs;
+    protected String[] toleratedMsgs;
 
     @BeforeClass
 	public static void beforeClass() throws Exception {
@@ -92,24 +91,19 @@ public class MultiRecoveryTest {
         serverApp = ShrinkHelper.buildDefaultApp("recoveryServer", "server.*");
 		ShrinkHelper.exportDropinAppToServer(server1, serverApp);
 		ShrinkHelper.exportDropinAppToServer(server2, serverApp);
-
-		FATUtils.startServers(runner, server1, server2);
 	}
-
-    @AfterClass
-	public static void afterClass() throws Exception {
-		Log.info(MultiRecoveryTest.class, "afterClass", "");
-		FATUtils.stopServers(true, toleratedMsgs, server1, server2);
-    }
 
     @Before
 	public void before() throws Exception {
+		WSATTest.deleteStateFiles(server1, server2);
+		FATUtils.startServers(runner, server1, server2);
 		toleratedMsgs = DEFAULT_TOLERATED_MSGS;
 	}
 
 	@After
 	public void after() throws Exception {
 		Log.info(MultiRecoveryTest.class, "after", "");
+		FATUtils.stopServers(toleratedMsgs, server1, server2);
 	}
 
 	protected void recoveryTest(LibertyServer server, LibertyServer server2, String id, String crashingServer) throws Exception {
@@ -126,8 +120,6 @@ public class MultiRecoveryTest {
 
 		try {
 			// We expect this to fail since it is gonna crash the server
-			server.setTraceMarkToEndOfDefaultTrace();
-			server2.setTraceMarkToEndOfDefaultTrace();
 			callSetupServlet(id);
 		} catch (IOException e) {
 			// This is fine. The setup servlet crashed its server
@@ -135,12 +127,12 @@ public class MultiRecoveryTest {
 
 		// wait for crashing servers to have gone away
 		if ("both".equals(crashingServer) || crashingServer.equals("server1")) {
-			assertNotNull(server.getServerName() + " did not crash", server.waitForStringInTraceUsingMark(XAResourceImpl.DUMP_STATE));
+			assertNotNull(server.getServerName() + " did not crash", server.waitForStringInTrace(XAResourceImpl.DUMP_STATE));
 			server.resetStarted();
 			server.postStopServerArchive();
 		}
 		if ("both".equals(crashingServer) || crashingServer.equals("server2")) {
-			assertNotNull(server2.getServerName() + " did not crash", server2.waitForStringInTraceUsingMark(XAResourceImpl.DUMP_STATE));
+			assertNotNull(server2.getServerName() + " did not crash", server2.waitForStringInTrace(XAResourceImpl.DUMP_STATE));
 			server2.resetStarted();
 			server2.postStopServerArchive();
 		}
@@ -173,7 +165,8 @@ public class MultiRecoveryTest {
 				} else {
 					assertNotNull(server2.getServerName()+failMsg+server2.getServerName(), server2.waitForStringInTrace(s2Condition, FATUtils.LOG_SEARCH_TIMEOUT));
 				}
-			}
+				}
+				
 
 			try {
 				result = callCheckServlet(id);

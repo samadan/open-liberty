@@ -72,6 +72,7 @@ public class ReroutePeerRecoveryTest extends MultiRecoveryTest {
 	public static LibertyServer server6;
 	
 	public static LibertyServer[] serversToStart;
+	public static LibertyServer[] serversToStop;
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
@@ -120,18 +121,20 @@ public class ReroutePeerRecoveryTest extends MultiRecoveryTest {
 		ShrinkHelper.exportDropinAppToServer(server3, serverApp);
 		ShrinkHelper.exportDropinAppToServer(server5, serverApp);
 
-		FATUtils.startServers(runner, server1, server2, server3, server4, server5, server6);
+		FATUtils.startServers(runner, server4, server6);
 	}
 
 	@After
 	public void after() throws Exception {
 		Log.info(ReroutePeerRecoveryTest.class, "after", "");
-		FATUtils.startServers(runner, serversToStart);
+		FATUtils.stopServers(allowedMsgs, server1, server2, server3, server5);
 	}
 
 	@Before
 	public void before() throws Exception {
 		Log.info(ReroutePeerRecoveryTest.class, "before", "");
+		WSATTest.deleteStateFiles(server3, server5);
+		FATUtils.startServers(runner, server1, server2, server3, server5);
 		server3.setTraceMarkToEndOfDefaultTrace();
 		server5.setTraceMarkToEndOfDefaultTrace();
 	}
@@ -141,7 +144,7 @@ public class ReroutePeerRecoveryTest extends MultiRecoveryTest {
 	@AfterClass
 	public static void afterClass() throws Exception {
 		Log.info(ReroutePeerRecoveryTest.class, "afterClass", "");
-		FATUtils.stopServers(true, allowedMsgs , server1, server2, server3, server4, server5, server6);
+		FATUtils.stopServers(server4, server6);
 	}
 
 	@Override
@@ -243,25 +246,29 @@ public class ReroutePeerRecoveryTest extends MultiRecoveryTest {
 
 	@Test
 	public void WSTXMPR008DFVT() throws Exception {
-		serversToStart = new LibertyServer[]{server1};
+		serversToStop = new LibertyServer[]{server3,};
+		serversToStart = new LibertyServer[]{server1, server3};
 		recoveryTest(server1, server2, "801", "server1", "none");
 	}
 
 	@Test
 	public void WSTXMPR008EFVT() throws Exception {
-		serversToStart = new LibertyServer[]{server2};
+		serversToStop = new LibertyServer[]{server5,};
+		serversToStart = new LibertyServer[]{server2, server5};
 		recoveryTest(server1, server2, "802", "server2", "none");
 	}
 
 	@Test
 	public void WSTXMPR009DFVT() throws Exception {
-		serversToStart = new LibertyServer[]{server1};
+		serversToStop = new LibertyServer[]{server3,};
+		serversToStart = new LibertyServer[]{server1, server3};
 		recoveryTest(server1, server2, "901", "server1", "none");
 	}
 
 	@Test
 	public void WSTXMPR009EFVT() throws Exception {
-		serversToStart = new LibertyServer[]{server2};
+		serversToStop = new LibertyServer[]{server5,};
+		serversToStart = new LibertyServer[]{server2, server5};
 		recoveryTest(server1, server2, "902", "server2", "none");
 	}
 }

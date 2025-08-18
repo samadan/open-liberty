@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2025 IBM Corporation and others.
+ * Copyright (c) 2020, 2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.AfterClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,7 @@ import com.ibm.tx.jta.ut.util.XAResourceImpl;
 import com.ibm.websphere.simplicity.ShrinkHelper;
 import com.ibm.websphere.simplicity.log.Log;
 import com.ibm.ws.transaction.fat.util.FATUtils;
+import com.ibm.ws.wsat.fat.util.WSATTest;
 
 import componenttest.annotation.AllowedFFDC;
 import componenttest.annotation.ExpectedFFDC;
@@ -66,15 +68,19 @@ public class LPSTest {
 
 		server1.setServerStartTimeout(FATUtils.LOG_SEARCH_TIMEOUT);
 		server2.setServerStartTimeout(FATUtils.LOG_SEARCH_TIMEOUT);
+	}
 
+	@Before
+	public void beforeTest() throws Exception {
+		WSATTest.deleteStateFiles(server1, server2);
 		FATUtils.startServers(server1, server2);
 	}
-
-	@AfterClass
-	public static void afterClass() throws Exception {
-		FATUtils.stopServers(true, new String[] {"WTRN0046E", "WTRN0048W", "WTRN0049W", "WTRN0094W"}, server1, server2);
-	}
-
+	
+	@After
+    public void tearDown() throws Exception {
+		FATUtils.stopServers(new String[] {"WTRN0046E", "WTRN0048W", "WTRN0049W", "WTRN0094W"}, server1, server2);
+    }
+	
 	/**
 	 * 
 	 * Multiple Recovery + LPS test
@@ -89,6 +95,9 @@ public class LPSTest {
 	@ExpectedFFDC("javax.transaction.xa.XAException")
 	public void WSTXLPS301BFVT() throws Exception {
 		recoveryTest("3012","server2");
+		if (server1 != null && server1.isStarted()) {
+			server1.stopServer("WTRN0049W"); //ensure server has stopped
+		}
 	}
 	
 	@Test
@@ -105,6 +114,9 @@ public class LPSTest {
 	@ExpectedFFDC("javax.transaction.xa.XAException")
 	public void WSTXLPS302BFVT() throws Exception {
 		recoveryTest("3022","server2");
+		if (server1 != null && server1.isStarted()) {
+			server1.stopServer("WTRN0049W"); //ensure server has stopped
+		}
 	}
 	
 	@Test
@@ -128,7 +140,8 @@ public class LPSTest {
         } catch (Throwable e) {
         	// This is fine
         }
-
+        Log.info(this.getClass(), method, "setupRec" + id + " returned: " + result);
+        
         //restart server in three modes
         if (startServer.equals("server1")){
         		restartServer(server1);
