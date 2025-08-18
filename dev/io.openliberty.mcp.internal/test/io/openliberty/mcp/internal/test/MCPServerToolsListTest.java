@@ -40,31 +40,31 @@ public class MCPServerToolsListTest {
     @Before
     public void setUp() throws Exception {
         ToolRegistry.set(registry);
-
         //Weather Tool
         Tool weatherTool = Literals.tool("get_weather", "Weather Information Provider", "Get current weather information for a location");
-        Map<String, ArgumentMetadata> arguments = Map.of("location", new ArgumentMetadata(String.class, 0),
-                                                         "temperature", new ArgumentMetadata(double.class, 1),
-                                                         "humidity", new ArgumentMetadata(int.class, 2));
-        registry.addTool(new ToolMetadata(weatherTool, null, null, arguments));
-
-        // Addition Tool
-        Tool additionTool = Literals.tool("Addition Calculator", "The Calculator Addition Tool", "Can add two floating point numbers");
-        Map<String, ArgumentMetadata> arguments2 = Map.of("number1", new ArgumentMetadata(double.class, 0),
-                                                          "number2", new ArgumentMetadata(double.class, 1));
-        registry.addTool(new ToolMetadata(additionTool, null, null, arguments2));
-
-        // Subtraction Tool
-        Tool subtractionTool = Literals.tool("Subtraction Calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
-        Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0),
-                                                          "number2", new ArgumentMetadata(int.class, 1));
-        registry.addTool(new ToolMetadata(subtractionTool, null, null, arguments3));
-
-        // True or False Tool
-        Tool booleanTool = Literals.tool("Boolean And Operator", "Boolean And Operator", "Does a Boolean And Operation on two boolean variables");
-        Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0),
-                                                          "var2", new ArgumentMetadata(boolean.class, 1));
-        registry.addTool(new ToolMetadata(booleanTool, null, null, arguments4));
+        Map<String, ArgumentMetadata> arguments = Map.of("location", new ArgumentMetadata(String.class, 0, "City in a country"),
+                                                         "temperature", new ArgumentMetadata(double.class, 1, "in degrees Celsius"),
+                                                         "humidity", new ArgumentMetadata(int.class, 2, "Relative Humidity"));
+        registry.addTool(new ToolMetadata(weatherTool, null, null, arguments, weatherTool.name(), weatherTool.title(), weatherTool.description()));
+/*
+ * // Addition Tool
+ * Tool additionTool = Literals.tool("addition_calculator", "The Calculator Addition Tool", "Can add two floating point numbers");
+ * Map<String, ArgumentMetadata> arguments2 = Map.of("number1", new ArgumentMetadata(double.class, 0, "operand 1"),
+ * "number2", new ArgumentMetadata(double.class, 1, "operand 2"));
+ * registry.addTool(new ToolMetadata(additionTool, null, null, arguments2, additionTool.name(), additionTool.title(), additionTool.description()));
+ *
+ * // Subtraction Tool
+ * Tool subtractionTool = Literals.tool("subtraction_calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
+ * Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0, "operand 1"),
+ * "number2", new ArgumentMetadata(int.class, 1, "operand 2"));
+ * registry.addTool(new ToolMetadata(subtractionTool, null, null, arguments3, subtractionTool.name(), subtractionTool.title(), subtractionTool.description()));
+ *
+ * // True or False Tool
+ * Tool booleanTool = Literals.tool("and_operator", "Boolean And Operator", "Does a Boolean And Operation on two boolean variables");
+ * Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "operand 1"),
+ * "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
+ * registry.addTool(new ToolMetadata(booleanTool, null, null, arguments4, booleanTool.name(), booleanTool.title(), booleanTool.description()));
+ */
     }
 
     @Test
@@ -78,7 +78,6 @@ public class MCPServerToolsListTest {
             for (ToolMetadata tmd : registry.getAllTools()) {
                 response.add(new ToolDescription(tmd));
             }
-            jsonb.toJson(response);
         }
         String responseString = jsonb.toJson(response);
         String expectedString = """

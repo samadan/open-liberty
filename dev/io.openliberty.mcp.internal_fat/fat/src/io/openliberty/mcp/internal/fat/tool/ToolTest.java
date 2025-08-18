@@ -444,48 +444,40 @@ public class ToolTest extends FATServletClient {
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         JSONObject jsonResponse = new JSONObject(response);
         String expectedString = """
-                                {
-                                    "id": 1,
-                                    "jsonrpc": "2.0",
-                                    "result": {
-                                        "tools": [
-                                            {
-                                                "name": "add",
-                                                "description": "Returns the sum of the two inputs",
-                                                "title": "Addition calculator",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "num1": {
-                                                            "description": "first number",
-                                                            "type": "integer"
-                                                        },
-                                                        "num2": {
-                                                            "description": "second number",
-                                                            "type": "integer"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "num1",
-                                                        "num2"
-                                                    ]
+                        {
+                            "result": {
+                                "tools": [
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "first number",
+                                                    "type": "integer"
+                                                },
+                                                "num2": {
+                                                    "description": "second number",
+                                                    "type": "integer"
                                                 }
                                             },
-                                            {
-                                                "name": "echo",
-                                                "description": "Returns the input unchanged",
-                                                "title": "Echoes the input",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "input": {
-                                                            "description": "input to echo",
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "input"
-                                                    ]
+                                            "required": [
+                                                "num1",
+                                                "num2"
+                                            ]
+                                        },
+                                        "name": "add",
+                                        "description": "Returns the sum of the two inputs",
+                                        "title": "Addition calculator"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "type": "integer"
+                                                },
+                                                "num2": {
+                                                    "type": "integer"
                                                 }
                                             },
                                             {
@@ -524,8 +516,12 @@ public class ToolTest extends FATServletClient {
                                             }
                                         ]
                                     }
-                                }
-                        """;
+                                ]
+                            },
+                            "id": 1,
+                            "jsonrpc": "2.0"
+                        }
+                                        """;
 
         // Lenient mode test (false boolean in 3rd parameter
         JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);

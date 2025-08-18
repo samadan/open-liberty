@@ -22,12 +22,23 @@ import jakarta.enterprise.inject.spi.Bean;
 /**
  *
  */
-public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method, Map<String, ArgumentMetadata> arguments) {
+public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method, Map<String, ArgumentMetadata> arguments, String name, String title, String description) {
 
     public record ArgumentMetadata(Type type, int index, String description) {}
 
-    public ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
-        this(annotation, bean, method, getArgumentMap(method));
+    public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
+        String name = annotation.name();
+        String title = annotation.title();
+        String description = annotation.description();
+
+        if (name.equals(Tool.ELEMENT_NAME)) {
+            name = method.getJavaMember().getName();
+        }
+        if (title.equals(Tool.BLANK_TITLE)) {
+            title = null;
+        }
+
+        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), name, title, description);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {

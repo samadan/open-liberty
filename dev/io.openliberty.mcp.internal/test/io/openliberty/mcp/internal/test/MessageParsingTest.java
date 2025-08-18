@@ -47,19 +47,19 @@ public class MessageParsingTest {
     public static void setup() {
         ToolRegistry registry = new ToolRegistry();
         ToolRegistry.set(registry);
+
         Tool testTool = Literals.tool("echo", "Echo", "Echos the input");
-        Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0));
-        registry.addTool(new ToolMetadata(testTool, null, null, arguments));
+        Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, ""));
+        registry.addTool(new ToolMetadata(testTool, null, null, arguments, "", "", ""));
 
         Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
-        Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0),
-                                                            "num2", new ArgumentMetadata(Integer.class, 1));
-        registry.addTool(new ToolMetadata(addTestTool, null, null, additionArgs));
+        Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, ""),
+                                                            "num2", new ArgumentMetadata(Integer.class, 1, ""));
+        registry.addTool(new ToolMetadata(addTestTool, null, null, additionArgs, "", "", ""));
 
         Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
-        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0));
-        registry.addTool(new ToolMetadata(toogleTestTool, null, null, booleanArgs));
-
+        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, ""));
+        registry.addTool(new ToolMetadata(toogleTestTool, null, null, booleanArgs, "", "", ""));
     }
 
     @Test
@@ -73,7 +73,8 @@ public class MessageParsingTest {
                           "params": {
                             "name": "echo",
                             "arguments": {
-                              "input": "Hello"
+                              "input": "Hello",
+                              "description": "A greeting"
                             }
                           }
                         }
@@ -96,7 +97,8 @@ public class MessageParsingTest {
                           "params": {
                             "name": "echo",
                             "arguments": {
-                              "input": "Hello"
+                              "input": "Hello",
+                              "description": "A greeting"
                             }
                           }
                         }
@@ -115,7 +117,8 @@ public class MessageParsingTest {
                           "params": {
                             "name": "echo",
                             "arguments": {
-                              "input": "Hello"
+                              "input": "Hello",
+                              "description": "A greeting"
                             }
                           }
                         }
@@ -227,11 +230,11 @@ public class MessageParsingTest {
         McpRequest request;
         try (Jsonb jsonb = JsonbBuilder.create()) {
             var reader = new StringReader("""
-                    {
-                      "jsonrpc": "2.0",
-                      "method": "notifications/initialized"
-                    }
-                    """);
+                            {
+                              "jsonrpc": "2.0",
+                              "method": "notifications/initialized"
+                            }
+                            """);
 
             request = jsonb.fromJson(reader, McpRequest.class);
             assertThat(request.getRequestMethod(), equalTo(RequestMethod.INITIALIZED));
