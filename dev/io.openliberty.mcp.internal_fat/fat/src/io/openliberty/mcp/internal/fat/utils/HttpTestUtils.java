@@ -9,21 +9,34 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat.utils;
 
+import static org.junit.Assert.assertNull;
+
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.HttpRequest;
-
-import static org.junit.Assert.assertNull;
 
 /**
  *
  */
 public class HttpTestUtils {
+    private static final String acceptHeader = "application/json, text/event-stream";
+    private static final String mcpProtocolHeader = "MCP-Protocol-Version";
+    private static final String mcpProtocolVersion = "2025-06-18";
 
     /**
      * Call MCP server, and get the String response body
      */
+
     public static String callMCP(LibertyServer server, String path, String jsonRequestBody) throws Exception {
-        return new HttpRequest(server, path + "/mcp").requestProp("Accept", "application/json, text/event-stream").jsonBody(jsonRequestBody).method("POST").run(String.class);
+        HttpRequest req = new HttpRequest(server, path + "/mcp")
+                                                                .requestProp("Accept", "application/json, text/event-stream")
+                                                                .jsonBody(jsonRequestBody)
+                                                                .method("POST");
+
+        if (!path.endsWith("/initialize")) {
+            req.requestProp(mcpProtocolHeader, mcpProtocolVersion);
+        }
+
+        return req.run(String.class);
     }
 
     /**
@@ -32,14 +45,16 @@ public class HttpTestUtils {
      */
     public static void callMCPNotification(LibertyServer server,
                                            String path,
-                                           String jsonRequestBody) throws Exception {
+                                           String jsonRequestBody)
+                    throws Exception {
 
         String response = new HttpRequest(server, path + "/mcp")
-                .requestProp("Accept", "application/json, text/event-stream")
-                .jsonBody(jsonRequestBody)
-                .method("POST")
-                .expectCode(202)
-                .run(String.class);
+                                                                .requestProp("Accept", acceptHeader).requestProp(mcpProtocolHeader, mcpProtocolVersion)
+                                                                .jsonBody(jsonRequestBody)
+                                                                .method("POST")
+                                                                .expectCode(202)
+                                                                .run(String.class);
+
         assertNull("Notification request received a response", response);
     }
 }

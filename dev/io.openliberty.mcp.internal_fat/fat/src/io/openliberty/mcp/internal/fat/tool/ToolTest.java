@@ -13,6 +13,7 @@ import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONL
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -39,6 +40,9 @@ import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
  */
 @RunWith(FATRunner.class)
 public class ToolTest extends FATServletClient {
+
+    private static final String mcpProtocolHeader = "MCP-Protocol-Version";
+    private static final String mcpProtocolVersion = "2025-06-18";
 
     @Server("mcp-server")
     public static LibertyServer server;
@@ -100,7 +104,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST").expectCode(406);
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp(mcpProtocolHeader, mcpProtocolVersion).jsonBody(request).method("POST").expectCode(406);
 
         String response = JsonRequest.run(String.class);
         assertNull("Expected no response body for 406 Not Acceptable", response);
@@ -122,10 +126,37 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json").jsonBody(request).method("POST").expectCode(406);
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json").requestProp(mcpProtocolHeader, mcpProtocolVersion)
+                                                                          .jsonBody(request).method("POST").expectCode(406);
 
         String response = JsonRequest.run(String.class);
         assertNull("Expected no response body for 406 Not Acceptable due to incorrect Accept header", response);
+    }
+
+    @Test
+    public void testMissingMcpProtocolVersionHeader() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """;
+
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp")
+                                                                          .requestProp("Accept", "application/json")
+                                                                          .jsonBody(request)
+                                                                          .method("POST")
+                                                                          .expectCode(400);
+        String response = JsonRequest.run(String.class);
+        assertTrue("Expected 400 error body mentioning MCP-Protocol-Version", response.contains("Missing or invalid MCP-Protocol-Version header"));
+
     }
 
     @Test

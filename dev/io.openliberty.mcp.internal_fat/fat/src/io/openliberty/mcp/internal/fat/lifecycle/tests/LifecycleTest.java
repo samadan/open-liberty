@@ -34,6 +34,9 @@ import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 @RunWith(FATRunner.class)
 public class LifecycleTest {
 
+    private static final String mcpProtocolHeader = "MCP-Protocol-Version";
+    private static final String mcpProtocolVersion = "2025-06-18";
+
     @Server("mcp-server")
     public static LibertyServer server;
 
