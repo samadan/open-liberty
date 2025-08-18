@@ -46,25 +46,24 @@ public class MCPServerToolsListTest {
                                                          "temperature", new ArgumentMetadata(double.class, 1, "in degrees Celsius"),
                                                          "humidity", new ArgumentMetadata(int.class, 2, "Relative Humidity"));
         registry.addTool(new ToolMetadata(weatherTool, null, null, arguments, weatherTool.name(), weatherTool.title(), weatherTool.description()));
-/*
- * // Addition Tool
- * Tool additionTool = Literals.tool("addition_calculator", "The Calculator Addition Tool", "Can add two floating point numbers");
- * Map<String, ArgumentMetadata> arguments2 = Map.of("number1", new ArgumentMetadata(double.class, 0, "operand 1"),
- * "number2", new ArgumentMetadata(double.class, 1, "operand 2"));
- * registry.addTool(new ToolMetadata(additionTool, null, null, arguments2, additionTool.name(), additionTool.title(), additionTool.description()));
- *
- * // Subtraction Tool
- * Tool subtractionTool = Literals.tool("subtraction_calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
- * Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0, "operand 1"),
- * "number2", new ArgumentMetadata(int.class, 1, "operand 2"));
- * registry.addTool(new ToolMetadata(subtractionTool, null, null, arguments3, subtractionTool.name(), subtractionTool.title(), subtractionTool.description()));
- *
- * // True or False Tool
- * Tool booleanTool = Literals.tool("and_operator", "Boolean And Operator", "Does a Boolean And Operation on two boolean variables");
- * Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "operand 1"),
- * "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
- * registry.addTool(new ToolMetadata(booleanTool, null, null, arguments4, booleanTool.name(), booleanTool.title(), booleanTool.description()));
- */
+
+        // Addition Tool
+        Tool additionTool = Literals.tool("addition_calculator", "The Calculator Addition Tool", "Can add two floating point numbers");
+        Map<String, ArgumentMetadata> arguments2 = Map.of("number1", new ArgumentMetadata(double.class, 0, "operand 1"),
+                                                          "number2", new ArgumentMetadata(double.class, 1, "operand 2"));
+        registry.addTool(new ToolMetadata(additionTool, null, null, arguments2, additionTool.name(), additionTool.title(), additionTool.description()));
+
+        // Subtraction Tool
+        Tool subtractionTool = Literals.tool("subtraction_calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
+        Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0, "operand 1"),
+                                                          "number2", new ArgumentMetadata(int.class, 1, "operand 2"));
+        registry.addTool(new ToolMetadata(subtractionTool, null, null, arguments3, subtractionTool.name(), subtractionTool.title(), subtractionTool.description()));
+
+        // True or False Tool
+        Tool booleanTool = Literals.tool("and_operator", "Boolean And Operator", "Does a Boolean And Operation on two boolean variables");
+        Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "operand 1"),
+                                                          "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
+        registry.addTool(new ToolMetadata(booleanTool, null, null, arguments4, booleanTool.name(), booleanTool.title(), booleanTool.description()));
     }
 
     @Test

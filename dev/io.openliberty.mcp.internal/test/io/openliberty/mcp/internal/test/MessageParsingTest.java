@@ -73,8 +73,7 @@ public class MessageParsingTest {
                           "params": {
                             "name": "echo",
                             "arguments": {
-                              "input": "Hello",
-                              "description": "A greeting"
+                              "input": "Hello"
                             }
                           }
                         }
@@ -97,8 +96,7 @@ public class MessageParsingTest {
                           "params": {
                             "name": "echo",
                             "arguments": {
-                              "input": "Hello",
-                              "description": "A greeting"
+                              "input": "Hello"
                             }
                           }
                         }
@@ -117,8 +115,7 @@ public class MessageParsingTest {
                           "params": {
                             "name": "echo",
                             "arguments": {
-                              "input": "Hello",
-                              "description": "A greeting"
+                              "input": "Hello"
                             }
                           }
                         }
