@@ -473,6 +473,23 @@ public class ToolTest extends FATServletClient {
                                         "inputSchema": {
                                             "type": "object",
                                             "properties": {
+                                                "input": {
+                                                    "description": "input to echo",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "input"
+                                            ]
+                                        },
+                                        "name": "privateEcho",
+                                        "description": "Returns the input unchanged",
+                                        "title": "Echoes the input"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
                                                 "num1": {
                                                     "type": "integer"
                                                 },
@@ -480,48 +497,55 @@ public class ToolTest extends FATServletClient {
                                                     "type": "integer"
                                                 }
                                             },
-                                            {
-                                                "name": "privateEcho",
-                                                "description": "Returns the input unchanged",
-                                                "title": "Echoes the input",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "input": {
-                                                            "description": "temp desc",
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "input"
-                                                    ]
+                                            "required": [
+                                                "num1",
+                                                "num2"
+                                            ]
+                                        },
+                                        "name": "subtract",
+                                        "description": "Minus number 2 from number 1",
+                                        "title": "Subtraction calculator"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "input": {
+                                                    "description": "input to echo",
+                                                    "type": "string"
                                                 }
                                             },
-                                            {
-                                                "name": "toggle",
-                                                "description": "toggles the boolean input",
-                                                "title": "Boolean toggle",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "value": {
-                                                            "description": "temp desc",
-                                                            "type": "boolean"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "value"
-                                                    ]
+                                            "required": [
+                                                "input"
+                                            ]
+                                        },
+                                        "name": "echo",
+                                        "description": "Returns the input unchanged",
+                                        "title": "Echoes the input"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "description": "boolean value",
+                                                    "type": "boolean"
                                                 }
-                                            }
-                                        ]
+                                            },
+                                            "required": [
+                                                "value"
+                                            ]
+                                        },
+                                        "name": "toggle",
+                                        "description": "toggles the boolean input",
+                                        "title": "Boolean toggle"
                                     }
                                 ]
                             },
                             "id": 1,
                             "jsonrpc": "2.0"
                         }
-                                        """;
+                                                                """;
 
         // Lenient mode test (false boolean in 3rd parameter
         JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);
