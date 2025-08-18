@@ -10,6 +10,8 @@
 package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -53,6 +55,33 @@ public class ToolTest extends FATServletClient {
     @AfterClass
     public static void teardown() throws Exception {
         server.stopServer();
+    }
+
+    private static final String ENDPOINT = "/toolTest/mcp";
+
+    @Test
+    public void testGetRequestWithoutAcceptHeaderReturns405() throws Exception {
+        HttpRequest request = new HttpRequest(server, ENDPOINT)
+                                                               .method("GET")
+                                                               .expectCode(405);
+
+        String response = request.run(String.class);
+
+        assertNotNull("Expected response body for 405 error", response);
+        assertEquals("GET method not allowed.", response);
+    }
+
+    @Test
+    public void testGetRequestWithTextEventStreamReturns405() throws Exception {
+        HttpRequest request = new HttpRequest(server, ENDPOINT)
+                                                               .requestProp("Accept", "text/event-stream")
+                                                               .method("GET")
+                                                               .expectCode(405);
+
+        String response = request.run(String.class);
+
+        assertNotNull("Expected response body for 405 error", response);
+        assertEquals("GET not supported yet. SSE not implemented.", response);
     }
 
     @Test

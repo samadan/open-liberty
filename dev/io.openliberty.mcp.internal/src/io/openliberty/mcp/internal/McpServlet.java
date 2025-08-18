@@ -65,8 +65,20 @@ public class McpServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // TODO Set up notification listening
-        super.doGet(req, resp);
+        String accept = req.getHeader("Accept");
+
+        // Return 405, with SSE-specific message if "text/event-stream" is requested.
+        if (accept != null && HeaderValidation.acceptContains(accept, "text/event-stream")) {
+            resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            resp.setHeader("Allow", "POST");
+            resp.setContentType("text/plain");
+            resp.getWriter().write("GET not supported yet. SSE not implemented.");
+        } else {
+            resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            resp.setHeader("Allow", "POST");
+            resp.setContentType("text/plain");
+            resp.getWriter().write("GET method not allowed.");
+        }
     }
 
     @Override
