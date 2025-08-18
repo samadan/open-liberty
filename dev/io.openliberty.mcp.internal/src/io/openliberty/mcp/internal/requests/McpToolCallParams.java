@@ -17,9 +17,11 @@ import java.util.Set;
 
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
+import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
+import io.openliberty.mcp.messaging.Cancellation;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
@@ -73,23 +75,41 @@ public class McpToolCallParams {
 
     private Object[] parseArguments(JsonObject arguments2, Jsonb jsonb) {
         JsonObject argsObject = arguments2.asJsonObject();
-        Object[] results = new Object[metadata.arguments().size()];
+        int resultSize = (metadata.arguments() != null ? metadata.arguments().size() : 0) +
+                (metadata.specialArguments() != null ? metadata.arguments().size() : 0);
+        Object[] results = new Object[resultSize];
         HashSet<String> argsProcessed = new HashSet<>();
-        for (var entry : argsObject.entrySet()) {
-            String argName = entry.getKey();
-            JsonValue argValue = entry.getValue();
-            ArgumentMetadata argMetadata = metadata.arguments().get(argName);
-            if (argMetadata != null) {
-                String json = jsonb.toJson(argValue);
-                results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
+        if (metadata.arguments() != null) {
+            for (var entry : argsObject.entrySet()) {
+                String argName = entry.getKey();
+                JsonValue argValue = entry.getValue();
+                ArgumentMetadata argMetadata = metadata.arguments().get(argName);
+                if (argMetadata != null) {
+                    String json = jsonb.toJson(argValue);
+                    results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
 
+                }
+                argsProcessed.add(argName);
             }
-            argsProcessed.add(argName);
+
+            if (!argsProcessed.equals(metadata.arguments().keySet())) {
+                List<String> data = generateArgumentMismatchData(argsProcessed, metadata.arguments().keySet());
+                throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
+            }
         }
 
-        if (!argsProcessed.equals(metadata.arguments().keySet())) {
-            List<String> data = generateArgumentMismatchData(argsProcessed, metadata.arguments().keySet());
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
+        if (metadata.specialArguments() == null) {
+            return results;
+        }
+
+        for (var entry : metadata.specialArguments().entrySet()) {
+            SpecialArgumentMetadata specialArgsMetadata = entry.getValue();
+
+            if (specialArgsMetadata.type().equals(Cancellation.class)) {
+                results[specialArgsMetadata.index()] = new RequestCancellation(null, null);
+            } else {
+                results[specialArgsMetadata.index()] = null;
+            }
         }
 
         return results;

@@ -25,4 +25,10 @@ public class McpCdiExtensionMetadata implements CDIExtensionMetadata {
         return Set.of(McpCdiExtension.class);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public Set<Class<?>> getBeanClasses() {
+        return Set.of(McpConnectionTracker.class);
+    }
+
 }

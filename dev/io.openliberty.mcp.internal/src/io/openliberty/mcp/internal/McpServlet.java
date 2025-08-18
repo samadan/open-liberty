@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Objects;
 
 import com.ibm.websphere.ras.Tr;
@@ -25,10 +26,14 @@ import io.openliberty.mcp.internal.exceptions.jsonrpc.HttpResponseException;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
+import io.openliberty.mcp.internal.requests.McpNotificationParams;
+import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
+import io.openliberty.mcp.internal.requests.RequestCancellation;
 import io.openliberty.mcp.internal.responses.McpInitializeResult;
 import io.openliberty.mcp.internal.responses.McpInitializeResult.ServerInfo;
 import io.openliberty.mcp.tools.ToolResponse;
+import io.openliberty.mcp.messaging.Cancellation;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
@@ -51,6 +56,9 @@ public class McpServlet extends HttpServlet {
 
     @Inject
     BeanManager bm;
+
+    @Inject
+    McpConnectionTracker connection;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -97,13 +105,20 @@ public class McpServlet extends HttpServlet {
     protected void callRequest(McpTransport transport)
                     throws JSONRPCException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
         RequestMethod method = transport.getMcpRequest().getRequestMethod();
+        String requestId = createOngoingRequestId(transport.getMcpRequest());
+
         switch (method) {
             case TOOLS_CALL -> callTool(transport);
             case TOOLS_LIST -> listTools(transport);
             case INITIALIZE -> initialize(transport);
             case INITIALIZED -> initialized(transport);
             case PING -> ping(transport);
+            case CANCELLED -> cancelled(transport);
             default -> throw new JSONRPCException(JSONRPCErrorCode.METHOD_NOT_FOUND, List.of(String.valueOf(method + " not found")));
+        }
+
+        if (requestId != null && connection.isOngoingProcess(requestId)) {
+            connection.deregisterOngoingRequest(requestId);
         }
 
     }
@@ -117,7 +132,9 @@ public class McpServlet extends HttpServlet {
         CreationalContext<Object> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
-            Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
+            Object[] arguments = params.getArguments(jsonb);
+            checkAndParseCancellationObject(arguments, transport.getMcpRequest().id().toString());
+            Object result = params.getMethod().invoke(bean, arguments);
             boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
             if (result instanceof ToolResponse response) {
                 transport.sendResponse(response);
@@ -155,6 +172,16 @@ public class McpServlet extends HttpServlet {
     private ToolResponse toErrorResponse(Throwable t) {
         String msg = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
         return ToolResponse.error(msg);
+    }
+
+    private void checkAndParseCancellationObject(Object[] argumentsArray, String requestId) {
+        for (Object argument : argumentsArray) {
+            if (argument instanceof Cancellation cancellation) {
+                cancellation = new RequestCancellation(requestId, null);
+                connection.registerOngoingRequest(requestId, cancellation);
+                break;
+            }
+        }
     }
 
     /**
@@ -204,4 +231,34 @@ public class McpServlet extends HttpServlet {
         transport.sendResponse(new Object());
     }
 
+    private void cancelled(McpTransport transport) {
+
+        boolean cancelled = cancelRequest(transport.getMcpRequest());
+
+        if (cancelled) {
+            transport.sendEmptyResponse();
+            //TODO log the reason from notificationParams.getReason
+        }
+    }
+
+    private boolean cancelRequest(McpRequest request) {
+
+        McpNotificationParams notificationParams = request.getParams(McpNotificationParams.class, jsonb);
+        String requestId = notificationParams.getRequestId();
+        Optional<String> reason = Optional.ofNullable(notificationParams.getReason());
+
+        if (connection.isOngoingProcess(requestId)) {
+            connection.addCancellationRequest(requestId, reason);
+            Cancellation cancellation = new RequestCancellation(requestId, reason);
+            connection.updateOngoingProcess(requestId, cancellation);
+
+            return true;
+        }
+        return false;
+    }
+
+    private String createOngoingRequestId(McpRequest request) {
+        //TODO add more to this id to make it unique
+        return request.id() != null ? request.id().toString() : null;
+    }
 }

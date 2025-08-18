@@ -24,9 +24,12 @@ import jakarta.enterprise.inject.spi.Bean;
  */
 
 public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
-                           Map<String, ArgumentMetadata> arguments, String name, String title, String description) {
+                           Map<String, ArgumentMetadata> arguments, Map<String, SpecialArgumentMetadata> specialArguments,
+                           String name, String title, String description) {
 
     public record ArgumentMetadata(Type type, int index, String description) {}
+
+    public record SpecialArgumentMetadata(Type type, int index) {}
 
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
 
@@ -34,7 +37,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         String title = annotation.title().isEmpty() ? null : annotation.title();
         String description = annotation.description().isEmpty() ? null : annotation.description();
 
-        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), name, title, description);
+        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentMap(method), name, title, description);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
@@ -48,6 +51,18 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                 } else {
                     result.put(pInfo.name(), pData);
                 }
+            }
+        }
+        return result;
+    }
+
+    private static Map<String, SpecialArgumentMetadata> getSpecialArgumentMap(AnnotatedMethod<?> method) {
+        Map<String, SpecialArgumentMetadata> result = new HashMap<>();
+        for (AnnotatedParameter<?> p : method.getParameters()) {
+            ToolArg pInfo = p.getAnnotation(ToolArg.class);
+            if (pInfo == null) {
+                SpecialArgumentMetadata pData = new SpecialArgumentMetadata(p.getBaseType(), p.getPosition());
+                result.put(p.getBaseType().getTypeName(), pData);
             }
         }
         return result;

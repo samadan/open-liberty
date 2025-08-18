@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.fat.tool.basicToolApp;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.Tool.Annotations;
@@ -283,4 +284,15 @@ public class BasicTools {
     }
 
     public record City(String name, String country, int population, boolean isCapital) {};
+//    @Tool(name = "cancellationTool", title = "Cancellable tool", description = "A tool that waits to be cancelled and is never retuned")
+//    public void cancellationTool(Cancellation cancellation) throws InterruptedException {
+//        int counter = 0;
+//
+//        while (counter++ < 5) {
+//            if (cancellation.check().isRequested()) {
+//                throw new OperationCancellationException();
+//            }
+//            TimeUnit.MILLISECONDS.sleep(500);
+//        }
+//    }
 }

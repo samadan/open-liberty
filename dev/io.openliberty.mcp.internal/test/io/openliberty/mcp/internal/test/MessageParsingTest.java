@@ -31,6 +31,7 @@ import io.openliberty.mcp.internal.ToolRegistry;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpInitializeParams.ClientInfo;
+import io.openliberty.mcp.internal.requests.McpNotificationParams;
 import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
 import jakarta.json.JsonException;
@@ -49,16 +50,16 @@ public class MessageParsingTest {
 
         Tool testTool = Literals.tool("echo", "Echo", "Echos the input");
         Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, ""));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(testTool, arguments));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(testTool, arguments, null));
 
         Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
         Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, ""),
                                                             "num2", new ArgumentMetadata(Integer.class, 1, ""));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(addTestTool, additionArgs));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(addTestTool, additionArgs, null));
 
         Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
         Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(toogleTestTool, booleanArgs));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(toogleTestTool, booleanArgs, null));
     }
 
     @Test
@@ -233,6 +234,29 @@ public class MessageParsingTest {
 
             request = jsonb.fromJson(reader, McpRequest.class);
             assertThat(request.getRequestMethod(), equalTo(RequestMethod.INITIALIZED));
+        }
+    }
+
+    @Test
+    public void parseCancelledNotification() throws Exception {
+        McpRequest request;
+        try (Jsonb jsonb = JsonbBuilder.create()) {
+            var reader = new StringReader("""
+                            {
+                               "jsonrpc": "2.0",
+                               "method": "notifications/cancelled",
+                               "params": {
+                                 "requestId": "123",
+                                 "reason": "User requested cancellation"
+                               }
+                             }
+                            """);
+            request = jsonb.fromJson(reader, McpRequest.class);
+            assertThat(request.getRequestMethod(), equalTo(RequestMethod.CANCELLED));
+
+            McpNotificationParams notificationRequest = request.getParams(McpNotificationParams.class, jsonb);
+            assertThat(notificationRequest.getRequestId(), equalTo("123"));
+            assertThat(notificationRequest.getReason(), equalTo("User requested cancellation"));
         }
     }
 

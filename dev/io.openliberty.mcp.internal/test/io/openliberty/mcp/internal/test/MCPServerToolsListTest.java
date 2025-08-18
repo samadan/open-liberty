@@ -40,7 +40,7 @@ public class MCPServerToolsListTest {
     }
 
     private List<ToolDescription> generateResponse(Tool numberTestTool, Map<String, ArgumentMetadata> arguments) {
-        return List.of(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments)));
+        return List.of(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments, null)));
     }
 
     @Test
@@ -305,10 +305,10 @@ public class MCPServerToolsListTest {
                                                           "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
 
         LinkedList<ToolDescription> toolDescriptions = new LinkedList<>();
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments, null)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2, null)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3, null)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4, null)));
 
         String responseString = jsonb.toJson(toolDescriptions);
         String expectedString = """

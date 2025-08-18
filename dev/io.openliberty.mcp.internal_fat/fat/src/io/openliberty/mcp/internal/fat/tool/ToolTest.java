@@ -1727,4 +1727,61 @@ public class ToolTest extends FATServletClient {
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
+//    @Test
+//    public void testCancellationToolWithCancallableArgs() throws Exception {
+//
+//        Runnable threadCallingTool = () -> {
+//
+//            try {
+//                String request = """
+//                                  {
+//                                  "jsonrpc": "2.0",
+//                                  "id": "2",
+//                                  "method": "tools/call",
+//                                  "params": {
+//                                    "name": "cancellationTool",
+//                                    "arguments": {}
+//                                  }
+//                                }
+//                                """;
+//
+//                String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+//                JSONAssert.assertEquals(null, response, true);
+//            } catch (Exception e) {
+//                // TODO Auto-generated catch block
+//                // Do you need FFDC here? Remember FFDC instrumentation and @FFDCIgnore
+//                e.printStackTrace();
+//            }
+//
+//        };
+//
+//        Runnable threadCancellingTool = () -> {
+//
+//            try {
+//
+//                String requestNotification = """
+//                                  {
+//                                  "jsonrpc": "2.0",
+//                                  "method": "notifications/cancelled",
+//                                  "params": {
+//                                    "requestId": "2",
+//                                    "reason": "no longer needed"
+//                                  }
+//                                }
+//                                """;
+//                HttpTestUtils.callMCPNotification(server, "/toolTest", requestNotification);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//
+//        };
+//
+//        Thread toolCall = new Thread(threadCallingTool);
+//        Thread cancelTool = new Thread(threadCancellingTool);
+//
+//        toolCall.start();
+//
+//        cancelTool.start();
+//    }
+
 }
