@@ -18,6 +18,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.ibm.ws.transaction.fat.util.TxTestContainerSuite;
+import com.ibm.ws.transaction.fat.util.TxTestDB;
 
 import componenttest.custom.junit.runner.AlwaysPassesTest;
 import componenttest.rules.repeater.FeatureReplacementAction;
@@ -33,9 +34,8 @@ import tests.DBRotationTest;
 })
 public class FATSuite extends TxTestContainerSuite {
 
-	static {
-		beforeSuite(DatabaseContainerType.DB2);
-	}
+    @ClassRule
+    public static TxTestDB p = new TxTestDB(DatabaseContainerType.DB2);
 
     @ClassRule
     public static RepeatTests r = RepeatTests.with(FeatureReplacementAction.EE8_FEATURES().forServers(DBRotationTest.serverNames));
