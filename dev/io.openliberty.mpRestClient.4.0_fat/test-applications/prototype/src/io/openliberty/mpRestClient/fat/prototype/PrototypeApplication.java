@@ -16,28 +16,4 @@ import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 
 @ApplicationPath("/")
-public class PrototypeApplication extends Application {
-
-//    @Override
-//    public Set<Class<?>> getClasses() {
-//        Set<Class<?>> classes = new HashSet<Class<?>>();
-//        classes.add(PrototypeResource.class);
-//        return classes;
-//        return Collections.singleton(PrototypeResource.class);
-//    }
-//
-//    @Override
-//    public Map<String, Object> getProperties() {
-//        Map<String, Object> properties = new HashMap<String, Object>();
-//        return properties;
-//        return Collections.singleton(props);
-//    }
-//
-//    @Override
-//    public Set<Object> getSingletons() {
-//        Set<Object> singletons = new HashSet<Object>();
-//        singletons.add(new PrototypeResource());
-//        return singletons;
-//        return Collections.singleton(new PrototypeResource());
-//    }
-}
+public class PrototypeApplication extends Application {}
