@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -15,9 +15,14 @@ package com.ibm.ws.security.utility.tasks;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.ibm.websphere.crypto.PasswordUtil;
 import com.ibm.ws.crypto.ltpakeyutil.LTPAKeyFileUtility;
+import com.ibm.ws.kernel.productinfo.ProductInfo;
 import com.ibm.ws.security.utility.IFileUtility;
 import com.ibm.ws.security.utility.SecurityUtilityReturnCodes;
 import com.ibm.ws.security.utility.utils.ConsoleWrapper;
@@ -38,7 +43,10 @@ public class CreateLTPAKeysTask extends BaseCommandTask {
     static final String ARG_FILE = "--file";
     static final String ARG_ENCODING = "--passwordEncoding";
     static final String ARG_KEY = "--passwordKey";
-
+    static final String ARG_BASE64_KEY = "--passwordBase64Key";
+    static final String ARG_ENCRYPTION_XML_FILE = "--passwordXmlFile";
+    private static final List<String> BETA_ARG_TABLE = Arrays.asList(ARG_BASE64_KEY, ARG_ENCRYPTION_XML_FILE);
+    private static final List<String> BETA_OPTS = BETA_ARG_TABLE.stream().map(s -> s.startsWith("--") ? s.substring(2) : s).collect(Collectors.toList());
     private final LTPAKeyFileUtility ltpaKeyFileUtil;
     private final IFileUtility fileUtility;
     protected ConsoleWrapper stdin;
@@ -77,9 +85,14 @@ public class CreateLTPAKeysTask extends BaseCommandTask {
     /** {@inheritDoc} */
     @Override
     boolean isKnownArgument(String arg) {
-        return arg.equals(ARG_SERVER) || arg.equals(ARG_PASSWORD) ||
-               arg.equals(ARG_ENCODING) || arg.equals(ARG_KEY) ||
-               arg.equals(ARG_FILE);
+        boolean isKnown = arg.equals(ARG_SERVER) || arg.equals(ARG_PASSWORD) ||
+                          arg.equals(ARG_ENCODING) || arg.equals(ARG_KEY) ||
+                          arg.equals(ARG_FILE);
+        if (!isKnown && ProductInfo.getBetaEdition()) {
+            isKnown = arg.equals(ARG_BASE64_KEY) || arg.equals(ARG_ENCRYPTION_XML_FILE);
+
+        }
+        return isKnown;
     }
 
     /** {@inheritDoc} */
@@ -171,10 +184,17 @@ public class CreateLTPAKeysTask extends BaseCommandTask {
             stdout.println(getMessage("createLTPAKeys.fileExists", path));
             return SecurityUtilityReturnCodes.ERR_FILE_EXISTS;
         } else {
+            Map<String, String> argMap = new HashMap<>();
             String password = getArgumentValue(ARG_PASSWORD, args, null);
             String encoding = getArgumentValue(ARG_ENCODING, args, PasswordUtil.getDefaultEncoding());
             String key = getArgumentValue(ARG_KEY, args, null);
-            String encodedPassword = PasswordUtil.encode(password, encoding, key);
+            String base64Key = getArgumentValue(ARG_BASE64_KEY, args, null);
+            String xmlFile = getArgumentValue(ARG_ENCRYPTION_XML_FILE, args, null);
+            argMap.put(EncodeTask.ARG_KEY, key);
+            argMap.put(EncodeTask.ARG_BASE64_KEY, base64Key);
+            argMap.put(EncodeTask.ARG_ENCRYPTION_XML_FILE, xmlFile);
+            Map<String, String> props = EncodeTask.convertToProperties(argMap, stdout);
+            String encodedPassword = PasswordUtil.encode(password, encoding, props);
 
             String xmlSnippet;
             // If the keys are generated for a server, omit the keysFileName as it would end up
@@ -189,6 +209,11 @@ public class CreateLTPAKeysTask extends BaseCommandTask {
             stdout.println(getMessage("createLTPAKeys.createdFile", path, xmlSnippet));
             return SecurityUtilityReturnCodes.OK;
         }
+    }
+
+    @Override
+    protected List<String> getBetaOptions() {
+        return BETA_OPTS;
     }
 
 }

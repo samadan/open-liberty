@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -64,6 +64,9 @@ public class HelpTask extends BaseCommandTask {
         StringBuffer scriptUsage = new StringBuffer(NL);
         if (ProductInfo.getBetaEdition()) {
             scriptUsage.append("BETA: The SecurityUtility configureFIPS task is only available in beta." + NL + NL);
+        }
+        if (ProductInfo.getBetaEdition()) {
+            scriptUsage.append("BETA: The SecurityUtility generate task is only available in beta." + NL + NL);
         }
         scriptUsage.append(getMessage("usage", scriptName));
         scriptUsage.append(" {");
