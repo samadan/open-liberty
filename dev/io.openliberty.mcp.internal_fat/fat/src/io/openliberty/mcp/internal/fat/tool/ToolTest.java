@@ -42,8 +42,8 @@ import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 public class ToolTest extends FATServletClient {
 
     private static final String ACCEPT_HEADER = "application/json, text/event-stream";
-    private static final String mcpProtocolHeader = "MCP-Protocol-Version";
-    private static final String mcpProtocolVersion = "2025-06-18";
+    private static final String MCP_PROTOCOL_HEADER = "MCP-Protocol-Version";
+    private static final String MCP_PROTOCOL_VERSION = "2025-06-18";
 
     @Server("mcp-server")
     public static LibertyServer server;
@@ -105,7 +105,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp(mcpProtocolHeader, mcpProtocolVersion).jsonBody(request).method("POST").expectCode(406);
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER).jsonBody(request).method("POST").expectCode(406);
 
         String response = JsonRequest.run(String.class);
         assertNull("Expected no response body for 406 Not Acceptable", response);
@@ -127,7 +127,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json").requestProp(mcpProtocolHeader, mcpProtocolVersion)
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json").requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER)
                                                                           .jsonBody(request).method("POST").expectCode(406);
 
         String response = JsonRequest.run(String.class);
