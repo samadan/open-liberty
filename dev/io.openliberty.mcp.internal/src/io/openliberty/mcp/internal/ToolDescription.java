@@ -23,8 +23,8 @@ import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 
 public class ToolDescription {
 
-    private String name;
-    private String title;
+    private final String name;
+    private final String title;
     private final String description;
     private final InputSchemaObject inputSchema;
 

@@ -35,7 +35,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         if (name.equals(Tool.ELEMENT_NAME)) {
             name = method.getJavaMember().getName();
         }
-        if (title.equals(Tool.BLANK_TITLE)) {
+        if (title.equals("")) {
             title = null;
         }
 
@@ -45,7 +45,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
     public static ToolMetadata createFrom(Tool annotation, Map<String, ArgumentMetadata> arguments) {
 
         String title = annotation.title();
-        if (title.equals(Tool.BLANK_TITLE)) {
+        if (title.equals("")) {
             title = null;
         }
 
