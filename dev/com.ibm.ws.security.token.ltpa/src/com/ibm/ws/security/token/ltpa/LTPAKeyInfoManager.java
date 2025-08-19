@@ -224,10 +224,10 @@ public class LTPAKeyInfoManager {
                 }
                 if ("1.0".equals(version)) {
                     if (validationKey) {
-                        Tr.warning(tc, "LTPA_VALIDATION_KEYS_NEED_TO_REGENERATE", validationKey);
+                        Tr.warning(tc, "LTPA_VALIDATION_KEYS_NEED_TO_REGENERATE", keyImportFile);
                     } else {
                         if (tc.isDebugEnabled()) {
-                            Tr.debug(this, tc, "FIPS 140-3 is enabled;  Need to regenerate the primary key file");
+                            Tr.debug(this, tc, "FIPS 140-3 is enabled;  Need to regenerate the primary key file " + keyImportFile);
                         }
                         backupLtpaKeyFile(locService, keyImportFile);
                         //regenerate the primary key
