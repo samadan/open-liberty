@@ -19,7 +19,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import jakarta.annotation.Resource;
 import jakarta.annotation.sql.DataSourceDefinition;
@@ -67,8 +67,8 @@ public class DataStoreTestServlet extends FATServlet {
     @Inject
     DSAccessorMethodQualifiedRepo dsAccessorQualifiedRepo;
 
-    @EJB(lookup = "java:global/DataStoreEJBApp/DataEJBAppBean!java.util.function.Consumer")
-    Consumer<String> ejbApp;
+    @EJB(lookup = "java:global/DataStoreEJBApp/DataEJBAppBean!java.util.function.BiConsumer")
+    BiConsumer<String, String> ejbApp;
 
     @Inject
     EMAccessorMethodQualifiedRepo emAccessorQualifiedRepo;
@@ -191,11 +191,27 @@ public class DataStoreTestServlet extends FATServlet {
     }
 
     /**
-     * Use a repository that is defined within an EJB application.
+     * Use a repository that is defined within an EJB application,
+     * where the data source is the default data source.
+     */
+    @Test
+    public void testDefaultDataSourceInEJBModule() {
+        ejbApp.accept("testDefaultDataSourceInEJBModule",
+                      "EJBAppDSRefRepo");
+
+        // Prove it went into the expected database by accessing it from
+        // another repository that uses the same DataSource
+        defaultDSRepo.existsByIdAndValue(62, "sixty-two");
+    }
+
+    /**
+     * Use a repository that is defined within an EJB application,
+     * where the EJB application also defines the data source.
      */
     @Test
     public void testEJBAppDefinesAndUsesRepository() {
-        ejbApp.accept("testEJBAppDefinesAndUsesRepository");
+        ejbApp.accept("testEJBAppDefinesAndUsesRepository",
+                      "EJBAppDSRefRepo");
     }
 
     /**
@@ -269,6 +285,16 @@ public class DataStoreTestServlet extends FATServlet {
             PersistenceUnitEntity e = em.find(PersistenceUnitEntity.class, "TestPersistenceUnit-fifty-two");
             assertEquals(Integer.valueOf(152), e.value);
         }
+    }
+
+    /**
+     * Use a repository that is defined within an EJB application,
+     * where the EJB application also defines the data source.
+     */
+    @Test
+    public void testRepositoryInEJBAppDefinesAndUsesDataSourceDefinition() {
+        ejbApp.accept("testRepositoryInEJBAppDefinesAndUsesDataSourceDefinition",
+                      "EJBAppDSDRepo");
     }
 
     /**
@@ -423,7 +449,8 @@ public class DataStoreTestServlet extends FATServlet {
      */
     @Test
     public void testStartupEventObserverInEJBApplicationUsesRepository() {
-        ejbApp.accept("testStartupEventObserverInEJBApplicationUsesRepository");
+        ejbApp.accept("testStartupEventObserverInEJBApplicationUsesRepository",
+                      "EJBAppDSRefRepo");
     }
 
     /**
