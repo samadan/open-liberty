@@ -51,8 +51,8 @@ public class McpServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final TraceComponent tc = Tr.register(McpServlet.class);
-    private static final String expectedProtocolVersion = "2025-06-18";
-    private static final String mcpHeader = "MCP-Protocol-Version";
+    private static final String EXPECTED_PROTOCOL_VERSION = "2025-06-18";
+    private static final String MCP_HEADER = "MCP-Protocol-Version";
 
     private Jsonb jsonb;
 
@@ -89,17 +89,6 @@ public class McpServlet extends HttpServlet {
         McpRequest request = null;
         try {
 
-            // Validate mcp-protocal version header
-            String path = req.getRequestURI();
-            if (!path.endsWith("/initialize")) {
-                String protocolVersion = req.getHeader(mcpHeader);
-                if (protocolVersion == null || !protocolVersion.equals(expectedProtocolVersion)) {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    resp.setContentType("application/json");
-                    resp.getWriter().write("Missing or invalid MCP-Protocol-Version header. Expected: " + expectedProtocolVersion + "\"}}");
-                    return;
-                }
-            }
             // Accept Header Validation
             String accept = req.getHeader("Accept");
             if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
@@ -110,6 +99,16 @@ public class McpServlet extends HttpServlet {
             } ;
 
             request = toRequest(req);
+            // Validate mcp-protocal version header
+            if (!"initialize".equals(request.method())) {
+                String protocolVersion = req.getHeader(MCP_HEADER);
+                if (protocolVersion == null || !protocolVersion.equals(EXPECTED_PROTOCOL_VERSION)) {
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    resp.setContentType("plain/text");
+                    resp.getWriter().write("Missing or invalid MCP-Protocol-Version header. Expected: " + EXPECTED_PROTOCOL_VERSION);
+                    return;
+                }
+            }
             callRequest(request, resp);
         } catch (JSONRPCException e) {
             McpResponse mcpResponse = new McpErrorResponse(request == null ? "" : request.id(), e);

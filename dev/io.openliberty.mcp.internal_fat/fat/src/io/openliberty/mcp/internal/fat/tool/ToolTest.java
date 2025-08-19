@@ -149,14 +149,8 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp")
-                                                                          .requestProp("Accept", "application/json")
-                                                                          .jsonBody(request)
-                                                                          .method("POST")
-                                                                          .expectCode(400);
-        String response = JsonRequest.run(String.class);
+        String response = HttpTestUtils.callMCPWithoutProtocolVersion(server, "/toolTest", request);
         assertTrue("Expected 400 error body mentioning MCP-Protocol-Version", response.contains("Missing or invalid MCP-Protocol-Version header"));
-
     }
 
     @Test
