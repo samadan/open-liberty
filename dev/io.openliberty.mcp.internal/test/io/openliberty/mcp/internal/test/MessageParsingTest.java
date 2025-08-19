@@ -50,16 +50,16 @@ public class MessageParsingTest {
 
         Tool testTool = Literals.tool("echo", "Echo", "Echos the input");
         Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, ""));
-        registry.addTool(new ToolMetadata(testTool, null, null, arguments, "", "", ""));
+        registry.addTool(ToolMetadata.createFrom(testTool, arguments));
 
         Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
         Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, ""),
                                                             "num2", new ArgumentMetadata(Integer.class, 1, ""));
-        registry.addTool(new ToolMetadata(addTestTool, null, null, additionArgs, "", "", ""));
+        registry.addTool(ToolMetadata.createFrom(addTestTool, additionArgs));
 
         Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
-        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, ""));
-        registry.addTool(new ToolMetadata(toogleTestTool, null, null, booleanArgs, "", "", ""));
+        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value"));
+        registry.addTool(ToolMetadata.createFrom(toogleTestTool, booleanArgs));
     }
 
     @Test
@@ -177,7 +177,6 @@ public class MessageParsingTest {
                           }
                         }
                         """);
-
         McpRequest.createValidMCPRequest(reader);
     }
 

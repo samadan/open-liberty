@@ -27,6 +27,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
     public record ArgumentMetadata(Type type, int index, String description) {}
 
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
+
         String name = annotation.name();
         String title = annotation.title();
         String description = annotation.description();
@@ -39,6 +40,16 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         }
 
         return new ToolMetadata(annotation, bean, method, getArgumentMap(method), name, title, description);
+    }
+
+    public static ToolMetadata createFrom(Tool annotation, Map<String, ArgumentMetadata> arguments) {
+
+        String title = annotation.title();
+        if (title.equals(Tool.BLANK_TITLE)) {
+            title = null;
+        }
+
+        return new ToolMetadata(annotation, null, null, arguments, annotation.name(), title, annotation.description());
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
