@@ -97,6 +97,7 @@ public class McpServlet extends HttpServlet {
             case TOOLS_LIST -> listTools(transport);
             case INITIALIZE -> initialize(transport);
             case INITIALIZED -> initialized(transport);
+            case PING -> ping(transport);
             default -> throw new JSONRPCException(JSONRPCErrorCode.METHOD_NOT_FOUND, List.of(String.valueOf(method + " not found")));
         }
 
@@ -172,6 +173,10 @@ public class McpServlet extends HttpServlet {
 
     private void initialized(McpTransport transport) {
         transport.sendEmptyResponse();
+    }
+
+    private void ping(McpTransport transport) {
+        transport.sendResponse(new Object());
     }
 
 }
