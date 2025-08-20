@@ -14,12 +14,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
-
-// TODO "cursor": "optional-cursor-value" (pagination after Tech Exchange)
-// TODO build object of objects (we will probably build a schema generator for this) so we could delete the InputSchema object
-// TODO method parameter descriptions needs to be defined in the tool annotation
 
 public class ToolDescription {
 
@@ -70,13 +69,18 @@ public class ToolDescription {
         }
 
         InputSchemaPrimitive tempSchemaPrimitive;
-        if (type.equals(String.class)) {
-            tempSchemaPrimitive = new InputSchemaPrimitive("string", argumentDescription);
-        } else if (type.equals(float.class) || type.equals(double.class))
+
+        boolean isJsonNumber = type.equals(long.class) || type.equals(double.class) || type.equals(byte.class) || type.equals(float.class) || type.equals(short.class)
+                               || type.equals(Long.class) || type.equals(Double.class) || type.equals(Byte.class) || type.equals(Float.class) || type.equals(Short.class)
+                               || type.equals(AtomicLong.class);
+
+        if (isJsonNumber)
             tempSchemaPrimitive = new InputSchemaPrimitive("number", argumentDescription);
-        else if (type.equals(int.class))
+        else if (type.equals(String.class) || type.equals(Character.class) || type.equals(char.class))
+            tempSchemaPrimitive = new InputSchemaPrimitive("string", argumentDescription);
+        else if (type.equals(int.class) || type.equals(Integer.class) || type.equals(AtomicInteger.class))
             tempSchemaPrimitive = new InputSchemaPrimitive("integer", argumentDescription);
-        else if (type.equals(boolean.class))
+        else if (type.equals(boolean.class) || type.equals(Boolean.class) || type.equals(AtomicBoolean.class))
             tempSchemaPrimitive = new InputSchemaPrimitive("boolean", argumentDescription);
         else
             tempSchemaPrimitive = new InputSchemaPrimitive(type.getTypeName(), argumentDescription);

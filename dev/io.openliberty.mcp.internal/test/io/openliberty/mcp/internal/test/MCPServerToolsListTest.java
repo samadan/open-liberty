@@ -12,6 +12,8 @@ package io.openliberty.mcp.internal.test;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +23,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.Literals;
 import io.openliberty.mcp.internal.ToolDescription;
-import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
 import jakarta.json.bind.Jsonb;
@@ -32,14 +33,317 @@ import jakarta.json.bind.JsonbBuilder;
  */
 public class MCPServerToolsListTest {
 
-    ToolRegistry registry = new ToolRegistry();
+    static ToolRegistry registry = new ToolRegistry();
+
+    static {
+        ToolRegistry.set(registry);
+    }
 
     /**
      * @throws java.lang.Exception
      */
     @Before
-    public void setUp() throws Exception {
-        ToolRegistry.set(registry);
+    public void setup() throws Exception {
+
+    }
+
+    @Test
+    public void testJSONNumberFromPrimitives() throws Exception {
+        Tool numberTestTool = Literals.tool("parseAllPrimitiveNumbers", "parse All PrimitiveNumbers", "Checks if primitives arguments are handled by the Json Serialiser");
+        Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(long.class, 0, "long -> number"),
+                                                         "var2", new ArgumentMetadata(double.class, 1, "double -> number"),
+                                                         "var3", new ArgumentMetadata(byte.class, 1, "byte -> number"),
+                                                         "var4", new ArgumentMetadata(float.class, 1, "float -> number"),
+                                                         "var5", new ArgumentMetadata(short.class, 1, "short -> number"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments));
+
+        Jsonb jsonb = JsonbBuilder.create();
+        List<ToolDescription> response = new LinkedList<>();
+
+        if (registry.hasTools()) {
+            response.add(new ToolDescription(registry.getTool("parseAllPrimitiveNumbers")));
+        } else {
+            throw new Exception("Expected Tools not found");
+        }
+
+        String responseString = jsonb.toJson(response);
+        String expectedString = """
+                        [
+                              {
+                                  "name": "parseAllPrimitiveNumbers",
+                                  "title": "parse All PrimitiveNumbers",
+                                  "description": "Checks if primitives arguments are handled by the Json Serialiser",
+                                  "inputSchema": {
+                                      "type": "object",
+                                      "properties": {
+                                          "var1": {
+                                              "description": "long -> number",
+                                              "type": "number"
+                                          },
+                                          "var2": {
+                                              "description": "double -> number",
+                                              "type": "number"
+                                          },
+                                          "var3": {
+                                              "description": "byte -> number",
+                                              "type": "number"
+                                          },
+                                          "var4": {
+                                              "description": "float -> number",
+                                              "type": "number"
+                                          },
+                                          "var5": {
+                                              "description": "short -> number",
+                                              "type": "number"
+                                          }
+                                      },
+                                      "required": [
+                                          "var1",
+                                          "var2",
+                                          "var3",
+                                          "var4",
+                                          "var5"
+                                      ]
+                                  }
+                              }
+                          ]
+
+                                                                  """;
+        // Lenient mode test (false boolean in 3rd parameter
+        JSONAssert.assertEquals(expectedString, responseString, false);
+    }
+
+    @Test
+    public void testJSONNumberFromWrapperPrimitives() throws Exception {
+        Tool numberTestTool = Literals.tool("parseAllWrapperNumbers", "parse All Wrapper Numbers", "Checks if wrapper type primitive arguments are handled by the Json Serialiser");
+        Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(Long.class, 0, "Long -> number"),
+                                                         "var2", new ArgumentMetadata(Double.class, 1, "Double -> number"),
+                                                         "var3", new ArgumentMetadata(Byte.class, 1, "Byte -> number"),
+                                                         "var4", new ArgumentMetadata(Float.class, 1, "Float -> number"),
+                                                         "var5", new ArgumentMetadata(Short.class, 1, "Short -> number"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments));
+
+        Jsonb jsonb = JsonbBuilder.create();
+        List<ToolDescription> response = new LinkedList<>();
+
+        if (registry.hasTools()) {
+            response.add(new ToolDescription(registry.getTool("parseAllWrapperNumbers")));
+        } else {
+            throw new Exception("Expected Tools not found");
+        }
+
+        String responseString = jsonb.toJson(response);
+        String expectedString = """
+                        [
+                             {
+                                 "name": "parseAllWrapperNumbers",
+                                 "title": "parse All Wrapper Numbers",
+                                 "description": "Checks if wrapper type primitive arguments are handled by the Json Serialiser",
+                                 "inputSchema": {
+                                     "type": "object",
+                                     "properties": {
+                                         "var1": {
+                                             "description": "Long -> number",
+                                             "type": "number"
+                                         },
+                                         "var2": {
+                                             "description": "Double -> number",
+                                             "type": "number"
+                                         },
+                                         "var3": {
+                                             "description": "Byte -> number",
+                                             "type": "number"
+                                         },
+                                         "var4": {
+                                             "description": "Float -> number",
+                                             "type": "number"
+                                         },
+                                         "var5": {
+                                             "description": "Short -> number",
+                                             "type": "number"
+                                         }
+                                     },
+                                     "required": [
+                                         "var1",
+                                         "var2",
+                                         "var3",
+                                         "var4",
+                                         "var5"
+                                     ]
+                                 }
+                             }
+                         ]
+
+                                                                 """;
+        // Lenient mode test (false boolean in 3rd parameter
+        JSONAssert.assertEquals(expectedString, responseString, false);
+    }
+
+    @Test
+    public void testJSONString() throws Exception {
+        Tool stringTestTool = Literals.tool("parseStrings", "parseStrings", "Checks string types are handled by the Json Serialiser");
+        Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(String.class, 0, "String -> string"),
+                                                         "var2", new ArgumentMetadata(Character.class, 1, "Character -> string"),
+                                                         "var3", new ArgumentMetadata(char.class, 1, "char -> string"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(stringTestTool, arguments));
+
+        Jsonb jsonb = JsonbBuilder.create();
+        List<ToolDescription> response = new LinkedList<>();
+
+        if (registry.hasTools()) {
+            response.add(new ToolDescription(registry.getTool("parseStrings")));
+        } else {
+            throw new Exception("Expected Tools not found");
+        }
+
+        String responseString = jsonb.toJson(response);
+        String expectedString = """
+                        [
+                             {
+                                 "name": "parseStrings",
+                                 "title": "parseStrings",
+                                 "description": "Checks string types are handled by the Json Serialiser",
+                                 "inputSchema": {
+                                     "type": "object",
+                                     "properties": {
+                                         "var1": {
+                                             "description": "String -> string",
+                                             "type": "string"
+                                         },
+                                         "var2": {
+                                             "description": "Character -> string",
+                                             "type": "string"
+                                         },
+                                         "var3": {
+                                             "description": "char -> string",
+                                             "type": "string"
+                                         }
+                                     },
+                                     "required": [
+                                         "var1",
+                                         "var2",
+                                         "var3"
+                                     ]
+                                 }
+                             }
+                         ]
+
+                                                                 """;
+        // Lenient mode test (false boolean in 3rd parameter
+        JSONAssert.assertEquals(expectedString, responseString, false);
+    }
+
+    @Test
+    public void testJSONInteger() throws Exception {
+        Tool intTestTool = Literals.tool("parseInts", "parseInts", "Checks int types are handled by the Json Serialiser");
+        Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(int.class, 0, "int -> int"),
+                                                         "var2", new ArgumentMetadata(Integer.class, 1, "Integer -> int"),
+                                                         "var3", new ArgumentMetadata(AtomicInteger.class, 1, "AtomicInteger -> int"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(intTestTool, arguments));
+
+        Jsonb jsonb = JsonbBuilder.create();
+        List<ToolDescription> response = new LinkedList<>();
+
+        if (registry.hasTools()) {
+            response.add(new ToolDescription(registry.getTool("parseInts")));
+        } else {
+            throw new Exception("Expected Tools not found");
+        }
+
+        String responseString = jsonb.toJson(response);
+        String expectedString = """
+                        [
+                             {
+                                 "name": "parseInts",
+                                 "title": "parseInts",
+                                 "description": "Checks int types are handled by the Json Serialiser",
+                                 "inputSchema": {
+                                     "type": "object",
+                                     "properties": {
+                                         "var1": {
+                                             "description": "int -> int",
+                                             "type": "integer"
+                                         },
+                                         "var2": {
+                                             "description": "Integer -> int",
+                                             "type": "integer"
+                                         },
+                                         "var3": {
+                                             "description": "AtomicInteger -> int",
+                                             "type": "integer"
+                                         }
+                                     },
+                                     "required": [
+                                         "var1",
+                                         "var2",
+                                         "var3"
+                                     ]
+                                 }
+                             }
+                         ]
+
+                                                                 """;
+        // Lenient mode test (false boolean in 3rd parameter
+        JSONAssert.assertEquals(expectedString, responseString, false);
+    }
+
+    @Test
+    public void testJSONBoolean() throws Exception {
+        Tool booleanTestTool = Literals.tool("parseBooleans", "parseBooleans", "Checks boolean types are handled by the Json Serialiser");
+        Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "boolean -> boolean"),
+                                                         "var2", new ArgumentMetadata(Boolean.class, 1, "Boolean -> boolean"),
+                                                         "var3", new ArgumentMetadata(AtomicBoolean.class, 1, "AtomicBoolean -> boolean"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(booleanTestTool, arguments));
+
+        Jsonb jsonb = JsonbBuilder.create();
+        List<ToolDescription> response = new LinkedList<>();
+
+        if (registry.hasTools()) {
+            response.add(new ToolDescription(registry.getTool("parseBooleans")));
+        } else {
+            throw new Exception("Expected Tools not found");
+        }
+
+        String responseString = jsonb.toJson(response);
+        String expectedString = """
+                        [
+                             {
+                                 "name": "parseBooleans",
+                                 "title": "parseBooleans",
+                                 "description": "Checks boolean types are handled by the Json Serialiser",
+                                 "inputSchema": {
+                                     "type": "object",
+                                     "properties": {
+                                         "var1": {
+                                             "description": "boolean -> boolean",
+                                             "type": "boolean"
+                                         },
+                                         "var2": {
+                                             "description": "Boolean -> boolean",
+                                             "type": "boolean"
+                                         },
+                                         "var3": {
+                                             "description": "AtomicBoolean -> boolean",
+                                             "type": "boolean"
+                                         }
+                                     },
+                                     "required": [
+                                         "var1",
+                                         "var2",
+                                         "var3"
+                                     ]
+                                 }
+                             }
+                         ]
+
+                                                                 """;
+        // Lenient mode test (false boolean in 3rd parameter
+        JSONAssert.assertEquals(expectedString, responseString, false);
+    }
+
+    @Test
+    public void testJSONSerialization() throws Exception {
+
         //Weather Tool
         Tool weatherTool = Literals.tool("get_weather", "Weather Information Provider", "Get current weather information for a location");
         Map<String, ArgumentMetadata> arguments = Map.of("location", new ArgumentMetadata(String.class, 0, "City in a country"),
@@ -64,20 +368,20 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "operand 1"),
                                                           "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4));
-    }
-
-    @Test
-    public void testJSONSerialization() throws Exception {
 
         Jsonb jsonb = JsonbBuilder.create();
 
         List<ToolDescription> response = new LinkedList<>();
 
         if (registry.hasTools()) {
-            for (ToolMetadata tmd : registry.getAllTools()) {
-                response.add(new ToolDescription(tmd));
-            }
+            response.add(new ToolDescription(registry.getTool("get_weather")));
+            response.add(new ToolDescription(registry.getTool("addition_calculator")));
+            response.add(new ToolDescription(registry.getTool("subtraction_calculator")));
+            response.add(new ToolDescription(registry.getTool("and_operator")));
+        } else {
+            throw new Exception("Expected Tools not found");
         }
+
         String responseString = jsonb.toJson(response);
         String expectedString = """
                         [
