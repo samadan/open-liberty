@@ -527,6 +527,243 @@ public class ToolTest extends FATServletClient {
                                         "inputSchema": {
                                             "type": "object",
                                             "properties": {
+                                                "num1": {
+                                                    "description": "long",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONlong",
+                                        "description": "testJSONlong",
+                                        "title": "testJSONlong"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "double",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONdouble",
+                                        "description": "testJSONdouble",
+                                        "title": "testJSONdouble"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "byte",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONbyte",
+                                        "description": "testJSONbyte",
+                                        "title": "testJSONbyte"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "float",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONfloat",
+                                        "description": "testJSONfloat",
+                                        "title": "testJSONfloat"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "short",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONshort",
+                                        "description": "testJSONshort",
+                                        "title": "testJSONshort"
+                                    },{
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "Long",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONLong",
+                                        "description": "testJSONLong",
+                                        "title": "testJSONLong"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "Double",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONDouble",
+                                        "description": "testJSONDouble",
+                                        "title": "testJSONDouble"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "Byte",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONByte",
+                                        "description": "testJSONByte",
+                                        "title": "testJSONByte"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "Float",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONFloat",
+                                        "description": "testJSONFloat",
+                                        "title": "testJSONFloat"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "Short",
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONShort",
+                                        "description": "testJSONShort",
+                                        "title": "testJSONShort"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "Integer",
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "num1"
+                                            ]
+                                        },
+                                        "name": "testJSONInteger",
+                                        "description": "testJSONInteger",
+                                        "title": "testJSONInteger"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "c": {
+                                                    "description": "Character",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "c"
+                                            ]
+                                        },
+                                        "name": "testJSONCharacter",
+                                        "description": "testJSONCharacter",
+                                        "title": "testJSONCharacter"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "c": {
+                                                    "description": "char",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "c"
+                                            ]
+                                        },
+                                        "name": "testJSONcharacter",
+                                        "description": "testJSONcharacter",
+                                        "title": "testJSONcharacter"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "b": {
+                                                    "description": "Boolean",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "b"
+                                            ]
+                                        },
+                                        "name": "testJSONBoolean",
+                                        "description": "testJSONBoolean",
+                                        "title": "testJSONBoolean"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
                                                 "value": {
                                                     "description": "boolean value",
                                                     "type": "boolean"

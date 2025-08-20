@@ -12,8 +12,6 @@ package io.openliberty.mcp.internal.test;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -238,7 +236,7 @@ public class MCPServerToolsListTest {
         Tool intTestTool = Literals.tool("parseInts", "parseInts", "Checks int types are handled by the Json Serialiser");
         Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(int.class, 0, "int -> int"),
                                                          "var2", new ArgumentMetadata(Integer.class, 1, "Integer -> int"),
-                                                         "var3", new ArgumentMetadata(AtomicInteger.class, 1, "AtomicInteger -> int"));
+                                                         "var3", new ArgumentMetadata(Integer.class, 1, "Integer -> int"));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(intTestTool, arguments));
 
         Jsonb jsonb = JsonbBuilder.create();
@@ -269,7 +267,7 @@ public class MCPServerToolsListTest {
                                              "type": "integer"
                                          },
                                          "var3": {
-                                             "description": "AtomicInteger -> int",
+                                             "description": "Integer -> int",
                                              "type": "integer"
                                          }
                                      },
@@ -292,7 +290,7 @@ public class MCPServerToolsListTest {
         Tool booleanTestTool = Literals.tool("parseBooleans", "parseBooleans", "Checks boolean types are handled by the Json Serialiser");
         Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "boolean -> boolean"),
                                                          "var2", new ArgumentMetadata(Boolean.class, 1, "Boolean -> boolean"),
-                                                         "var3", new ArgumentMetadata(AtomicBoolean.class, 1, "AtomicBoolean -> boolean"));
+                                                         "var3", new ArgumentMetadata(Boolean.class, 1, "Boolean -> boolean"));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(booleanTestTool, arguments));
 
         Jsonb jsonb = JsonbBuilder.create();
@@ -323,7 +321,7 @@ public class MCPServerToolsListTest {
                                              "type": "boolean"
                                          },
                                          "var3": {
-                                             "description": "AtomicBoolean -> boolean",
+                                             "description": "Boolean -> boolean",
                                              "type": "boolean"
                                          }
                                      },
