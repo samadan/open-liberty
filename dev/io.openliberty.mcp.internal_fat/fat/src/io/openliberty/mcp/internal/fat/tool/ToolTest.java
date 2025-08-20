@@ -183,6 +183,34 @@ public class ToolTest extends FATServletClient {
     }
 
     @Test
+    public void testRejectsUnsupportedProtocolVersion() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = new HttpRequest(server, "/toolTest/mcp")
+                                                                  .requestProp("Accept", ACCEPT_HEADER)
+                                                                  .requestProp("MCP-Protocol-Version", "2022-02-02")
+                                                                  .jsonBody(request)
+                                                                  .method("POST")
+                                                                  .expectCode(400)
+                                                                  .run(String.class);
+
+        assertTrue("Expected error message about invalid protocol version", response.contains("Missing or invalid MCP-Protocol-Version header"));
+        assertTrue("Expected error message to contain expected version", response.contains("Expected: 2025-06-18"));
+    }
+
+    @Test
     public void postJsonRpc() throws Exception {
         String request = """
                           {
