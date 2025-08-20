@@ -30,10 +30,10 @@
 
     <resourceAdapter id="HELLOWORLD1" location="${server.config.dir}/connectors/helloworldra.rar"/>
     <resourceAdapter id="HELLOWORLD2" location="${server.config.dir}/connectors/helloworldbeanra.rar"/>
-	<resourceAdapter id="ADO" location="${server.config.dir}/connectors/adapter.rar"/>
-	<resourceAdapter id="ZRA" location="${server.config.dir}/connectors/fvtra.rar"/>
-	
+    <resourceAdapter id="ADO" location="${server.config.dir}/connectors/adapter.rar"/>
+    <resourceAdapter id="ZRA" location="${server.config.dir}/connectors/fvtra.rar"/>
+
     <application type="ear" id="fvtapp" name="fvtapp" location="fvtapp.ear"/>
     
-	<javaPermission className="java.util.PropertyPermission" name="*" actions="read"/>
+    <javaPermission className="java.util.PropertyPermission" name="*" actions="read"/>
 </server>
