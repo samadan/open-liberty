@@ -9,9 +9,7 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,23 +19,18 @@ import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
+import io.openliberty.mcp.internal.exceptions.jsonrpc.HttpResponseException;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
-import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
-import io.openliberty.mcp.internal.responses.McpErrorResponse;
 import io.openliberty.mcp.internal.responses.McpInitializeResult;
 import io.openliberty.mcp.internal.responses.McpInitializeResult.ServerInfo;
-import io.openliberty.mcp.internal.responses.McpResponse;
-import io.openliberty.mcp.internal.responses.McpResultResponse;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
-import jakarta.json.JsonException;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
-import jakarta.json.bind.JsonbException;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -51,9 +44,6 @@ public class McpServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final TraceComponent tc = Tr.register(McpServlet.class);
-    private static final String EXPECTED_PROTOCOL_VERSION = "2025-06-18";
-    private static final String MCP_HEADER = "MCP-Protocol-Version";
-
     private Jsonb jsonb;
 
     @Inject
@@ -67,98 +57,67 @@ public class McpServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        McpTransport transport = new McpTransport(req, resp, jsonb);
         String accept = req.getHeader("Accept");
-
         // Return 405, with SSE-specific message if "text/event-stream" is requested.
         if (accept != null && HeaderValidation.acceptContains(accept, "text/event-stream")) {
-            resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-            resp.setHeader("Allow", "POST");
-            resp.setContentType("text/plain");
-            resp.getWriter().write("GET not supported yet. SSE not implemented.");
+            transport.sendHttpException(
+                                        new HttpResponseException(
+                                                                  HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                                                                  "GET not supported yet. SSE not implemented."));
         } else {
-            resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-            resp.setHeader("Allow", "POST");
-            resp.setContentType("text/plain");
-            resp.getWriter().write("GET method not allowed.");
+            transport.sendHttpException(
+                                        new HttpResponseException(
+                                                                  HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                                                                  "GET method not allowed."));
         }
     }
 
     @Override
-    @FFDCIgnore(JSONRPCException.class)
+    @FFDCIgnore({ JSONRPCException.class, HttpResponseException.class })
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, JSONRPCException {
-        McpRequest request = null;
+        McpTransport transport = new McpTransport(req, resp, jsonb);
         try {
-
-            // Accept Header Validation
-            String accept = req.getHeader("Accept");
-            if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
-                || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
-                resp.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
-                resp.setContentType("application/json");
-                return;
-            } ;
-
-            request = toRequest(req);
-            // Validate mcp-protocal version header
-            if (!"initialize".equals(request.method())) {
-                String protocolVersion = req.getHeader(MCP_HEADER);
-                if (protocolVersion == null || !protocolVersion.equals(EXPECTED_PROTOCOL_VERSION)) {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    resp.setContentType("plain/text");
-                    resp.getWriter().write("Missing or invalid MCP-Protocol-Version header. Expected: " + EXPECTED_PROTOCOL_VERSION);
-                    return;
-                }
-            }
-            callRequest(request, resp);
+            transport.init();
+            callRequest(transport);
         } catch (JSONRPCException e) {
-            McpResponse mcpResponse = new McpErrorResponse(request == null ? "" : request.id(), e);
-            jsonb.toJson(mcpResponse, resp.getWriter());
+            transport.sendJsonRpcException(e);
+        } catch (HttpResponseException e) {
+            transport.sendHttpException(e);
         } catch (Exception e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            transport.sendError(e);
         }
     }
 
-    @FFDCIgnore(JsonException.class)
-    public McpRequest toRequest(HttpServletRequest req) throws IOException, JSONRPCException {
-        McpRequest request = null;
-        // TODO: validate headers/contentType etc.
-        try {
-            BufferedReader re = req.getReader();
-            request = McpRequest.createValidMCPRequest(re);
-        } catch (JsonbException | JsonException e) {
-            throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR, List.of(e.getMessage()));
-        }
-        return request;
-    }
-
-    protected void callRequest(McpRequest request, HttpServletResponse resp)
+    protected void callRequest(McpTransport transport)
                     throws JSONRPCException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
-        switch (request.getRequestMethod()) {
-            case TOOLS_CALL -> callTool(request, resp.getWriter());
-            case TOOLS_LIST -> listTools(request, resp.getWriter());
-            case INITIALIZE -> initialize(request, resp.getWriter());
-            case INITIALIZED -> initialized(resp);
-            default -> throw new JSONRPCException(JSONRPCErrorCode.METHOD_NOT_FOUND, List.of(String.valueOf(request.getRequestMethod() + " not found")));
+        RequestMethod method = transport.getMcpRequest().getRequestMethod();
+        switch (method) {
+            case TOOLS_CALL -> callTool(transport);
+            case TOOLS_LIST -> listTools(transport);
+            case INITIALIZE -> initialize(transport);
+            case INITIALIZED -> initialized(transport);
+            default -> throw new JSONRPCException(JSONRPCErrorCode.METHOD_NOT_FOUND, List.of(String.valueOf(method + " not found")));
         }
 
     }
 
     @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
-    private void callTool(McpRequest request, Writer writer) {
-        McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
+
+    private void callTool(McpTransport transport) {
+        McpToolCallParams params = transport.getParams(McpToolCallParams.class);
         if (params.getMetadata() == null) {
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + request.params().getString("name") + " not found"));
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
         }
         CreationalContext<Object> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
-        McpResponse mcpResponse;
         try {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
-            mcpResponse = new McpResultResponse(request.id(), new ToolResponseResult(result, false));
+            transport.sendResponse(new ToolResponseResult(result, false));
         } catch (JSONRPCException e) {
             throw e;
         } catch (InvocationTargetException e) {
-            mcpResponse = new McpResultResponse(request.id(), new ToolResponseResult(e.getCause().getMessage(), true));;
+            transport.sendResponse(new ToolResponseResult(e.getCause().getMessage(), true));;
         } catch (IllegalAccessException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
         } catch (IllegalArgumentException e) {
@@ -170,15 +129,14 @@ public class McpServlet extends HttpServlet {
                 Tr.warning(tc, "Failed to release bean: " + ex);
             }
         }
-        jsonb.toJson(mcpResponse, writer);
-
     }
 
     /**
      * @param request
      * @return
+     * @throws IOException
      */
-    private void listTools(McpRequest request, Writer writer) {
+    private void listTools(McpTransport transport) throws IOException {
         ToolRegistry toolRegistry = ToolRegistry.get();
 
         List<ToolDescription> response = new LinkedList<>();
@@ -188,8 +146,7 @@ public class McpServlet extends HttpServlet {
                 response.add(new ToolDescription(tmd));
             }
             ToolResult toolResult = new ToolResult(response);
-            McpResponse mcpResponse = new McpResultResponse(request.id(), toolResult);
-            jsonb.toJson(mcpResponse, writer);
+            transport.sendResponse(toolResult);
         }
     }
 
@@ -197,9 +154,10 @@ public class McpServlet extends HttpServlet {
      * @param request
      * @param writer
      * @return
+     * @throws IOException
      */
-    private void initialize(McpRequest request, Writer writer) {
-        McpInitializeParams params = request.getParams(McpInitializeParams.class, jsonb);
+    private void initialize(McpTransport transport) throws IOException {
+        McpInitializeParams params = transport.getParams(McpInitializeParams.class);
         // TODO validate protocol
         // TODO store client capabilities
         // TODO store client info
@@ -209,12 +167,11 @@ public class McpServlet extends HttpServlet {
         // TODO: provide a way for the user to set server info
         ServerInfo info = new ServerInfo("test-server", "Test Server", "0.1");
         McpInitializeResult result = new McpInitializeResult("2025-06-18", caps, info, null);
-        McpResponse response = new McpResultResponse(request.id(), result);
-        jsonb.toJson(response, writer);
+        transport.sendResponse(result);
     }
 
-    private void initialized(HttpServletResponse response) {
-        response.setStatus(HttpServletResponse.SC_ACCEPTED);
+    private void initialized(McpTransport transport) {
+        transport.sendEmptyResponse();
     }
 
 }
