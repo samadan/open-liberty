@@ -22,7 +22,6 @@ import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.Literals;
 import io.openliberty.mcp.internal.ToolDescription;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
-import io.openliberty.mcp.internal.ToolRegistry;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 
@@ -31,18 +30,16 @@ import jakarta.json.bind.JsonbBuilder;
  */
 public class MCPServerToolsListTest {
 
-    static ToolRegistry registry = new ToolRegistry();
-
-    static {
-        ToolRegistry.set(registry);
-    }
-
     /**
      * @throws java.lang.Exception
      */
     @Before
     public void setup() throws Exception {
 
+    }
+
+    private List<ToolDescription> generateResponse(Tool numberTestTool, Map<String, ArgumentMetadata> arguments) {
+        return List.of(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments)));
     }
 
     @Test
@@ -53,18 +50,9 @@ public class MCPServerToolsListTest {
                                                          "var3", new ArgumentMetadata(byte.class, 1, "byte -> number"),
                                                          "var4", new ArgumentMetadata(float.class, 1, "float -> number"),
                                                          "var5", new ArgumentMetadata(short.class, 1, "short -> number"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments));
 
         Jsonb jsonb = JsonbBuilder.create();
-        List<ToolDescription> response = new LinkedList<>();
-
-        if (registry.hasTools()) {
-            response.add(new ToolDescription(registry.getTool("parseAllPrimitiveNumbers")));
-        } else {
-            throw new Exception("Expected Tools not found");
-        }
-
-        String responseString = jsonb.toJson(response);
+        String responseString = jsonb.toJson(generateResponse(numberTestTool, arguments));
         String expectedString = """
                         [
                               {
@@ -119,18 +107,8 @@ public class MCPServerToolsListTest {
                                                          "var3", new ArgumentMetadata(Byte.class, 1, "Byte -> number"),
                                                          "var4", new ArgumentMetadata(Float.class, 1, "Float -> number"),
                                                          "var5", new ArgumentMetadata(Short.class, 1, "Short -> number"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments));
-
         Jsonb jsonb = JsonbBuilder.create();
-        List<ToolDescription> response = new LinkedList<>();
-
-        if (registry.hasTools()) {
-            response.add(new ToolDescription(registry.getTool("parseAllWrapperNumbers")));
-        } else {
-            throw new Exception("Expected Tools not found");
-        }
-
-        String responseString = jsonb.toJson(response);
+        String responseString = jsonb.toJson(generateResponse(numberTestTool, arguments));
         String expectedString = """
                         [
                              {
@@ -183,18 +161,8 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(String.class, 0, "String -> string"),
                                                          "var2", new ArgumentMetadata(Character.class, 1, "Character -> string"),
                                                          "var3", new ArgumentMetadata(char.class, 1, "char -> string"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(stringTestTool, arguments));
-
         Jsonb jsonb = JsonbBuilder.create();
-        List<ToolDescription> response = new LinkedList<>();
-
-        if (registry.hasTools()) {
-            response.add(new ToolDescription(registry.getTool("parseStrings")));
-        } else {
-            throw new Exception("Expected Tools not found");
-        }
-
-        String responseString = jsonb.toJson(response);
+        String responseString = jsonb.toJson(generateResponse(stringTestTool, arguments));
         String expectedString = """
                         [
                              {
@@ -237,18 +205,8 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(int.class, 0, "int -> int"),
                                                          "var2", new ArgumentMetadata(Integer.class, 1, "Integer -> int"),
                                                          "var3", new ArgumentMetadata(Integer.class, 1, "Integer -> int"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(intTestTool, arguments));
-
         Jsonb jsonb = JsonbBuilder.create();
-        List<ToolDescription> response = new LinkedList<>();
-
-        if (registry.hasTools()) {
-            response.add(new ToolDescription(registry.getTool("parseInts")));
-        } else {
-            throw new Exception("Expected Tools not found");
-        }
-
-        String responseString = jsonb.toJson(response);
+        String responseString = jsonb.toJson(generateResponse(intTestTool, arguments));
         String expectedString = """
                         [
                              {
@@ -291,18 +249,8 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "boolean -> boolean"),
                                                          "var2", new ArgumentMetadata(Boolean.class, 1, "Boolean -> boolean"),
                                                          "var3", new ArgumentMetadata(Boolean.class, 1, "Boolean -> boolean"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(booleanTestTool, arguments));
-
         Jsonb jsonb = JsonbBuilder.create();
-        List<ToolDescription> response = new LinkedList<>();
-
-        if (registry.hasTools()) {
-            response.add(new ToolDescription(registry.getTool("parseBooleans")));
-        } else {
-            throw new Exception("Expected Tools not found");
-        }
-
-        String responseString = jsonb.toJson(response);
+        String responseString = jsonb.toJson(generateResponse(booleanTestTool, arguments));
         String expectedString = """
                         [
                              {
@@ -347,40 +295,28 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments = Map.of("location", new ArgumentMetadata(String.class, 0, "City in a country"),
                                                          "temperature", new ArgumentMetadata(double.class, 1, "in degrees Celsius"),
                                                          "humidity", new ArgumentMetadata(int.class, 2, "Relative Humidity"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments));
-
         // Addition Tool
         Tool additionTool = Literals.tool("addition_calculator", "The Calculator Addition Tool", "Can add two floating point numbers");
         Map<String, ArgumentMetadata> arguments2 = Map.of("number1", new ArgumentMetadata(double.class, 0, "operand 1"),
                                                           "number2", new ArgumentMetadata(double.class, 1, "operand 2"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2));
-
         // Subtraction Tool
         Tool subtractionTool = Literals.tool("subtraction_calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
         Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0, "operand 1"),
                                                           "number2", new ArgumentMetadata(int.class, 1, "operand 2"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3));
-
         // True or False Tool
         Tool booleanTool = Literals.tool("and_operator", "Boolean And Operator", "Does a Boolean And Operation on two boolean variables");
         Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "operand 1"),
                                                           "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4));
+
+        LinkedList<ToolDescription> toolDescriptions = new LinkedList<>();
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4)));
 
         Jsonb jsonb = JsonbBuilder.create();
 
-        List<ToolDescription> response = new LinkedList<>();
-
-        if (registry.hasTools()) {
-            response.add(new ToolDescription(registry.getTool("get_weather")));
-            response.add(new ToolDescription(registry.getTool("addition_calculator")));
-            response.add(new ToolDescription(registry.getTool("subtraction_calculator")));
-            response.add(new ToolDescription(registry.getTool("and_operator")));
-        } else {
-            throw new Exception("Expected Tools not found");
-        }
-
-        String responseString = jsonb.toJson(response);
+        String responseString = jsonb.toJson(toolDescriptions);
         String expectedString = """
                         [
                             {
