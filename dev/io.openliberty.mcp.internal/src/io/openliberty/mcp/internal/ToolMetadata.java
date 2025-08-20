@@ -42,16 +42,6 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         return new ToolMetadata(annotation, bean, method, getArgumentMap(method), name, title, description);
     }
 
-    public static ToolMetadata createFrom(Tool annotation, Map<String, ArgumentMetadata> arguments) {
-
-        String title = annotation.title();
-        if (title.equals("")) {
-            title = null;
-        }
-
-        return new ToolMetadata(annotation, null, null, arguments, annotation.name(), title, annotation.description());
-    }
-
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
         Map<String, ArgumentMetadata> result = new HashMap<>();
         for (AnnotatedParameter<?> p : method.getParameters()) {

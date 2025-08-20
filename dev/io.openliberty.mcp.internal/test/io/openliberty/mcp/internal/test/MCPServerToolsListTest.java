@@ -45,25 +45,25 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments = Map.of("location", new ArgumentMetadata(String.class, 0, "City in a country"),
                                                          "temperature", new ArgumentMetadata(double.class, 1, "in degrees Celsius"),
                                                          "humidity", new ArgumentMetadata(int.class, 2, "Relative Humidity"));
-        registry.addTool(ToolMetadata.createFrom(weatherTool, arguments));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments));
 
         // Addition Tool
         Tool additionTool = Literals.tool("addition_calculator", "The Calculator Addition Tool", "Can add two floating point numbers");
         Map<String, ArgumentMetadata> arguments2 = Map.of("number1", new ArgumentMetadata(double.class, 0, "operand 1"),
                                                           "number2", new ArgumentMetadata(double.class, 1, "operand 2"));
-        registry.addTool(ToolMetadata.createFrom(additionTool, arguments2));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2));
 
         // Subtraction Tool
         Tool subtractionTool = Literals.tool("subtraction_calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
         Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0, "operand 1"),
                                                           "number2", new ArgumentMetadata(int.class, 1, "operand 2"));
-        registry.addTool(ToolMetadata.createFrom(subtractionTool, arguments3));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3));
 
         // True or False Tool
         Tool booleanTool = Literals.tool("and_operator", "Boolean And Operator", "Does a Boolean And Operation on two boolean variables");
         Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "operand 1"),
                                                           "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
-        registry.addTool(ToolMetadata.createFrom(booleanTool, arguments4));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4));
     }
 
     @Test

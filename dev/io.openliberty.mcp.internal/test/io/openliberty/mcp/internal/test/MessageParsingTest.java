@@ -26,7 +26,6 @@ import io.openliberty.mcp.internal.Capabilities.Roots;
 import io.openliberty.mcp.internal.Capabilities.Sampling;
 import io.openliberty.mcp.internal.Literals;
 import io.openliberty.mcp.internal.RequestMethod;
-import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
@@ -50,16 +49,16 @@ public class MessageParsingTest {
 
         Tool testTool = Literals.tool("echo", "Echo", "Echos the input");
         Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, ""));
-        registry.addTool(ToolMetadata.createFrom(testTool, arguments));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(testTool, arguments));
 
         Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
         Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, ""),
                                                             "num2", new ArgumentMetadata(Integer.class, 1, ""));
-        registry.addTool(ToolMetadata.createFrom(addTestTool, additionArgs));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(addTestTool, additionArgs));
 
         Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
         Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value"));
-        registry.addTool(ToolMetadata.createFrom(toogleTestTool, booleanArgs));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(toogleTestTool, booleanArgs));
     }
 
     @Test
