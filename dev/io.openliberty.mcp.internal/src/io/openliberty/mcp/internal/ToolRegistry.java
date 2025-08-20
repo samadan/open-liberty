@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import jakarta.enterprise.inject.spi.CDI;
 
@@ -41,9 +40,6 @@ public class ToolRegistry {
 
     public ToolMetadata getTool(String name) {
         ToolMetadata result = tools.get(name);
-        if (result == null) {
-            throw new NoSuchElementException(name);
-        }
         return result;
     }
 

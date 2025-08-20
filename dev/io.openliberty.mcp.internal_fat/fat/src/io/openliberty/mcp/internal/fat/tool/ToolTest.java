@@ -608,6 +608,40 @@ public class ToolTest extends FATServletClient {
     }
 
     @Test
+    public void testToolNotFoundError() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": 2,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "privateEchoMissing",
+                            "arguments": {
+                              "input": "Hello",
+                              "repeat": 4
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {
+                            "id": 2,
+                            "jsonrpc": "2.0",
+                            "error": {
+                                "code": -32602,
+                                "data": [
+                                    "Method privateEchoMissing not found"
+                                ],
+                                "message": "Invalid params"
+                            }
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
     public void testAddWithIntegerInputArgs() throws Exception {
         String request = """
                           {
