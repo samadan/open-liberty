@@ -51,6 +51,8 @@ public class McpServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final TraceComponent tc = Tr.register(McpServlet.class);
+    private static final String EXPECTED_PROTOCOL_VERSION = "2025-06-18";
+    private static final String MCP_HEADER = "MCP-Protocol-Version";
 
     private Jsonb jsonb;
 
@@ -86,6 +88,8 @@ public class McpServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, JSONRPCException {
         McpRequest request = null;
         try {
+
+            // Accept Header Validation
             String accept = req.getHeader("Accept");
             if (accept == null || !HeaderValidation.acceptContains(accept, "application/json")
                 || !HeaderValidation.acceptContains(accept, "text/event-stream")) {
@@ -93,7 +97,18 @@ public class McpServlet extends HttpServlet {
                 resp.setContentType("application/json");
                 return;
             } ;
+
             request = toRequest(req);
+            // Validate mcp-protocal version header
+            if (!"initialize".equals(request.method())) {
+                String protocolVersion = req.getHeader(MCP_HEADER);
+                if (protocolVersion == null || !protocolVersion.equals(EXPECTED_PROTOCOL_VERSION)) {
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    resp.setContentType("plain/text");
+                    resp.getWriter().write("Missing or invalid MCP-Protocol-Version header. Expected: " + EXPECTED_PROTOCOL_VERSION);
+                    return;
+                }
+            }
             callRequest(request, resp);
         } catch (JSONRPCException e) {
             McpResponse mcpResponse = new McpErrorResponse(request == null ? "" : request.id(), e);
@@ -101,7 +116,6 @@ public class McpServlet extends HttpServlet {
         } catch (Exception e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-
     }
 
     @FFDCIgnore(JsonException.class)

@@ -13,6 +13,7 @@ import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONL
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -39,6 +40,10 @@ import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
  */
 @RunWith(FATRunner.class)
 public class ToolTest extends FATServletClient {
+
+    private static final String ACCEPT_HEADER = "application/json, text/event-stream";
+    private static final String MCP_PROTOCOL_HEADER = "MCP-Protocol-Version";
+    private static final String MCP_PROTOCOL_VERSION = "2025-06-18";
 
     @Server("mcp-server")
     public static LibertyServer server;
@@ -100,7 +105,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").jsonBody(request).method("POST").expectCode(406);
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER).jsonBody(request).method("POST").expectCode(406);
 
         String response = JsonRequest.run(String.class);
         assertNull("Expected no response body for 406 Not Acceptable", response);
@@ -122,10 +127,59 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json").jsonBody(request).method("POST").expectCode(406);
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json").requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER)
+                                                                          .jsonBody(request).method("POST").expectCode(406);
 
         String response = JsonRequest.run(String.class);
         assertNull("Expected no response body for 406 Not Acceptable due to incorrect Accept header", response);
+    }
+
+    @Test
+    public void testMissingMcpProtocolVersionHeader() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "echo",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """;
+        String response = HttpTestUtils.callMCPWithoutProtocolVersion(server, "/toolTest", request);
+        assertTrue("Expected 400 error body mentioning MCP-Protocol-Version", response.contains("Missing or invalid MCP-Protocol-Version header"));
+    }
+
+    @Test
+    public void testInitializeDoesNotNeedMcpProtocolVersionHeader() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "initialize",
+                         "params": {
+                            "clientInfo": {
+                              "name": "test-client",
+                              "version": "0.1"
+                            },
+                            "rootUri": "file:/test/root"
+                          }
+                        }
+                        """;
+
+        String response = new HttpRequest(server, "/toolTest/mcp")
+                                                                  .requestProp("Accept", ACCEPT_HEADER)
+                                                                  .jsonBody(request)
+                                                                  .method("POST")
+                                                                  .expectCode(200)
+                                                                  .run(String.class);
+
+        assertTrue("Expected response to contain result", response.contains("\"result\""));
+        assertTrue("Expected protocolVersion field in response", response.contains("\"protocolVersion\""));
+        assertTrue("Expected serverInfo field in response", response.contains("\"serverInfo\""));
     }
 
     @Test
