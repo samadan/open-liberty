@@ -112,4 +112,26 @@ public class LifecycleTest {
 
         HttpTestUtils.callMCPNotification(server, "/lifecycleTest", request);
     }
+
+    @Test
+    public void testPing() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": "123",
+                          "method": "ping"
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/lifecycleTest", request);
+
+        String expectedResponse = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "123",
+                          "result": {}
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedResponse, response, JSONCompareMode.STRICT);
+    }
 }
