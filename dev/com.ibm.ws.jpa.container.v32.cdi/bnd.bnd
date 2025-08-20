@@ -33,4 +33,9 @@ Private-Package: \
 	com.ibm.websphere.javaee.persistence.2.1;version=latest,\
 	com.ibm.ws.jpa.container.jakarta,\
 	com.ibm.wsspi.org.osgi.service.component.annotations,\
-	com.ibm.ws.org.osgi.annotation.versioning
+	com.ibm.ws.org.osgi.annotation.versioning,\
+	com.ibm.ws.kernel.service,\
+	com.ibm.ws.cdi.internal.jakarta,\
+	com.ibm.ws.container.service,\
+	io.openliberty.org.eclipse.persistence-3.2,\
+	io.openliberty.jakarta.transaction.2.0
