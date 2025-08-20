@@ -443,6 +443,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         JSONObject jsonResponse = new JSONObject(response);
+
         String expectedString = """
                         {
                             "result": {
@@ -493,6 +494,12 @@ public class ToolTest extends FATServletClient {
                                                 "num2"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "add",
                                         "description": "Returns the sum of the two inputs",
                                         "title": "Addition calculator"
@@ -509,6 +516,12 @@ public class ToolTest extends FATServletClient {
                                             "required": [
                                                 "input"
                                             ]
+                                        },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
                                         },
                                         "name": "privateEcho",
                                         "description": "Returns the input unchanged",
@@ -530,6 +543,12 @@ public class ToolTest extends FATServletClient {
                                                 "num2"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "subtract",
                                         "description": "Minus number 2 from number 1",
                                         "title": "Subtraction calculator"
@@ -546,6 +565,12 @@ public class ToolTest extends FATServletClient {
                                             "required": [
                                                 "input"
                                             ]
+                                        },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
                                         },
                                         "name": "echo",
                                         "description": "Returns the input unchanged",
@@ -564,6 +589,12 @@ public class ToolTest extends FATServletClient {
                                                 "num1"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "testJSONlong",
                                         "description": "testJSONlong",
                                         "title": "testJSONlong"
@@ -580,6 +611,12 @@ public class ToolTest extends FATServletClient {
                                             "required": [
                                                 "num1"
                                             ]
+                                        },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
                                         },
                                         "name": "testJSONdouble",
                                         "description": "testJSONdouble",
@@ -598,6 +635,12 @@ public class ToolTest extends FATServletClient {
                                                 "num1"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "testJSONbyte",
                                         "description": "testJSONbyte",
                                         "title": "testJSONbyte"
@@ -614,6 +657,12 @@ public class ToolTest extends FATServletClient {
                                             "required": [
                                                 "num1"
                                             ]
+                                        },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
                                         },
                                         "name": "testJSONfloat",
                                         "description": "testJSONfloat",
@@ -632,10 +681,17 @@ public class ToolTest extends FATServletClient {
                                                 "num1"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "testJSONshort",
                                         "description": "testJSONshort",
                                         "title": "testJSONshort"
-                                    },{
+                                    },
+                                    {
                                         "inputSchema": {
                                             "type": "object",
                                             "properties": {
@@ -647,6 +703,12 @@ public class ToolTest extends FATServletClient {
                                             "required": [
                                                 "num1"
                                             ]
+                                        },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
                                         },
                                         "name": "testJSONLong",
                                         "description": "testJSONLong",
@@ -665,6 +727,12 @@ public class ToolTest extends FATServletClient {
                                                 "num1"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "testJSONDouble",
                                         "description": "testJSONDouble",
                                         "title": "testJSONDouble"
@@ -681,6 +749,12 @@ public class ToolTest extends FATServletClient {
                                             "required": [
                                                 "num1"
                                             ]
+                                        },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
                                         },
                                         "name": "testJSONByte",
                                         "description": "testJSONByte",
@@ -699,6 +773,12 @@ public class ToolTest extends FATServletClient {
                                                 "num1"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "testJSONFloat",
                                         "description": "testJSONFloat",
                                         "title": "testJSONFloat"
@@ -716,7 +796,13 @@ public class ToolTest extends FATServletClient {
                                                 "num1"
                                             ]
                                         },
-                                        "name": "testJSONShort",
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
+                                         "name": "testJSONShort",
                                         "description": "testJSONShort",
                                         "title": "testJSONShort"
                                     },
@@ -732,6 +818,12 @@ public class ToolTest extends FATServletClient {
                                             "required": [
                                                 "num1"
                                             ]
+                                        },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
                                         },
                                         "name": "testJSONInteger",
                                         "description": "testJSONInteger",
@@ -750,6 +842,12 @@ public class ToolTest extends FATServletClient {
                                                 "c"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "testJSONCharacter",
                                         "description": "testJSONCharacter",
                                         "title": "testJSONCharacter"
@@ -766,6 +864,12 @@ public class ToolTest extends FATServletClient {
                                             "required": [
                                                 "c"
                                             ]
+                                        },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
                                         },
                                         "name": "testJSONcharacter",
                                         "description": "testJSONcharacter",
@@ -784,6 +888,12 @@ public class ToolTest extends FATServletClient {
                                                 "b"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "testJSONBoolean",
                                         "description": "testJSONBoolean",
                                         "title": "testJSONBoolean"
@@ -801,10 +911,16 @@ public class ToolTest extends FATServletClient {
                                                 "value"
                                             ]
                                         },
+                                        "annotations": {
+                                          "readOnlyHint": true,
+                                          "destructiveHint": false,
+                                          "idempotentHint": true,
+                                          "openWorldHint": false
+                                        },
                                         "name": "toggle",
                                         "description": "toggles the boolean input",
                                         "title": "Boolean toggle"
-                                    }
+                                    },
                                 ]
                             },
                             "id": 1,

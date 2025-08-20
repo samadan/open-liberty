@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 
 public class ToolDescription {
@@ -23,6 +24,7 @@ public class ToolDescription {
     private final String title;
     private final String description;
     private final InputSchemaObject inputSchema;
+    private final AnnotationsDescription annotations;
 
     public String getName() {
         return name;
@@ -40,11 +42,21 @@ public class ToolDescription {
         return inputSchema;
     }
 
-    public ToolDescription(ToolMetadata toolMetadata) {
-        this.name = toolMetadata.name();
-        this.title = toolMetadata.title();
-        this.description = toolMetadata.description();
+    public AnnotationsDescription getAnnotations() {
+        return annotations;
+    }
 
+    public ToolDescription(ToolMetadata toolMetadata) {
+        this.name = toolMetadata.annotation().name();
+        this.title = toolMetadata.annotation().title();
+        this.description = toolMetadata.annotation().description();
+
+        Tool.Annotations ann = toolMetadata.annotations();
+        this.annotations = new AnnotationsDescription(
+                                                      ann.readOnlyHint(),
+                                                      ann.destructiveHint(),
+                                                      ann.idempotentHint(),
+                                                      ann.openWorldHint());
         Map<String, ArgumentMetadata> argumentMap = toolMetadata.arguments();
         Map<String, InputSchemaPrimitive> primitiveInputSchemaMap = new HashMap<>();
         LinkedList<String> requiredParameterList = new LinkedList<>();
@@ -91,4 +103,34 @@ public class ToolDescription {
     public record InputSchemaObject(String type, Map<String, InputSchemaPrimitive> properties, List<String> required) {}
 
     public record InputSchemaPrimitive(String type, String description) {}
+
+    public static class AnnotationsDescription {
+        private final boolean readOnlyHint;
+        private final boolean destructiveHint;
+        private final boolean idempotentHint;
+        private final boolean openWorldHint;
+
+        public AnnotationsDescription(boolean readOnlyHint, boolean destructiveHint, boolean idempotentHint, boolean openWorldHint) {
+            this.readOnlyHint = readOnlyHint;
+            this.destructiveHint = destructiveHint;
+            this.idempotentHint = idempotentHint;
+            this.openWorldHint = openWorldHint;
+        }
+
+        public boolean isReadOnlyHint() {
+            return readOnlyHint;
+        }
+
+        public boolean isDestructiveHint() {
+            return destructiveHint;
+        }
+
+        public boolean isIdempotentHint() {
+            return idempotentHint;
+        }
+
+        public boolean isOpenWorldHint() {
+            return openWorldHint;
+        }
+    }
 }

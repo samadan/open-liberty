@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.fat.tool.basicToolApp;
 
 import io.openliberty.mcp.annotations.Tool;
+import io.openliberty.mcp.annotations.Tool.Annotations;
 import io.openliberty.mcp.annotations.ToolArg;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -48,7 +49,8 @@ public class BasicTools {
         return input;
     }
 
-    @Tool(name = "privateEcho", title = "Echoes the input", description = "Returns the input unchanged")
+    @Tool(name = "privateEcho", title = "Echoes the input", description = "Returns the input unchanged",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     private String privateEcho(@ToolArg(name = "input", description = "input to echo") String input) {
         return input;
     }
@@ -66,27 +68,32 @@ public class BasicTools {
     /////////////
     // Primitives
     /////////////
-    @Tool(name = "testJSONlong", title = "testJSONlong", description = "testJSONlong")
+    @Tool(name = "testJSONlong", title = "testJSONlong", description = "testJSONlong",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public long testJSONlong(@ToolArg(name = "num1", description = "long") long number1) {
         return number1;
     }
 
-    @Tool(name = "testJSONdouble", title = "testJSONdouble", description = "testJSONdouble")
+    @Tool(name = "testJSONdouble", title = "testJSONdouble", description = "testJSONdouble",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public double testJSONdouble(@ToolArg(name = "num1", description = "double") double number1) {
         return number1;
     }
 
-    @Tool(name = "testJSONbyte", title = "testJSONbyte", description = "testJSONbyte")
+    @Tool(name = "testJSONbyte", title = "testJSONbyte", description = "testJSONbyte",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public byte testJSONbyte(@ToolArg(name = "num1", description = "byte") byte number1) {
         return number1;
     }
 
-    @Tool(name = "testJSONfloat", title = "testJSONfloat", description = "testJSONfloat")
+    @Tool(name = "testJSONfloat", title = "testJSONfloat", description = "testJSONfloat",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public float testJSONfloat(@ToolArg(name = "num1", description = "float") float number1) {
         return number1;
     }
 
-    @Tool(name = "testJSONshort", title = "testJSONshort", description = "testJSONshort")
+    @Tool(name = "testJSONshort", title = "testJSONshort", description = "testJSONshort",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public short testJSONshort(@ToolArg(name = "num1", description = "short") short number1) {
         return number1;
     }
@@ -94,27 +101,32 @@ public class BasicTools {
     ///////////
     // Wrappers
     ///////////
-    @Tool(name = "testJSONLong", title = "testJSONLong", description = "testJSONLong")
+    @Tool(name = "testJSONLong", title = "testJSONLong", description = "testJSONLong",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public Long testJSONLong(@ToolArg(name = "num1", description = "Long") Long number1) {
         return number1;
     }
 
-    @Tool(name = "testJSONDouble", title = "testJSONDouble", description = "testJSONDouble")
+    @Tool(name = "testJSONDouble", title = "testJSONDouble", description = "testJSONDouble",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public Double testJSONDouble(@ToolArg(name = "num1", description = "Double") Double number1) {
         return number1;
     }
 
-    @Tool(name = "testJSONByte", title = "testJSONByte", description = "testJSONByte")
+    @Tool(name = "testJSONByte", title = "testJSONByte", description = "testJSONByte",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public Byte testJSONByte(@ToolArg(name = "num1", description = "Byte") Byte number1) {
         return number1;
     }
 
-    @Tool(name = "testJSONFloat", title = "testJSONFloat", description = "testJSONFloat")
+    @Tool(name = "testJSONFloat", title = "testJSONFloat", description = "testJSONFloat",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public Float testJSONFloat(@ToolArg(name = "num1", description = "Float") Float number1) {
         return number1;
     }
 
-    @Tool(name = "testJSONShort", title = "testJSONShort", description = "testJSONShort")
+    @Tool(name = "testJSONShort", title = "testJSONShort", description = "testJSONShort",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public Short testJSONShort(@ToolArg(name = "num1", description = "Short") Short number1) {
         return number1;
     }
@@ -122,17 +134,20 @@ public class BasicTools {
     //////////
     // Integer
     //////////
-    @Tool(name = "testJSONInteger", title = "testJSONInteger", description = "testJSONInteger")
+    @Tool(name = "testJSONInteger", title = "testJSONInteger", description = "testJSONInteger",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public int testJSONInteger(@ToolArg(name = "num1", description = "Integer") Integer number1) {
         return number1;
     }
 
-    @Tool(name = "add", title = "Addition calculator", description = "Returns the sum of the two inputs")
+    @Tool(name = "add", title = "Addition calculator", description = "Returns the sum of the two inputs",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public int add(@ToolArg(name = "num1", description = "first number") int number1, @ToolArg(name = "num2", description = "second number") int number2) {
         return number1 + number2;
     }
 
-    @Tool(name = "subtract", title = "Subtraction calculator", description = "Minus number 2 from number 1")
+    @Tool(name = "subtract", title = "Subtraction calculator", description = "Minus number 2 from number 1",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public int subtract(@ToolArg(name = "num1", description = "") int number1, @ToolArg(name = "num2", description = "") int number2) {
         return number1 - number2;
     }
@@ -140,12 +155,14 @@ public class BasicTools {
     /////////
     //Boolean
     /////////
-    @Tool(name = "testJSONBoolean", title = "testJSONBoolean", description = "testJSONBoolean")
+    @Tool(name = "testJSONBoolean", title = "testJSONBoolean", description = "testJSONBoolean",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public boolean testJSONBoolean(@ToolArg(name = "b", description = "Boolean") Boolean b) {
         return b;
     }
 
-    @Tool(name = "toggle", title = "Boolean toggle", description = "toggles the boolean input")
+    @Tool(name = "toggle", title = "Boolean toggle", description = "toggles the boolean input",
+          annotations = @Annotations(readOnlyHint = true, idempotentHint = true, destructiveHint = false, openWorldHint = false))
     public boolean toggle(@ToolArg(name = "value", description = "boolean value") boolean value) {
         return !value;
     }

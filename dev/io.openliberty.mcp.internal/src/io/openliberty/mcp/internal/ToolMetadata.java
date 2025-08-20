@@ -22,7 +22,9 @@ import jakarta.enterprise.inject.spi.Bean;
 /**
  *
  */
-public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method, Map<String, ArgumentMetadata> arguments, String name, String title, String description) {
+
+public record ToolMetadata(Tool.Annotations annotations, Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
+                           Map<String, ArgumentMetadata> arguments) {
 
     public record ArgumentMetadata(Type type, int index, String description) {}
 
@@ -39,7 +41,8 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo != null) {
-                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description());
+                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(),
+                                                              pInfo.description());
                 if (pInfo.name().equals(Tool.ELEMENT_NAME)) {
                     result.put(method.getJavaMember().getName(), pData);
                 } else {

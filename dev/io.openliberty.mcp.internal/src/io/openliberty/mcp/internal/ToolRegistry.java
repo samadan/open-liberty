@@ -44,7 +44,7 @@ public class ToolRegistry {
     }
 
     public void addTool(ToolMetadata tool) {
-        String name = tool.name();
+        String name = tool.annotation().name();
         tools.put(name, tool);
     }
 
