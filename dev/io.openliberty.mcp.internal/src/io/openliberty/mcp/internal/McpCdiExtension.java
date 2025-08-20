@@ -36,7 +36,7 @@ public class McpCdiExtension implements Extension {
     }
 
     private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method) {
-        tools.addTool(new ToolMetadata(tool, bean, method));
+        tools.addTool(ToolMetadata.createFrom(tool, bean, method));
     }
 
     public ToolRegistry getToolRegistry() {

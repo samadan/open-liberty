@@ -444,88 +444,108 @@ public class ToolTest extends FATServletClient {
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         JSONObject jsonResponse = new JSONObject(response);
         String expectedString = """
-                                {
-                                    "id": 1,
-                                    "jsonrpc": "2.0",
-                                    "result": {
-                                        "tools": [
-                                            {
-                                                "name": "add",
-                                                "description": "Returns the sum of the two inputs",
-                                                "title": "Addition calculator",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "num1": {
-                                                            "description": "temp desc",
-                                                            "type": "integer"
-                                                        },
-                                                        "num2": {
-                                                            "description": "temp desc",
-                                                            "type": "integer"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "num1",
-                                                        "num2"
-                                                    ]
+                        {
+                            "result": {
+                                "tools": [
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "description": "first number",
+                                                    "type": "integer"
+                                                },
+                                                "num2": {
+                                                    "description": "second number",
+                                                    "type": "integer"
                                                 }
                                             },
-                                            {
-                                                "name": "echo",
-                                                "description": "Returns the input unchanged",
-                                                "title": "Echoes the input",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "input": {
-                                                            "description": "temp desc",
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "input"
-                                                    ]
+                                            "required": [
+                                                "num1",
+                                                "num2"
+                                            ]
+                                        },
+                                        "name": "add",
+                                        "description": "Returns the sum of the two inputs",
+                                        "title": "Addition calculator"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "input": {
+                                                    "description": "input to echo",
+                                                    "type": "string"
                                                 }
                                             },
-                                            {
-                                                "name": "privateEcho",
-                                                "description": "Returns the input unchanged",
-                                                "title": "Echoes the input",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "input": {
-                                                            "description": "temp desc",
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "input"
-                                                    ]
+                                            "required": [
+                                                "input"
+                                            ]
+                                        },
+                                        "name": "privateEcho",
+                                        "description": "Returns the input unchanged",
+                                        "title": "Echoes the input"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "num1": {
+                                                    "type": "integer"
+                                                },
+                                                "num2": {
+                                                    "type": "integer"
                                                 }
                                             },
-                                            {
-                                                "name": "toggle",
-                                                "description": "toggles the boolean input",
-                                                "title": "Boolean toggle",
-                                                "inputSchema": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "value": {
-                                                            "description": "temp desc",
-                                                            "type": "boolean"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "value"
-                                                    ]
+                                            "required": [
+                                                "num1",
+                                                "num2"
+                                            ]
+                                        },
+                                        "name": "subtract",
+                                        "description": "Minus number 2 from number 1",
+                                        "title": "Subtraction calculator"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "input": {
+                                                    "description": "input to echo",
+                                                    "type": "string"
                                                 }
-                                            }
-                                        ]
+                                            },
+                                            "required": [
+                                                "input"
+                                            ]
+                                        },
+                                        "name": "echo",
+                                        "description": "Returns the input unchanged",
+                                        "title": "Echoes the input"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "description": "boolean value",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "value"
+                                            ]
+                                        },
+                                        "name": "toggle",
+                                        "description": "toggles the boolean input",
+                                        "title": "Boolean toggle"
                                     }
-                                }
-                        """;
+                                ]
+                            },
+                            "id": 1,
+                            "jsonrpc": "2.0"
+                        }
+                                                                """;
 
         // Lenient mode test (false boolean in 3rd parameter
         JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);

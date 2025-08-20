@@ -22,12 +22,24 @@ import jakarta.enterprise.inject.spi.Bean;
 /**
  *
  */
-public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method, Map<String, ArgumentMetadata> arguments) {
+public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method, Map<String, ArgumentMetadata> arguments, String name, String title, String description) {
 
-    public record ArgumentMetadata(Type type, int index) {}
+    public record ArgumentMetadata(Type type, int index, String description) {}
 
-    public ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
-        this(annotation, bean, method, getArgumentMap(method));
+    public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
+
+        String name = annotation.name();
+        String title = annotation.title();
+        String description = annotation.description();
+
+        if (name.equals(Tool.ELEMENT_NAME)) {
+            name = method.getJavaMember().getName();
+        }
+        if (title.equals("")) {
+            title = null;
+        }
+
+        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), name, title, description);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
@@ -35,8 +47,12 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo != null) {
-                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition());
-                result.put(pInfo.name(), pData);
+                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description());
+                if (pInfo.name().equals(Tool.ELEMENT_NAME)) {
+                    result.put(method.getJavaMember().getName(), pData);
+                } else {
+                    result.put(pInfo.name(), pData);
+                }
             }
         }
         return result;

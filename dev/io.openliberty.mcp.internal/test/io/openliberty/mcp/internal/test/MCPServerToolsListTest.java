@@ -40,31 +40,30 @@ public class MCPServerToolsListTest {
     @Before
     public void setUp() throws Exception {
         ToolRegistry.set(registry);
-
         //Weather Tool
         Tool weatherTool = Literals.tool("get_weather", "Weather Information Provider", "Get current weather information for a location");
-        Map<String, ArgumentMetadata> arguments = Map.of("location", new ArgumentMetadata(String.class, 0),
-                                                         "temperature", new ArgumentMetadata(double.class, 1),
-                                                         "humidity", new ArgumentMetadata(int.class, 2));
-        registry.addTool(new ToolMetadata(weatherTool, null, null, arguments));
+        Map<String, ArgumentMetadata> arguments = Map.of("location", new ArgumentMetadata(String.class, 0, "City in a country"),
+                                                         "temperature", new ArgumentMetadata(double.class, 1, "in degrees Celsius"),
+                                                         "humidity", new ArgumentMetadata(int.class, 2, "Relative Humidity"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments));
 
         // Addition Tool
-        Tool additionTool = Literals.tool("Addition Calculator", "The Calculator Addition Tool", "Can add two floating point numbers");
-        Map<String, ArgumentMetadata> arguments2 = Map.of("number1", new ArgumentMetadata(double.class, 0),
-                                                          "number2", new ArgumentMetadata(double.class, 1));
-        registry.addTool(new ToolMetadata(additionTool, null, null, arguments2));
+        Tool additionTool = Literals.tool("addition_calculator", "The Calculator Addition Tool", "Can add two floating point numbers");
+        Map<String, ArgumentMetadata> arguments2 = Map.of("number1", new ArgumentMetadata(double.class, 0, "operand 1"),
+                                                          "number2", new ArgumentMetadata(double.class, 1, "operand 2"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2));
 
         // Subtraction Tool
-        Tool subtractionTool = Literals.tool("Subtraction Calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
-        Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0),
-                                                          "number2", new ArgumentMetadata(int.class, 1));
-        registry.addTool(new ToolMetadata(subtractionTool, null, null, arguments3));
+        Tool subtractionTool = Literals.tool("subtraction_calculator", "The Calculator Subtraction Tool", "Can subtract two integers");
+        Map<String, ArgumentMetadata> arguments3 = Map.of("number1", new ArgumentMetadata(int.class, 0, "operand 1"),
+                                                          "number2", new ArgumentMetadata(int.class, 1, "operand 2"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3));
 
         // True or False Tool
-        Tool booleanTool = Literals.tool("Boolean And Operator", "Boolean And Operator", "Does a Boolean And Operation on two boolean variables");
-        Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0),
-                                                          "var2", new ArgumentMetadata(boolean.class, 1));
-        registry.addTool(new ToolMetadata(booleanTool, null, null, arguments4));
+        Tool booleanTool = Literals.tool("and_operator", "Boolean And Operator", "Does a Boolean And Operation on two boolean variables");
+        Map<String, ArgumentMetadata> arguments4 = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "operand 1"),
+                                                          "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4));
     }
 
     @Test
@@ -78,7 +77,6 @@ public class MCPServerToolsListTest {
             for (ToolMetadata tmd : registry.getAllTools()) {
                 response.add(new ToolDescription(tmd));
             }
-            jsonb.toJson(response);
         }
         String responseString = jsonb.toJson(response);
         String expectedString = """
@@ -88,15 +86,15 @@ public class MCPServerToolsListTest {
                                 "inputSchema": {
                                     "properties": {
                                         "temperature": {
-                                            "description": "temp desc",
+                                            "description": "in degrees Celsius",
                                             "type": "number"
                                         },
                                         "humidity": {
-                                            "description": "temp desc",
+                                            "description": "Relative Humidity",
                                             "type": "integer"
                                         },
                                         "location": {
-                                            "description": "temp desc",
+                                            "description": "City in a country",
                                             "type": "string"
                                         }
                                     },
@@ -115,11 +113,11 @@ public class MCPServerToolsListTest {
                                 "inputSchema": {
                                     "properties": {
                                         "var2": {
-                                            "description": "temp desc",
+                                            "description": "operand 2",
                                             "type": "boolean"
                                         },
                                         "var1": {
-                                            "description": "temp desc",
+                                            "description": "operand 1",
                                             "type": "boolean"
                                         }
                                     },
@@ -129,7 +127,7 @@ public class MCPServerToolsListTest {
                                     ],
                                     "type": "object"
                                 },
-                                "name": "Boolean And Operator",
+                                "name": "and_operator",
                                 "title": "Boolean And Operator"
                             },
                             {
@@ -137,11 +135,11 @@ public class MCPServerToolsListTest {
                                 "inputSchema": {
                                     "properties": {
                                         "number1": {
-                                            "description": "temp desc",
+                                            "description": "operand 1",
                                             "type": "integer"
                                         },
                                         "number2": {
-                                            "description": "temp desc",
+                                            "description": "operand 2",
                                             "type": "integer"
                                         }
                                     },
@@ -151,7 +149,7 @@ public class MCPServerToolsListTest {
                                     ],
                                     "type": "object"
                                 },
-                                "name": "Subtraction Calculator",
+                                "name": "subtraction_calculator",
                                 "title": "The Calculator Subtraction Tool"
                             },
                             {
@@ -159,11 +157,11 @@ public class MCPServerToolsListTest {
                                 "inputSchema": {
                                     "properties": {
                                         "number2": {
-                                            "description": "temp desc",
+                                            "description": "operand 2",
                                             "type": "number"
                                         },
                                         "number1": {
-                                            "description": "temp desc",
+                                            "description": "operand 1",
                                             "type": "number"
                                         }
                                     },
@@ -173,7 +171,7 @@ public class MCPServerToolsListTest {
                                     ],
                                     "type": "object"
                                 },
-                                "name": "Addition Calculator",
+                                "name": "addition_calculator",
                                 "title": "The Calculator Addition Tool"
                             }
                         ]
