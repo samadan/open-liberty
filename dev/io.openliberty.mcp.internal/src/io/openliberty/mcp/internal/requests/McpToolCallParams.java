@@ -33,6 +33,14 @@ public class McpToolCallParams {
     private Jsonb jsonb;
     private String name;
     private ToolMetadata metadata;
+
+    /**
+     * @return the metadata
+     */
+    public ToolMetadata getMetadata() {
+        return metadata;
+    }
+
     private JsonObject arguments;
     private Object[] parsedArguments;
 

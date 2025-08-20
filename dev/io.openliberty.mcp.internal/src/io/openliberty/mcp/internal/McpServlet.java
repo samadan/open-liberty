@@ -146,6 +146,9 @@ public class McpServlet extends HttpServlet {
     @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpRequest request, Writer writer) {
         McpToolCallParams params = request.getParams(McpToolCallParams.class, jsonb);
+        if (params.getMetadata() == null) {
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + request.params().getString("name") + " not found"));
+        }
         CreationalContext<Object> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         McpResponse mcpResponse;
