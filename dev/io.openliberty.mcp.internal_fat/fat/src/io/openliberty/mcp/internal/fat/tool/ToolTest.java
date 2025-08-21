@@ -996,7 +996,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2}],"isError":false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}],"isError":false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1019,7 +1019,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2.2}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.2"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1042,7 +1042,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1065,7 +1065,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2.5}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1088,7 +1088,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1111,7 +1111,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1134,7 +1134,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2.5}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1157,7 +1157,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1180,7 +1180,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2.5}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1203,7 +1203,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -1226,7 +1226,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":2}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
