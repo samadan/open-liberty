@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -57,19 +58,25 @@ public class McpServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
         McpTransport transport = new McpTransport(req, resp, jsonb);
         String accept = req.getHeader("Accept");
         // Return 405, with SSE-specific message if "text/event-stream" is requested.
         if (accept != null && HeaderValidation.acceptContains(accept, "text/event-stream")) {
-            transport.sendHttpException(
-                                        new HttpResponseException(
-                                                                  HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                                                                  "GET not supported yet. SSE not implemented."));
+            HttpResponseException e = new HttpResponseException(
+                                                                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                                                                "GET not supported yet. SSE not implemented.",
+                                                                "text/plain");
+            e.setHeader(Map.of("Allow", "POST"));
+            transport.sendHttpException(e);
         } else {
-            transport.sendHttpException(
-                                        new HttpResponseException(
-                                                                  HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                                                                  "GET method not allowed."));
+            HttpResponseException e = new HttpResponseException(
+                                                                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                                                                "GET method not allowed.",
+                                                                "text/plain");
+
+            e.setHeader(Map.of("Allow", "POST"));
+            transport.sendHttpException(e);
         }
     }
 

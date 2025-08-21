@@ -62,13 +62,15 @@ public class McpTransport {
         if (!validReqAcceptHeader()) {
             throw new HttpResponseException(
                                             HttpServletResponse.SC_NOT_ACCEPTABLE,
-                                            "Request header does not accept required mimetypes for the MCP Server");
+                                            "",
+                                            "application/json");
         }
         this.mcpRequest = toRequest();
         if (!validProtcolVersionHeader()) {
             throw new HttpResponseException(
                                             HttpServletResponse.SC_BAD_REQUEST,
-                                            "Missing or invalid MCP-Protocol-Version header. Expected: " + EXPECTED_PROTOCOL_VERSION);
+                                            "Missing or invalid MCP-Protocol-Version header. Expected: " + EXPECTED_PROTOCOL_VERSION,
+                                            "plain/text");
         }
     }
 
@@ -190,22 +192,13 @@ public class McpTransport {
      * @throws IOException
      */
     public void sendHttpException(HttpResponseException e) throws IOException {
-        switch (e.getStatusCode()) {
-            case (HttpServletResponse.SC_NOT_ACCEPTABLE) -> {
-                res.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
-                res.setContentType("application/json");
-            }
-            case (HttpServletResponse.SC_BAD_REQUEST) -> {
-                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                res.setContentType("plain/text");
-                writer.write(e.getMessage());
-            }
-            case (HttpServletResponse.SC_METHOD_NOT_ALLOWED) -> {
-                res.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-                res.setHeader("Allow", "POST");
-                res.setContentType("text/plain");
-                writer.write(e.getMessage());
+        res.setStatus(e.getStatusCode());
+        res.setContentType(e.getContentType());
+        if (e.getHeader() != null) {
+            for (String header : e.getHeader().keySet()) {
+                res.setHeader(header, e.getHeader().get(header));
             }
         }
+        writer.write(e.getMessage());
     }
 }
