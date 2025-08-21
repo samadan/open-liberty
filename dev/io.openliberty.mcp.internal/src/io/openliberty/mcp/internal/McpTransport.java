@@ -194,11 +194,8 @@ public class McpTransport {
     public void sendHttpException(HttpResponseException e) throws IOException {
         res.setStatus(e.getStatusCode());
         res.setContentType(e.getContentType());
-        if (e.getHeader() != null) {
-            for (String header : e.getHeader().keySet()) {
-                res.setHeader(header, e.getHeader().get(header));
-            }
-        }
+        if (e.getHeader() != null)
+            e.getHeader().forEach((key, val) -> res.setHeader(key, val));
         writer.write(e.getMessage());
     }
 }
