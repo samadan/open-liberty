@@ -28,5 +28,5 @@ public class FATSuite {
     public static RepeatTests repeat = RepeatTests
                     .with(FeatureReplacementAction.NO_REPLACEMENT().conditionalFullFATOnly(EmptyAction.GREATER_THAN_OR_EQUAL_JAVA_11))
                     .andWith(FeatureReplacementAction.EE10_FEATURES().setSkipTransformation(true));
-    }
+    
 }
