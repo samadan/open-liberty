@@ -949,7 +949,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-        System.out.println("XCVBOB->testJSONCharacter: " + response);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"c"}], "isError": false}}
                         """;
@@ -973,7 +972,6 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-        System.out.println("XCVBOB->testJSONcharacter: " + response);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"c"}], "isError": false}}
                         """;
