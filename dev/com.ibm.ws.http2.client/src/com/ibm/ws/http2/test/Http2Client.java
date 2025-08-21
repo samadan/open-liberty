@@ -323,7 +323,7 @@ public class Http2Client {
         if (((wasUpgradeHeaderReceived() && wasServerPrefaceReceived())) && !h2Connection.getWaitingForACK().get()) {
             return h2Connection.sendBytesSync(bytes);
         }
-        throw new UnableToSendFrameException("Unable to send bytes becuase upgrade header and server preface have not been received yet. wasUpgradeHeaderReceived() = "
+        throw new UnableToSendFrameException("Unable to send bytes because upgrade header and server preface have not been received yet. wasUpgradeHeaderReceived() = "
                                              + wasUpgradeHeaderReceived() + " wasServerPrefaceReceived() = " + wasServerPrefaceReceived() + " bytes = " + bytes);
     }
 
@@ -363,7 +363,7 @@ public class Http2Client {
         if (((wasUpgradeHeaderReceived() && wasServerPrefaceReceived()) || bypassPreface) && !h2Connection.getWaitingForACK().get()) {
             return h2Connection.sendFrame(writableFrame);
         }
-        throw new UnableToSendFrameException("Unable to send frame becuase upgrade header and server preface have not been received yet. wasUpgradeHeaderReceived() = "
+        throw new UnableToSendFrameException("Unable to send frame because upgrade header and server preface have not been received yet. wasUpgradeHeaderReceived() = "
                                              + wasUpgradeHeaderReceived() + " wasServerPrefaceReceived() = " + wasServerPrefaceReceived() + " Frame = " + writableFrame);
         //return -1;
     }
