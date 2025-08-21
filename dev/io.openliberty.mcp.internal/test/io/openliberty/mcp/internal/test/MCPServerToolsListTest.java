@@ -30,12 +30,14 @@ import jakarta.json.bind.JsonbBuilder;
  */
 public class MCPServerToolsListTest {
 
+    Jsonb jsonb;
+
     /**
      * @throws java.lang.Exception
      */
     @Before
     public void setup() throws Exception {
-
+        jsonb = JsonbBuilder.create();
     }
 
     private List<ToolDescription> generateResponse(Tool numberTestTool, Map<String, ArgumentMetadata> arguments) {
@@ -51,7 +53,6 @@ public class MCPServerToolsListTest {
                                                          "var4", new ArgumentMetadata(float.class, 1, "float -> number"),
                                                          "var5", new ArgumentMetadata(short.class, 1, "short -> number"));
 
-        Jsonb jsonb = JsonbBuilder.create();
         String responseString = jsonb.toJson(generateResponse(numberTestTool, arguments));
         String expectedString = """
                         [
@@ -107,7 +108,6 @@ public class MCPServerToolsListTest {
                                                          "var3", new ArgumentMetadata(Byte.class, 1, "Byte -> number"),
                                                          "var4", new ArgumentMetadata(Float.class, 1, "Float -> number"),
                                                          "var5", new ArgumentMetadata(Short.class, 1, "Short -> number"));
-        Jsonb jsonb = JsonbBuilder.create();
         String responseString = jsonb.toJson(generateResponse(numberTestTool, arguments));
         String expectedString = """
                         [
@@ -161,7 +161,6 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(String.class, 0, "String -> string"),
                                                          "var2", new ArgumentMetadata(Character.class, 1, "Character -> string"),
                                                          "var3", new ArgumentMetadata(char.class, 1, "char -> string"));
-        Jsonb jsonb = JsonbBuilder.create();
         String responseString = jsonb.toJson(generateResponse(stringTestTool, arguments));
         String expectedString = """
                         [
@@ -205,7 +204,6 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(int.class, 0, "int -> int"),
                                                          "var2", new ArgumentMetadata(Integer.class, 1, "Integer -> int"),
                                                          "var3", new ArgumentMetadata(Integer.class, 1, "Integer -> int"));
-        Jsonb jsonb = JsonbBuilder.create();
         String responseString = jsonb.toJson(generateResponse(intTestTool, arguments));
         String expectedString = """
                         [
@@ -249,7 +247,6 @@ public class MCPServerToolsListTest {
         Map<String, ArgumentMetadata> arguments = Map.of("var1", new ArgumentMetadata(boolean.class, 0, "boolean -> boolean"),
                                                          "var2", new ArgumentMetadata(Boolean.class, 1, "Boolean -> boolean"),
                                                          "var3", new ArgumentMetadata(Boolean.class, 1, "Boolean -> boolean"));
-        Jsonb jsonb = JsonbBuilder.create();
         String responseString = jsonb.toJson(generateResponse(booleanTestTool, arguments));
         String expectedString = """
                         [
@@ -313,8 +310,6 @@ public class MCPServerToolsListTest {
         toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2)));
         toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3)));
         toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4)));
-
-        Jsonb jsonb = JsonbBuilder.create();
 
         String responseString = jsonb.toJson(toolDescriptions);
         String expectedString = """
