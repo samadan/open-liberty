@@ -13,7 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -413,11 +412,4 @@ public class MCPServerToolsListTest {
         // Lenient mode test (false boolean in 3rd parameter
         JSONAssert.assertEquals(expectedString, responseString, false);
     }
-
-    /**
-     * @throws java.lang.Exception
-     */
-    @After
-    public void tearDown() throws Exception {}
-
 }
