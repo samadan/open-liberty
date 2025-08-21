@@ -51,6 +51,7 @@ import com.ibm.ws.http.netty.NettyHttpConstants;
 import com.ibm.ws.http.netty.NettyVirtualConnectionImpl;
 import com.ibm.ws.http.netty.message.NettyRequestMessage;
 import com.ibm.ws.http.netty.pipeline.RemoteIpHandler;
+import com.ibm.ws.http.netty.pipeline.inbound.LibertyHttpRequestHandler;
 import com.ibm.ws.netty.upgrade.NettyServletUpgradeHandler;
 import com.ibm.ws.transport.access.TransportConnectionAccess;
 import com.ibm.ws.transport.access.TransportConstants;
@@ -232,6 +233,10 @@ public class HttpDispatcherLink extends InboundApplicationLink implements HttpIn
                 nettyContext.channel().pipeline().addLast("ServletUpgradeHandler", upgradeHandler);
             } else { // In HTTP2
                 nettyContext.channel().pipeline().addBefore(nettyContext.channel().pipeline().context(http2Handler).name(), "ServletUpgradeHandler", upgradeHandler);
+            }
+            // In an upgrade, we don't expect to keep the request handler running so will remove this because it is HTTP 1.1 specific
+            if(nettyContext.channel().pipeline().get(LibertyHttpRequestHandler.class) != null){
+                nettyContext.channel().pipeline().remove(LibertyHttpRequestHandler.class);
             }
         }
     }
