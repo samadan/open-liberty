@@ -841,7 +841,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
                         Integer key = child.getPath().substring(chop).hashCode();
                         UniversalContainerList listForThisPath = map.get(key);
                         if (listForThisPath == null) {
-                            listForThisPath = new UniversalContainerList(false);
+                            listForThisPath = new UniversalContainerList(new ArrayList<>());
                             map.put(key, listForThisPath);
                         }
                         if (!listForThisPath.contains(this)) {
@@ -1054,7 +1054,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
                     Integer key = child.getPath().substring(chop).hashCode();
                     UniversalContainerList listForThisPath = map.get(key);
                     if (listForThisPath == null) {
-                        listForThisPath = new UniversalContainerList(false);
+                        listForThisPath = new UniversalContainerList(new ArrayList<>());
                         map.put(key, listForThisPath);
                     }
                     if (!listForThisPath.contains(this)) {
@@ -1226,8 +1226,8 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             containers = Collections.emptyList();
         }
 
-        UniversalContainerList(boolean copyOnWrite) {
-            containers = copyOnWrite ? new CopyOnWriteArrayList<>() : new ArrayList<>();
+        UniversalContainerList(List<UniversalContainer> containers) {
+            this.containers = containers;
         }
 
         /**
@@ -1292,7 +1292,10 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             }
         }
 
-        final UniversalContainerList classPath = new UniversalContainerList(true);
+        // This classPath field MUST be here and remain a List<UniversalContainer> to avoid breaking classgraph
+        // https://github.com/classgraph/classgraph/blob/classgraph-4.8.44/src/main/java/nonapi/io/github/classgraph/classloaderhandler/WebsphereLibertyClassLoaderHandler.java#L137-L158
+        final List<UniversalContainer> classPath = new CopyOnWriteArrayList<ContainerClassLoader.UniversalContainer>();
+        final UniversalContainerList classPathContainers = new UniversalContainerList(classPath);
         /**
          * How many 'not found' paths to cache per classpath element.<p>
          * A not found path will accelerate future locations of 'found' elements by helping the
@@ -1336,12 +1339,12 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             if (tc.isDebugEnabled()) {
                 // Debug info for classpath elements as they are added.. candidate for Trace.debug.
                 if (uc instanceof ArtifactContainerUniversalContainer) {
-                    Tr.debug(tc, "CCL: " + this.hashCode() + " cpelt idx " + classPath.size() + "wraps " + ((ArtifactContainerUniversalContainer) uc).container);
-                    Tr.debug(tc, "CCL: " + this.hashCode() + " cpelt idx " + classPath.size() + " ART url "
+                    Tr.debug(tc, "CCL: " + this.hashCode() + " cpelt idx " + classPathContainers.size() + "wraps " + ((ArtifactContainerUniversalContainer) uc).container);
+                    Tr.debug(tc, "CCL: " + this.hashCode() + " cpelt idx " + classPathContainers.size() + " ART url "
                                  + ((ArtifactContainerUniversalContainer) uc).container.getPhysicalPath());
                 } else {
-                    Tr.debug(tc, "CCL: " + this.hashCode() + " cpelt idx " + classPath.size() + " wraps " + ((ContainerUniversalContainer) uc).container);
-                    Tr.debug(tc, "CCL: " + this.hashCode() + " cpelt idx " + classPath.size() + " CON url " + ((ContainerUniversalContainer) uc).container.getPhysicalPath());
+                    Tr.debug(tc, "CCL: " + this.hashCode() + " cpelt idx " + classPathContainers.size() + " wraps " + ((ContainerUniversalContainer) uc).container);
+                    Tr.debug(tc, "CCL: " + this.hashCode() + " cpelt idx " + classPathContainers.size() + " CON url " + ((ContainerUniversalContainer) uc).container.getPhysicalPath());
                 }
             }
 
@@ -1377,7 +1380,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             //Note method is synchronized to attempt to keep these two always executing together,
             //although the implementation is written so it wont matter if the 'wrong' lastNotFound
             //set is used with a given cp entry. They all start empty, and are equiv at this stage.
-            classPath.add(uc, prepend);
+            classPathContainers.add(uc, prepend);
 
             lastNotFound.add(Collections.synchronizedSet(new LinkedHashSet<String>()));
         }
@@ -1461,7 +1464,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         @Override
         public ByteResourceInformation getByteResourceInformation(String className, String path, ClassLoaderHook hook) throws IOException {
             int idx = 0;
-            UniversalContainerList locationsToCheck = classPath;
+            UniversalContainerList locationsToCheck = classPathContainers;
             if (usePackageMap) {
                 locationsToCheck = getUniversalContainersForPath(path, locationsToCheck);
             }
@@ -1509,7 +1512,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
                 return null;
             }
 
-            UniversalContainerList locationsToCheck = classPath;
+            UniversalContainerList locationsToCheck = classPathContainers;
             if (usePackageMap) {
                 locationsToCheck = getUniversalContainersForPath(path, locationsToCheck);
             }
@@ -1558,7 +1561,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
                 return urls;
             }
 
-            UniversalContainerList locationsToCheck = classPath;
+            UniversalContainerList locationsToCheck = classPathContainers;
             if (usePackageMap) {
                 locationsToCheck = getUniversalContainersForPath(path, locationsToCheck);
             }
@@ -1614,7 +1617,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         @Override
         @Trivial
         public String toString() {
-            return String.valueOf(classPath);
+            return String.valueOf(classPathContainers);
         }
 
         @Override
@@ -1625,7 +1628,7 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         @Override
         public Collection<Collection<URL>> getClassPath() {
             List<Collection<URL>> containerURLs = new ArrayList<>();
-            for (UniversalContainer uc : classPath) {
+            for (UniversalContainer uc : classPathContainers) {
                 containerURLs.add(uc.getContainerURLs());
             }
             return containerURLs;

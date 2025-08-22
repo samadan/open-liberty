@@ -66,6 +66,7 @@ public class SimpleSSLMultipleServersDefaultLibertySSLConfigTest extends FATServ
              */
             server2.useSecondaryHTTPPort();
             server2.startServer("server.log", true);
+            server2.waitForSSLStart();
             assertNotNull("The server did not start", server2.waitForStringInLog("CWWKF0011I"));
             assertNotNull("FeatureManager did not report update was complete", server2.waitForStringInLog("CWWKF0008I"));
         } catch (Exception e) {
