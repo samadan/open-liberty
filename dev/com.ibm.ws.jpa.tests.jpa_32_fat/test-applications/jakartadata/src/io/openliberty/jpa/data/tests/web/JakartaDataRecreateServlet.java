@@ -78,6 +78,7 @@ import io.openliberty.jpa.data.tests.models.Segment;
 import io.openliberty.jpa.data.tests.models.ShippingAddress;
 import io.openliberty.jpa.data.tests.models.Store;
 import io.openliberty.jpa.data.tests.models.StreetAddress;
+import io.openliberty.jpa.data.tests.models.Student;
 import io.openliberty.jpa.data.tests.models.TaxPayer;
 import io.openliberty.jpa.data.tests.models.Triangle;
 import io.openliberty.jpa.data.tests.models.Vehicle;
@@ -2430,6 +2431,38 @@ public class JakartaDataRecreateServlet extends FATServlet {
         assertEquals(2, result.size());
         assertEquals(40000f, result.get(0).income, 0.01);
         assertEquals(60000f, result.get(1).income, 0.01);
+    }
+    
+    @Test
+    // Reference issue: https://github.com/OpenLiberty/open-liberty/issues/32246
+    public void testOLGH32246() throws Exception {
+        deleteAllEntities(Student.class);
+
+        Student s1 = new Student(1L, "Achu", new int[] { 90, 85, 88 });
+        Student s2 = new Student(2L, "Appu", new int[] { 75, 80, 70 });
+        Student s3 = new Student(3L, "Ammu", new int[] { 70, 90, 75 });
+
+        tx.begin();
+        em.persist(s1);
+        em.persist(s2);
+        em.persist(s3);
+        tx.commit();
+
+        List<?> resultStudents;
+        try {
+            resultStudents = em.createQuery("SELECT s.marks FROM Student s WHERE s.rollNo = ?1", Student.class) // Forcing ConversionException by giving wrong entity class
+                            .setParameter(1, 3L)
+                            .getResultList();
+        } catch (Exception e) {
+            throw e;
+        }
+
+        assertEquals(
+                     List.of(Arrays.toString(new int[] { 70, 90, 75 })),
+                     resultStudents.stream()
+                                     .map(o -> Arrays.toString((int[]) o))
+                                     .collect(Collectors.toList()));
+
     }
 
     /**
