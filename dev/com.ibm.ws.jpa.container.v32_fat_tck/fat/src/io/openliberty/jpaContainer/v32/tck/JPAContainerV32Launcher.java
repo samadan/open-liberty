@@ -12,12 +12,10 @@
  *******************************************************************************/
 package io.openliberty.jpaContainer.v32.tck;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -26,10 +24,6 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.custom.junit.runner.Mode.TestMode;
 import componenttest.custom.junit.runner.TestModeFilter;
-import componenttest.rules.repeater.MicroProfileActions;
-import componenttest.rules.repeater.RepeatTests;
-import componenttest.topology.impl.JavaInfo;
-import componenttest.topology.impl.JavaInfo.Vendor;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
@@ -83,6 +77,7 @@ public class JPAContainerV32Launcher {
 
         TCKRunner.build(server, Type.JAKARTA, "JPA")
                         .withSuiteFileName(suiteFileName)
+                        .withLogging(Collections.EMPTY_MAP)
                         .runTCK();
     }
 
