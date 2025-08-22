@@ -17,8 +17,10 @@
     <properties>
         <jakarta-persistence-version>11.0.1</jakarta-persistence-version>
 
-        <arquillian.version>1.7.0.Alpha13</arquillian.version>
+        <arquillian.version>1.7.0.Final</arquillian.version>
+        <junit-jupiter.version>5.7.2</junit-jupiter.version>
         <arquillian.liberty.managed.jakarta.version>2.1.1</arquillian.liberty.managed.jakarta.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <testng.version>7.5.1</testng.version>
         <slf4j.version>2.0.6</slf4j.version>
 
@@ -42,6 +44,13 @@
                 <groupId>org.jboss.arquillian</groupId>
                 <artifactId>arquillian-bom</artifactId>
                 <version>${arquillian.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>            
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit-jupiter.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -107,7 +116,12 @@
          <groupId>org.apache-extras.beanshell</groupId>
          <artifactId>bsh</artifactId>
          <version>2.0b6</version>
-       </dependency>
+       </dependency>  
+               <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -135,6 +149,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
+                      <dependencies>
+        <dependency>
+          <groupId>org.junit.platform</groupId>
+          <artifactId>junit-platform-surefire-provider</artifactId>
+          <version>1.0.3</version>
+        </dependency>
+        <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-engine</artifactId>
+          <version>5.0.3</version>
+        </dependency>
+      </dependencies>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -143,8 +169,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.17</version>
-                <configuration>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>              
                     <argLine>-Dfile.encoding=${project.build.sourceEncoding} -Dcom.ibm.tools.attach.enable=yes</argLine> <!-- Needed for ZOS. sourceEncoding is needed becuase arquillian calls string.getBtytes(). Attach is needed becuase because arquillian uses com.sun.tools.attach to find VMs -->
                     <systemPropertyVariables>
                         <wlp>${wlp}</wlp>
