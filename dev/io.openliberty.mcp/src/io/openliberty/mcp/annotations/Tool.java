@@ -31,7 +31,11 @@ import java.lang.annotation.Target;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
-import javax.swing.text.AbstractDocument.Content;
+import io.openliberty.mcp.content.Content;
+import io.openliberty.mcp.content.TextContent;
+import io.openliberty.mcp.encoders.ContentEncoder;
+import io.openliberty.mcp.encoders.ToolResponseEncoder;
+import io.openliberty.mcp.tools.ToolResponse;
 
 /**
  * Annotates a business method of a CDI bean as an exposed tool.

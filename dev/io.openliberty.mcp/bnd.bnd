@@ -26,4 +26,6 @@ Export-Package: \
 -buildpath: \
     com.ibm.websphere.org.osgi.core;version=latest,\
     com.ibm.ws.org.osgi.annotation.versioning;version=latest,\
-    com.ibm.ws.logging;version=latest
+    com.ibm.ws.logging;version=latest,\
+    io.openliberty.jakarta.cdi.4.0;version=latest,\
+    io.openliberty.jakarta.interceptor.2.1;version=latest
