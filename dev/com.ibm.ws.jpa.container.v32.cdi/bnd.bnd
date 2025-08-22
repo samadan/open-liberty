@@ -10,7 +10,9 @@
 #*******************************************************************************
 -include= ~../cnf/resources/bnd/bundle.props
 
--sub: *.bnd
+Bundle-Name: JPA 3.2 Container CDI Integration
+Bundle-SymbolicName: com.ibm.ws.jpa.container.v32.cdi
+Bundle-Description: JPA 3.2 Container CDI Integration; version=${bVersion}
 
 bVersion=1.0
 
