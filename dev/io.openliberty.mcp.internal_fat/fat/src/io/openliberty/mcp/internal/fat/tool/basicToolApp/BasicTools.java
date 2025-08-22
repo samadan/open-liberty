@@ -19,6 +19,24 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class BasicTools {
 
+    //tool name is not present -> use method name
+    //tool title not present -> ignore
+    //tool description is not present -> ignore
+    //arg  description is not present -> ignore
+    @Tool()
+    public String ignoredEcho(@ToolArg(name = "input") String input) {
+        return input;
+    }
+
+    //tool name is empty string -> allow empty string
+    //tool title is empty string -> ignore
+    //tool description is empty string -> ignore
+    //arg  description is empty string -> ignore
+    @Tool(name = "", title = "", description = "")
+    public String emptyEcho(@ToolArg(name = "input", description = "") String input) {
+        return input;
+    }
+
     //////////
     // Strings
     //////////
