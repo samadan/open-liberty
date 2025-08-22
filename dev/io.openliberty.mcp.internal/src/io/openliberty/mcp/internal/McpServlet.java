@@ -114,7 +114,7 @@ public class McpServlet extends HttpServlet {
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
-            transport.sendResponse(new ToolResponseResult(result, false));
+            transport.sendResponse(new ToolResponseResult(result.toString(), false));
         } catch (JSONRPCException e) {
             throw e;
         } catch (InvocationTargetException e) {
