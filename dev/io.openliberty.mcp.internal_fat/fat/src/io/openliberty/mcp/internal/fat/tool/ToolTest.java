@@ -447,6 +447,34 @@ public class ToolTest extends FATServletClient {
                         {
                             "result": {
                                 "tools": [
+                                   {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "input": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "input"
+                                            ]
+                                        },
+                                        "name": "ignoredEcho"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "input": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "input"
+                                            ]
+                                        },
+                                        "name": ""
+                                    },
                                     {
                                         "inputSchema": {
                                             "type": "object",
