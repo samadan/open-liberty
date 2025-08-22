@@ -899,11 +899,11 @@ public class ToolTest extends FATServletClient {
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
-        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\": 300}]}}", jsonResponse, false);
+        JSONAssert.assertEquals("{\"result\":{\"content\":[{\"type\":\"text\",\"text\": \"300\"}]}}", jsonResponse, false);
 
         // Strict Mode tests
         String expectedResponseString = """
-                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": 300}], "isError": false}}
+                        {"id":\"2\","jsonrpc":"2.0","result":{"content":[{"type":"text","text": "300"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -927,8 +927,331 @@ public class ToolTest extends FATServletClient {
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text": false}], "isError": false}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text": "false"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
+
+    @Test
+    public void testJSONCharacter() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONCharacter",
+                            "arguments": {
+                              "c": "c"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"c"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONcharacter() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONcharacter",
+                            "arguments": {
+                              "c": "c"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"c"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONlong() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONlong",
+                            "arguments": {
+                              "num1": 2
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}],"isError":false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONdouble() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONdouble",
+                            "arguments": {
+                              "num1": 2.2
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.2"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONbyte() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONbyte",
+                            "arguments": {
+                              "num1": 2
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONfloat() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONfloat",
+                            "arguments": {
+                              "num1": 2.5
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONshort() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONshort",
+                            "arguments": {
+                              "num1": 2
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONLong() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONLong",
+                            "arguments": {
+                              "num1": 2
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONDouble() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONDouble",
+                            "arguments": {
+                              "num1": 2.5
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONByte() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONByte",
+                            "arguments": {
+                              "num1": 2
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONFloat() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONFloat",
+                            "arguments": {
+                              "num1": 2.5
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONShort() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONShort",
+                            "arguments": {
+                              "num1": 2
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONInteger() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONInteger",
+                            "arguments": {
+                              "num1": 2
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testJSONBoolean() throws Exception {
+        String request = """
+                          {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "testJSONBoolean",
+                            "arguments": {
+                              "b": true
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String expectedResponseString = """
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"true"}], "isError": false}}
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
 }

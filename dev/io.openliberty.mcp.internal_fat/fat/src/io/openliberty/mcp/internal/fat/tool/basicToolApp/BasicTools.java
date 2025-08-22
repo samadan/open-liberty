@@ -36,12 +36,12 @@ public class BasicTools {
     }
 
     @Tool(name = "testJSONCharacter", title = "testJSONCharacter", description = "testJSONCharacter")
-    private String testJSONCharacter(@ToolArg(name = "c", description = "Character") Character c) {
+    public String testJSONCharacter(@ToolArg(name = "c", description = "Character") Character c) {
         return c.toString();
     }
 
     @Tool(name = "testJSONcharacter", title = "testJSONcharacter", description = "testJSONcharacter")
-    private String testJSONCharacter(@ToolArg(name = "c", description = "char") char c) {
+    public String testJSONCharacter(@ToolArg(name = "c", description = "char") char c) {
         return new String(c + "");
     }
 
