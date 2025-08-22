@@ -9,43 +9,50 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.exceptions.jsonrpc;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Custom exception class for HTTP related errors.
- * Used to handle exceptions where the HTTP request is in the incorrect format for the MCP Server to handle
+ * Signals that a specific HTTP status code should be used as the response to this request.
+ * <p>
+ * The message of this exception will be included in the body of the response to the client as plain text.
+ * <p>
+ * If required, additional headers can be specified.
  */
 public class HttpResponseException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     private int statusCode;
-    private Map<String, String> header;
-    private String contentType;
+    private Map<String, String> headers;
 
-    public HttpResponseException(int statusCode, String msg, String contentType) {
+    public HttpResponseException(int statusCode) {
+        this.statusCode = statusCode;
+    }
+
+    public HttpResponseException(int statusCode, String msg) {
         super(msg);
         this.statusCode = statusCode;
-        this.contentType = contentType;
     }
 
     /**
-     * @return the header
+     * Adds a header to the response.
+     *
+     * @param name the name of the header
+     * @param value the value of the header
+     * @return this exception instance for method chaining
      */
-    public Map<String, String> getHeader() {
-        return header;
+    public HttpResponseException withHeader(String name, String value) {
+        if (headers == null)
+            headers = new HashMap<>();
+
+        headers.put(name, value);
+        return this;
     }
 
     /**
-     * @param header the header to set
+     * @return the headers as a map
      */
-    public void setHeader(Map<String, String> header) {
-        this.header = header;
-    }
-
-    /**
-     * @return the contentType
-     */
-    public String getContentType() {
-        return contentType;
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 
     /**

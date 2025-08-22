@@ -60,17 +60,13 @@ public class McpTransport {
      */
     public void init() throws IOException {
         if (!validReqAcceptHeader()) {
-            throw new HttpResponseException(
-                                            HttpServletResponse.SC_NOT_ACCEPTABLE,
-                                            "",
-                                            "application/json");
+            throw new HttpResponseException(HttpServletResponse.SC_NOT_ACCEPTABLE);
         }
         this.mcpRequest = toRequest();
         if (!validProtcolVersionHeader()) {
             throw new HttpResponseException(
                                             HttpServletResponse.SC_BAD_REQUEST,
-                                            "Missing or invalid MCP-Protocol-Version header. Expected: " + EXPECTED_PROTOCOL_VERSION,
-                                            "plain/text");
+                                            "Missing or invalid MCP-Protocol-Version header. Expected: " + EXPECTED_PROTOCOL_VERSION);
         }
     }
 
@@ -193,9 +189,9 @@ public class McpTransport {
      */
     public void sendHttpException(HttpResponseException e) throws IOException {
         res.setStatus(e.getStatusCode());
-        res.setContentType(e.getContentType());
-        if (e.getHeader() != null)
-            e.getHeader().forEach((key, val) -> res.setHeader(key, val));
-        writer.write(e.getMessage());
+        if (e.getHeaders() != null)
+            e.getHeaders().forEach((key, val) -> res.setHeader(key, val));
+        if (e.getMessage() != null)
+            writer.write(e.getMessage());
     }
 }
