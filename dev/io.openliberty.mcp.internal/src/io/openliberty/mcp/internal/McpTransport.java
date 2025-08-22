@@ -191,7 +191,9 @@ public class McpTransport {
         res.setStatus(e.getStatusCode());
         if (e.getHeaders() != null)
             e.getHeaders().forEach((key, val) -> res.setHeader(key, val));
-        if (e.getMessage() != null)
+        if (e.getMessage() != null) {
+            res.setContentType("text/plain");
             writer.write(e.getMessage());
+        }
     }
 }
