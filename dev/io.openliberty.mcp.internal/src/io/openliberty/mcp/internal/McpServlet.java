@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -114,7 +115,7 @@ public class McpServlet extends HttpServlet {
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
-            transport.sendResponse(new ToolResponseResult(result.toString(), false));
+            transport.sendResponse(new ToolResponseResult(Objects.toString(result), false));
         } catch (JSONRPCException e) {
             throw e;
         } catch (InvocationTargetException e) {
