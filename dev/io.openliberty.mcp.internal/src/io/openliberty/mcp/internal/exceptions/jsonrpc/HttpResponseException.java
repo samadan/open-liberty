@@ -21,8 +21,8 @@ import java.util.Map;
  */
 public class HttpResponseException extends RuntimeException {
     private static final long serialVersionUID = 1L;
+    private Map<String, String> headers = new HashMap<>();
     private int statusCode;
-    private Map<String, String> headers;
 
     public HttpResponseException(int statusCode) {
         this.statusCode = statusCode;
@@ -41,15 +41,12 @@ public class HttpResponseException extends RuntimeException {
      * @return this exception instance for method chaining
      */
     public HttpResponseException withHeader(String name, String value) {
-        if (headers == null)
-            headers = new HashMap<>();
-
         headers.put(name, value);
         return this;
     }
 
     /**
-     * @return the headers as a map
+     * @return the headers as a map. If none are set then an empty map is returned.
      */
     public Map<String, String> getHeaders() {
         return headers;
