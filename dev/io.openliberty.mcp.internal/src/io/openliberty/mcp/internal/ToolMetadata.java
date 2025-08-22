@@ -24,16 +24,33 @@ import jakarta.enterprise.inject.spi.Bean;
  */
 
 public record ToolMetadata(Tool.Annotations annotations, Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
-                           Map<String, ArgumentMetadata> arguments) {
+                           Map<String, ArgumentMetadata> arguments, String name, String title, String description) {
 
     public record ArgumentMetadata(Type type, int index, String description) {}
 
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
-        String name = annotation.name().equals(Tool.ELEMENT_NAME) ? method.getJavaMember().getName() : annotation.name();
-        String title = annotation.title().isEmpty() ? null : annotation.title();
-        String description = annotation.description().isEmpty() ? null : annotation.description();
 
-        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), name, title, description);
+        String name = annotation.name();
+        if (Tool.ELEMENT_NAME.equals(name)) {
+            name = method.getJavaMember().getName();
+        }
+
+        String title = annotation.title();
+        if (title.isEmpty()) {
+            title = null;
+        }
+
+        String description = annotation.description();
+
+        return new ToolMetadata(
+                                annotation.annotations(),
+                                annotation,
+                                bean,
+                                method,
+                                getArgumentMap(method),
+                                name,
+                                title,
+                                description);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
@@ -41,8 +58,7 @@ public record ToolMetadata(Tool.Annotations annotations, Tool annotation, Bean<?
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo != null) {
-                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(),
-                                                              pInfo.description());
+                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description());
                 if (pInfo.name().equals(Tool.ELEMENT_NAME)) {
                     result.put(method.getJavaMember().getName(), pData);
                 } else {

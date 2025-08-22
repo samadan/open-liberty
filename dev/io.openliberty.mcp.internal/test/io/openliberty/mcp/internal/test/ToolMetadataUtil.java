@@ -27,6 +27,6 @@ public class ToolMetadataUtil {
             title = null;
         }
 
-        return new ToolMetadata(annotation.annotations(), annotation, null, null, arguments);
+        return new ToolMetadata(annotation.annotations(), annotation, null, null, arguments, annotation.name(), annotation.description(), title);
     }
 }
