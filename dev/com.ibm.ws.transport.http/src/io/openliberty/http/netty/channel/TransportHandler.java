@@ -10,6 +10,7 @@
 package io.openliberty.http.netty.channel;
 
 import com.ibm.ws.http.netty.NettyHttpConstants;
+import com.ibm.ws.http.netty.pipeline.inbound.LibertyHttpRequestHandler;
 import com.ibm.ws.netty.upgrade.NettyServletUpgradeHandler;
 
 import io.netty.channel.ChannelDuplexHandler;
@@ -70,6 +71,7 @@ public final class TransportHandler extends ChannelDuplexHandler{
                 pipeline.remove(TransportHandler.this);
                 removeIfPresent(pipeline, HttpServerCodec.class);
                 removeIfPresent(pipeline, TimeoutHandler.class);
+                removeIfPresent(pipeline, LibertyHttpRequestHandler.class);
 
                 if(pipeline.get(NettyServletUpgradeHandler.class) == null){
                     pipeline.addLast(new NettyServletUpgradeHandler(context.channel()));

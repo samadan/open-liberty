@@ -69,7 +69,15 @@ public class LibertyHttpRequestHandler extends SimpleChannelInboundHandler<FullH
         context.channel().attr(NettyHttpConstants.HANDLING_REQUEST).set(false);
         requestHandlerContext = context;
     }
-                  
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext context) {
+        FullHttpRequest request;
+        while ((request = requestQueue.poll()) != null) {
+            ReferenceCountUtil.safeRelease(request);
+        }
+    }
+
     @Override
     public void channelInactive(ChannelHandlerContext context) throws Exception{
         FullHttpRequest request;
