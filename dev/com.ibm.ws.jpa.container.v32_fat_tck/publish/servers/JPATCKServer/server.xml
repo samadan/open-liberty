@@ -12,6 +12,7 @@
  -->
 <server>
    <featureManager>
+   <feature>webProfile-11.0</feature>
         <feature>persistenceContainer-3.2</feature>
         <feature>cdi-4.1</feature>
         <feature>localConnector-1.0</feature>

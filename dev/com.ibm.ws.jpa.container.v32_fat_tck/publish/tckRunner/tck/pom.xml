@@ -17,14 +17,17 @@
     <artifactId>tck.runner.tck</artifactId>
     <version>4.0</version>
     <name>MicroProfile Fault Tolerance TCK Runner TCK Module</name>
-    
 
 	<properties>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+	
 		<targetDirectory>${project.basedir}/target</targetDirectory>
 		
         <jakarta-persistence-version>11.0.1</jakarta-persistence-version>
 		        <!-- Test Infrastructure versions -->
-        <arquillian.version>1.7.0.Final</arquillian.version>
+        <arquillian.version>1.9.1.Final</arquillian.version> <!-- earlier versions of arquillian are not compatible with this TCK (paramater inejction on @Deployment methods) -->
         <arquillian.wlp.version>2.1.3</arquillian.wlp.version>
         <arquillian.liberty.managed>2.1.3</arquillian.liberty.managed>
         <junit.version>5.10.0</junit.version>
@@ -51,6 +54,15 @@
 	</dependencyManagement>
 
 	<dependencies>
+	
+	        <dependency>
+            <groupId>com.ibm.ws</groupId>
+            <artifactId>fattest.simplicity</artifactId>
+            <version>1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../../lib/fattest.simplicity.jar</systemPath> <!-- This will point to build/libs/autoFVT/lib/fattest.simplicity.jar -->
+        </dependency>
+	
 		<!-- tck - data - external TCK -->
 		<dependency>
 			<groupId>jakarta.tck</groupId>
@@ -62,6 +74,7 @@
     <artifactId>tck-porting-lib</artifactId>
     <version>${jakarta-persistence-version}</version>
 </dependency>
+
 		<!-- test frameworks -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -83,6 +96,7 @@
 		<dependency>
 			<groupId>org.jboss.shrinkwrap</groupId>
 			<artifactId>shrinkwrap-api</artifactId>
+			<version>1.2.6</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.jboss.arquillian.junit5</groupId>
@@ -142,27 +156,23 @@
             </plugins>
         </pluginManagement>
 		<plugins>
-			<!-- Plugin used to internal bundles to signaturedirectory for signature tests -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>3.0.0</version>
-				<executions>
-					<execution>
-						<id>copy-data</id>
-						<phase>generate-test-sources</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-						</configuration>
-					</execution>
-				</executions>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.2</version>
 				<configuration>
+				
+				
+				    <includes>
+      <include>ee.jakarta.tck.persistence.ee.cdi.ServletEMLookupTest</include>
+    </includes>
 					<forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/> <!-- Default forkNode has encoding issues on ZOS -->
 					<trimStackTrace>false</trimStackTrace>
 					<failIfNoTests>true</failIfNoTests>
