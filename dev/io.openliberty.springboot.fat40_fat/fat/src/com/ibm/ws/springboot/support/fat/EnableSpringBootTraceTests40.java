@@ -12,6 +12,8 @@
  *******************************************************************************/
 package com.ibm.ws.springboot.support.fat;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
@@ -23,25 +25,8 @@ import componenttest.custom.junit.runner.FATRunner;
 
 @RunWith(FATRunner.class)
 @MinimumJavaLevel(javaLevel = 17)
-public class CommonWebServerTests40 extends CommonWebServerTests {
+public class EnableSpringBootTraceTests40 extends CommonWebServerTests {
 
-    @After
-    public void stopTestServer() throws Exception {
-        String methodName = testName.getMethodName();
-        if ((methodName != null) && methodName.contains(DEFAULT_HOST_WITH_APP_PORT)) {
-            super.stopServer(true, "CWWKT0015W");
-        } else {
-            super.stopServer();
-        }
-    }
-
-    /**
-     * Override: Web applications use springboot and servlet.
-     *
-     * @return The features provisioned in the test server. This
-     *         implementation always answers "springBoot-4.0" and
-     *         "servlet-6.1`".
-     */
     @Override
     public Set<String> getFeatures() {
         return getWebFeatures();
@@ -52,15 +37,20 @@ public class CommonWebServerTests40 extends CommonWebServerTests {
         return SPRING_BOOT_40_APP_BASE;
     }
 
-    @Test
-    public void testBasicSpringBootApplication40() throws Exception {
-        testBasicSpringBootApplication();
+    @Override
+    public Map<String, String> getBootStrapProperties() {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("com.ibm.ws.logging.trace.specification", "*=audit=enabled:springboot=all");
+        return properties;
+    }
+
+    @After
+    public void stopTestServer() throws Exception {
+        super.stopServer(true);
     }
 
     @Test
-    public void testDefaultHostWithAppPort40() throws Exception {
-        // A variation of 'testBasicSpringBootApplication40'.
-        // The different behavior is triggered by the test name.
+    public void testEnableSpringBootTraceFor40() throws Exception {
         testBasicSpringBootApplication();
     }
 }
