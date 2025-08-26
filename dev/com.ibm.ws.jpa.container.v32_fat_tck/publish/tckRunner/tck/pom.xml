@@ -92,6 +92,20 @@
 		    <version>5.1.0.Final</version>
 		    <scope>test</scope>
 		</dependency>
+		
+		<!-- Resteasy since the test uses  jakarta.ws.rs.client.ClientBuilder  -->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-client</artifactId>
+            <version>6.0.0.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-json-binding-provider</artifactId>
+            <version>6.0.0.Final</version>
+        </dependency>
+		
 		<!-- APIs referenced by TCK that do not require implementations for standalone tests -->
 		<dependency>
 			<groupId>org.jboss.shrinkwrap</groupId>

@@ -3,14 +3,13 @@ package com.ibm.ws.jpa.container.v32.cdi.internal;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import com.ibm.websphere.csi.J2EEName;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
+import com.ibm.ws.cdi.CDIService;
 import com.ibm.ws.cdi.internal.interfaces.CDIRuntime;
-import com.ibm.ws.cdi.internal.interfaces.ContextBeginnerEnder;
 import com.ibm.ws.jpa.JPAAccessor;
 import com.ibm.ws.jpa.JPAComponent;
 import com.ibm.ws.kernel.service.util.ServiceCaller;
@@ -20,7 +19,13 @@ import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
 import jakarta.enterprise.util.AnnotationLiteral;
+import jakarta.persistence.Cache;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.SchemaManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.metamodel.Metamodel;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 
 public class JPACDIExtension implements Extension {
@@ -29,28 +34,24 @@ public class JPACDIExtension implements Extension {
 
     private final JPAComponent jpaComponent = JPAAccessor.getJPAComponent();
 
-    private J2EEName getCurrentAppJ2EEName() {
-        Optional<ContextBeginnerEnder> cbe = ServiceCaller.runOnce(JPACDIExtension.class, CDIRuntime.class, CDIRuntime::cloneActiveContextBeginnerEnder);
-        Optional<J2EEName> maybeJ2EEName = cbe.flatMap(ContextBeginnerEnder::getJ2EEName);
+    @SuppressWarnings("rawtypes")
+    private static final ServiceCaller<CDIService> CDI_SERVICE;
+    private static final CDIRuntime CDI_RUNTIME;
 
-        if (!maybeJ2EEName.isPresent()) {
-            //This should be impossible, in theory the ContextBeginnerEnder API allows it since its a builder pattern and doesn't check
-            //we have a component metadata, but its only used by CDIRuntimeImpl and that always gets a CMD
-            throw new IllegalStateException("There was no active CDI Context, no Persistence Units will be available for injection");
-        }
-
-        J2EEName originalJ2EEName = maybeJ2EEName.get();
-        return new AppOnlyJ2EEName(originalJ2EEName.getApplication());
+    //TODO clean this up a bit, ok a lot, discuss if we should add something to the interface
+    //Think about getting the J2EEName from the ComponentMetaDataAccessor
+    static {
+        CDI_SERVICE = new ServiceCaller<CDIService>(JPACDIExtension.class, CDIService.class);
+        CDI_RUNTIME = (CDIRuntime) CDI_SERVICE.current().get();
     }
 
     public void afterBeanDiscovery(@Observes AfterBeanDiscovery abd, BeanManager bm) {
-
         J2EEName j2EEName = getCurrentAppJ2EEName();
         List<PersistenceUnitInfo> persistenceUnits = jpaComponent.getPersistenceUnits(j2EEName);
 
         for (PersistenceUnitInfo pui : persistenceUnits) {
             try {
-                createBeanForPersistenceUnit(abd, pui);
+                createBeanForPersistenceUnit(abd, pui, j2EEName);
             } catch (ClassNotFoundException e) {
                 //TODO we'll probably want a better message and NLS translation
                 Tr.warning(tc, "Could not create bean for PersistenceUnit {0}, it will not be injectable", pui.getPersistenceUnitName());
@@ -58,21 +59,40 @@ public class JPACDIExtension implements Extension {
         }
     }
 
-    private void createBeanForPersistenceUnit(AfterBeanDiscovery abd, PersistenceUnitInfo pui) throws ClassNotFoundException {
+    private void createBeanForPersistenceUnit(AfterBeanDiscovery abd, final PersistenceUnitInfo pui, final J2EEName j2eeName) throws ClassNotFoundException {
         Set<Annotation> qualfiiers = getQualifiers(pui);
         Class<? extends Annotation> scope = getScope(pui);
 
-        abd.addBean().types(EntityManager.class).addQualifiers(qualfiiers).scope(scope);
+        abd.addBean().types(EntityManager.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManager(j2eeName, pui));
+        abd.addBean().types(EntityManagerFactory.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName, pui));
+        abd.addBean().types(PersistenceUnitUtil.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                             pui).getPersistenceUnitUtil());
+        abd.addBean().types(CriteriaBuilder.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                         pui).getCriteriaBuilder());
+        abd.addBean().types(Cache.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                               pui).getCache());
+        abd.addBean().types(Metamodel.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                   pui).getMetamodel());
+        abd.addBean().types(SchemaManager.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                       pui).getSchemaManager());
+    }
+
+    //TODO while this should always work since CDIRuntime should always have a CBE with a j2EEName for
+    //extensions, the API doesn't guarantee it so throw up some defences.
+    private J2EEName getCurrentAppJ2EEName() {
+        J2EEName j2eeName = CDI_RUNTIME.cloneActiveContextBeginnerEnder().getJ2EEName().get();
+        return new AppOnlyJ2EEName(j2eeName.getApplication());
     }
 
     private Class<? extends Annotation> getScope(PersistenceUnitInfo pui) throws ClassNotFoundException {
         String scopeName = pui.getScopeAnnotationName();
 
         Class<? extends Annotation> scope;
-        if (scopeName == null) {
+        if (scopeName == null || scopeName.equals("")) {
             scope = jakarta.transaction.TransactionScoped.class;
         } else {
-            scope = Class.forName(scopeName).asSubclass(Annotation.class);
+            //The TCCL will be set by CDIRuntimeImpl to the app classloader.
+            scope = Class.forName(scopeName, false, Thread.currentThread().getContextClassLoader()).asSubclass(Annotation.class);
         }
 
         return scope;
@@ -82,7 +102,8 @@ public class JPACDIExtension implements Extension {
         List<String> qualifierNames = pui.getQualifierAnnotationNames();
         Set<Annotation> qualfiiers = new HashSet<Annotation>();
         for (String qualifierName : qualifierNames) {
-            final Class<? extends Annotation> qualifierClass = Class.forName(qualifierName).asSubclass(Annotation.class);
+
+            final Class<? extends Annotation> qualifierClass = Class.forName(qualifierName, false, Thread.currentThread().getContextClassLoader()).asSubclass(Annotation.class);
             @SuppressWarnings("rawtypes")
             Annotation qualifierAnnotationLiteral = new AnnotationLiteral() {
                 @Override
