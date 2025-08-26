@@ -14,6 +14,7 @@ package com.ibm.ws.connectionpool.monitor;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import com.ibm.websphere.jca.pmi.JCAPMIHelper;
 import com.ibm.websphere.monitor.annotation.Monitor;
@@ -45,6 +46,8 @@ public class ConnectionPoolMonitor extends StatisticActions {
     private final ThreadLocal<Long> tlocalforwtTime = new ThreadLocal<Long>();
     private final ThreadLocal<Long> tlocalforiuTime = new ThreadLocal<Long>();
     private final ThreadLocal<Integer> tlocalforiumconThread = new ThreadLocal<Integer>();
+
+    private static final Logger logger = Logger.getLogger(ConnectionPoolMonitor.class.getName());
 
     private final ThreadLocal<Boolean> tlocalfpsize = new ThreadLocal<Boolean>() {
         @Override
@@ -84,6 +87,7 @@ public class ConnectionPoolMonitor extends StatisticActions {
      *         we check in the synchronized block to make sure that there is no already existing connectionPoolStats Object for the specific datasource.
      */
     public synchronized ConnectionPoolStats initializeConnectionPoolStats(String dsName) {
+        logger.warning("DE_BUG: > ConnectionPoolMonitor.initializeConnectionPoolStats( "+ dsName +" )");
         ConnectionPoolStats cStats = this.connectionPoolCountByName.get(dsName);
         if (cStats == null) {
             cStats = new ConnectionPoolStats();
@@ -92,8 +96,10 @@ public class ConnectionPoolMonitor extends StatisticActions {
                 legacyPMIMap.put(dsName, new LegacyMonitor(dsName, grp));
                 CPStatsMap.put(dsName, cStats);
             }
+            logger.warning("DE_BUG: < ConnectionPoolMonitor.initializeConnectionPoolStats( " + dsName + " )");
             return cStats;
         } else {
+            logger.warning("DE_BUG: < ConnectionPoolMonitor.initializeConnectionPoolStats( " + dsName + " )");
             return cStats;
         }
     }
