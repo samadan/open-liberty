@@ -48,8 +48,11 @@ public class UtilsTest {
         Utils.getURL("tp:/.ibm.com");
     }
 
+   /**
+    * The algorithm assessment of FIPS 140-3 by updating SHA512 checksum is based on slack discussion with component SMEs. 
+    */
     @Test
-    public void md5Test() {
-        assertEquals("MD5 encoding not working", "9EC5C2C0F355B0B1EA8319C9FCD6E44F".toLowerCase(), Utils.getMD5String("Test MD5 String"));
+    public void sha512Test() {
+        assertEquals("SHA512 encoding not working", "298bd4e66fec7b0c116bb0ab9858e450b176c07f8b151fdfa083bf775cc258668e93fc8e2ae412939a35062aa712ee484b307690d043ee59d489d27ca0dcddc9".toLowerCase(), Utils.getSHA512String("Test SHA512 String"));
     }
 }
