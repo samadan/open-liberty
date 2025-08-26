@@ -60,9 +60,7 @@ public class McpTransport {
      */
     public void init() throws IOException {
         if (!validReqAcceptHeader()) {
-            throw new HttpResponseException(
-                                            HttpServletResponse.SC_NOT_ACCEPTABLE,
-                                            "Request header does not accept required mimetypes for the MCP Server");
+            throw new HttpResponseException(HttpServletResponse.SC_NOT_ACCEPTABLE);
         }
         this.mcpRequest = toRequest();
         if (!validProtcolVersionHeader()) {
@@ -190,22 +188,12 @@ public class McpTransport {
      * @throws IOException
      */
     public void sendHttpException(HttpResponseException e) throws IOException {
-        switch (e.getStatusCode()) {
-            case (HttpServletResponse.SC_NOT_ACCEPTABLE) -> {
-                res.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
-                res.setContentType("application/json");
-            }
-            case (HttpServletResponse.SC_BAD_REQUEST) -> {
-                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                res.setContentType("plain/text");
-                writer.write(e.getMessage());
-            }
-            case (HttpServletResponse.SC_METHOD_NOT_ALLOWED) -> {
-                res.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-                res.setHeader("Allow", "POST");
-                res.setContentType("text/plain");
-                writer.write(e.getMessage());
-            }
+        res.setStatus(e.getStatusCode());
+        if (e.getHeaders() != null)
+            e.getHeaders().forEach((key, val) -> res.setHeader(key, val));
+        if (e.getMessage() != null) {
+            res.setContentType("text/plain");
+            writer.write(e.getMessage());
         }
     }
 }

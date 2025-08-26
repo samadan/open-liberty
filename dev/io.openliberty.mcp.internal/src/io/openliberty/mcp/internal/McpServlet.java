@@ -62,15 +62,17 @@ public class McpServlet extends HttpServlet {
         String accept = req.getHeader("Accept");
         // Return 405, with SSE-specific message if "text/event-stream" is requested.
         if (accept != null && HeaderValidation.acceptContains(accept, "text/event-stream")) {
-            transport.sendHttpException(
-                                        new HttpResponseException(
-                                                                  HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                                                                  "GET not supported yet. SSE not implemented."));
+            HttpResponseException e = new HttpResponseException(
+                                                                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                                                                "GET not supported yet. SSE not implemented.")
+                                                                                                              .withHeader("Allow", "POST");
+            transport.sendHttpException(e);
         } else {
-            transport.sendHttpException(
-                                        new HttpResponseException(
-                                                                  HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                                                                  "GET method not allowed."));
+            HttpResponseException e = new HttpResponseException(
+                                                                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                                                                "GET method not allowed.")
+                                                                                          .withHeader("Allow", "POST");
+            transport.sendHttpException(e);
         }
     }
 
