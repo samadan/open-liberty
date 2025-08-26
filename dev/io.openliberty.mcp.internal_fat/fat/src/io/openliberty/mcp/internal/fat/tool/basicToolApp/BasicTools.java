@@ -33,7 +33,7 @@ public class BasicTools {
     //tool title is empty string -> ignore
     //tool description is empty string -> ignore
     //arg  description is empty string -> ignore
-    @Tool(name = "", title = "", description = "")
+    @Tool(title = "", description = "")
     public String emptyEcho(@ToolArg(name = "input", description = "") String input) {
         return input;
     }
@@ -156,7 +156,7 @@ public class BasicTools {
     /////////
 
     @Tool(name = "readOnlyTool", title = "Read Only Tool", description = "A tool that is read-only",
-          annotations = @Annotations(readOnlyHint = true, destructiveHint = true, idempotentHint = false, openWorldHint = true, title = "Read Only Tool"))
+          annotations = @Annotations(readOnlyHint = true, title = "Read Only Tool"))
     public String readOnlyTool(@ToolArg(name = "input", description = "input string") String input) {
         return input;
     }
@@ -168,8 +168,20 @@ public class BasicTools {
     }
 
     @Tool(name = "openWorldTool", title = "Open to World Tool", description = "A tool in an open world context",
-          annotations = @Annotations(readOnlyHint = false, destructiveHint = false, idempotentHint = false, openWorldHint = true, title = "Open to World Tool"))
+          annotations = @Annotations(readOnlyHint = false, destructiveHint = true, idempotentHint = false, openWorldHint = true, title = "Open to World Tool"))
     public String openWorldTool(@ToolArg(name = "input", description = "input string") String input) {
+        return input;
+    }
+
+    @Tool(name = "idempotentTool", title = "Idempotent Tool", description = "A tool with idempotent context",
+          annotations = @Annotations(idempotentHint = true, title = "Idempotent Tool"))
+    public String idempotentTool(@ToolArg(name = "input", description = "input string") String input) {
+        return input;
+    }
+
+    @Tool(name = "missingTitle", title = "", description = "A tool that does not have a title",
+          annotations = @Annotations(readOnlyHint = false, destructiveHint = true, idempotentHint = false, openWorldHint = true))
+    public String missingTitle(@ToolArg(name = "input", description = "input string") String input) {
         return input;
     }
 

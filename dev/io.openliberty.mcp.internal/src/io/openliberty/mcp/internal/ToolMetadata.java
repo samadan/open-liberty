@@ -30,27 +30,11 @@ public record ToolMetadata(Tool.Annotations annotations, Tool annotation, Bean<?
 
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
 
-        String name = annotation.name();
-        if (Tool.ELEMENT_NAME.equals(name)) {
-            name = method.getJavaMember().getName();
-        }
+        String name = annotation.name().equals(Tool.ELEMENT_NAME) ? method.getJavaMember().getName() : annotation.name();
+        String title = annotation.title().isEmpty() ? null : annotation.title();
+        String description = annotation.description().isEmpty() ? null : annotation.description();
 
-        String title = annotation.title();
-        if (title.isEmpty()) {
-            title = null;
-        }
-
-        String description = annotation.description();
-
-        return new ToolMetadata(
-                                annotation.annotations(),
-                                annotation,
-                                bean,
-                                method,
-                                getArgumentMap(method),
-                                name,
-                                title,
-                                description);
+        return new ToolMetadata(annotation.annotations(), annotation, bean, method, getArgumentMap(method), name, title, description);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
