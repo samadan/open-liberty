@@ -107,4 +107,5 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
     public String getToolQualifiedName() {
         return bean.getBeanClass() + "." + method.getJavaMember().getName();
     }
+
 }

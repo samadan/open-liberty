@@ -20,6 +20,7 @@ import com.ibm.websphere.ras.TraceComponent;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
+import io.openliberty.mcp.internal.schemas.SchemaRegistry;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
@@ -38,6 +39,8 @@ public class McpCdiExtension implements Extension {
 
     private ToolRegistry tools = new ToolRegistry();
     private ConcurrentHashMap<String, LinkedList<String>> duplicateToolsMap = new ConcurrentHashMap<>();
+
+    private SchemaRegistry schemas = new SchemaRegistry();
 
     void registerTools(@Observes ProcessManagedBean<?> pmb) {
         AnnotatedType<?> type = pmb.getAnnotatedBeanClass();
@@ -163,5 +166,9 @@ public class McpCdiExtension implements Extension {
 
     public ToolRegistry getToolRegistry() {
         return tools;
+    }
+
+    public SchemaRegistry getSchemaRegistry() {
+        return schemas;
     }
 }
