@@ -23,7 +23,7 @@ import jakarta.enterprise.inject.spi.Bean;
  *
  */
 
-public record ToolMetadata(Tool.Annotations annotations, Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
+public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
                            Map<String, ArgumentMetadata> arguments, String name, String title, String description) {
 
     public record ArgumentMetadata(Type type, int index, String description) {}
@@ -34,7 +34,7 @@ public record ToolMetadata(Tool.Annotations annotations, Tool annotation, Bean<?
         String title = annotation.title().isEmpty() ? null : annotation.title();
         String description = annotation.description().isEmpty() ? null : annotation.description();
 
-        return new ToolMetadata(annotation.annotations(), annotation, bean, method, getArgumentMap(method), name, title, description);
+        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), name, title, description);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {

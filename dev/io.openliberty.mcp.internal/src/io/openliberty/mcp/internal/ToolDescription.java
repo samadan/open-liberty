@@ -51,8 +51,7 @@ public class ToolDescription {
         this.title = toolMetadata.title();
         this.description = toolMetadata.description();
 
-        Tool.Annotations ann = toolMetadata.annotations();
-
+        Tool.Annotations ann = toolMetadata.annotation().annotations();
         if (isDefaultAnnotation(ann)) {
             this.annotations = null;
         } else {
@@ -123,39 +122,10 @@ public class ToolDescription {
 
     public record InputSchemaPrimitive(String type, String description) {}
 
-    public static class AnnotationsDescription {
-        private final Boolean readOnlyHint;
-        private final Boolean destructiveHint;
-        private final Boolean idempotentHint;
-        private final Boolean openWorldHint;
-        private final String title;
-
-        public AnnotationsDescription(Boolean readOnlyHint, Boolean destructiveHint, Boolean idempotentHint, Boolean openWorldHint, String title) {
-            this.readOnlyHint = readOnlyHint;
-            this.destructiveHint = destructiveHint;
-            this.idempotentHint = idempotentHint;
-            this.openWorldHint = openWorldHint;
-            this.title = title;
-        }
-
-        public Boolean isReadOnlyHint() {
-            return readOnlyHint;
-        }
-
-        public Boolean isDestructiveHint() {
-            return destructiveHint;
-        }
-
-        public Boolean isIdempotentHint() {
-            return idempotentHint;
-        }
-
-        public Boolean isOpenWorldHint() {
-            return openWorldHint;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-    }
+    public record AnnotationsDescription(
+                                         Boolean readOnlyHint,
+                                         Boolean destructiveHint,
+                                         Boolean idempotentHint,
+                                         Boolean openWorldHint,
+                                         String title) {}
 }

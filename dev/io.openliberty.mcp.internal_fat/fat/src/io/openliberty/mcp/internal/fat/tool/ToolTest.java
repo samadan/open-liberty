@@ -106,7 +106,10 @@ public class ToolTest extends FATServletClient {
                         """;
 
         HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp")
-                                                                          .requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER).jsonBody(request).method("POST").expectCode(406);
+                                                                          .requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER)
+                                                                          .jsonBody(request)
+                                                                          .method("POST")
+                                                                          .expectCode(406);
 
         String response = JsonRequest.run(String.class);
         assertNull("Expected no response body for 406 Not Acceptable", response);
