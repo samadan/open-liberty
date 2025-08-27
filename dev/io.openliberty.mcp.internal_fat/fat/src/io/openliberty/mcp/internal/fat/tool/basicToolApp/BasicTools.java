@@ -156,7 +156,7 @@ public class BasicTools {
     /////////
 
     @Tool(name = "readOnlyTool", title = "Read Only Tool", description = "A tool that is read-only",
-          annotations = @Annotations(readOnlyHint = true, title = "Read Only Tool"))
+          annotations = @Annotations(readOnlyHint = true))
     public String readOnlyTool(@ToolArg(name = "input", description = "input string") String input) {
         return input;
     }

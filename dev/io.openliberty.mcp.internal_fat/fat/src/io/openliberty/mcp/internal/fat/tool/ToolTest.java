@@ -825,8 +825,7 @@ public class ToolTest extends FATServletClient {
                                         ]
                                       },
                                       "annotations": {
-                                        "readOnlyHint": true,
-                                        "title" : "Read Only Tool"
+                                        "readOnlyHint": true
                                       },
                                       "name": "readOnlyTool",
                                       "title": "Read Only Tool",
@@ -908,7 +907,6 @@ public class ToolTest extends FATServletClient {
                                         ]
                                       },
                                       "name": "missingTitle",
-                                      "title": "",
                                       "description": "A tool that does not have a title"
                                     }
                                 ]

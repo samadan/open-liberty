@@ -47,9 +47,9 @@ public class ToolDescription {
     }
 
     public ToolDescription(ToolMetadata toolMetadata) {
-        this.name = toolMetadata.annotation().name();
-        this.title = toolMetadata.annotation().title();
-        this.description = toolMetadata.annotation().description();
+        this.name = toolMetadata.name();
+        this.title = toolMetadata.title();
+        this.description = toolMetadata.description();
 
         Tool.Annotations ann = toolMetadata.annotations();
 
@@ -61,7 +61,7 @@ public class ToolDescription {
                                                           ann.destructiveHint() == true ? null : ann.destructiveHint(),
                                                           ann.idempotentHint() == false ? null : ann.idempotentHint(),
                                                           ann.openWorldHint() == true ? null : ann.openWorldHint(),
-                                                          ann.title());
+                                                          ann.title().isEmpty() ? null : ann.title());
         }
         Map<String, ArgumentMetadata> argumentMap = toolMetadata.arguments();
         Map<String, InputSchemaPrimitive> primitiveInputSchemaMap = new HashMap<>();
