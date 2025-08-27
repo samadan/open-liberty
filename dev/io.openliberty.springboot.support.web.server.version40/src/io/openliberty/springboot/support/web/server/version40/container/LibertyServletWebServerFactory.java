@@ -91,7 +91,7 @@ public class LibertyServletWebServerFactory extends AbstractConfigurableWebServe
 
     @Override
     public String getContextPath() {
-        return "/";
+        return this.settings.getContextPath().toString();
     }
 
     @Override
