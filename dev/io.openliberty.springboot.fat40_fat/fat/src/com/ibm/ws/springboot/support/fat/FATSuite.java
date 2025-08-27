@@ -16,18 +16,52 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
+import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
+
 @RunWith(Suite.class)
 @SuiteClasses({
                 CommonWebServerTests40.class,
                 ErrorPage40Test.class,
                 CDITests40.class,
                 ConfigDropinRootTests40.class,
+                ConfigServerXMLOverrideTests40.class,
                 ConfigSpringBootApplicationClassloaderTests40.class,
                 ConfigSpringBootApplicationTagTests40.class,
                 ConfigSpringBootApplicationWithArgsTests40.class,
                 EnableSpringBootTraceTests40.class,
                 ExceptionOccuredAfterAppIsAvailableTest40.class,
-                MissingServletTests40.class
+                MissingServletTests40.class,
+                MissingSslFeatureTests40.class,
+                SSLTests40.class,
+                SSLMutualAuthTests40.class,
+                NeedSpringBootFeatureTests40.class,
+                MultipleApplicationsNotSupported40.class,
+                NonZipExtensionFilesInBootInfLibTests40.class,
+                PreThinnedSpringBootTests40.class,
+                UnsupportedConfigWarningTest40.class,
+                UseDefaultHostTest40.class,
+                WarmStartTests40.class,
+                ExtractedAppTests40.class,
+                GenerateWebServerPluginTests40.class,
+                JakartaFeatureTests40.class,
+//                MimeMapping40.class,
+                ConfigSpringBootApplicationTagWarTests40.class,
+                SpringBootUtilityThinTest.class,
+                JSPTests40.class,
+                MultiModuleProjectTests40.class,
+//                ConfigActuatorXMLOverrideTests40.class,
+                CommonWebFluxTests40.class,
+                NoServletRequiredAppTests40.class,
+//                MultiContextTests40.class,
+                WebAnnotationTests40.class,
+                WebSocketSpringBootAppTests40.class,
+//                WebSocketWebAppTests40.class,
+                SpringSecurityTests40.class,
+                InvalidAppTests.class,
+                ApplicationArgsTests40.class,
+                MissingWebsocketFeatureTests40.class,
+                TemplateTests40.class,
+                ApplicationStartedEventTests40.class
 
 })
 
