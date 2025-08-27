@@ -4,15 +4,15 @@ import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.ibm.websphere.csi.J2EEName;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
-import com.ibm.ws.cdi.CDIService;
-import com.ibm.ws.cdi.internal.interfaces.CDIRuntime;
 import com.ibm.ws.jpa.JPAAccessor;
 import com.ibm.ws.jpa.JPAComponent;
-import com.ibm.ws.kernel.service.util.ServiceCaller;
+import com.ibm.ws.runtime.metadata.ComponentMetaData;
+import com.ibm.ws.threadContext.ComponentMetaDataAccessorImpl;
 
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
@@ -33,17 +33,6 @@ public class JPACDIExtension implements Extension {
     private static final TraceComponent tc = Tr.register(JPACDIExtension.class);
 
     private final JPAComponent jpaComponent = JPAAccessor.getJPAComponent();
-
-    @SuppressWarnings("rawtypes")
-    private static final ServiceCaller<CDIService> CDI_SERVICE;
-    private static final CDIRuntime CDI_RUNTIME;
-
-    //TODO clean this up a bit, ok a lot, discuss if we should add something to the interface
-    //Think about getting the J2EEName from the ComponentMetaDataAccessor
-    static {
-        CDI_SERVICE = new ServiceCaller<CDIService>(JPACDIExtension.class, CDIService.class);
-        CDI_RUNTIME = (CDIRuntime) CDI_SERVICE.current().get();
-    }
 
     public void afterBeanDiscovery(@Observes AfterBeanDiscovery abd, BeanManager bm) {
         J2EEName j2EEName = getCurrentAppJ2EEName();
@@ -75,13 +64,22 @@ public class JPACDIExtension implements Extension {
                                                                                                                                                    pui).getMetamodel());
         abd.addBean().types(SchemaManager.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
                                                                                                                                                        pui).getSchemaManager());
+
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            String qualifiersString = qualfiiers.stream().map(Annotation::annotationType).map(Class::getName).collect(Collectors.joining(", "));
+            Tr.debug(tc, "Creating beans for a persistence unit (and related) with scope {0} and qualifiers {1}", scope.getName(), qualifiersString);
+        }
+
     }
 
-    //TODO while this should always work since CDIRuntime should always have a CBE with a j2EEName for
-    //extensions, the API doesn't guarantee it so throw up some defences.
     private J2EEName getCurrentAppJ2EEName() {
-        J2EEName j2eeName = CDI_RUNTIME.cloneActiveContextBeginnerEnder().getJ2EEName().get();
-        return new AppOnlyJ2EEName(j2eeName.getApplication());
+
+        ComponentMetaData cmd = ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor().getComponentMetaData();
+        if (cmd != null) {
+            J2EEName j2eeName = cmd.getJ2EEName();
+            return new AppOnlyJ2EEName(j2eeName.getApplication());
+        }
+        return null;
     }
 
     private Class<? extends Annotation> getScope(PersistenceUnitInfo pui) throws ClassNotFoundException {
@@ -116,8 +114,7 @@ public class JPACDIExtension implements Extension {
         return qualfiiers;
     }
 
-    //TODO its probably better. A LOT better. To add a method to the jpaComponent that takes a J2EEName but ignores the non-app parts than to do this.
-    //Ask JPA if they can add one.
+    //TODO ask JPA if they object to adding appOnly to jpaComponent.getPersistenceUnits (or overloading the method)
     private static class AppOnlyJ2EEName implements J2EEName {
 
         private final String appName;
@@ -144,6 +141,12 @@ public class JPACDIExtension implements Extension {
         @Override
         public String getModule() {
             return null;
+        }
+
+        //For pretty trace output
+        @Override
+        public String toString() {
+            return "AppOnlyJ2EEName[" + appName + "]";
         }
     }
 }
