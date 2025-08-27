@@ -52,7 +52,7 @@ public class DeploymentProblemTest extends FATServletClient {
     }
 
     @Test
-    public void testDuplicateToolDeplymentError() throws Exception {
+    public void testDuplicateToolDeploymentError() throws Exception {
         String request = """
                         {
                           "jsonrpc": "2.0",
@@ -65,6 +65,7 @@ public class DeploymentProblemTest extends FATServletClient {
                         """;
 
         boolean deploymentErrorOccured = false;
+
         try {
             HttpTestUtils.callMCP(server, "/toolTest", request);
         } catch (Exception e) {
