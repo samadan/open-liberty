@@ -63,7 +63,7 @@ public class LibertyMetricsTest extends BaseTestClass {
 		server.setMarkToEndOfLog();
 		
 		// Wait for registration so that the metrics will be available for testing.
-		server.waitForStringInTrace("javaxas.management.MBeanServerNotification\\[source=JMImplementation:type=MBeanServerDelegate\\]"
+		server.waitForStringInTrace("javax.management.MBeanServerNotification\\[source=JMImplementation:type=MBeanServerDelegate\\]"
 				+ "\\[type=JMX.mbean.registered\\]\\[message=\\]\\[mbeanName=WebSphere:type=ThreadPoolStats,name=Default Executor\\]");
 		server.waitForStringInTrace("javax.management.MBeanServerNotification\\[source=JMImplementation:type=MBeanServerDelegate\\]"
 				+ "\\[type=JMX.mbean.registered\\]\\[message=\\]\\[mbeanName=WebSphere:type=RequestTimingStats,name=Servlet\\]");

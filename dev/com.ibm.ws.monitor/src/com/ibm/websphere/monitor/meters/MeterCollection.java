@@ -34,7 +34,6 @@ import com.ibm.websphere.monitor.annotation.Monitor;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.monitor.internal.MonitoringFrameworkExtender;
-import com.ibm.ws.monitors.ThreadPoolMonitor;
 
 public final class MeterCollection<T> {
 

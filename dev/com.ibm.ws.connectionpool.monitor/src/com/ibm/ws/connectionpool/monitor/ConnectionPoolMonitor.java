@@ -45,7 +45,7 @@ public class ConnectionPoolMonitor extends StatisticActions {
     private final ThreadLocal<Long> tlocalforwtTime = new ThreadLocal<Long>();
     private final ThreadLocal<Long> tlocalforiuTime = new ThreadLocal<Long>();
     private final ThreadLocal<Integer> tlocalforiumconThread = new ThreadLocal<Integer>();
-    
+
     private final ThreadLocal<Boolean> tlocalfpsize = new ThreadLocal<Boolean>() {
         @Override
         public Boolean initialValue() {

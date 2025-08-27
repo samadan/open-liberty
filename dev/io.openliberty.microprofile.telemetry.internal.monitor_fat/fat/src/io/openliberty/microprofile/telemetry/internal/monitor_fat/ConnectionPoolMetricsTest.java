@@ -82,9 +82,7 @@ public class ConnectionPoolMetricsTest extends BaseTestClass {
 		server.waitForStringInTrace("javax.management.MBeanServerNotification\\[source=JMImplementation:type=MBeanServerDelegate\\]"
 				+ "\\[type=JMX.mbean.registered\\]\\[message=\\]\\[mbeanName=WebSphere:type=ConnectionPoolStats,name=jdbc/exampleDS1\\]");
 		server.waitForStringInTrace("javax.management.MBeanServerNotification\\[source=JMImplementation:type=MBeanServerDelegate\\]"
-				+ "\\[type=JMX.mbean.registered\\]\\[message=\\]\\[mbeanName=WebSphere:type=ConnectionPoolStats,name=jdbc/exampleDS2\\]");	
-		
-		
+			+ "\\[type=JMX.mbean.registered\\]\\[message=\\]\\[mbeanName=WebSphere:type=ConnectionPoolStats,name=jdbc/exampleDS2\\]");	
 	}
 
 	@AfterClass
