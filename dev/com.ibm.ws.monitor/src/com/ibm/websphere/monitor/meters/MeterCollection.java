@@ -21,7 +21,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Logger;
 
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.InstanceNotFoundException;
@@ -47,15 +46,12 @@ public final class MeterCollection<T> {
     final String collectionName;
     Object monitor;
 
-    private static final Logger logger = Logger.getLogger(MeterCollection.class.getName());
-
     public MeterCollection(String collectionName, Object monitor) {
         this.collectionName = collectionName;
         this.monitor = monitor;
     }
 
     public void put(String key, T meter) {
-        logger.warning("DE_BUG: > MeterCollection.put(): " + " Key:" + key + " Meter:" + meter.getClass().getSimpleName());
         try {
             if (tc.isDebugEnabled()) {
                 if (meter != null) {
@@ -69,7 +65,6 @@ public final class MeterCollection<T> {
             }
             ObjectName objectName = null;
             if (!meters.containsValue(meter)) {
-                logger.warning("DE_BUG: = MeterCollection.put(): DOES NOT EXIST YET, ADDING: " + " Key:" + key + " Meter:" + meter.getClass().getSimpleName());
                 //USE type = meter.getClass().getSimpleName() ---> Example :If meter is ServletStats, MXBean type woould be ServletStats
                 //USE name = key ---> Example: Incase of ServletStats Key would be APPANAME.SERVLETNAME (WebSphere:type=ServletStats,name=MyBankApp.MyServlet)
                 //USE mxBeanImple as meter object ---> Example ServletStats which extends ServletStatsMXBean.
@@ -101,7 +96,6 @@ public final class MeterCollection<T> {
             }
         }
         meters.put(key, meter);
-        logger.warning("DE_BUG: < MeterCollection.put(): " + " Key:" + key + " Meter:" + meter.getClass().getSimpleName());
     }
 
     private static boolean ifMonitorClassExistsInFilterGroup(Class monitorClassName) {
@@ -124,7 +118,6 @@ public final class MeterCollection<T> {
         if (tc.isEntryEnabled()) {
             Tr.entry(tc, "MXBeanHelper");
         }
-        logger.warning("DE_BUG: > MeterCollection.MXBeanHelper()");
         StringBuilder sb = new StringBuilder("WebSphere:");
         sb.append("type=").append(type);
         sb.append(",name=").append(name);
@@ -135,10 +128,7 @@ public final class MeterCollection<T> {
             }
             try {
                 AccessController.doPrivileged((PrivilegedExceptionAction<Object>) () -> {
-                    logger.warning("DE_BUG: = MeterCollection.MXBeanHelper(): Registering meter: " + on);
-                    logger.warning("DE_BUG: = MeterCollection.MXBeanHelper(): Should expect notification next... " + on);
                     mbeanServer.registerMBean(mxBeanImpl, on);
-                    logger.warning("DE_BUG: < MeterCollection.MXBeanHelper()");
                     return null;
                 });
             } catch (PrivilegedActionException pae) {
@@ -160,8 +150,6 @@ public final class MeterCollection<T> {
             try {
                 AccessController.doPrivileged((PrivilegedExceptionAction<Object>) () -> {
                     mbeanServer.unregisterMBean(on);
-                    logger.warning("DE_BUG: < MeterCollection.MXBeanHelper(): Unregister meter: " + name);
-                    logger.warning("DE_BUG: < MeterCollection.MXBeanHelper()");
                     return null;
                 });
             } catch (PrivilegedActionException pae) {
@@ -178,7 +166,6 @@ public final class MeterCollection<T> {
         if (tc.isEntryEnabled()) {
             Tr.exit(tc, "MXBeanHelper");
         }
-        logger.warning("DE_BUG: < MeterCollection.MXBeanHelper()");
         return on;
     }
 

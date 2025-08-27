@@ -13,7 +13,6 @@
 package com.ibm.ws.session.monitor;
 
 import java.util.HashMap;
-import java.util.logging.Logger;
 
 import com.ibm.websphere.monitor.annotation.Args;
 import com.ibm.websphere.monitor.annotation.Monitor;
@@ -46,7 +45,6 @@ public class SessionMonitor extends StatisticActions {
     public static final int INVALIDATED_SESSIONS = 2;
     public static final int INVALIDATED_SESSIONS_BYTIMEOUT = 16;
     //-----------------------
-    private static final Logger logger = Logger.getLogger(SessionMonitor.class.getName());
 
     private static final String template = "/com/ibm/ws/session/monitor/xml/servletSessionsModule.xml";
     private StatsGroup grp;    
@@ -73,7 +71,6 @@ public class SessionMonitor extends StatisticActions {
      * @param sessionStats
      */
     private synchronized SessionStats initializeSessionStats(String appName, SessionStats sessionStats) {
-        logger.warning("DE_BUG: > SessionStats.initializeSessionStats()");
         // TODO Auto-generated method stub
     	SessionStats newStats = this.sessionCountByName.get(appName);
     	try{
@@ -94,7 +91,6 @@ public class SessionMonitor extends StatisticActions {
     			Tr.debug(tc, "Exception occured ", e.getMessage());
     		}
     	}
-        logger.warning("DE_BUG: < SessionStats.initializeSessionStats()");
     	return newStats;
     }
     /**

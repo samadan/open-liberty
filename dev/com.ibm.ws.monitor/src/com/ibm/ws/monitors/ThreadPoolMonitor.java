@@ -14,7 +14,6 @@ package com.ibm.ws.monitors;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import com.ibm.websphere.monitor.annotation.Args;
 import com.ibm.websphere.monitor.annotation.Monitor;
@@ -49,8 +48,6 @@ public class ThreadPoolMonitor extends StatisticActions {
     private static final TraceComponent tc = Tr.register(ThreadPoolMonitor.class);
 
     private static final String DEFAULT_POOL_NAME = "Default Executor";
-
-    private static final Logger logger = Logger.getLogger(ThreadPoolMonitor.class.getName());
 
     //For Legacy PMI
     //Define stats ID here.
@@ -126,7 +123,6 @@ public class ThreadPoolMonitor extends StatisticActions {
      * @param poolName
      */
     private synchronized void initThreadPoolStat(String _poolName) {
-        logger.warning("DE_BUG: > ThreadPoolMonitor.initThreadPoolStat( " + _poolName + " )");
         if (threadPoolCountByName.get(_poolName) != null) {
             return;
         }
@@ -135,7 +131,6 @@ public class ThreadPoolMonitor extends StatisticActions {
         }
         ThreadPoolStats tpStats = new ThreadPoolStats(_poolName, ob_ref);
         threadPoolCountByName.put(_poolName, tpStats);
-        logger.warning("DE_BUG: < ThreadPoolMonitor.initThreadPoolStat( " + _poolName + " )");
     }
 
     /** {@inheritDoc} */
