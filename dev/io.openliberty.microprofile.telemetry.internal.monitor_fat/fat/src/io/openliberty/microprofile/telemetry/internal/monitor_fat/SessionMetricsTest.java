@@ -78,7 +78,8 @@ public class SessionMetricsTest extends BaseTestClass {
 		server.setMarkToEndOfLog();
 		
 		// Wait for registration so that the metrics will be available for testing.
-		server.waitForStringInTrace("javax.management.MBeanServerNotification\\[source=JMImplementation:type=MBeanServerDelegate\\]\\[type=JMX.mbean.registered\\]\\[message=\\]\\[mbeanName=WebSphere:type=SessionStats,name=default_host/testSessionApp\\]");
+		server.waitForStringInTrace("javax.management.MBeanServerNotification\\[source=JMImplementation:type=MBeanServerDelegate\\]" 
+				+ "\\[type=JMX.mbean.registered\\]\\[message=\\]\\[mbeanName=WebSphere:type=SessionStats,name=default_host/testSessionApp\\]");
 					
 		
 	}

@@ -137,13 +137,9 @@ public class MonitorMetricsHandler {
 	protected void register() {
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 		for (String sName : mappingTable.getKeys()) {
-		}
-		for (String sName : mappingTable.getKeys()) {
 			Set<ObjectInstance> mBeanObjectInstanceSet;
 			try {
 				mBeanObjectInstanceSet = mbs.queryMBeans(new ObjectName(sName), null);
-				for(ObjectInstance oi : mBeanObjectInstanceSet) {
-				}
 				if (sName.contains("ThreadPoolStats") && mBeanObjectInstanceSet.isEmpty() && execServ != null) {
 					execServ.execute(() -> {
 						final int MAX_TIME_OUT = 5000;
@@ -193,6 +189,7 @@ public class MonitorMetricsHandler {
 	}
 
 	protected synchronized void register(String objectName, String[][] data) {
+		
 		MonitorMetrics monitorMetricsInsts = null;
 		if (!containMetrics(objectName)) {
 			monitorMetricsInsts = new MonitorMetrics(objectName);
