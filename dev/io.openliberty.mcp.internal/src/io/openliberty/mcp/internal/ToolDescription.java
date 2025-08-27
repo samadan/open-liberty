@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 
 public class ToolDescription {
@@ -23,6 +24,7 @@ public class ToolDescription {
     private final String title;
     private final String description;
     private final InputSchemaObject inputSchema;
+    private final AnnotationsDescription annotations;
 
     public String getName() {
         return name;
@@ -40,11 +42,26 @@ public class ToolDescription {
         return inputSchema;
     }
 
+    public AnnotationsDescription getAnnotations() {
+        return annotations;
+    }
+
     public ToolDescription(ToolMetadata toolMetadata) {
         this.name = toolMetadata.name();
         this.title = toolMetadata.title();
         this.description = toolMetadata.description();
 
+        Tool.Annotations ann = toolMetadata.annotation().annotations();
+        if (isDefaultAnnotation(ann)) {
+            this.annotations = null;
+        } else {
+            this.annotations = new AnnotationsDescription(
+                                                          ann.readOnlyHint() == false ? null : ann.readOnlyHint(),
+                                                          ann.destructiveHint() == true ? null : ann.destructiveHint(),
+                                                          ann.idempotentHint() == false ? null : ann.idempotentHint(),
+                                                          ann.openWorldHint() == true ? null : ann.openWorldHint(),
+                                                          ann.title().isEmpty() ? null : ann.title());
+        }
         Map<String, ArgumentMetadata> argumentMap = toolMetadata.arguments();
         Map<String, InputSchemaPrimitive> primitiveInputSchemaMap = new HashMap<>();
         LinkedList<String> requiredParameterList = new LinkedList<>();
@@ -55,6 +72,19 @@ public class ToolDescription {
         }
 
         inputSchema = new InputSchemaObject("object", primitiveInputSchemaMap, requiredParameterList);
+    }
+
+    /*
+     * Helper Method for default Annotation
+     */
+
+    private boolean isDefaultAnnotation(Tool.Annotations ann) {
+        return ann.readOnlyHint() == false
+               && ann.destructiveHint() == true
+               && ann.idempotentHint() == false
+               && ann.openWorldHint() == true
+               && ann.title().isEmpty();
+
     }
 
     private InputSchemaPrimitive buildPrimitiveInputSchema(ArgumentMetadata argumentMetadata) {
@@ -91,4 +121,11 @@ public class ToolDescription {
     public record InputSchemaObject(String type, Map<String, InputSchemaPrimitive> properties, List<String> required) {}
 
     public record InputSchemaPrimitive(String type, String description) {}
+
+    public record AnnotationsDescription(
+                                         Boolean readOnlyHint,
+                                         Boolean destructiveHint,
+                                         Boolean idempotentHint,
+                                         Boolean openWorldHint,
+                                         String title) {}
 }

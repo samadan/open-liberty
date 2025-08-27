@@ -105,7 +105,11 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER).jsonBody(request).method("POST").expectCode(406);
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp")
+                                                                          .requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER)
+                                                                          .jsonBody(request)
+                                                                          .method("POST")
+                                                                          .expectCode(406);
 
         String response = JsonRequest.run(String.class);
         assertNull("Expected no response body for 406 Not Acceptable", response);
@@ -127,7 +131,8 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json").requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER)
+        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json")
+                                                                          .requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER)
                                                                           .jsonBody(request).method("POST").expectCode(406);
 
         String response = JsonRequest.run(String.class);
@@ -150,7 +155,8 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
         String response = HttpTestUtils.callMCPWithoutProtocolVersion(server, "/toolTest", request);
-        assertTrue("Expected 400 error body mentioning MCP-Protocol-Version", response.contains("Missing or invalid MCP-Protocol-Version header"));
+        assertTrue("Expected 400 error body mentioning MCP-Protocol-Version",
+                   response.contains("Missing or invalid MCP-Protocol-Version header"));
     }
 
     @Test
@@ -206,7 +212,8 @@ public class ToolTest extends FATServletClient {
                                                                   .expectCode(400)
                                                                   .run(String.class);
 
-        assertTrue("Expected error message about invalid protocol version", response.contains("Missing or invalid MCP-Protocol-Version header"));
+        assertTrue("Expected error message about invalid protocol version",
+                   response.contains("Missing or invalid MCP-Protocol-Version header"));
         assertTrue("Expected error message to contain expected version", response.contains("Expected: 2025-06-18"));
     }
 
@@ -443,6 +450,7 @@ public class ToolTest extends FATServletClient {
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
         JSONObject jsonResponse = new JSONObject(response);
+
         String expectedString = """
                         {
                             "result": {
@@ -635,7 +643,8 @@ public class ToolTest extends FATServletClient {
                                         "name": "testJSONshort",
                                         "description": "testJSONshort",
                                         "title": "testJSONshort"
-                                    },{
+                                    },
+                                    {
                                         "inputSchema": {
                                             "type": "object",
                                             "properties": {
@@ -716,7 +725,7 @@ public class ToolTest extends FATServletClient {
                                                 "num1"
                                             ]
                                         },
-                                        "name": "testJSONShort",
+                                         "name": "testJSONShort",
                                         "description": "testJSONShort",
                                         "title": "testJSONShort"
                                     },
@@ -789,21 +798,119 @@ public class ToolTest extends FATServletClient {
                                         "title": "testJSONBoolean"
                                     },
                                     {
-                                        "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "value": {
-                                                    "description": "boolean value",
-                                                    "type": "boolean"
-                                                }
-                                            },
-                                            "required": [
-                                                "value"
-                                            ]
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "value": {
+                                            "description": "boolean value",
+                                            "type": "boolean"
+                                          }
                                         },
-                                        "name": "toggle",
-                                        "description": "toggles the boolean input",
-                                        "title": "Boolean toggle"
+                                        "required": [
+                                          "value"
+                                        ]
+                                      },
+                                      "name": "toggle",
+                                      "description": "toggles the boolean input",
+                                      "title": "Boolean toggle"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "input": {
+                                            "description": "input string",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "input"
+                                        ]
+                                      },
+                                      "annotations": {
+                                        "readOnlyHint": true
+                                      },
+                                      "name": "readOnlyTool",
+                                      "title": "Read Only Tool",
+                                      "description": "A tool that is read-only"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "input": {
+                                            "description": "input string",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "input"
+                                        ]
+                                      },
+                                      "annotations": {
+                                        "openWorldHint": false,
+                                        "title": "Destructive Tool"
+                                      },
+                                      "name": "destructiveTool",
+                                      "title": "Destructive Tool",
+                                      "description": "A tool that performs a destructive operation"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "input": {
+                                            "description": "input string",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "input"
+                                        ]
+                                      },
+                                      "annotations": {
+                                        "title": "Open to World Tool"
+                                      },
+                                      "name": "openWorldTool",
+                                      "title": "Open to World Tool",
+                                      "description": "A tool in an open world context"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "input": {
+                                            "description": "input string",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "input"
+                                        ]
+                                      },
+                                      "annotations": {
+                                        "idempotentHint": true,
+                                        "title": "Idempotent Tool"
+                                      },
+                                      "name": "idempotentTool",
+                                      "title": "Idempotent Tool",
+                                      "description": "A tool with idempotent context"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "input": {
+                                            "description": "input string",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "input"
+                                        ]
+                                      },
+                                      "name": "missingTitle",
+                                      "description": "A tool that does not have a title"
                                     }
                                 ]
                             },

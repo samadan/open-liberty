@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.fat.tool.basicToolApp;
 
 import io.openliberty.mcp.annotations.Tool;
+import io.openliberty.mcp.annotations.Tool.Annotations;
 import io.openliberty.mcp.annotations.ToolArg;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -148,6 +149,40 @@ public class BasicTools {
     @Tool(name = "toggle", title = "Boolean toggle", description = "toggles the boolean input")
     public boolean toggle(@ToolArg(name = "value", description = "boolean value") boolean value) {
         return !value;
+    }
+
+    /////////
+    //Annotations
+    /////////
+
+    @Tool(name = "readOnlyTool", title = "Read Only Tool", description = "A tool that is read-only",
+          annotations = @Annotations(readOnlyHint = true))
+    public String readOnlyTool(@ToolArg(name = "input", description = "input string") String input) {
+        return input;
+    }
+
+    @Tool(name = "destructiveTool", title = "Destructive Tool", description = "A tool that performs a destructive operation",
+          annotations = @Annotations(readOnlyHint = false, destructiveHint = true, idempotentHint = false, openWorldHint = false, title = "Destructive Tool"))
+    public String destructiveTool(@ToolArg(name = "input", description = "input string") String input) {
+        return input;
+    }
+
+    @Tool(name = "openWorldTool", title = "Open to World Tool", description = "A tool in an open world context",
+          annotations = @Annotations(readOnlyHint = false, destructiveHint = true, idempotentHint = false, openWorldHint = true, title = "Open to World Tool"))
+    public String openWorldTool(@ToolArg(name = "input", description = "input string") String input) {
+        return input;
+    }
+
+    @Tool(name = "idempotentTool", title = "Idempotent Tool", description = "A tool with idempotent context",
+          annotations = @Annotations(idempotentHint = true, title = "Idempotent Tool"))
+    public String idempotentTool(@ToolArg(name = "input", description = "input string") String input) {
+        return input;
+    }
+
+    @Tool(name = "missingTitle", title = "", description = "A tool that does not have a title",
+          annotations = @Annotations(readOnlyHint = false, destructiveHint = true, idempotentHint = false, openWorldHint = true))
+    public String missingTitle(@ToolArg(name = "input", description = "input string") String input) {
+        return input;
     }
 
 }
