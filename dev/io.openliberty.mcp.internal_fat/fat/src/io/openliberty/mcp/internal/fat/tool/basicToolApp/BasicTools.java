@@ -33,7 +33,7 @@ public class BasicTools {
     //tool title is empty string -> ignore
     //tool description is empty string -> ignore
     //arg  description is empty string -> ignore
-    @Tool(title = "", description = "")
+    @Tool(name = "", title = "", description = "")
     public String emptyEcho(@ToolArg(name = "input", description = "") String input) {
         return input;
     }
