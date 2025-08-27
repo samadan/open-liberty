@@ -13,6 +13,9 @@ import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONL
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Logger;
+
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.json.JSONObject;
@@ -24,6 +27,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import com.ibm.websphere.simplicity.ShrinkHelper;
+import com.ibm.websphere.simplicity.log.Log;
 
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
@@ -37,6 +41,11 @@ import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
  */
 @RunWith(FATRunner.class)
 public class ToolTest extends FATServletClient {
+
+    private static final String ACCEPT_HEADER = "application/json, text/event-stream";
+    private static final String MCP_PROTOCOL_HEADER = "MCP-Protocol-Version";
+    private static final String MCP_PROTOCOL_VERSION = "2025-06-18";
+    private static final Logger LOG = Logger.getLogger(ToolTest.class.getName());
 
     @Server("mcp-server")
     public static LibertyServer server;
@@ -464,6 +473,8 @@ public class ToolTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        LOG.info(response);
+
         JSONObject jsonResponse = new JSONObject(response);
 
         String expectedString = """
@@ -926,6 +937,26 @@ public class ToolTest extends FATServletClient {
                                       },
                                       "name": "missingTitle",
                                       "description": "A tool that does not have a title"
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "description": "boolean value",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "value"
+                                            ]
+                                        },
+                                        "name": "toggle",
+                                        "description": "toggles the boolean input",
+                                        "title": "Boolean toggle"
+                                    },
+                                    {
+                                        "name": "cancellationTool",
+                                        "description": "A tool that waits to be cancelled and is never retuned",
+                                        "title": "Cancellable tool"
                                     },
                                     {
                                       "inputSchema": {
@@ -1727,61 +1758,62 @@ public class ToolTest extends FATServletClient {
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
-//    @Test
-//    public void testCancellationToolWithCancallableArgs() throws Exception {
-//
-//        Runnable threadCallingTool = () -> {
-//
-//            try {
-//                String request = """
-//                                  {
-//                                  "jsonrpc": "2.0",
-//                                  "id": "2",
-//                                  "method": "tools/call",
-//                                  "params": {
-//                                    "name": "cancellationTool",
-//                                    "arguments": {}
-//                                  }
-//                                }
-//                                """;
-//
-//                String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-//                JSONAssert.assertEquals(null, response, true);
-//            } catch (Exception e) {
-//                // TODO Auto-generated catch block
-//                // Do you need FFDC here? Remember FFDC instrumentation and @FFDCIgnore
-//                e.printStackTrace();
-//            }
-//
-//        };
-//
-//        Runnable threadCancellingTool = () -> {
-//
-//            try {
-//
-//                String requestNotification = """
-//                                  {
-//                                  "jsonrpc": "2.0",
-//                                  "method": "notifications/cancelled",
-//                                  "params": {
-//                                    "requestId": "2",
-//                                    "reason": "no longer needed"
-//                                  }
-//                                }
-//                                """;
-//                HttpTestUtils.callMCPNotification(server, "/toolTest", requestNotification);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//
-//        };
-//
-//        Thread toolCall = new Thread(threadCallingTool);
-//        Thread cancelTool = new Thread(threadCancellingTool);
-//
-//        toolCall.start();
-//
-//        cancelTool.start();
-//    }
+    @Test
+    public void testCancellationToolWithCancallableParameter() throws Exception {
+        String m = "testCancellationToolWithCancallableParameter";
+
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        Log.info(ToolTest.class, m, "MyMessage");
+
+        Runnable threadCallingTool = () -> {
+            try {
+                String request = """
+                                  {
+                                  "jsonrpc": "2.0",
+                                  "id": "2",
+                                  "method": "tools/call",
+                                  "params": {
+                                    "name": "cancellationTool",
+                                    "arguments": {}
+                                  }
+                                }
+                                """;
+
+                latch.countDown();
+                String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+                assertNull(response);
+            } catch (Exception e) {
+//                Thread.currentThread().interrupt();
+                e.printStackTrace();
+            }
+        };
+
+        Runnable threadCancellingTool = () -> {
+            try {
+                latch.await();
+
+                String requestNotification = """
+                                  {
+                                  "jsonrpc": "2.0",
+                                  "method": "notifications/cancelled",
+                                  "params": {
+                                    "requestId": "2",
+                                    "reason": "no longer needed"
+                                  }
+                                }
+                                """;
+                HttpTestUtils.callMCPNotification(server, "/toolTest", requestNotification);
+            } catch (Exception e) {
+                Thread.currentThread().interrupt();
+            }
+        };
+
+        Thread toolCall = new Thread(threadCallingTool);
+        Thread cancelTool = new Thread(threadCancellingTool);
+
+        toolCall.start();
+        cancelTool.start();
+    }
 
 }

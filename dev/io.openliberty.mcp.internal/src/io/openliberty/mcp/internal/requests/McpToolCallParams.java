@@ -76,7 +76,7 @@ public class McpToolCallParams {
     private Object[] parseArguments(JsonObject arguments2, Jsonb jsonb) {
         JsonObject argsObject = arguments2.asJsonObject();
         int resultSize = (metadata.arguments() != null ? metadata.arguments().size() : 0) +
-                (metadata.specialArguments() != null ? metadata.arguments().size() : 0);
+                         (metadata.specialArguments() != null ? metadata.specialArguments().size() : 0);
         Object[] results = new Object[resultSize];
         HashSet<String> argsProcessed = new HashSet<>();
         if (metadata.arguments() != null) {
@@ -106,7 +106,7 @@ public class McpToolCallParams {
             SpecialArgumentMetadata specialArgsMetadata = entry.getValue();
 
             if (specialArgsMetadata.type().equals(Cancellation.class)) {
-                results[specialArgsMetadata.index()] = new RequestCancellation(null, null);
+                results[specialArgsMetadata.index()] = new RequestCancellation();
             } else {
                 results[specialArgsMetadata.index()] = null;
             }

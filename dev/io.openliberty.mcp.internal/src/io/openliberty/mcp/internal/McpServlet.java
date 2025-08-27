@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -177,7 +177,7 @@ public class McpServlet extends HttpServlet {
     private void checkAndParseCancellationObject(Object[] argumentsArray, String requestId) {
         for (Object argument : argumentsArray) {
             if (argument instanceof Cancellation cancellation) {
-                cancellation = new RequestCancellation(requestId, null);
+                ((RequestCancellation) cancellation).setRequestId(requestId);
                 connection.registerOngoingRequest(requestId, cancellation);
                 break;
             }
@@ -238,7 +238,10 @@ public class McpServlet extends HttpServlet {
         if (cancelled) {
             transport.sendEmptyResponse();
             //TODO log the reason from notificationParams.getReason
+        } else {
+            transport.sendEmptyErrorResponse();
         }
+
     }
 
     private boolean cancelRequest(McpRequest request) {
@@ -247,11 +250,11 @@ public class McpServlet extends HttpServlet {
         String requestId = notificationParams.getRequestId();
         Optional<String> reason = Optional.ofNullable(notificationParams.getReason());
 
-        if (connection.isOngoingProcess(requestId)) {
-            connection.addCancellationRequest(requestId, reason);
-            Cancellation cancellation = new RequestCancellation(requestId, reason);
-            connection.updateOngoingProcess(requestId, cancellation);
+        Cancellation cancellation = connection.getOngoingProcessCancelation(requestId);
 
+        if (cancellation != null) {
+            ((RequestCancellation) cancellation).setReason(reason);
+            connection.updateOngoingProcess(requestId, cancellation);
             return true;
         }
         return false;

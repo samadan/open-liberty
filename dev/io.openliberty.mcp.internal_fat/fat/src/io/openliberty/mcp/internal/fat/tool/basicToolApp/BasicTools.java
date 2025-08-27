@@ -20,6 +20,8 @@ import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.content.ImageContent;
 import io.openliberty.mcp.content.TextContent;
 import io.openliberty.mcp.tools.ToolResponse;
+import io.openliberty.mcp.messaging.Cancellation;
+import io.openliberty.mcp.messaging.Cancellation.OperationCancellationException;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
@@ -284,15 +286,17 @@ public class BasicTools {
     }
 
     public record City(String name, String country, int population, boolean isCapital) {};
-//    @Tool(name = "cancellationTool", title = "Cancellable tool", description = "A tool that waits to be cancelled and is never retuned")
-//    public void cancellationTool(Cancellation cancellation) throws InterruptedException {
-//        int counter = 0;
-//
-//        while (counter++ < 5) {
-//            if (cancellation.check().isRequested()) {
-//                throw new OperationCancellationException();
-//            }
-//            TimeUnit.MILLISECONDS.sleep(500);
-//        }
-//    }
+
+    @Tool(name = "cancellationTool", title = "Cancellable tool", description = "A tool that waits to be cancelled and is never retuned")
+    public String cancellationTool(Cancellation cancellation) throws InterruptedException {
+        int counter = 0;
+
+        while (counter++ < 5) {
+            if (cancellation.check().isRequested() && cancellation.check().reason().isPresent()) {
+                throw new OperationCancellationException();
+            }
+            TimeUnit.MILLISECONDS.sleep(500);
+        }
+        return "If this String is returned, then an exception was not thrown";
+    }
 }

@@ -11,20 +11,17 @@ package io.openliberty.mcp.internal.requests;
 
 import java.util.Optional;
 
-import io.openliberty.mcp.internal.McpConnectionTracker;
 import io.openliberty.mcp.messaging.Cancellation;
-import jakarta.inject.Inject;
 
 /**
  *
  */
 public class RequestCancellation implements Cancellation {
 
-    private final String requestId;
-    private final Optional<String> reason;
+    private String requestId;
+    private volatile Optional<String> reason;
 
-    @Inject
-    private McpConnectionTracker connection;
+    public RequestCancellation() {}
 
     /**
      *
@@ -40,11 +37,24 @@ public class RequestCancellation implements Cancellation {
         if (requestId == null) {
             return new Result(false, Optional.empty());
         }
-        Optional<String> reason = connection.getCancellationReason(requestId);
         if (reason == null || reason.isEmpty()) {
             return new Result(false, Optional.empty());
         }
         return new Result(true, reason);
+    }
+
+    /**
+     * @param requestId the requestId to set
+     */
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    /**
+     * @param reason the reason to set
+     */
+    public void setReason(Optional<String> reason) {
+        this.reason = reason;
     }
 
 }

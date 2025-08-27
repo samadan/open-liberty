@@ -158,6 +158,10 @@ public class McpTransport {
         res.setStatus(HttpServletResponse.SC_ACCEPTED);
     }
 
+    public void sendEmptyErrorResponse() {
+        res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+    }
+
     /**
      * sends custom error message response back to client depending on the error
      *

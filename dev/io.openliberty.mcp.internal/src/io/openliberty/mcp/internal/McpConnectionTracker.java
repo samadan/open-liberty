@@ -9,7 +9,6 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -23,35 +22,13 @@ import jakarta.inject.Singleton;
 @Singleton
 public class McpConnectionTracker {
 
-    private final ConcurrentMap<String, Optional<String>> cancellationRequests;
     private final ConcurrentMap<String, Cancellation> ongoingRequests;
 
     /**
      * @param cancellationRequests
      */
     public McpConnectionTracker() {
-        this.cancellationRequests = new ConcurrentHashMap<>();
         this.ongoingRequests = new ConcurrentHashMap<>();
-    }
-
-    /**
-     * @return the cancellationRequests
-     */
-    public Optional<String> getCancellationReason(String requestId) {
-        return cancellationRequests.get(requestId);
-    }
-
-    /**
-     * @param cancellationRequests the cancellationRequests to set
-     */
-    public void addCancellationRequest(String requestId, Optional<String> reason) {
-        cancellationRequests.putIfAbsent(requestId, reason);
-    }
-
-    public void removeCancellationRequest(String requestId) {
-        if (!cancellationRequests.isEmpty()) {
-            cancellationRequests.remove(requestId);
-        }
     }
 
     /**
@@ -71,6 +48,13 @@ public class McpConnectionTracker {
 
     public boolean isOngoingProcess(String id) {
         return ongoingRequests.containsKey(id);
+    }
+
+    public Cancellation getOngoingProcessCancelation(String id) {
+        if (isOngoingProcess(id)) {
+            return ongoingRequests.get(id);
+        }
+        return null;
     }
 
 }
