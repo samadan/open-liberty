@@ -49,7 +49,6 @@ import com.ibm.ws.concurrent.cdi.MTFBeanResourceInfo;
 import com.ibm.ws.container.service.metadata.extended.DeferredMetaDataFactory;
 import com.ibm.ws.container.service.metadata.extended.IdentifiableComponentMetaData;
 import com.ibm.ws.container.service.metadata.extended.MetaDataIdentifierService;
-import com.ibm.ws.kernel.service.util.JavaInfo;
 import com.ibm.ws.runtime.metadata.ComponentMetaData;
 import com.ibm.ws.runtime.metadata.MetaData;
 import com.ibm.ws.runtime.metadata.ModuleMetaData;
@@ -173,6 +172,12 @@ public class ManagedThreadFactoryService implements ResourceFactory, Application
     private final VirtualThreadOps virtualThreadOps;
 
     /**
+     * Tracks whether or not an informational message was already logged
+     * about overriding virtual thread creation.
+     */
+    private final AtomicBoolean virtualThreadOverrideLogged = new AtomicBoolean();
+
+    /**
      * Metadata factory for the web container.
      */
     @Reference(target = "(deferredMetaData=WEB)",
@@ -233,7 +238,7 @@ public class ManagedThreadFactoryService implements ResourceFactory, Application
         boolean virtual = Boolean.TRUE.equals(properties.get(VIRTUAL));
 
         if (virtual)
-            if (JavaInfo.majorVersion() >= 21)
+            if (virtualThreadOps.isSupported())
                 virtualThreadFactory = virtualThreadOps //
                                 .createFactoryOfVirtualThreads(properties.get(CONFIG_ID) + ":",
                                                                1L,
@@ -483,15 +488,20 @@ public class ManagedThreadFactoryService implements ResourceFactory, Application
 
             Thread thread;
             if (virtualThreadFactory == null ||
-                (service.virtualThreadOps.isSupported() &&
-                 !service.virtualThreadOps.isVirtualThreadCreationEnabled())) {
+                (virtualThreadOps.isSupported() &&
+                 !virtualThreadOps.isVirtualThreadCreationEnabled())) {
+
                 // new platform thread
                 String threadName = name + "-thread-" + createdThreadCount.incrementAndGet();
                 thread = new ManagedThreadImpl(this, runnable, threadName);
-                // TODO if (virtualThreadFactory != null) log message about override once only
+
+                if (virtualThreadFactory != null &&
+                    virtualThreadOverrideLogged.compareAndSet(false, true))
+                    Tr.info(tc, "CWWKC1108.override.virtual", name);
             } else {
                 // new virtual thread
-                thread = virtualThreadFactory.newThread(new ManagedVirtualThreadAction(this, runnable));
+                Runnable action = new ManagedVirtualThreadAction(this, runnable);
+                thread = virtualThreadFactory.newThread(action);
             }
 
             if (trace && tc.isEntryEnabled())
