@@ -63,6 +63,7 @@ public class Config31TCKLauncher {
     public void launchConfig31Tck() throws Exception {
         TCKRunner.build(server, Type.MICROPROFILE, "Config")
                         .withDefaultSuiteFileName()
+                        .withPlatfromVersion("7.1") //Latest MicroProfile version
                         .runTCK();
     }
 }

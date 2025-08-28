@@ -52,6 +52,7 @@ public class OpentracingTCKLauncher {
 
         TCKRunner.build(server, Type.MICROPROFILE, "Open Tracing")
                         .withDefaultSuiteFileName()
+                        .withPlatfromVersion("4.1") //Latest MicroProfile version
                         .runTCK();
     }
 }

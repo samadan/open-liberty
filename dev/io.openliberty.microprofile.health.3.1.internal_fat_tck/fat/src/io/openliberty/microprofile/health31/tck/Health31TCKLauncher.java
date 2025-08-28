@@ -62,6 +62,7 @@ public class Health31TCKLauncher {
         TCKRunner.build(server, Type.MICROPROFILE, "Health")
                         .withDefaultSuiteFileName()
                         .withAdditionalMvnProps(additionalProps)
+                        .withPlatfromVersion("4.1") //Latest MicroProfile version
                         .runTCK();
     }
 

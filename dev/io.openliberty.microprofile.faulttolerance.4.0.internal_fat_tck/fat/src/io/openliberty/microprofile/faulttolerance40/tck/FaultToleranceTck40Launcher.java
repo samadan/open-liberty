@@ -132,6 +132,7 @@ public class FaultToleranceTck40Launcher {
         TCKRunner.build(server, Type.MICROPROFILE, "Fault Tolerance")
                         .withSuiteFileName(suiteFileName)
                         .withAdditionalMvnProps(additionalProps)
+                        .withPlatfromVersion("6.1") //Latest MicroProfile version
                         .runTCK();
     }
 

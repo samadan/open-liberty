@@ -64,6 +64,7 @@ public class ReactiveMessagingTCKLauncher {
     public void launchReactiveMessaging30Tck() throws Exception {
         TCKRunner.build(server, Type.MICROPROFILE, "Reactive Messaging")
                         .withDefaultSuiteFileName()
+                        .withPlatfromVersion("4.1") //Latest MicroProfile version
                         .runTCK();
     }
 

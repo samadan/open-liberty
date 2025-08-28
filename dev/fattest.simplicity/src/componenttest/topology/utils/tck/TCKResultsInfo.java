@@ -158,6 +158,28 @@ public class TCKResultsInfo {
     }
 
     /**
+     * @return the page version
+     */
+    public String getPageVersion() {
+        if (getPlatformVersion().equals("")) {
+            return getSpecVersion(); //Standalone features use the spec number for page-version
+        } else {
+            return getPlatformVersion();
+        }
+    }
+
+    /**
+     * @return the page spec
+     */
+    public String getPageSpec() {
+        if (getPlatformVersion().equals("")) {
+            return this.type.toString() + this.specName.toUpperCase(); //Standalone features use the platform name and spec name for the page-spec, such as MICROPROFILE GRAPH QL
+        } else {
+            return this.type.toString();
+        }
+    }
+
+    /**
      * @return
      */
     public String getSHA256() {

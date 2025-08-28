@@ -72,6 +72,7 @@ public class MetricsTCKLauncher {
         TCKRunner.build(server, Type.MICROPROFILE, "Metrics")
                         .withDefaultSuiteFileName()
                         .withAdditionalMvnProps(additionalProps)
+                        .withPlatfromVersion("4.1") //Latest MicroProfile version
                         .runTCK();
     }
 

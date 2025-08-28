@@ -79,6 +79,7 @@ public class Health40JavaEETCKLauncher {
         TCKRunner.build(server, Type.MICROPROFILE, "Health")
                         .withDefaultSuiteFileName()
                         .withAdditionalMvnProps(additionalProps)
+                        .withPlatfromVersion("7.1") //Latest MicroProfile version
                         .runTCK();
     }
 

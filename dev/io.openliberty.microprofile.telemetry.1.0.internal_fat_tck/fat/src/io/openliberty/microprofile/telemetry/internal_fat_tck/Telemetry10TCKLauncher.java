@@ -55,6 +55,7 @@ public class Telemetry10TCKLauncher {
     public void launchTelemetry10Tck() throws Exception {
         TCKRunner.build(server, Type.MICROPROFILE, "Telemetry")
                         .withDefaultSuiteFileName()
+                        .withPlatfromVersion("6.0") //Latest MicroProfile version
                         .runTCK();
     }
 }
