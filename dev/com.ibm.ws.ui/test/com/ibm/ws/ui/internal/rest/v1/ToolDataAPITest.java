@@ -47,7 +47,7 @@ import com.ibm.wsspi.rest.handler.RESTResponse;
 import test.common.SharedOutputManager;
 
 /**
- *
+ * The algorithm assessment of FIPS 140-3 by updating SHA512 checksum is based on slack discussion with component SMEs.
  */
 public class ToolDataAPITest {
     static SharedOutputManager outputMgr = SharedOutputManager.getInstance();
@@ -76,10 +76,10 @@ public class ToolDataAPITest {
     private final ToolEntry toolEntry2 = new ToolEntry(tool2, ITool.TYPE_FEATURE_TOOL);
     private final ToolEntry toolEntry3 = new ToolEntry(tool3, ITool.TYPE_BOOKMARK);
     private final String message = "{\"key\":\"value\"}";
-    private final String messageMD5 = "a7353f7cddce808de0032747a0b7be50";
+    private final String messageSHA512 = "0213f898602b6a489de25f20d8d32c3dbf3d6fee0fbe468f89ac803874ac846f8cd239294a78c2bddf3e0988acb8cd3d00e067a981c9c7933b43a42d3b273eae";
 
     private final String message2 = "{\"key\":\"value1\"}";
-    private final String message2MD5 = "9ecb15df65a2ceddcb3b2c726f5aa522";
+    private final String message2SHA512 = "30a9c1549c94169bc284e21ea24d49084b1d661d01a8f6c194b7823bcad429da2aafae945b6a1573994234806fb6000ca092718e8b92c02b062223650e6817e1";
 
     private final String url = "ibm/api/adminCenter/v1/tooldata";
     private final String createdURL = url + "/tool1";
@@ -201,7 +201,7 @@ public class ToolDataAPITest {
                 one(mockToolDataService).getToolData(USER_ID, "tool1");
                 will(returnValue(message));
 
-                one(restResponse).setResponseHeader("ETag", messageMD5);
+                one(restResponse).setResponseHeader("ETag", messageSHA512);
             }
         });
         assertSame("Did not get back the the same message which should have been returned by the mock",
@@ -302,7 +302,7 @@ public class ToolDataAPITest {
                 one(restRequest).getURL();
                 will(returnValue(url));
 
-                one(restResponse).setResponseHeader("ETag", messageMD5);
+                one(restResponse).setResponseHeader("ETag", messageSHA512);
             }
         });
         POSTResponse response = handler.postChild(restRequest, restResponse, "tool1");
@@ -361,7 +361,7 @@ public class ToolDataAPITest {
                 will(returnValue(false));
 
                 one(restRequest).getHeader("If-Match");
-                will(returnValue(messageMD5));
+                will(returnValue(messageSHA512));
             }
         });
         try {
@@ -412,7 +412,7 @@ public class ToolDataAPITest {
                 will(returnValue(true));
 
                 one(restRequest).getHeader("If-Match");
-                will(returnValue(messageMD5));
+                will(returnValue(messageSHA512));
 
                 one(mockToolDataService).getToolData(USER_ID, "tool1");
                 will(returnValue(message));
@@ -448,7 +448,7 @@ public class ToolDataAPITest {
                 will(returnValue(true));
 
                 one(restRequest).getHeader("If-Match");
-                will(returnValue(messageMD5));
+                will(returnValue(messageSHA512));
 
                 one(mockToolDataService).getToolData(USER_ID, "tool1");
                 will(returnValue(message));
@@ -462,7 +462,7 @@ public class ToolDataAPITest {
                 one(mockToolDataService).addToolData(USER_ID, "tool1", message2);
                 will(returnValue(message2));
 
-                one(restResponse).setResponseHeader("ETag", message2MD5);
+                one(restResponse).setResponseHeader("ETag", message2SHA512);
             }
         });
         Object obj = handler.putChild(restRequest, restResponse, "tool1");
