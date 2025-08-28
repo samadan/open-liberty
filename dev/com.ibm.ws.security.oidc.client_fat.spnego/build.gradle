@@ -21,7 +21,6 @@ dependencies {
                project(':com.ibm.ws.security.spnego.fat.common'),
                project(':com.ibm.ws.security.fat.common'),
                project(':com.ibm.ws.webcontainer.security_test.servlets'),
-               project(':com.ibm.ws.security.spnego.fat.common'),
                project(':com.ibm.ws.net.oauth.jsontoken'),
                project(':com.ibm.ws.org.joda.time'),
                project(':com.ibm.ws.org.apache.httpcomponents'),
@@ -31,6 +30,7 @@ dependencies {
                'org.apache.sshd:sshd-common:2.12.1',
                'org.apache.sshd:sshd-core:2.12.1',
                'org.apache.sshd:sshd-scp:2.12.1',
+               'org.bouncycastle:bcprov-jdk18on:1.78.1', // required for sshd and cannot use io.openliberty.org.bouncycastle.bcprov-jdk18on
                'net.sourceforge.htmlunit:htmlunit:2.44.0',
                'net.sourceforge.htmlunit:htmlunit-core-js:2.44.0',
                'net.sourceforge.htmlunit:htmlunit-cssparser:1.6.0',
