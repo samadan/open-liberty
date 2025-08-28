@@ -26,8 +26,7 @@ import java.util.Optional;
 /**
  * Can be used to determine if an MCP client requested a cancellation of an in-progress request.
  * <p>
- * {@link Tool}, {@link Prompt}, {@link Resource}, {@link ResourceTemplate}, {@link CompletePrompt} and
- * {@link CompleteResourceTemplate} methods can accept this class as a parameter. It will be automatically injected before the
+ * {@link Tool}, {@link Prompt} methods can accept this class as a parameter. It will be automatically injected before the
  * method is invoked.
  *
  * @see #check()

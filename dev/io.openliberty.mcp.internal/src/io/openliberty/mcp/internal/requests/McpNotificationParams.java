@@ -14,7 +14,7 @@ import jakarta.json.bind.annotation.JsonbNillable;
 @JsonbNillable(value = false)
 public class McpNotificationParams {
 
-    //Cancelled Notification Params
+    //Cancelled Notification params
     private String requestId;
     private String reason;
 

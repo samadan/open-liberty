@@ -87,7 +87,6 @@ public class McpToolCallParams {
                 if (argMetadata != null) {
                     String json = jsonb.toJson(argValue);
                     results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
-
                 }
                 argsProcessed.add(argName);
             }
@@ -102,14 +101,20 @@ public class McpToolCallParams {
             return results;
         }
 
+        HashSet<String> specialArgsProcessed = new HashSet<>();
         for (var entry : metadata.specialArguments().entrySet()) {
             SpecialArgumentMetadata specialArgsMetadata = entry.getValue();
 
             if (specialArgsMetadata.type().equals(Cancellation.class)) {
+                //Cancellation is the only Special Argument type allowed for now
                 results[specialArgsMetadata.index()] = new RequestCancellation();
-            } else {
-                results[specialArgsMetadata.index()] = null;
             }
+            specialArgsProcessed.add(entry.getKey());
+        }
+
+        if (!specialArgsProcessed.equals(metadata.specialArguments().keySet())) {
+            List<String> data = generateArgumentMismatchData(specialArgsProcessed, metadata.specialArguments().keySet());
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
         }
 
         return results;

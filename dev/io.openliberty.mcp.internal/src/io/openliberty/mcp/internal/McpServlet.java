@@ -105,26 +105,21 @@ public class McpServlet extends HttpServlet {
     protected void callRequest(McpTransport transport)
                     throws JSONRPCException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
         RequestMethod method = transport.getMcpRequest().getRequestMethod();
-        String requestId = createOngoingRequestId(transport.getMcpRequest());
-
         switch (method) {
             case TOOLS_CALL -> callTool(transport);
             case TOOLS_LIST -> listTools(transport);
             case INITIALIZE -> initialize(transport);
             case INITIALIZED -> initialized(transport);
             case PING -> ping(transport);
-            case CANCELLED -> cancelled(transport);
+            case CANCELLED -> cancelRequest(transport);
             default -> throw new JSONRPCException(JSONRPCErrorCode.METHOD_NOT_FOUND, List.of(String.valueOf(method + " not found")));
-        }
-
-        if (requestId != null && connection.isOngoingProcess(requestId)) {
-            connection.deregisterOngoingRequest(requestId);
         }
 
     }
 
     @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpTransport transport) {
+        String requestId = createOngoingRequestId(transport.getMcpRequest());
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
         if (params.getMetadata() == null) {
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
@@ -133,7 +128,7 @@ public class McpServlet extends HttpServlet {
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
             Object[] arguments = params.getArguments(jsonb);
-            checkAndParseCancellationObject(arguments, transport.getMcpRequest().id().toString());
+            checkAndParseCancellationObject(arguments, requestId);
             Object result = params.getMethod().invoke(bean, arguments);
             boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
             if (result instanceof ToolResponse response) {
@@ -160,6 +155,9 @@ public class McpServlet extends HttpServlet {
         } catch (IllegalArgumentException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
         } finally {
+            if (requestId != null && connection.isOngoingRequest(requestId)) {
+                connection.deregisterOngoingRequest(requestId);
+            }
             try {
                 cc.release();
             } catch (Exception ex) {
@@ -231,37 +229,23 @@ public class McpServlet extends HttpServlet {
         transport.sendResponse(new Object());
     }
 
-    private void cancelled(McpTransport transport) {
-
-        boolean cancelled = cancelRequest(transport.getMcpRequest());
-
-        if (cancelled) {
-            transport.sendEmptyResponse();
-            //TODO log the reason from notificationParams.getReason
-        } else {
-            transport.sendEmptyErrorResponse();
-        }
-
-    }
-
-    private boolean cancelRequest(McpRequest request) {
-
-        McpNotificationParams notificationParams = request.getParams(McpNotificationParams.class, jsonb);
+    private void cancelRequest(McpTransport transport) {
+        McpNotificationParams notificationParams = transport.getMcpRequest().getParams(McpNotificationParams.class, jsonb);
         String requestId = notificationParams.getRequestId();
         Optional<String> reason = Optional.ofNullable(notificationParams.getReason());
 
-        Cancellation cancellation = connection.getOngoingProcessCancelation(requestId);
+        Cancellation cancellation = connection.getOngoingRequestCancelation(requestId);
 
         if (cancellation != null) {
-            ((RequestCancellation) cancellation).setReason(reason);
-            connection.updateOngoingProcess(requestId, cancellation);
-            return true;
+            ((RequestCancellation) cancellation).cancel(reason);
+            connection.updateOngoingRequest(requestId, cancellation);
+            transport.sendEmptyResponse();
         }
-        return false;
+        //Ignore notification if there is no request to cancel
     }
 
     private String createOngoingRequestId(McpRequest request) {
-        //TODO add more to this id to make it unique
-        return request.id() != null ? request.id().toString() : null;
+        //TODO add more data to this id to make it more unique
+        return request.id().toString();
     }
 }

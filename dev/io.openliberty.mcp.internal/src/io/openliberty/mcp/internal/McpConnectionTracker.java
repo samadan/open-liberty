@@ -16,7 +16,7 @@ import io.openliberty.mcp.messaging.Cancellation;
 import jakarta.inject.Singleton;
 
 /**
- * The connection from an MCP client.
+ * This is a connection tracker bean. It keeps track of ongoing tool call requests
  */
 
 @Singleton
@@ -24,16 +24,10 @@ public class McpConnectionTracker {
 
     private final ConcurrentMap<String, Cancellation> ongoingRequests;
 
-    /**
-     * @param cancellationRequests
-     */
     public McpConnectionTracker() {
         this.ongoingRequests = new ConcurrentHashMap<>();
     }
 
-    /**
-     * @return the ongoingRequests
-     */
     public void deregisterOngoingRequest(String id) {
         ongoingRequests.remove(id);
     }
@@ -42,19 +36,18 @@ public class McpConnectionTracker {
         ongoingRequests.putIfAbsent(id, cancellation);
     }
 
-    public void updateOngoingProcess(String id, Cancellation cancellation) {
+    public void updateOngoingRequest(String id, Cancellation cancellation) {
         ongoingRequests.put(id, cancellation);
     }
 
-    public boolean isOngoingProcess(String id) {
+    public boolean isOngoingRequest(String id) {
         return ongoingRequests.containsKey(id);
     }
 
-    public Cancellation getOngoingProcessCancelation(String id) {
-        if (isOngoingProcess(id)) {
+    public Cancellation getOngoingRequestCancelation(String id) {
+        if (isOngoingRequest(id)) {
             return ongoingRequests.get(id);
         }
         return null;
     }
-
 }

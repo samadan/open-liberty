@@ -14,46 +14,36 @@ import java.util.Optional;
 import io.openliberty.mcp.messaging.Cancellation;
 
 /**
- *
+ * An implementation of the Cancellation interface which checks that the Result object has the reason field set
+ * It returns the Result object indicating if a cancellation has been requested or not
  */
 public class RequestCancellation implements Cancellation {
 
     private String requestId;
-    private volatile Optional<String> reason;
-
-    public RequestCancellation() {}
+    private volatile Optional<String> reason = null;
 
     /**
-     *
+     * Check if the Request has been cancelled
      */
-    public RequestCancellation(String requestId, Optional<String> reason) {
-        this.requestId = requestId;
-        this.reason = reason;
-    }
-
-    /** {@inheritDoc} */
     @Override
     public Result check() {
         if (requestId == null) {
             return new Result(false, Optional.empty());
         }
-        if (reason == null || reason.isEmpty()) {
+        if (reason == null) {
             return new Result(false, Optional.empty());
         }
         return new Result(true, reason);
     }
 
-    /**
-     * @param requestId the requestId to set
-     */
     public void setRequestId(String requestId) {
         this.requestId = requestId;
     }
 
     /**
-     * @param reason the reason to set
+     * This method cancels the request by setting a reason field
      */
-    public void setReason(Optional<String> reason) {
+    public void cancel(Optional<String> reason) {
         this.reason = reason;
     }
 

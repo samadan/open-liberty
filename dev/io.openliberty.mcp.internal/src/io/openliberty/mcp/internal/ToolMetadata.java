@@ -22,9 +22,9 @@ import jakarta.enterprise.inject.spi.Bean;
 /**
  *
  */
-
 public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
-                           Map<String, ArgumentMetadata> arguments, Map<String, SpecialArgumentMetadata> specialArguments,
+                           Map<String, ArgumentMetadata> arguments,
+                           Map<String, SpecialArgumentMetadata> specialArguments,
                            String name, String title, String description) {
 
     public record ArgumentMetadata(Type type, int index, String description) {}
