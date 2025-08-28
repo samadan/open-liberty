@@ -9,11 +9,12 @@
  *******************************************************************************/
 package io.openliberty.classloading.classpath.fat;
 
-import static io.openliberty.classloading.classpath.fat.FATSuite.PARENT_LAST_LIBRARY_INCONSISTENT_SERVER;
+import static io.openliberty.classloading.classpath.fat.FATSuite.PARENT_LAST_RESOURCE_ADAPTOR_INCONSISTENT_SERVER;
+import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_DUMMY_RAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB1_JAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB2_JAR;
-import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_PARENT_LIBRARY_INCONSISTENT_APP;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB_DELEGATION_PARENT_INCONSISTENT_WAR;
+import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_PARENT_LIBRARY_INCONSISTENT_APP;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -34,9 +35,9 @@ import componenttest.topology.utils.FATServletClient;
 import io.openliberty.classloading.parent.library.inconsistent.test.app.ParentLibraryInconsistentTestServlet;
 
 @RunWith(FATRunner.class)
-public class LibraryParentLastInconsistentTests extends FATServletClient {
+public class ParentLastInconsistentLibraryTests extends FATServletClient {
 
-    @Server(PARENT_LAST_LIBRARY_INCONSISTENT_SERVER)
+    @Server(PARENT_LAST_RESOURCE_ADAPTOR_INCONSISTENT_SERVER)
     @TestServlet(servlet = ParentLibraryInconsistentTestServlet.class, contextRoot = TEST_PARENT_LIBRARY_INCONSISTENT_APP)
     public static LibertyServer server;
 
@@ -56,6 +57,7 @@ public class LibraryParentLastInconsistentTests extends FATServletClient {
 
         ShrinkHelper.exportToServer(server, "/libs", TEST_LIB1_JAR, DeployOptions.SERVER_ONLY);
         ShrinkHelper.exportToServer(server, "/libs", TEST_LIB2_JAR, DeployOptions.SERVER_ONLY);
+        ShrinkHelper.exportToServer(server, "/ras", TEST_DUMMY_RAR, DeployOptions.SERVER_ONLY);
 
         server.startServer();
     }
