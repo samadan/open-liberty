@@ -64,7 +64,6 @@ public class Constants {
      */
     public static int getDefaultTimeout() {
         return getTimeout(TimeoutType.DEFAULT_TIMEOUT);
-
     }
 
     /**
