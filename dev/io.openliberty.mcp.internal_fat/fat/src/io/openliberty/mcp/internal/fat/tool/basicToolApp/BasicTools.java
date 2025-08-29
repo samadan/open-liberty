@@ -9,9 +9,15 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat.tool.basicToolApp;
 
+import java.util.List;
+
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.Tool.Annotations;
 import io.openliberty.mcp.annotations.ToolArg;
+import io.openliberty.mcp.content.AudioContent;
+import io.openliberty.mcp.content.ImageContent;
+import io.openliberty.mcp.content.TextContent;
+import io.openliberty.mcp.tools.ToolResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
@@ -19,6 +25,23 @@ import jakarta.enterprise.context.ApplicationScoped;
  */
 @ApplicationScoped
 public class BasicTools {
+
+    @Tool(name = "mixedContentTool", title = "Mixed Content Tool", description = "Returns Text, Audio or Image Content List")
+    public ToolResponse mixedContentTool(@ToolArg(name = "input", description = "input to echo") String input) {
+        TextContent text = new TextContent("Echo: " + input);
+
+        ImageContent image = new ImageContent(
+                                              "base64-encoded-image",
+                                              "image/png",
+                                              null);
+
+        AudioContent audio = new AudioContent(
+                                              "base64-encoded-audio",
+                                              "audio/mpeg",
+                                              null);
+
+        return ToolResponse.success(List.of(text, image, audio));
+    }
 
     //tool name is not present -> use method name
     //tool title not present -> ignore
