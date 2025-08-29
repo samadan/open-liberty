@@ -42,7 +42,6 @@ public class DeploymentProblemTest extends FATServletClient {
     public static void setup() throws Exception {
         WebArchive war = ShrinkWrap.create(WebArchive.class, "DeploymentProblemTest.war").addPackage(DuplicateToolErrorTest.class.getPackage());
         ShrinkHelper.exportDropinAppToServer(server, war, DISABLE_VALIDATION, SERVER_ONLY);
-
         server.startServer();
     }
 
@@ -69,7 +68,9 @@ public class DeploymentProblemTest extends FATServletClient {
         try {
             HttpTestUtils.callMCP(server, "/toolTest", request);
         } catch (Exception e) {
-            deploymentErrorOccured = true;
+            if (!server.findStringsInLogs("More than one MCP tool has the name").isEmpty()) {
+                deploymentErrorOccured = true;
+            }
         }
 
         assertTrue("Expected a deployment error due to duplicate MCP Tools being present, no error was present", deploymentErrorOccured);

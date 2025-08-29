@@ -9,7 +9,8 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
-import java.util.Objects;
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.openliberty.mcp.annotations.Tool;
 import jakarta.enterprise.event.Observes;
@@ -27,28 +28,46 @@ import jakarta.enterprise.inject.spi.ProcessManagedBean;
 public class McpCdiExtension implements Extension {
 
     private ToolRegistry tools = new ToolRegistry();
+    private ConcurrentHashMap<String, LinkedList<String>> duplicateToolsMap = new ConcurrentHashMap<>();
 
     void registerTools(@Observes ProcessManagedBean<?> pmb) {
         // TODO: limit this to just bean types with Tool annotations?
         AnnotatedType<?> type = pmb.getAnnotatedBeanClass();
+        Class<?> javaClass = type.getJavaClass();
         for (AnnotatedMethod<?> m : type.getMethods()) {
             Tool toolAnnotation = m.getAnnotation(Tool.class);
             if (toolAnnotation != null) {
-                registerTool(toolAnnotation, pmb.getBean(), m);
+                registerTool(toolAnnotation, pmb.getBean(), m, javaClass.getPackageName() + "." + javaClass.getSimpleName());
             }
         }
+
+        // prune items that are not duplicates
+        duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
     }
 
     void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
-        String duplicateToolName = tools.getDuplicateToolName();
-        if (!Objects.isNull(duplicateToolName)) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception("Duplicate Tool Name ('" + duplicateToolName
-                                                                         + "') found in Tool Registry. Aborting container deployment!"));
+
+        StringBuilder sb = new StringBuilder();
+
+        for (String toolName : duplicateToolsMap.keySet()) {
+            LinkedList<String> qualifiedNames = duplicateToolsMap.get(toolName);
+
+            sb.append("Tool: ").append(toolName).append("\n");
+            sb.append("  Qualified Names:\n");
+            for (String name : qualifiedNames) {
+                sb.append("    - ").append(name).append("\n");
+            }
+        }
+
+        if (duplicateToolsMap.size() != 0) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception("More than one MCP tool has the name: " + sb.toString()));
         }
     }
 
-    private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method) {
-        tools.addTool(ToolMetadata.createFrom(tool, bean, method));
+    private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method, String qualifiedName) {
+        ToolMetadata toolmd = ToolMetadata.createFrom(tool, bean, method);
+        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(qualifiedName);
+        tools.addTool(toolmd);
     }
 
     public ToolRegistry getToolRegistry() {
