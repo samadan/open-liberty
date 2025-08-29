@@ -11,12 +11,14 @@ package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -433,6 +435,49 @@ public class ToolTest extends FATServletClient {
                         "jsonrpc":"2.0"}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testMixedContentTool() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "mixedContentTool",
+                            "arguments": {
+                              "input": "Hello"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        JSONObject json = new JSONObject(response);
+
+        JSONObject result = json.getJSONObject("result");
+        assertFalse("Expected success response", result.optBoolean("error", false));
+
+        JSONArray contentArray = result.getJSONArray("content");
+        assertEquals("Expected 3 content items", 3, contentArray.length());
+
+        // Text content
+        JSONObject text = contentArray.getJSONObject(0);
+        assertEquals("First content type should be 'text'", "text", text.getString("type"));
+        assertEquals("Text content mismatch", "Echo: Hello", text.getString("text"));
+
+        // Image content
+        JSONObject image = contentArray.getJSONObject(1);
+        assertEquals("Second content type 'image'", "image", image.getString("type"));
+        assertEquals("Image mime_type mismatch", "image/png", image.getString("mimeType"));
+        assertEquals("Image data mismatch", "base64-encoded-image", image.getString("data"));
+
+        // Audio content
+        JSONObject audio = contentArray.getJSONObject(2);
+        assertEquals("Third content type should be 'audio'", "audio", audio.getString("type"));
+        assertEquals("Audio mime_type mismatch", "audio/mpeg", audio.getString("mimeType"));
+        assertEquals("Audio data mismatch", "base64-encoded-audio", audio.getString("data"));
     }
 
     @Test

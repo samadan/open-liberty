@@ -107,12 +107,6 @@ public class McpServlet extends HttpServlet {
 
     }
 
-    // Helper method for ToolResponse Error
-    public ToolResponse toErrorResponse(Throwable t) {
-        String msg = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
-        return ToolResponse.error(msg);
-    }
-
     @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpTransport transport) {
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
@@ -133,7 +127,7 @@ public class McpServlet extends HttpServlet {
         } catch (JSONRPCException e) {
             throw e;
         } catch (InvocationTargetException e) {
-            transport.sendResponse(ToolResponse.error(e.getCause()));
+            transport.sendResponse(toErrorResponse(e.getCause()));
         } catch (IllegalAccessException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
         } catch (IllegalArgumentException e) {
@@ -145,6 +139,12 @@ public class McpServlet extends HttpServlet {
                 Tr.warning(tc, "Failed to release bean: " + ex);
             }
         }
+    }
+
+    // Helper method for ToolResponse Error
+    private ToolResponse toErrorResponse(Throwable t) {
+        String msg = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
+        return ToolResponse.error(msg);
     }
 
     /**
