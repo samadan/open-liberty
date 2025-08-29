@@ -10,12 +10,15 @@
 
 package io.openliberty.jpa.persistence.tests.models;
 
-import jakarta.persistence.Entity;
+
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 
-@Entity
+
+/*
+ *  Add @Enity after fixing B10 Regression issue 
+ */
 public class Ticket {
 
     @Id

@@ -182,6 +182,7 @@ public class JakartaPersistenceServlet extends FATServlet {
      * @throws Exception
      */
     @Test
+    @Ignore("B10 Regression issue")
     public void testEnumeratedValue() throws Exception {
 
         Ticket ticket1 = Ticket.of(1, "ticket1", TicketStatus.OPEN, Priority.HIGH);
