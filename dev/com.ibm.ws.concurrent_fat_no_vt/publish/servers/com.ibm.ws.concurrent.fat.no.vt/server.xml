@@ -23,11 +23,24 @@
 
   <application location="ConcurrentNoVTWeb.war"/>
 
-  <managedExecutorService jndiName="concurrent/ServerXMLExecutorToOverride"
-                          virtual="true"/>
+  <concurrencyPolicy
+    id="virtualThreadPolicyToOverride"
+    max="3"
+    virtual="true"/>
 
-  <managedThreadFactory jndiName="concurrent/ServerXMLThreadFactoryToOverride"
-                        virtual="true"/>
+  <managedExecutorService
+    id="executorToOverride"
+    jndiName="concurrent/ServerXMLExecutorToOverride">
+    <concurrencyPolicy virtual="true"/>
+  </managedExecutorService>
+
+  <managedScheduledExecutorService
+    jndiName="concurrent/ServerXMLScheduledExecutorToOverride"
+    concurrencyPolicyRef="virtualThreadPolicyToOverride"/>
+
+  <managedThreadFactory
+    jndiName="concurrent/ServerXMLThreadFactoryToOverride"
+    virtual="true"/>
 
   <!-- allows application to shut down a pool of unmanaged threads -->
   <javaPermission codebase="${server.config.dir}/apps/ConcurrentNoVTWeb.war"
