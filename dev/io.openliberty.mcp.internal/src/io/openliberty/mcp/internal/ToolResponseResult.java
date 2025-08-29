@@ -11,17 +11,34 @@ package io.openliberty.mcp.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
  */
 public class ToolResponseResult {
     private boolean isError = false;
+    private List<Content> content = new ArrayList<>();
 
-    public ToolResponseResult(Object result, boolean isError) {
+    public ToolResponseResult(List<Content> contents, boolean isError) {
         this.isError = isError;
+        this.content = contents != null ? contents : new ArrayList<>();
+    }
 
-        content.add(new TextContent(result));
+    public static ToolResponseResult fromText(String text, boolean isError) {
+        return new ToolResponseResult(List.of(new TextContent(text)), isError);
+    }
+
+    public static ToolResponseResult fromImage(String base64Image, String mimeType, boolean isError) {
+        return new ToolResponseResult(List.of(new ImageContent(base64Image, mimeType, null, null)), isError);
+    }
+
+    public static ToolResponseResult fromAudio(String base64Audio, String mimeType, boolean isError) {
+        return new ToolResponseResult(List.of(new AudioContent(base64Audio, mimeType, null, null)), isError);
+    }
+
+    public static ToolResponseResult fromMixed(List<Content> contents, boolean isError) {
+        return new ToolResponseResult(contents, isError);
     }
 
     public List<Content> getContent() {
@@ -34,8 +51,6 @@ public class ToolResponseResult {
     public boolean getIsError() {
         return isError;
     }
-
-    private List<Content> content = new ArrayList<>();
 
     public static abstract class Content {
         private final String type;
@@ -60,6 +75,69 @@ public class ToolResponseResult {
         public TextContent(Object text) {
             super("text");
             this.text = text;
+        }
+    }
+
+    public static class ImageContent extends Content {
+        private final String data;
+        private final String mimeType;
+        private final Map<String, Object> _meta;
+        private final Object annotations;
+
+        public ImageContent(String data, String mimeType, Map<String, Object> _meta, Object annotations) {
+            super("image");
+            this.data = data;
+            this.mimeType = mimeType;
+            this._meta = _meta;
+            this.annotations = annotations;
+        }
+
+        public String getData() {
+            return data;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public Map<String, Object> get_meta() {
+            return _meta;
+        }
+
+        public Object getAnnotations() {
+            return annotations;
+        }
+    }
+
+    public static class AudioContent extends Content {
+
+        private final String data;
+        private final String mimeType;
+        private final Map<String, Object> _meta;
+        private final Object annotations;
+
+        public AudioContent(String data, String mimeType, Map<String, Object> _meta, Object annotations) {
+            super("audio");
+            this.data = data;
+            this.mimeType = mimeType;
+            this._meta = _meta;
+            this.annotations = annotations;
+        }
+
+        public String getData() {
+            return data;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public Map<String, Object> get_meta() {
+            return _meta;
+        }
+
+        public Object getAnnotations() {
+            return annotations;
         }
     }
 }

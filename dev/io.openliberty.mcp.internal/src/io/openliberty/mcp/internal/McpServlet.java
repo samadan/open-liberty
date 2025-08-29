@@ -27,6 +27,7 @@ import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
 import io.openliberty.mcp.internal.responses.McpInitializeResult;
 import io.openliberty.mcp.internal.responses.McpInitializeResult.ServerInfo;
+import io.openliberty.mcp.tools.ToolResponse;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
@@ -106,8 +107,13 @@ public class McpServlet extends HttpServlet {
 
     }
 
-    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
+    // Helper method for ToolResponse Error
+    public ToolResponse toErrorResponse(Throwable t) {
+        String msg = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
+        return ToolResponse.error(msg);
+    }
 
+    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpTransport transport) {
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
         if (params.getMetadata() == null) {
@@ -117,11 +123,17 @@ public class McpServlet extends HttpServlet {
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
-            transport.sendResponse(new ToolResponseResult(Objects.toString(result), false));
+            if (result instanceof ToolResponse response) {
+                transport.sendResponse(response);
+            } else if (result instanceof String s) {
+                transport.sendResponse(ToolResponse.success(s));
+            } else {
+                transport.sendResponse(ToolResponse.success(Objects.toString(result)));
+            }
         } catch (JSONRPCException e) {
             throw e;
         } catch (InvocationTargetException e) {
-            transport.sendResponse(new ToolResponseResult(e.getCause().getMessage(), true));;
+            transport.sendResponse(ToolResponse.error(e.getCause()));
         } catch (IllegalAccessException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
         } catch (IllegalArgumentException e) {

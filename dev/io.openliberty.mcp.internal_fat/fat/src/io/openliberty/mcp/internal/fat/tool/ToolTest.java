@@ -911,6 +911,23 @@ public class ToolTest extends FATServletClient {
                                       },
                                       "name": "missingTitle",
                                       "description": "A tool that does not have a title"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "input": {
+                                            "description": "input to echo",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "input"
+                                        ]
+                                      },
+                                      "name": "mixedContentTool",
+                                      "description": "Returns Text, Audio or Image Content List",
+                                      "title": "Mixed Content Tool"
                                     }
                                 ]
                             },

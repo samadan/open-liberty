@@ -66,6 +66,18 @@ public record ToolResponse(boolean isError, List<? extends Content> content, Map
     }
 
     /**
+     * Creates an unsuccessful response using the provided Throwable.
+     * If the exception has a message, it will be used; otherwise, the class name of the Throwable is used.
+     *
+     * @param t the Throwable representing the error
+     * @return a ToolResponse marked as error, containing the extracted message
+     */
+    public static ToolResponse error(Throwable t) {
+        String message = (t.getMessage() != null) ? t.getMessage() : t.getClass().getSimpleName();
+        return error(message);
+    }
+
+    /**
      * @param message
      * @return a successful response with single text content item
      */
