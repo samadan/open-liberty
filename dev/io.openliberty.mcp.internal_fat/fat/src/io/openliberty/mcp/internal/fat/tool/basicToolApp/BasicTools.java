@@ -18,6 +18,7 @@ import io.openliberty.mcp.content.AudioContent;
 import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.content.ImageContent;
 import io.openliberty.mcp.content.TextContent;
+import io.openliberty.mcp.tools.ToolResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
@@ -25,9 +26,26 @@ import jakarta.enterprise.context.ApplicationScoped;
  */
 @ApplicationScoped
 public class BasicTools {
+    @Tool(name = "mixedContentTool", title = "Mixed Content Tool", description = "Returns Text, Audio or Image Content")
+    public ToolResponse mixedContentTool(@ToolArg(name = "input", description = "input to echo") String input) {
+        TextContent text = new TextContent("Echo: " + input);
 
-    @Tool(name = "mixedContentTool", title = "Mixed Content Tool", description = "Returns Text, Audio or Image Content List")
-    public List<Content> mixedContentTool(@ToolArg(name = "input", description = "input to echo") String input) {
+        ImageContent image = new ImageContent(
+                                              "base64-encoded-image",
+                                              "image/png",
+                                              null);
+
+        AudioContent audio = new AudioContent(
+                                              "base64-encoded-audio",
+                                              "audio/mpeg",
+                                              null);
+
+        return ToolResponse.success(List.of(text, image, audio));
+
+    }
+
+    @Tool(name = "mixedContentListTool", title = "Mixed Content List Tool", description = "Returns Text, Audio or Image Content List")
+    public List<Content> mixedContentListTool(@ToolArg(name = "input", description = "input to echo") String input) {
         return List.of(
                        new TextContent("Echo: " + input),
 
