@@ -120,7 +120,7 @@ public class McpServlet extends HttpServlet {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
             if (result instanceof ToolResponse response) {
                 transport.sendResponse(response);
-            } else if (result instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Content) {
+            } else if (result instanceof List<?> list && list.stream().allMatch(item -> item instanceof Content)) {
                 @SuppressWarnings("unchecked")
                 List<Content> contents = (List<Content>) list;
                 transport.sendResponse(ToolResponse.success(contents));

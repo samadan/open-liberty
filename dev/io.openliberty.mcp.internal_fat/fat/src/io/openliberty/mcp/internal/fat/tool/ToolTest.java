@@ -438,6 +438,102 @@ public class ToolTest extends FATServletClient {
     }
 
     @Test
+    public void testToolReturnsListOfContent() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "textContentListTool",
+                            "arguments": {
+                              "input": "hello"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        JSONObject json = new JSONObject(response);
+
+        assertTrue(json.has("result"));
+        JSONObject result = json.getJSONObject("result");
+
+        assertFalse(result.optBoolean("error", false));
+        JSONArray contentArray = result.getJSONArray("content");
+
+        assertEquals(1, contentArray.length());
+        assertEquals("text", contentArray.getJSONObject(0).getString("type"));
+        assertEquals("Echo: hello", contentArray.getJSONObject(0).getString("text"));
+    }
+
+    @Test
+    public void testToolReturnsImageContentList() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "imageContentListTool",
+                            "arguments": {
+                              "imageData": "base64-encoded-image"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        JSONObject json = new JSONObject(response);
+
+        assertTrue("Response should contain result", json.has("result"));
+        JSONObject result = json.getJSONObject("result");
+
+        assertFalse("Expected success response", result.optBoolean("error", false));
+        JSONArray contentArray = result.getJSONArray("content");
+
+        assertEquals("Should return 1 content item", 1, contentArray.length());
+
+        JSONObject image = contentArray.getJSONObject(0);
+        assertEquals("Content type should be image", "image", image.getString("type"));
+        assertEquals("Image MIME type mismatch", "image/png", image.getString("mimeType"));
+        assertEquals("Image data mismatch", "base64-encoded-image", image.getString("data"));
+    }
+
+    @Test
+    public void testToolReturnsAudioContentList() throws Exception {
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/call",
+                          "params": {
+                            "name": "audioContentListTool",
+                            "arguments": {
+                              "input": "base64-encoded-audio"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        JSONObject json = new JSONObject(response);
+
+        assertTrue("Response should contain result", json.has("result"));
+        JSONObject result = json.getJSONObject("result");
+
+        assertFalse("Expected success response", result.optBoolean("error", false));
+        JSONArray contentArray = result.getJSONArray("content");
+
+        assertEquals("Should return 1 content item", 1, contentArray.length());
+
+        JSONObject audio = contentArray.getJSONObject(0);
+        assertEquals("Content type should be audio", "audio", audio.getString("type"));
+        assertEquals("Audio MIME type mismatch", "audio/mpeg", audio.getString("mimeType"));
+        assertEquals("Audio data mismatch", "base64-encoded-audio", audio.getString("data"));
+    }
+
+    @Test
     public void testMixedContentTool() throws Exception {
         String request = """
                         {
@@ -973,6 +1069,57 @@ public class ToolTest extends FATServletClient {
                                       "name": "mixedContentTool",
                                       "description": "Returns Text, Audio or Image Content List",
                                       "title": "Mixed Content Tool"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "input": {
+                                            "description": "input string to echo back as content",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "input"
+                                        ]
+                                      },
+                                      "name": "textContentListTool",
+                                      "description": "Returns a list of content objects",
+                                      "title": "Text Content List Tool"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "imageData": {
+                                            "description": "Base64-encoded image",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "imageData"
+                                        ]
+                                      },
+                                      "name": "imageContentListTool",
+                                      "description": "Returns a list of content objects",
+                                      "title": "Image Content List Tool"
+                                    },
+                                    {
+                                      "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                          "input": {
+                                            "description": "Base64-encoded audio",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "input"
+                                        ]
+                                      },
+                                      "name": "audioContentListTool",
+                                      "description": "Returns a list of content objects",
+                                      "title": "Audio Content List Tool"
                                     }
                                 ]
                             },
