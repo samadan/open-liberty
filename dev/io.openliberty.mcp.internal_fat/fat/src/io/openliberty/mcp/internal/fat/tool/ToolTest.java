@@ -445,7 +445,7 @@ public class ToolTest extends FATServletClient {
                           "id": 1,
                           "method": "tools/call",
                           "params": {
-                            "name": "textContentListTool",
+                            "name": "textContentTool",
                             "arguments": {
                               "input": "hello"
                             }
@@ -475,7 +475,7 @@ public class ToolTest extends FATServletClient {
                           "id": 1,
                           "method": "tools/call",
                           "params": {
-                            "name": "imageContentListTool",
+                            "name": "imageContentTool",
                             "arguments": {
                               "imageData": "base64-encoded-image"
                             }
@@ -508,9 +508,9 @@ public class ToolTest extends FATServletClient {
                           "id": 1,
                           "method": "tools/call",
                           "params": {
-                            "name": "audioContentListTool",
+                            "name": "audioContentTool",
                             "arguments": {
-                              "input": "base64-encoded-audio"
+                              "audioData": "base64-encoded-audio"
                             }
                           }
                         }
@@ -1083,9 +1083,9 @@ public class ToolTest extends FATServletClient {
                                           "input"
                                         ]
                                       },
-                                      "name": "textContentListTool",
-                                      "description": "Returns a list of content objects",
-                                      "title": "Text Content List Tool"
+                                      "name": "textContentTool",
+                                      "description": "Returns text content object",
+                                      "title": "Text Content Tool"
                                     },
                                     {
                                       "inputSchema": {
@@ -1100,26 +1100,26 @@ public class ToolTest extends FATServletClient {
                                           "imageData"
                                         ]
                                       },
-                                      "name": "imageContentListTool",
-                                      "description": "Returns a list of content objects",
-                                      "title": "Image Content List Tool"
+                                      "name": "imageContentTool",
+                                      "description": "Returns image content object",
+                                      "title": "Image Content Tool"
                                     },
                                     {
                                       "inputSchema": {
                                         "type": "object",
                                         "properties": {
-                                          "input": {
+                                          "audioData": {
                                             "description": "Base64-encoded audio",
                                             "type": "string"
                                           }
                                         },
                                         "required": [
-                                          "input"
+                                          "audioData"
                                         ]
                                       },
-                                      "name": "audioContentListTool",
-                                      "description": "Returns a list of content objects",
-                                      "title": "Audio Content List Tool"
+                                      "name": "audioContentTool",
+                                      "description": "Returns audio content object",
+                                      "title": "Audio Content Tool"
                                     }
                                 ]
                             },

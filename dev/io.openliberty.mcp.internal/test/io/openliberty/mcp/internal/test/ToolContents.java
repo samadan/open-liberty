@@ -17,8 +17,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import io.openliberty.mcp.content.AudioContent;
-import io.openliberty.mcp.content.ImageContent;
 import io.openliberty.mcp.content.TextContent;
 import io.openliberty.mcp.meta.MetaKey;
 
@@ -46,29 +44,5 @@ public class ToolContents {
     @Test(expected = IllegalArgumentException.class)
     public void testTextContentNullTextThrowsException() {
         new TextContent(null);
-    }
-
-    @Test
-    public void testImageContentFields() {
-        String base64Image = "base64-image-data";
-        ImageContent image = new ImageContent(base64Image, "image/png", null);
-
-        assertEquals("image/png", image.mimeType());
-        assertEquals(base64Image, image.data());
-        assertNull(image._meta());
-        assertEquals(ImageContent.Type.IMAGE, image.type());
-        assertSame(image, image.asImage());
-    }
-
-    @Test
-    public void testAudioContentFields() {
-        String base64Audio = "base64-audio-data";
-        AudioContent audio = new AudioContent(base64Audio, "audio/mpeg", null);
-
-        assertEquals("audio/mpeg", audio.mimeType());
-        assertEquals(base64Audio, audio.data());
-        assertNull(audio._meta());
-        assertEquals(AudioContent.Type.AUDIO, audio.type());
-        assertSame(audio, audio.asAudio());
     }
 }

@@ -42,38 +42,28 @@ public class BasicTools {
                                         null));
     }
 
-    @Tool(
-          name = "textContentListTool",
-          title = "Text Content List Tool",
-          description = "Returns a list of content objects")
-    public List<Content> textContentListTool(
-                                             @ToolArg(name = "input", description = "input string to echo back as content") String input) {
-        return List.of(new TextContent("Echo: " + input));
+    @Tool(name = "textContentTool", title = "Text Content Tool", description = "Returns text content object")
+    public TextContent textContentTool(
+                                       @ToolArg(name = "input", description = "input string to echo back as content") String input) {
+        return new TextContent("Echo: " + input);
     }
 
-    @Tool(
-          name = "imageContentListTool",
-          title = "Image Content List Tool",
-          description = "Returns a list of content objects")
-    public List<Content> imageContentListTool(
-                                              @ToolArg(name = "imageData", description = "Base64-encoded image") String imageData) {
-        return List.of(new ImageContent(
-                                        imageData,
-                                        "image/png",
-                                        null));
+    @Tool(name = "imageContentTool", title = "Image Content Tool", description = "Returns image content object")
+    public ImageContent imageContentTool(
+                                         @ToolArg(name = "imageData", description = "Base64-encoded image") String imageData) {
+        return new ImageContent(
+                                imageData,
+                                "image/png",
+                                null);
     }
 
-    @Tool(
-          name = "audioContentListTool",
-          title = "Audio Content List Tool",
-          description = "Returns a list of content objects")
-    public List<Content> audioContentListTool(
-                                              @ToolArg(name = "input", description = "Base64-encoded audio") String audioData) {
-
-        return List.of(new AudioContent(
-                                        audioData,
-                                        "audio/mpeg",
-                                        null));
+    @Tool(name = "audioContentTool", title = "Audio Content Tool", description = "Returns audio content object")
+    public AudioContent audioContentTool(
+                                         @ToolArg(name = "audioData", description = "Base64-encoded audio") String audioData) {
+        return new AudioContent(
+                                audioData,
+                                "audio/mpeg",
+                                null);
     }
 
     //tool name is not present -> use method name
