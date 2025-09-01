@@ -19,6 +19,7 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
+import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.HttpResponseException;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
@@ -119,6 +120,10 @@ public class McpServlet extends HttpServlet {
             Object result = params.getMethod().invoke(bean, params.getArguments(jsonb));
             if (result instanceof ToolResponse response) {
                 transport.sendResponse(response);
+            } else if (result instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Content) {
+                @SuppressWarnings("unchecked")
+                List<Content> contents = (List<Content>) list;
+                transport.sendResponse(ToolResponse.success(contents));
             } else if (result instanceof String s) {
                 transport.sendResponse(ToolResponse.success(s));
             } else {
