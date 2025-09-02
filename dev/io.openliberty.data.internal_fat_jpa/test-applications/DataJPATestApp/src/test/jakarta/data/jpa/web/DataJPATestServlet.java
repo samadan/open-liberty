@@ -2014,8 +2014,7 @@ public class DataJPATestServlet extends FATServlet {
     /**
      * Verify that JPQL can be used to EXTRACT the DATE from a LocalDateTime.
      */
-    // TODO enable once EclipseLink bug #31802 is fixed
-    //@Test
+    @Test
     public void testExtractDate() {
         rebates.reset();
 
@@ -2138,8 +2137,7 @@ public class DataJPATestServlet extends FATServlet {
     /**
      * Verify that JPQL can be used to EXTRACT the TIME from a LocalDateTime.
      */
-    // TODO enable once EclipseLink bug #31802 is fixed
-    //@Test
+    @Test
     public void testExtractTime() {
         rebates.reset();
 
