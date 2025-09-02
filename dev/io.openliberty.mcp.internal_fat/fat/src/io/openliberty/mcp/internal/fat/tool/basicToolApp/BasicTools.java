@@ -249,4 +249,38 @@ public class BasicTools {
         return input;
     }
 
+    @Tool(name = "testListObjectResponse", title = "City List",
+          description = "A tool to return a list of cities", structuredContent = true)
+    public List<City> testListObjectResponse() {
+        City city1 = new City("Paris", "France", 8000, true);
+        City city2 = new City("Manchester", "England", 15000, false);
+        return List.of(city1, city2);
+    }
+
+    @Tool(name = "testListStringResponse", title = "String List",
+          description = "A tool to return a list of strings", structuredContent = true)
+    public List<String> testListStringResponse() {
+        return List.of("red", "blue", "yellow");
+    }
+
+    @Tool(name = "testArrayResponse", title = "Array of ints",
+          description = "A tool to return an array of ints", structuredContent = true)
+    public int[] testArrayResponse() {
+        return new int[] { 1, 2, 3, 4, 5 };
+    }
+
+    @Tool(name = "testStringStructuredContentResponse", title = "Structured Content String Response",
+          description = "A tool to return a string with structuredContent set. The tool should ignore this and not return a structuredContent field when the response is string.",
+          structuredContent = true)
+    public String testStringStructuredContentResponse() {
+        return "Hello World";
+    }
+
+    @Tool(name = "testObjectResponse", title = "Create a city",
+          description = "A tool to return a city object you've named", structuredContent = true)
+    public City testObjectResponse(@ToolArg(name = "name", description = "name of your city") String name) {
+        return new City(name, "England", 8000, false);
+    }
+
+    public record City(String name, String country, int population, boolean isCapital) {};
 }
