@@ -52814,9 +52814,9 @@
         </constituent>
     </feature>
     <feature>
-        <file>io.openliberty.springBoot40ServerSupport.servlet60-1.0.mf</file>
-        <name>io.openliberty.springBoot40ServerSupport.servlet60-1.0</name>
-        <symbolic-name>io.openliberty.springBoot40ServerSupport.servlet60-1.0</symbolic-name>
+        <file>io.openliberty.springBoot40ServerSupport.servlet61-1.0.mf</file>
+        <name>io.openliberty.springBoot40ServerSupport.servlet61-1.0</name>
+        <symbolic-name>io.openliberty.springBoot40ServerSupport.servlet61-1.0</symbolic-name>
         <version>1.0.0</version>
         <ibm-version>2</ibm-version>
         <supported-version/>
