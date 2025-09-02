@@ -15,6 +15,7 @@ import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.Tool.Annotations;
 import io.openliberty.mcp.annotations.ToolArg;
 import io.openliberty.mcp.content.AudioContent;
+import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.content.ImageContent;
 import io.openliberty.mcp.content.TextContent;
 import io.openliberty.mcp.tools.ToolResponse;
@@ -25,8 +26,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  */
 @ApplicationScoped
 public class BasicTools {
-
-    @Tool(name = "mixedContentTool", title = "Mixed Content Tool", description = "Returns Text, Audio or Image Content List")
+    @Tool(name = "mixedContentTool", title = "Mixed Content Tool", description = "Returns Text, Audio or Image Content")
     public ToolResponse mixedContentTool(@ToolArg(name = "input", description = "input to echo") String input) {
         TextContent text = new TextContent("Echo: " + input);
 
@@ -41,6 +41,47 @@ public class BasicTools {
                                               null);
 
         return ToolResponse.success(List.of(text, image, audio));
+
+    }
+
+    @Tool(name = "mixedContentListTool", title = "Mixed Content List Tool", description = "Returns Text, Audio or Image Content List")
+    public List<Content> mixedContentListTool(@ToolArg(name = "input", description = "input to echo") String input) {
+        return List.of(
+                       new TextContent("Echo: " + input),
+
+                       new ImageContent(
+                                        "base64-encoded-image",
+                                        "image/png",
+                                        null),
+
+                       new AudioContent(
+                                        "base64-encoded-audio",
+                                        "audio/mpeg",
+                                        null));
+    }
+
+    @Tool(name = "textContentTool", title = "Text Content Tool", description = "Returns text content object")
+    public TextContent textContentTool(
+                                       @ToolArg(name = "input", description = "input string to echo back as content") String input) {
+        return new TextContent("Echo: " + input);
+    }
+
+    @Tool(name = "imageContentTool", title = "Image Content Tool", description = "Returns image content object")
+    public ImageContent imageContentTool(
+                                         @ToolArg(name = "imageData", description = "Base64-encoded image") String imageData) {
+        return new ImageContent(
+                                imageData,
+                                "image/png",
+                                null);
+    }
+
+    @Tool(name = "audioContentTool", title = "Audio Content Tool", description = "Returns audio content object")
+    public AudioContent audioContentTool(
+                                         @ToolArg(name = "audioData", description = "Base64-encoded audio") String audioData) {
+        return new AudioContent(
+                                audioData,
+                                "audio/mpeg",
+                                null);
     }
 
     //tool name is not present -> use method name
