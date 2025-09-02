@@ -381,7 +381,10 @@ public class DataProvider implements //
             Tr.entry(this, tc, "applicationStopped" + appInfo.getDeploymentName() +
                                " (" + appInfo.getName() + ')');
 
-        String appName = appInfo.getName();
+        // Prefer deployment name (from J2EEName)
+        String appName = appInfo.getDeploymentName();
+        if (appName == null) // fall back to generated name
+            appName = appInfo.getName();
 
         // Try to order removals based on dependencies, so that we remove first
         // what might depend on the others.
