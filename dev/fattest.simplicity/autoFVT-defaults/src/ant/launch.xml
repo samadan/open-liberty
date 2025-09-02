@@ -291,11 +291,6 @@
 				<include name="com.ibm.ws.componenttest.jar" />
 			</fileset>
 
-			<!-- shared libraries from bootstrapping.properties -->
-			<fileset dir="${local.sharedLib}" erroronmissingdir="false">
-				<include name="**/*.jar" />
-			</fileset>
-
 			<!-- java libraries for secure SSH authentication -->
 			<fileset dir="${local.java}/lib/" erroronmissingdir="false">
 				<include name="*.jar" />
