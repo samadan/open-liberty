@@ -4,10 +4,14 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
+package io.openliberty.mcp.internal.schemas;
+
 /**
  *
  */
-package io.openliberty.mcp.internal.test.schema;
+public enum SchemaDirection {
+    INPUT, OUTPUT, INPUT_OUTPUT
+};

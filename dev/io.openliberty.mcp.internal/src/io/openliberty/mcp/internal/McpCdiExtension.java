@@ -21,6 +21,7 @@ import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 import io.openliberty.mcp.internal.schemas.SchemaRegistry;
+import io.openliberty.mcp.internal.schemas.SchemaRegistryTwo;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
@@ -41,6 +42,7 @@ public class McpCdiExtension implements Extension {
     private ConcurrentHashMap<String, LinkedList<String>> duplicateToolsMap = new ConcurrentHashMap<>();
 
     private SchemaRegistry schemas = new SchemaRegistry();
+    private SchemaRegistryTwo schemasTwo = new SchemaRegistryTwo();
 
     void registerTools(@Observes ProcessManagedBean<?> pmb) {
         AnnotatedType<?> type = pmb.getAnnotatedBeanClass();
@@ -170,5 +172,9 @@ public class McpCdiExtension implements Extension {
 
     public SchemaRegistry getSchemaRegistry() {
         return schemas;
+    }
+
+    public SchemaRegistryTwo getSchemaRegistryTwo() {
+        return schemasTwo;
     }
 }

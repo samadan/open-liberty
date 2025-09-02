@@ -22,7 +22,10 @@
 
 package io.openliberty.mcp.annotations;
 
+import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
@@ -32,9 +35,11 @@ import java.lang.annotation.Target;
  * Annotates a parameter of a {@linkSchema} method.
  */
 @Retention(RUNTIME)
-@Target(METHOD)
+@Target({ TYPE, FIELD, METHOD, PARAMETER })
 public @interface Schema {
 
     String value();
+
+    String description() default "";
 
 }
