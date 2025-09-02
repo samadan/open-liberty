@@ -74,33 +74,35 @@ public class ConcurrentVirtualThreadsDisabledTest extends FATServletClient {
     @AfterClass
     public static void tearDown() throws Exception {
         try {
-            List<String> mtfMessages = server.findStringsInLogs("CWWKC1108I");
+            if (Runtime.version().feature() >= 21) {
+                List<String> mtfMessages = server.findStringsInLogs("CWWKC1108I");
 
-            assertContains("concurrent/ServerXMLThreadFactoryToOverride",
-                           mtfMessages);
-            assertContains("java:comp/concurrent/WebXMLThreadFactoryToOverride",
-                           mtfMessages);
-            assertContains("java:module/concurrent/AnnoThreadFactoryToOverride",
-                           mtfMessages);
+                assertContains("concurrent/ServerXMLThreadFactoryToOverride",
+                               mtfMessages);
+                assertContains("java:comp/concurrent/WebXMLThreadFactoryToOverride",
+                               mtfMessages);
+                assertContains("java:module/concurrent/AnnoThreadFactoryToOverride",
+                               mtfMessages);
 
-            assertEquals(mtfMessages.toString(), 3, mtfMessages.size());
+                assertEquals(mtfMessages.toString(), 3, mtfMessages.size());
 
-            List<String> policyMessages = server.findStringsInLogs("CWWKE1208I");
+                List<String> policyMessages = server.findStringsInLogs("CWWKE1208I");
 
-            assertContains("application[ConcurrentNoVTWeb]/managedScheduledExecutorService[java:app/concurrent/AnnoScheduledExecutorToOverride]/concurrencyPolicy",
-                           policyMessages);
-            assertContains("application[ConcurrentNoVTWeb]/module[ConcurrentNoVTWeb.war]/managedExecutorService[java:comp/concurrent/AnnoExecutorToOverride]/concurrencyPolicy",
-                           policyMessages);
-            assertContains("application[ConcurrentNoVTWeb]/module[ConcurrentNoVTWeb.war]/managedScheduledExecutorService[java:module/concurrent/WebXMLScheduledExecutorToOverride]/concurrencyPolicy",
-                           policyMessages);
-            assertContains("managedExecutorService[executorToOverride]/concurrencyPolicy[default-0]",
-                           policyMessages);
-            assertContains("managedExecutorService[java:global/concurrent/WebXMLExecutorToOverride]/concurrencyPolicy",
-                           policyMessages);
-            assertContains("virtualThreadPolicyToOverride",
-                           policyMessages);
+                assertContains("application[ConcurrentNoVTWeb]/managedScheduledExecutorService[java:app/concurrent/AnnoScheduledExecutorToOverride]/concurrencyPolicy",
+                               policyMessages);
+                assertContains("application[ConcurrentNoVTWeb]/module[ConcurrentNoVTWeb.war]/managedExecutorService[java:comp/concurrent/AnnoExecutorToOverride]/concurrencyPolicy",
+                               policyMessages);
+                assertContains("application[ConcurrentNoVTWeb]/module[ConcurrentNoVTWeb.war]/managedScheduledExecutorService[java:module/concurrent/WebXMLScheduledExecutorToOverride]/concurrencyPolicy",
+                               policyMessages);
+                assertContains("managedExecutorService[executorToOverride]/concurrencyPolicy[default-0]",
+                               policyMessages);
+                assertContains("managedExecutorService[java:global/concurrent/WebXMLExecutorToOverride]/concurrencyPolicy",
+                               policyMessages);
+                assertContains("virtualThreadPolicyToOverride",
+                               policyMessages);
 
-            assertEquals(policyMessages.toString(), 6, policyMessages.size());
+                assertEquals(policyMessages.toString(), 6, policyMessages.size());
+            }
         } finally {
             server.stopServer();
         }
