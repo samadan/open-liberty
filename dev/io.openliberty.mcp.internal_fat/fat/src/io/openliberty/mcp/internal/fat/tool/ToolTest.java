@@ -11,9 +11,7 @@ package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -31,7 +29,6 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
-import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
 import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
@@ -40,10 +37,6 @@ import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
  */
 @RunWith(FATRunner.class)
 public class ToolTest extends FATServletClient {
-
-    private static final String ACCEPT_HEADER = "application/json, text/event-stream";
-    private static final String MCP_PROTOCOL_HEADER = "MCP-Protocol-Version";
-    private static final String MCP_PROTOCOL_VERSION = "2025-06-18";
 
     @Server("mcp-server")
     public static LibertyServer server;
@@ -60,161 +53,6 @@ public class ToolTest extends FATServletClient {
     @AfterClass
     public static void teardown() throws Exception {
         server.stopServer();
-    }
-
-    private static final String ENDPOINT = "/toolTest/mcp";
-
-    @Test
-    public void testGetRequestWithoutAcceptHeaderReturns405() throws Exception {
-        HttpRequest request = new HttpRequest(server, ENDPOINT)
-                                                               .method("GET")
-                                                               .expectCode(405);
-
-        String response = request.run(String.class);
-
-        assertNotNull("Expected response body for 405 error", response);
-        assertEquals("GET method not allowed.", response);
-    }
-
-    @Test
-    public void testGetRequestWithTextEventStreamReturns405() throws Exception {
-        HttpRequest request = new HttpRequest(server, ENDPOINT)
-                                                               .requestProp("Accept", "text/event-stream")
-                                                               .method("GET")
-                                                               .expectCode(405);
-
-        String response = request.run(String.class);
-
-        assertNotNull("Expected response body for 405 error", response);
-        assertEquals("GET not supported yet. SSE not implemented.", response);
-    }
-
-    @Test
-    public void testMissingAcceptHeader() throws Exception {
-        String request = """
-                        {
-                          "jsonrpc": "2.0",
-                          "id": 1,
-                          "method": "tools/call",
-                          "params": {
-                            "name": "echo",
-                            "arguments": {
-                              "input": "Hello"
-                            }
-                          }
-                        }
-                        """;
-
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp")
-                                                                          .requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER)
-                                                                          .jsonBody(request)
-                                                                          .method("POST")
-                                                                          .expectCode(406);
-
-        String response = JsonRequest.run(String.class);
-        assertNull("Expected no response body for 406 Not Acceptable", response);
-    }
-
-    @Test
-    public void testIncorrectAcceptHeader() throws Exception {
-        String request = """
-                        {
-                          "jsonrpc": "2.0",
-                          "id": 1,
-                          "method": "tools/call",
-                          "params": {
-                            "name": "echo",
-                            "arguments": {
-                              "input": "Hello"
-                            }
-                          }
-                        }
-                        """;
-
-        HttpRequest JsonRequest = new HttpRequest(server, "/toolTest/mcp").requestProp("Accept", "application/json")
-                                                                          .requestProp(MCP_PROTOCOL_VERSION, MCP_PROTOCOL_HEADER)
-                                                                          .jsonBody(request).method("POST").expectCode(406);
-
-        String response = JsonRequest.run(String.class);
-        assertNull("Expected no response body for 406 Not Acceptable due to incorrect Accept header", response);
-    }
-
-    @Test
-    public void testMissingMcpProtocolVersionHeader() throws Exception {
-        String request = """
-                        {
-                          "jsonrpc": "2.0",
-                          "id": 1,
-                          "method": "tools/call",
-                          "params": {
-                            "name": "echo",
-                            "arguments": {
-                              "input": "Hello"
-                            }
-                          }
-                        }
-                        """;
-        String response = HttpTestUtils.callMCPWithoutProtocolVersion(server, "/toolTest", request);
-        assertTrue("Expected 400 error body mentioning MCP-Protocol-Version",
-                   response.contains("Missing or invalid MCP-Protocol-Version header"));
-    }
-
-    @Test
-    public void testInitializeDoesNotNeedMcpProtocolVersionHeader() throws Exception {
-        String request = """
-                        {
-                          "jsonrpc": "2.0",
-                          "id": 1,
-                          "method": "initialize",
-                         "params": {
-                            "clientInfo": {
-                              "name": "test-client",
-                              "version": "0.1"
-                            },
-                            "rootUri": "file:/test/root"
-                          }
-                        }
-                        """;
-
-        String response = new HttpRequest(server, "/toolTest/mcp")
-                                                                  .requestProp("Accept", ACCEPT_HEADER)
-                                                                  .jsonBody(request)
-                                                                  .method("POST")
-                                                                  .expectCode(200)
-                                                                  .run(String.class);
-
-        assertTrue("Expected response to contain result", response.contains("\"result\""));
-        assertTrue("Expected protocolVersion field in response", response.contains("\"protocolVersion\""));
-        assertTrue("Expected serverInfo field in response", response.contains("\"serverInfo\""));
-    }
-
-    @Test
-    public void testRejectsUnsupportedProtocolVersion() throws Exception {
-        String request = """
-                        {
-                          "jsonrpc": "2.0",
-                          "id": 1,
-                          "method": "tools/call",
-                          "params": {
-                            "name": "echo",
-                            "arguments": {
-                              "input": "Hello"
-                            }
-                          }
-                        }
-                        """;
-
-        String response = new HttpRequest(server, "/toolTest/mcp")
-                                                                  .requestProp("Accept", ACCEPT_HEADER)
-                                                                  .requestProp("MCP-Protocol-Version", "2022-02-02")
-                                                                  .jsonBody(request)
-                                                                  .method("POST")
-                                                                  .expectCode(400)
-                                                                  .run(String.class);
-
-        assertTrue("Expected error message about invalid protocol version",
-                   response.contains("Missing or invalid MCP-Protocol-Version header"));
-        assertTrue("Expected error message to contain expected version", response.contains("Expected: 2025-06-18"));
     }
 
     @Test

@@ -15,6 +15,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import io.openliberty.mcp.internal.fat.lifecycle.tests.BeanLifecycleTest;
 import io.openliberty.mcp.internal.fat.lifecycle.tests.LifecycleTest;
+import io.openliberty.mcp.internal.fat.protocol.HttpTest;
+import io.openliberty.mcp.internal.fat.protocol.ProtocolVersionTest;
 import io.openliberty.mcp.internal.fat.tool.ToolTest;
 
 /**
@@ -23,8 +25,11 @@ import io.openliberty.mcp.internal.fat.tool.ToolTest;
 @RunWith(Suite.class)
 @SuiteClasses({
                 BeanLifecycleTest.class,
+                HttpTest.class,
                 LifecycleTest.class,
+                ProtocolVersionTest.class,
                 ToolTest.class
+
 })
 public class FATSuite {
 
