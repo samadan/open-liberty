@@ -27,9 +27,9 @@ import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpNotificationParams;
-import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
-import io.openliberty.mcp.internal.requests.RequestCancellation;
+import io.openliberty.mcp.internal.requests.CancellationImpl;
+import io.openliberty.mcp.internal.requests.RequestId;
 import io.openliberty.mcp.internal.responses.McpInitializeResult;
 import io.openliberty.mcp.internal.responses.McpInitializeResult.ServerInfo;
 import io.openliberty.mcp.tools.ToolResponse;
@@ -119,7 +119,7 @@ public class McpServlet extends HttpServlet {
 
     @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpTransport transport) {
-        String requestId = createOngoingRequestId(transport.getMcpRequest());
+        RequestId requestId = createOngoingRequestId(transport);
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
         if (params.getMetadata() == null) {
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
@@ -172,10 +172,10 @@ public class McpServlet extends HttpServlet {
         return ToolResponse.error(msg);
     }
 
-    private void checkAndParseCancellationObject(Object[] argumentsArray, String requestId) {
+    private void checkAndParseCancellationObject(Object[] argumentsArray, RequestId requestId) {
         for (Object argument : argumentsArray) {
             if (argument instanceof Cancellation cancellation) {
-                ((RequestCancellation) cancellation).setRequestId(requestId);
+                ((CancellationImpl) cancellation).setRequestId(requestId);
                 connection.registerOngoingRequest(requestId, cancellation);
                 break;
             }
@@ -231,21 +231,20 @@ public class McpServlet extends HttpServlet {
 
     private void cancelRequest(McpTransport transport) {
         McpNotificationParams notificationParams = transport.getMcpRequest().getParams(McpNotificationParams.class, jsonb);
-        String requestId = notificationParams.getRequestId();
+        RequestId requestId = new RequestId(notificationParams.getRequestId(), transport.getRequestIpAddress());
         Optional<String> reason = Optional.ofNullable(notificationParams.getReason());
 
         Cancellation cancellation = connection.getOngoingRequestCancelation(requestId);
 
         if (cancellation != null) {
-            ((RequestCancellation) cancellation).cancel(reason);
-            connection.updateOngoingRequest(requestId, cancellation);
+            ((CancellationImpl) cancellation).cancel(reason);
             transport.sendEmptyResponse();
         }
         //Ignore notification if there is no request to cancel
     }
 
-    private String createOngoingRequestId(McpRequest request) {
-        //TODO add more data to this id to make it more unique
-        return request.id().toString();
+    private RequestId createOngoingRequestId(McpTransport transport) {
+        return new RequestId(transport.getMcpRequest().id().toString(),
+                             transport.getRequestIpAddress());
     }
 }

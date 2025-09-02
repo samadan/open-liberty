@@ -10,8 +10,6 @@
 package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -940,6 +938,16 @@ public class ToolTest extends FATServletClient {
                                         "name": "cancellationTool",
                                         "title": "Cancellable tool",
                                         "description": "A tool that waits to be cancelled"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                          "properties": {},
+                                          "required": [],
+                                          "type": "object"
+                                        },
+                                        "name": "cancellationToolNoWait",
+                                        "title": "Cancellable tool NoWait",
+                                        "description": "A tool that does not waits to be cancelled"
                                     },
                                     {
                                       "inputSchema": {

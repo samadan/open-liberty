@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
 
     public record ArgumentMetadata(Type type, int index, String description) {}
 
-    public record SpecialArgumentMetadata(Type type, int index) {}
+    public record SpecialArgumentMetadata(SpecialArgumentType type, int index) {}
 
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
 
@@ -53,7 +54,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                 }
             }
         }
-        return result;
+        return result.isEmpty() ? Collections.emptyMap() : Map.copyOf(result);
     }
 
     private static Map<String, SpecialArgumentMetadata> getSpecialArgumentMap(AnnotatedMethod<?> method) {
@@ -61,10 +62,10 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo == null) {
-                SpecialArgumentMetadata pData = new SpecialArgumentMetadata(p.getBaseType(), p.getPosition());
+                SpecialArgumentMetadata pData = new SpecialArgumentMetadata(SpecialArgumentType.fromClass(p.getBaseType()), p.getPosition());
                 result.put(p.getBaseType().getTypeName(), pData);
             }
         }
-        return result;
+        return result.isEmpty() ? Collections.emptyMap() : Map.copyOf(result);
     }
 }

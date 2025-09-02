@@ -196,4 +196,14 @@ public class McpTransport {
             writer.write(e.getMessage());
         }
     }
+
+    public String getRequestIpAddress() {
+        String idAddress = req.getHeader("X-Forwarded-For");
+        if (idAddress == null || idAddress.isEmpty() || "unknown".equalsIgnoreCase(idAddress)) {
+            idAddress = req.getRemoteAddr();
+        } else if (idAddress.contains(",")) {
+            idAddress = idAddress.split(",")[0].trim();
+        }
+        return idAddress;
+    }
 }

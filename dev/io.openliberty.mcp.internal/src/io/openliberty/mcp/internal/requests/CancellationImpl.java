@@ -17,9 +17,9 @@ import io.openliberty.mcp.messaging.Cancellation;
  * An implementation of the Cancellation interface which checks that the Result object has the reason field set
  * It returns the Result object indicating if a cancellation has been requested or not
  */
-public class RequestCancellation implements Cancellation {
+public class CancellationImpl implements Cancellation {
 
-    private String requestId;
+    private RequestId requestId;
     private volatile Optional<String> reason = null;
 
     /**
@@ -36,7 +36,7 @@ public class RequestCancellation implements Cancellation {
         return new Result(true, reason);
     }
 
-    public void setRequestId(String requestId) {
+    public void setRequestId(RequestId requestId) {
         this.requestId = requestId;
     }
 

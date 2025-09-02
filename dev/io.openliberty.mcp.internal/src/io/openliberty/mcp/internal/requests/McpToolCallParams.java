@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.openliberty.mcp.internal.ToolMetadata;
@@ -21,7 +22,6 @@ import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
-import io.openliberty.mcp.messaging.Cancellation;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
@@ -75,49 +75,45 @@ public class McpToolCallParams {
 
     private Object[] parseArguments(JsonObject arguments2, Jsonb jsonb) {
         JsonObject argsObject = arguments2.asJsonObject();
-        int resultSize = (metadata.arguments() != null ? metadata.arguments().size() : 0) +
-                         (metadata.specialArguments() != null ? metadata.specialArguments().size() : 0);
-        Object[] results = new Object[resultSize];
-        HashSet<String> argsProcessed = new HashSet<>();
-        if (metadata.arguments() != null) {
-            for (var entry : argsObject.entrySet()) {
-                String argName = entry.getKey();
-                JsonValue argValue = entry.getValue();
-                ArgumentMetadata argMetadata = metadata.arguments().get(argName);
-                if (argMetadata != null) {
-                    String json = jsonb.toJson(argValue);
-                    results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
-                }
-                argsProcessed.add(argName);
-            }
+        Map<String, ArgumentMetadata> arguments = metadata.arguments();
+        Map<String, SpecialArgumentMetadata> specialArguments = metadata.specialArguments();
+        Object[] results = new Object[arguments.size() + specialArguments.size()];
 
-            if (!argsProcessed.equals(metadata.arguments().keySet())) {
-                List<String> data = generateArgumentMismatchData(argsProcessed, metadata.arguments().keySet());
-                throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
+        HashSet<String> argsProcessed = new HashSet<>();
+        for (var entry : argsObject.entrySet()) {
+            String argName = entry.getKey();
+            JsonValue argValue = entry.getValue();
+            ArgumentMetadata argMetadata = metadata.arguments().get(argName);
+            if (argMetadata != null) {
+                String json = jsonb.toJson(argValue);
+                results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
             }
+            argsProcessed.add(argName);
         }
 
-        if (metadata.specialArguments() == null) {
+        validateProcessedArgs(argsProcessed, arguments.keySet());
+
+        if (specialArguments.isEmpty()) {
             return results;
         }
 
         HashSet<String> specialArgsProcessed = new HashSet<>();
-        for (var entry : metadata.specialArguments().entrySet()) {
+        for (var entry : specialArguments.entrySet()) {
             SpecialArgumentMetadata specialArgsMetadata = entry.getValue();
-
-            if (specialArgsMetadata.type().equals(Cancellation.class)) {
-                //Cancellation is the only Special Argument type allowed for now
-                results[specialArgsMetadata.index()] = new RequestCancellation();
-            }
+            results[specialArgsMetadata.index()] = specialArgsMetadata.type();
             specialArgsProcessed.add(entry.getKey());
         }
 
-        if (!specialArgsProcessed.equals(metadata.specialArguments().keySet())) {
-            List<String> data = generateArgumentMismatchData(specialArgsProcessed, metadata.specialArguments().keySet());
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
-        }
+        validateProcessedArgs(specialArgsProcessed, specialArguments.keySet());
 
         return results;
+    }
+
+    private void validateProcessedArgs(Set<String> processedArgs, Set<String> expectedArgs) {
+        if (!processedArgs.equals(expectedArgs)) {
+            List<String> data = generateArgumentMismatchData(processedArgs, expectedArgs);
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
+        }
     }
 
     public List<String> generateArgumentMismatchData(Set<String> processed, Set<String> expected) {

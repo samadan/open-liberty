@@ -12,14 +12,15 @@ package io.openliberty.mcp.internal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import io.openliberty.mcp.internal.requests.RequestId;
 import io.openliberty.mcp.messaging.Cancellation;
-import jakarta.inject.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * This is a connection tracker bean. It keeps track of ongoing tool call requests
  */
 
-@Singleton
+@ApplicationScoped
 public class McpConnectionTracker {
 
     private final ConcurrentMap<String, Cancellation> ongoingRequests;
@@ -28,25 +29,21 @@ public class McpConnectionTracker {
         this.ongoingRequests = new ConcurrentHashMap<>();
     }
 
-    public void deregisterOngoingRequest(String id) {
-        ongoingRequests.remove(id);
+    public void deregisterOngoingRequest(RequestId id) {
+        ongoingRequests.remove(id.getUniqueId());
     }
 
-    public void registerOngoingRequest(String id, Cancellation cancellation) {
-        ongoingRequests.putIfAbsent(id, cancellation);
+    public void registerOngoingRequest(RequestId id, Cancellation cancellation) {
+        ongoingRequests.putIfAbsent(id.getUniqueId(), cancellation);
     }
 
-    public void updateOngoingRequest(String id, Cancellation cancellation) {
-        ongoingRequests.put(id, cancellation);
+    public boolean isOngoingRequest(RequestId id) {
+        return ongoingRequests.containsKey(id.getUniqueId());
     }
 
-    public boolean isOngoingRequest(String id) {
-        return ongoingRequests.containsKey(id);
-    }
-
-    public Cancellation getOngoingRequestCancelation(String id) {
+    public Cancellation getOngoingRequestCancelation(RequestId id) {
         if (isOngoingRequest(id)) {
-            return ongoingRequests.get(id);
+            return ongoingRequests.get(id.getUniqueId());
         }
         return null;
     }

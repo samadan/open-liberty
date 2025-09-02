@@ -40,6 +40,7 @@ public class CancellationTest extends FATServletClient {
 
     @Server("mcp-server")
     public static LibertyServer server;
+    private static ExecutorService executor;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -48,10 +49,13 @@ public class CancellationTest extends FATServletClient {
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
         server.startServer();
+
+        executor = Executors.newSingleThreadExecutor();
     }
 
     @AfterClass
     public static void teardown() throws Exception {
+        executor.shutdown();
         server.stopServer();
     }
 
@@ -59,7 +63,6 @@ public class CancellationTest extends FATServletClient {
     public void testCancellationToolWithCancellableParameterAndCancellationRequest() throws Exception {
 
         final CountDownLatch latch = new CountDownLatch(1);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
 
         Callable<String> threadCallingTool = () -> {
             try {
@@ -96,22 +99,18 @@ public class CancellationTest extends FATServletClient {
                         """;
         //make sure the tool call request has started
         latch.await();
-        try {
-            //wait to make sure the tool call is registered before trying to cancel it
-            TimeUnit.MILLISECONDS.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+
+        //wait to make sure the tool call is registered before trying to cancel it
+        TimeUnit.MILLISECONDS.sleep(1000);
 
         HttpTestUtils.callMCPNotification(server, "/toolTest", cancellationRequestNotification);
 
-        String response = future.get();
+        String response = future.get(10, TimeUnit.SECONDS);
+
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text"}],"isError":true}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
-
-        executor.shutdown();
     }
 
     @Test
@@ -123,7 +122,7 @@ public class CancellationTest extends FATServletClient {
                           "id": "2",
                           "method": "tools/call",
                           "params": {
-                            "name": "cancellationTool",
+                            "name": "cancellationToolNoWait",
                             "arguments": {}
                           }
                         }
