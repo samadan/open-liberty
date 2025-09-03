@@ -52,14 +52,18 @@ public class JPACDIExtension implements Extension {
             try {
                 createBeanForPersistenceUnit(abd, pui, j2EEName);
             } catch (ClassNotFoundException e) {
-                //TODO we'll probably want a better message and NLS translation
-                Tr.warning(tc, "Could not create bean for PersistenceUnit {0}, it will not be injectable", pui.getPersistenceUnitName());
+                Tr.warning(tc, "FAILED_TO_CREATE_PU_BEAN_CWWJP9994W", pui.getPersistenceUnitName());
                 Tr.debug(tc, "Could not create bean for PersistenceUnit {0}, it will not be injectable because: {1}", pui.getPersistenceUnitName(), e);
             }
         }
     }
 
     private void createBeanForPersistenceUnit(AfterBeanDiscovery abd, final PersistenceUnitInfo pui, final J2EEName j2eeName) throws ClassNotFoundException {
+
+        if (2 < 3) {
+            throw new ClassNotFoundException("test NLS");
+        }
+
         Set<Annotation> qualfiiers = getQualifiers(pui);
         Class<? extends Annotation> scope = getScope(pui);
 

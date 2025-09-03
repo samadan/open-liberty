@@ -12,7 +12,8 @@
  * @version 1.0
  */
 @org.osgi.annotation.versioning.Version("1.0")
-@TraceOptions(traceGroups = { "JCDI", "JPA" })
+@TraceOptions(traceGroups = "JPA", messageBundle = JPAConstants.JPA_RESOURCE_BUNDLE_NAME)
 package com.ibm.ws.jpa.container.v32.cdi.internal;
 
 import com.ibm.websphere.ras.annotation.TraceOptions;
+import com.ibm.ws.jpa.management.JPAConstants;
