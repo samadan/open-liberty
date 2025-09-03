@@ -9,11 +9,15 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
+import java.util.Objects;
+
 import io.openliberty.mcp.annotations.Tool;
 import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
 import jakarta.enterprise.inject.spi.AnnotatedType;
 import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
 import jakarta.enterprise.inject.spi.ProcessManagedBean;
 
@@ -32,6 +36,14 @@ public class McpCdiExtension implements Extension {
             if (toolAnnotation != null) {
                 registerTool(toolAnnotation, pmb.getBean(), m);
             }
+        }
+    }
+
+    void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
+        String duplicateToolName = tools.getDuplicateToolName();
+        if (!Objects.isNull(duplicateToolName)) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception("Duplicate Tool Name ('" + duplicateToolName
+                                                                         + "') found in Tool Registry. Aborting container deployment!"));
         }
     }
 

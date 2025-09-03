@@ -19,6 +19,7 @@ import jakarta.enterprise.inject.spi.CDI;
 public class ToolRegistry {
 
     private static ToolRegistry staticInstance = null;
+    private String duplicateToolName = null;
 
     public static ToolRegistry get() {
         if (staticInstance != null) {
@@ -44,8 +45,21 @@ public class ToolRegistry {
     }
 
     public void addTool(ToolMetadata tool) {
+
         String name = tool.name();
-        tools.put(name, tool);
+
+        if (tools.get(name) == null) {
+            tools.put(name, tool);
+        } else {
+            duplicateToolName = name;
+        }
+    }
+
+    /**
+     * @return the duplicateToolName
+     */
+    public String getDuplicateToolName() {
+        return duplicateToolName;
     }
 
     public boolean hasTools() {
