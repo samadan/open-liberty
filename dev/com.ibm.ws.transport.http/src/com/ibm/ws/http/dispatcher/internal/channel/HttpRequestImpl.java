@@ -113,7 +113,6 @@ public class HttpRequestImpl implements Http2Request, HttpRequestExt {
      */
     @Override
     public List<HttpCookie> getCookies(String name) {
-
         return this.message.getAllCookies(name);
     }
 
