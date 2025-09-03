@@ -15,37 +15,32 @@ bVersion=1.0
 
 src: \
 	fat/src,\
-	test-applications/prototype/src
-
-javac.source: 11
-javac.target: 11
+	test-applications/prototype/src,\
+	test-applications/prototypeClientApp/src,\
+	test-applications/multipart/src,\
+	test-applications/multipartClientApp/src
 	
 fat.project: true
 
+javac.source: 11
+javac.target: 11
+    
+fat.project: true
 # These features get added programmatically
 tested.features: \
   mpRestClient-4.0,\
-  restfulwsclient-3.1,\
-  restfulws-3.1,\
-  restfulwsclient-4.0,\
-  restfulws-4.0,\
-  jsonp-2.1,\
-  cdi-4.0,\
-  connectors-2.1,\
-  jsonb-3.0,\
-  expressionlanguage-5.0,\
-  expressionlanguage-6.0,\
-  xmlbinding-4.0,\
-  validation-3.1,\
-  noship-1.0
+  restfulWS-3.1,\
+  servlet-6.0,\
+  ssl-1.0,\
+  componenttest-2.0
 
 -buildpath: \
-    io.openliberty.jakarta.enterpriseBeans.4.0;version=latest,\
-	io.openliberty.jakarta.annotation.2.1;version=latest,\
-	io.openliberty.jakarta.cdi.4.0;version=latest,\
-	io.openliberty.jakarta.restfulWS.3.1;version=latest,\
-	io.openliberty.jakarta.servlet.6.0;version=latest,\
-	io.openliberty.jakarta.validation.3.0;version=latest,\
-	io.openliberty.jakarta.xmlBinding.4.0;version=latest,\
-	io.openliberty.org.jboss.resteasy.common.ee10;version=latest,\
-	com.ibm.ws.componenttest.2.0
+    io.openliberty.jakarta.annotation.2.1;version=latest,\
+    io.openliberty.jakarta.cdi.4.0;version=latest,\
+    io.openliberty.jakarta.restfulWS.4.0;version=latest,\
+    io.openliberty.jakarta.servlet.6.0;version=latest,\
+    io.openliberty.jakarta.validation.3.0;version=latest,\
+    io.openliberty.jakarta.xmlBinding.4.0;version=latest,\
+    io.openliberty.jakarta.jsonp.2.1;version=latest,\
+    io.openliberty.org.eclipse.microprofile.rest.client.4.0;version=latest,\
+    com.ibm.ws.componenttest.2.0;version=latest

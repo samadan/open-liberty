@@ -9,16 +9,13 @@
  *******************************************************************************/
 package io.openliberty.mpRestClient.fat;
 
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.ibm.websphere.simplicity.ShrinkHelper;
 
-import io.openliberty.mpRestClient.fat.prototypeClient.BasicClientTestServlet;
+import io.openliberty.mpRestClient.fat.multipartClient.MultipartClientTestServlet;
 
 import componenttest.annotation.Server;
 import componenttest.annotation.TestServlet;
@@ -26,28 +23,19 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 
-/*
- * The purpose of this test is to provide an empty canvas for rapid/easy test experimentation,
- * as well as providing and example of FAT best practices.
- *
- * This Test should never have any real tests, if you use this Test to create a test that should
- * be added permanently, create a new FAT Test using this test as a template.
+/**
+ * Test for multipart form data with MP Rest Client
  */
 @RunWith(FATRunner.class)
-public class PrototypeTest extends FATServletClient {
+public class MultipartTest extends FATServletClient {
 
-    final static String REMOTE_SERVER_NAME = "io.openliberty.mpRestClient.fat.prototypeRemote";
-    final static String SERVER_NAME = "io.openliberty.mpRestClient.fat.prototypeLocal";
+    final static String REMOTE_SERVER_NAME = "io.openliberty.mpRestClient.fat.multipartRemote";
+    final static String SERVER_NAME = "io.openliberty.mpRestClient.fat.multipartLocal";
 
-
-    private static final String appName = "prototypeClientApp";
-
-    // Third party libs are copied to ${buildDir}/autoFVT/appLibs/prototype in build.gradle
-    private static final String libs = "appLibs/prototype";
-
+    private static final String appName = "multipartClientApp";
 
     @Server(SERVER_NAME)
-    @TestServlet(servlet = BasicClientTestServlet.class, contextRoot = appName)
+    @TestServlet(servlet = MultipartClientTestServlet.class, contextRoot = appName)
     public static LibertyServer server;
 
     @Server(REMOTE_SERVER_NAME)
@@ -55,14 +43,14 @@ public class PrototypeTest extends FATServletClient {
 
     @BeforeClass
     public static void setup() throws Exception {
-         ShrinkHelper.defaultDropinApp(remoteAppServer, "prototype", "io.openliberty.mpRestClient.fat.prototype");
+        ShrinkHelper.defaultDropinApp(remoteAppServer, "multipart", "io.openliberty.mpRestClient.fat.multipart");
         remoteAppServer.startServer();
-         ShrinkHelper.defaultDropinApp(server, appName, "io.openliberty.mpRestClient.fat.prototypeClient");
+        ShrinkHelper.defaultDropinApp(server, appName, "io.openliberty.mpRestClient.fat.multipartClient");
   
         // Make sure we don't fail because we try to start an
         // already started server
         try {
-            server.startServer("Prototype.log", true);
+            server.startServer("Multipart.log", true);
         } catch (Exception e) {
             System.out.println(e.toString());
         }
@@ -73,10 +61,10 @@ public class PrototypeTest extends FATServletClient {
         if (server != null) {
             server.stopServer();  //ignore server quiesce timeouts due to slow test machines
         }
-         if (remoteAppServer != null) {
+        if (remoteAppServer != null) {
             remoteAppServer.stopServer();  //ignore server quiesce timeouts due to slow test machines
         }
     }
-
-   
 }
+
+// Made with Bob

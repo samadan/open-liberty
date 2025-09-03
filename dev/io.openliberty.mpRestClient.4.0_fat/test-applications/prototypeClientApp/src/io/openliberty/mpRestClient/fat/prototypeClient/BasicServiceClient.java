@@ -7,17 +7,25 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mpRestClient.fat.prototype;
+package io.openliberty.mpRestClient.fat.prototypeClient;
 
+import java.util.Set;
+
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
+@Produces(MediaType.APPLICATION_JSON)
 @Path("/")
-public class PrototypeResource {
+public interface BasicServiceClient {
+
 
     @GET
     @Path("echo")
-    public String hello() {
-        return "Hello World!";
-    }
+    String hello();
+
+
 }

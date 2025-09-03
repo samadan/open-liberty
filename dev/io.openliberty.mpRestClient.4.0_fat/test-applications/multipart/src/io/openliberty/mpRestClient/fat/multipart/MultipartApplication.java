@@ -7,17 +7,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mpRestClient.fat.prototype;
+package io.openliberty.mpRestClient.fat.multipart;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
+import jakarta.ws.rs.ApplicationPath;
+import jakarta.ws.rs.core.Application;
 
-@Path("/")
-public class PrototypeResource {
+@ApplicationPath("/")
+public class MultipartApplication extends Application {
 
-    @GET
-    @Path("echo")
-    public String hello() {
-        return "Hello World!";
-    }
 }
+
+// Made with Bob

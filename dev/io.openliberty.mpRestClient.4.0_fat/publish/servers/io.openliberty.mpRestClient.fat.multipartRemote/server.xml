@@ -1,0 +1,16 @@
+<server>
+    <featureManager>
+        <feature>componenttest-2.0</feature>
+        <feature>restfulWS-3.1</feature>
+        <feature>ssl-1.0</feature>
+    </featureManager>
+    <include location="../fatTestPorts.xml"/>
+    <include location="../fatTestCommon.xml"/>
+    
+    <httpEndpoint id="defaultHttpEndpoint"
+                 host="*"
+                 httpPort="8020"
+                 httpsPort="8021"/>
+</server>
+
+<!-- Made with Bob -->
