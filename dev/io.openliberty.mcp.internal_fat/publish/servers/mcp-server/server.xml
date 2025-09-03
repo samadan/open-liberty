@@ -8,6 +8,5 @@
   </featureManager>
 
   <include location="../fatTestPorts.xml" />
-  <!--logging traceSpecification="MCP=all"/-->
   
 </server>
