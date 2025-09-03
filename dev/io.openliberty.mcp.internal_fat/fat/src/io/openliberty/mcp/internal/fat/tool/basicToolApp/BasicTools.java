@@ -283,4 +283,11 @@ public class BasicTools {
     }
 
     public record City(String name, String country, int population, boolean isCapital) {};
+
+    // Test ToolArg.required is always true by default, check that it works when it is set to true
+    @Tool(name = "testToolArgIsNotRequired", title = "ToolArgNotRequired", description = "ToolArgNotRequired")
+    public boolean testToolArgNotRequired(@ToolArg(name = "value", description = "boolean value ", required = false) boolean val) {
+        return false;
+    }
+
 }
