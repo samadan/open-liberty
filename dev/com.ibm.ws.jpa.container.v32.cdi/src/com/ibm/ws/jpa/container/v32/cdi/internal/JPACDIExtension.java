@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2025 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ *******************************************************************************/
 package com.ibm.ws.jpa.container.v32.cdi.internal;
 
 import java.lang.annotation.Annotation;
@@ -44,6 +54,7 @@ public class JPACDIExtension implements Extension {
             } catch (ClassNotFoundException e) {
                 //TODO we'll probably want a better message and NLS translation
                 Tr.warning(tc, "Could not create bean for PersistenceUnit {0}, it will not be injectable", pui.getPersistenceUnitName());
+                Tr.debug(tc, "Could not create bean for PersistenceUnit {0}, it will not be injectable because: {1}", pui.getPersistenceUnitName(), e);
             }
         }
     }

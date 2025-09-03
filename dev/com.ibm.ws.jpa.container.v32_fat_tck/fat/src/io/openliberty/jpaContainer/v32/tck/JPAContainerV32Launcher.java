@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2024 IBM Corporation and others.
+ * Copyright (c) 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,8 @@
 package io.openliberty.jpaContainer.v32.tck;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -22,8 +24,8 @@ import org.junit.runner.RunWith;
 import componenttest.annotation.AllowedFFDC;
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.custom.junit.runner.Mode;
 import componenttest.custom.junit.runner.Mode.TestMode;
-import componenttest.custom.junit.runner.TestModeFilter;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
@@ -36,11 +38,10 @@ import componenttest.topology.utils.tck.TCKRunner;
  * location.
  */
 @RunWith(FATRunner.class)
+@Mode(TestMode.FULL)
 public class JPAContainerV32Launcher {
 
     private static final String SERVER_NAME = "JPATCKServer";
-
-    private static final boolean FAT_TEST_LOCALRUN = Boolean.getBoolean("fat.test.localrun");
 
     @Server(SERVER_NAME)
     public static LibertyServer server;
@@ -71,13 +72,14 @@ public class JPAContainerV32Launcher {
     @Test
     @AllowedFFDC // The tested exceptions cause FFDC so we have to allow for this.
     public void launchFaultTolerance40TCK() throws Exception {
-        boolean isFullMode = TestModeFilter.shouldRun(TestMode.FULL);
 
-        String suiteFileName = isFullMode ? "tck-suite.xml" : "tck-suite-lite.xml";
+        Map<String, String> additionalProps = new HashMap<>();
+        //For now, only the CDI tests are enabled
+        additionalProps.put("included.tests", "ee.jakarta.tck.persistence.ee.cdi.ServletEMLookupTest");
 
         TCKRunner.build(server, Type.JAKARTA, "JPA")
-                        .withSuiteFileName(suiteFileName)
-                        .withLogging(Collections.EMPTY_MAP)
+                        .withLogging(Collections.emptyMap())
+                        .withAdditionalMvnProps(additionalProps)
                         .runTCK();
     }
 
