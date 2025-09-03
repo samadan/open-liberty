@@ -9,6 +9,7 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.test;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -305,10 +306,10 @@ public class MCPServerToolsListTest {
                                                           "var2", new ArgumentMetadata(boolean.class, 1, "operand 2"));
 
         LinkedList<ToolDescription> toolDescriptions = new LinkedList<>();
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments, null)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2, null)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3, null)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4, null)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments, Collections.emptyMap())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2, Collections.emptyMap())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3, Collections.emptyMap())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4, Collections.emptyMap())));
 
         String responseString = jsonb.toJson(toolDescriptions);
         String expectedString = """
