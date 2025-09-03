@@ -344,3 +344,8 @@ PROVIDER_FATAL_CWWJP9993E.explanation=The Java Persistence API (JPA) provider ha
 PROVIDER_FATAL_CWWJP9993E.useraction=See the JPA provider documentation.
 
 #-------------------------------------------------------------------------------
+FAILED_TO_CREATE_PU_BEAN_CWWJP9994W=CWWJP9994W: Could not create bean for PersistenceUnit {0}, it will not be injectable
+FAILED_TO_CREATE_PU_BEAN_CWWJP9994W.explanation=The Java Persistence API (JPA) provider has logged this warning message.
+FAILED_TO_CREATE_PU_BEAN_CWWJP9994W.useraction=See the JPA provider documentation.
+
+#-------------------------------------------------------------------------------
