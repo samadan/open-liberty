@@ -40,33 +40,31 @@ public class McpCdiExtension implements Extension {
                 registerTool(toolAnnotation, pmb.getBean(), m, javaClass.getPackageName() + "." + javaClass.getSimpleName());
             }
         }
-
-        // prune items that are not duplicates
-        duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
     }
 
     void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
 
+        // prune items that are not duplicates
+        duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
         StringBuilder sb = new StringBuilder();
 
         for (String toolName : duplicateToolsMap.keySet()) {
             LinkedList<String> qualifiedNames = duplicateToolsMap.get(toolName);
-
-            sb.append("Tool: ").append(toolName).append("\n");
-            sb.append("  Qualified Names:\n");
-            for (String name : qualifiedNames) {
-                sb.append("    - ").append(name).append("\n");
+            sb.append("Tool: ").append(toolName);
+            sb.append(" -- Methods found:\n");
+            for (String qualifiedName : qualifiedNames) {
+                sb.append("    - ").append(qualifiedName + "\n");
             }
         }
 
         if (duplicateToolsMap.size() != 0) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception("More than one MCP tool has the name: " + sb.toString()));
+            afterDeploymentValidation.addDeploymentProblem(new Exception("More than one MCP tool has the same name: \n" + sb.toString()));
         }
     }
 
     private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method, String qualifiedName) {
         ToolMetadata toolmd = ToolMetadata.createFrom(tool, bean, method);
-        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(qualifiedName);
+        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(qualifiedName + "." + method.getJavaMember().getName() + "()");
         tools.addTool(toolmd);
     }
 

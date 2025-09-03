@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat.tool.duplicateToolErrorTestApp;
+package io.openliberty.mcp.internal.fat.tool.duplicateToolErrorTestApps;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
@@ -30,7 +30,23 @@ public class DuplicateToolErrorTest {
     ///////////////////
     //// Duplicate echo
     @Tool(name = "echo")
-    public String duplicateToolThatWillTestDeploymentError(@ToolArg(name = "input") String input) {
+    public String duplicateEcho(@ToolArg(name = "input") String input) {
         return input;
     }
+
+    @Tool(name = "bob", title = "Echoes the input", description = "Returns the input unchanged")
+    public String bob(@ToolArg(name = "input", description = "input to echo") String input) {
+        if (input.equals("throw error")) {
+            throw new RuntimeException("Method call caused runtime exception");
+        }
+        return input;
+    }
+
+    ///////////////////
+    //// Duplicate bob
+    @Tool(name = "bob")
+    public String duplicateBob(@ToolArg(name = "input") String input) {
+        return input;
+    }
+
 }

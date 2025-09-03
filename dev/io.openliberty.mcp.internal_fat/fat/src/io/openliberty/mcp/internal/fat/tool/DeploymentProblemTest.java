@@ -26,7 +26,8 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
-import io.openliberty.mcp.internal.fat.tool.duplicateToolErrorTestApp.DuplicateToolErrorTest;
+import io.openliberty.mcp.internal.fat.tool.duplicateToolErrorTestApps.DuplicateToolErrorTest;
+import io.openliberty.mcp.internal.fat.tool.duplicateToolErrorTestApps.DuplicateToolErrorTest2;
 import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
 /**
@@ -40,7 +41,8 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @BeforeClass
     public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "DeploymentProblemTest.war").addPackage(DuplicateToolErrorTest.class.getPackage());
+        WebArchive war = ShrinkWrap.create(WebArchive.class, "DeploymentProblemTest.war").addPackages(true, DuplicateToolErrorTest.class.getPackage(),
+                                                                                                      DuplicateToolErrorTest2.class.getPackage());
         ShrinkHelper.exportDropinAppToServer(server, war, DISABLE_VALIDATION, SERVER_ONLY);
         server.startServer();
     }
@@ -68,7 +70,7 @@ public class DeploymentProblemTest extends FATServletClient {
         try {
             HttpTestUtils.callMCP(server, "/toolTest", request);
         } catch (Exception e) {
-            if (!server.findStringsInLogs("More than one MCP tool has the name").isEmpty()) {
+            if (!server.findStringsInLogs("More than one MCP tool has the same name").isEmpty()) {
                 deploymentErrorOccured = true;
             }
         }
