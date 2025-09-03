@@ -17,6 +17,7 @@ import io.openliberty.mcp.internal.fat.lifecycle.tests.BeanLifecycleTest;
 import io.openliberty.mcp.internal.fat.lifecycle.tests.LifecycleTest;
 import io.openliberty.mcp.internal.fat.protocol.HttpTest;
 import io.openliberty.mcp.internal.fat.protocol.ProtocolVersionTest;
+import io.openliberty.mcp.internal.fat.tool.DeploymentProblemTest;
 import io.openliberty.mcp.internal.fat.tool.ToolTest;
 
 /**
@@ -28,7 +29,8 @@ import io.openliberty.mcp.internal.fat.tool.ToolTest;
                 HttpTest.class,
                 LifecycleTest.class,
                 ProtocolVersionTest.class,
-                ToolTest.class
+                ToolTest.class,
+                DeploymentProblemTest.class
 
 })
 public class FATSuite {
