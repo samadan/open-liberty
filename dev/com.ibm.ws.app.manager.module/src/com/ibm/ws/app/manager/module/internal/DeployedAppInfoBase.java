@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2023 IBM Corporation and others.
+ * Copyright (c) 2012, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -188,7 +188,7 @@ public abstract class DeployedAppInfoBase extends SimpleDeployedAppInfoBase impl
     /**
      * Capture creation of a library container.
      *
-     * @param libPath The path to the library container.
+     * @param libPath  The path to the library container.
      * @param supplier The supplier of the library container.
      *
      * @return A new supplier of the library container which will capture the
@@ -272,6 +272,9 @@ public abstract class DeployedAppInfoBase extends SimpleDeployedAppInfoBase impl
                     if (props != null) {
                         String[] libraryPIDs = (String[]) props.get("privateLibraryRef");
                         processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.PRIVATE_LIB);
+
+                        libraryPIDs = (String[]) props.get("overrideLibraryRef");
+                        processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.OVERRIDE_LIB);
 
                         libraryPIDs = (String[]) props.get("commonLibraryRef");
                         processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.COMMON_LIB);
