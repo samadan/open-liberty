@@ -60,10 +60,6 @@ public class JPACDIExtension implements Extension {
 
     private void createBeanForPersistenceUnit(AfterBeanDiscovery abd, final PersistenceUnitInfo pui, final J2EEName j2eeName) throws ClassNotFoundException {
 
-        if (2 < 3) {
-            throw new ClassNotFoundException("test NLS");
-        }
-
         Set<Annotation> qualfiiers = getQualifiers(pui);
         Class<? extends Annotation> scope = getScope(pui);
 
