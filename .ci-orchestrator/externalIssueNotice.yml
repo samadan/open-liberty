@@ -1,21 +1,30 @@
 type: pipeline_definition
 product: Liberty
 name: Open Liberty External Contributor New Issues Notification
-description: "Creates notification for a new issue opened by an external contributor"
+description: Creates notification of a new issue opened by an external contributor
 triggers:
-- type: github
-  description: "Runs a pipeline that notifies of a new issue opened by an external contributor"
-  triggerName: "external-contributor-new-issue"
-  triggerRank: 50
-  groups: ["LibertyDev"]
-  #TODO: We shouldn't need to rely on a comment. The label should be enough trigger. How to detect that?
-  #keyword: "!external-contrib-new-issue"
-  #aliasKeywords:
-  #  - "#external-contrib-new-issue"
+- type: event
+  triggerName: external-contributor-label-trigger
+  eventType: GitHubIssueData
+  eventFilters:
+  - property: action
+    include: labeled
+  - property: repo
+    include: OpenLiberty/open-liberty
+  - property: labels
+    include: "Opened by external contributor"
+  - property: labels
+    exclude: "test"
   propertyDefinitions:
-    - name: githubIssueNumber
+    - name: user
       isRequired: true
-      description: "Number of new issue opened by the external contributor"
+      description: "User who created issue"
+    - name: number
+      isRequired: true
+      description: "Issue number"
+    - name: githubUrl
+      isRequired: true
+      description: "Issue HTML URL"
 
 steps:
 - stepName: New Issue Notice
@@ -23,4 +32,7 @@ steps:
   projectName: externalContribNewIssueNotify
   timeoutInMinutes: 120
   properties:
-    githubIssueApi: "https://api.github.com/repos/OpenLiberty/open-liberty/issues/${githubIssueNumber}"
+    githubIssueApi: "https://api.github.com/repos/OpenLiberty/open-liberty/issues/${number}"
+    githubIssueCreator: ${user}
+    githubIssueNumber: ${number}
+    githubIssueHtml: ${githubUrl}
