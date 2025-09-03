@@ -12,11 +12,13 @@
  *******************************************************************************/
 package suite;
 
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.ibm.ws.transaction.fat.util.TxTestContainerSuite;
+import com.ibm.ws.transaction.fat.util.TxTestDB;
 
 import componenttest.custom.junit.runner.AlwaysPassesTest;
 import componenttest.topology.database.container.DatabaseContainerType;
@@ -32,6 +34,8 @@ public class FATSuite extends TxTestContainerSuite {
 
 	static {
 		DBRotationTest.setDerby();
-		beforeSuite(DatabaseContainerType.Derby);
 	}
+
+	@ClassRule
+    public static TxTestDB p = new TxTestDB(DatabaseContainerType.Derby);
 }
