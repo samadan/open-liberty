@@ -127,7 +127,7 @@ public class ReroutePeerRecoveryTest extends MultiRecoveryTest {
 	@After
 	public void after() throws Exception {
 		Log.info(ReroutePeerRecoveryTest.class, "after", "");
-		FATUtils.stopServers(allowedMsgs, server1, server2, server3, server5);
+		FATUtils.stopServers(true, allowedMsgs, server1, server2, server3, server5);
 	}
 
 	@Before
@@ -144,7 +144,7 @@ public class ReroutePeerRecoveryTest extends MultiRecoveryTest {
 	@AfterClass
 	public static void afterClass() throws Exception {
 		Log.info(ReroutePeerRecoveryTest.class, "afterClass", "");
-		FATUtils.stopServers(server4, server6);
+		FATUtils.stopServers(true, server4, server6);
 	}
 
 	@Override

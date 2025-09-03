@@ -106,6 +106,6 @@ public class DBRerouteRecoveryTest extends MultiRecoveryTest1 {
 	@After
 	public void after() throws Exception {
 		Log.info(DBRerouteRecoveryTest.class, "after", "");
-		FATUtils.stopServers(server1, server2);
+		FATUtils.stopServers(true, server1, server2);
 	}
 }
