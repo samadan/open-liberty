@@ -80,7 +80,7 @@ public class Data_1_1_Servlet extends FATServlet {
      */
     @Test
     public void testIsAnnoEqualityAndInequality() {
-        Order<Fraction> order = Order.by(Sort.desc("value"));
+        Order<Fraction> order = Order.by(Sort.desc(_Fraction.VALUE));
 
         assertEquals(List.of("Four Fifths",
                              "Two Fifths",

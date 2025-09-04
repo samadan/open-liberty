@@ -33,18 +33,18 @@ import jakarta.data.repository.Repository;
 @Repository
 public interface Fractions {
     @Find
-    @OrderBy("numerator")
-    @OrderBy("denominator")
+    @OrderBy(_Fraction.NUMERATOR)
+    @OrderBy(_Fraction.DENOMINATOR)
     Stream<Fraction> havingDenoninatorWithin//
-    (@By("denominator") @Is(AtLeast.class) long min,
-     @By("denominator") @Is(AtMost.class) long max);
-
-    @Find
-    Stream<Fraction> withDenominatorButNotNumerator //
-    (@By("denominator") @Is(EqualTo.class) long denominator,
-     @By("numerator") @Is(NotEqualTo.class) long excludeNumerator,
-     Order<Fraction> order);
+    (@By(_Fraction.DENOMINATOR) @Is(AtLeast.class) long min,
+     @By(_Fraction.DENOMINATOR) @Is(AtMost.class) long max);
 
     @Insert
     void supply(Collection<Fraction> list);
+
+    @Find
+    Stream<Fraction> withDenominatorButNotNumerator //
+    (@By(_Fraction.DENOMINATOR) @Is(EqualTo.class) long denominator,
+     @By(_Fraction.NUMERATOR) @Is(NotEqualTo.class) long excludeNumerator,
+     Order<Fraction> order);
 }
