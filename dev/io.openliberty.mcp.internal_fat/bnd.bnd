@@ -20,7 +20,8 @@ fat.project: true
 
 
 tested.features: \
-    jsonb-3.0
+    cdi-4.1,\
+    servlet-6.1
 
 -buildpath: \
 	io.openliberty.jakarta.cdi.4.0;version=latest,\
