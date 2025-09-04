@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  *
- * Based on https://github.com/quarkiverse/quarkus-mcp-server/blob/main/core/runtime/src/main/java/io/quarkiverse/mcp/server/Tool.java
+ * Based on https://github.com/quarkiverse/quarkus-mcp-server/blob/main/core/runtime/src/main/java/io/quarkiverse/mcp/server/WrapBusinessError.java
  * Modifications have been made.
  *******************************************************************************/
 package io.openliberty.mcp.annotations;
