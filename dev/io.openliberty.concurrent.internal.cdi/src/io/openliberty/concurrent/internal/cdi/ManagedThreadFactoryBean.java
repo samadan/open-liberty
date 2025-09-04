@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,6 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.ras.annotation.Trivial;
 import com.ibm.ws.classloading.ClassLoaderIdentifierService;
-import com.ibm.ws.container.service.metadata.extended.IdentifiableComponentMetaData;
 import com.ibm.ws.runtime.metadata.ApplicationMetaData;
 import com.ibm.ws.runtime.metadata.ComponentMetaData;
 import com.ibm.ws.runtime.metadata.MetaData;
@@ -85,18 +84,25 @@ public class ManagedThreadFactoryBean implements Bean<ManagedThreadFactory>, Pas
         this.factory = extSvc.defaultManagedThreadFactoryFactory;
         this.qualifiers = qualifiers;
 
-        // TODO find out how to get the class loader for the application.
-        // It is not correct to use whichever application component's classloader happens to be on the thread.
-        if (cmd instanceof IdentifiableComponentMetaData) {
-            String identifier = ((IdentifiableComponentMetaData) cmd).getPersistentIdentifier();
+        // Find the Application classloader for this component
+        BundleContext bc = FrameworkUtil.getBundle(ClassLoaderIdentifierService.class).getBundleContext();
+        ServiceReference<ClassLoaderIdentifierService> ref = bc.getServiceReference(ClassLoaderIdentifierService.class);
+        ClassLoaderIdentifierService classloaderIdSvc = bc.getService(ref);
 
-            BundleContext bc = FrameworkUtil.getBundle(ClassLoaderIdentifierService.class).getBundleContext();
-            ServiceReference<ClassLoaderIdentifierService> ref = bc.getServiceReference(ClassLoaderIdentifierService.class);
-            ClassLoaderIdentifierService classloaderIdSvc = bc.getService(ref);
-            this.declaringClassLoader = classloaderIdSvc.getClassLoader(identifier);
-        } else {
-            throw new IllegalArgumentException(cmd.toString()); // internal error
+        // Check if an EAR Classloader exists for this component, if none, then check if a WEB Classloader exists
+        ClassLoader foundClassLoader = classloaderIdSvc.getClassLoader("EARApplication:" + cmd.getJ2EEName().getApplication());
+        if (foundClassLoader == null) {
+            foundClassLoader = classloaderIdSvc.getClassLoader("WebModule:" + cmd.getJ2EEName().getApplication() + "#" + cmd.getJ2EEName().getModule());
         }
+
+        // TODO - Is there anywhere else you would be able to inject a default managed thread factory
+        // like an application client?
+        if (foundClassLoader == null && tc.isDebugEnabled()) {
+            Tr.debug(tc, "No application classloader found for component: " + cmd.getJ2EEName()
+                         + ", while initalizing the default MangedThreadFactory bean.");
+        }
+
+        this.declaringClassLoader = foundClassLoader;
 
         // The Concurrency extension could be running under any module/component of the application.
         ApplicationMetaData amd = cmd.getModuleMetaData().getApplicationMetaData();
