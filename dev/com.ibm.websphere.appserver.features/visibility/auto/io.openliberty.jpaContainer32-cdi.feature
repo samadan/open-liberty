@@ -1,5 +1,5 @@
 -include= ~${workspace}/cnf/resources/bnd/feature.props
-symbolicName=io.openliberty.jpaContainer-cdi
+symbolicName=io.openliberty.jpaContainer32-cdi
 visibility=private
 IBM-App-ForceRestart: install, \
  uninstall
