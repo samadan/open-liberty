@@ -67,8 +67,12 @@ public class ToolDescription {
         LinkedList<String> requiredParameterList = new LinkedList<>();
 
         for (String argumentName : argumentMap.keySet()) {
-            primitiveInputSchemaMap.put(argumentName, buildPrimitiveInputSchema(argumentMap.get(argumentName)));
-            requiredParameterList.add(argumentName);
+            ArgumentMetadata argumentMetadata = argumentMap.get(argumentName);
+            primitiveInputSchemaMap.put(argumentName, buildPrimitiveInputSchema(argumentMetadata));
+
+            if (argumentMetadata.required()) {
+                requiredParameterList.add(argumentName);
+            }
         }
 
         inputSchema = new InputSchemaObject("object", primitiveInputSchemaMap, requiredParameterList);

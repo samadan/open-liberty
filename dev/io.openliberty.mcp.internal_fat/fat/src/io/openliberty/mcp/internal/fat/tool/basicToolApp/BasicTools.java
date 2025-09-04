@@ -286,7 +286,7 @@ public class BasicTools {
 
     // Test ToolArg.required is always true by default, check that it works when it is set to true
     @Tool(name = "testToolArgIsNotRequired", title = "ToolArgNotRequired", description = "ToolArgNotRequired")
-    public boolean testToolArgNotRequired(@ToolArg(name = "value", description = "boolean value ", required = false) boolean val) {
+    public boolean testToolArgNotRequired(@ToolArg(name = "value", description = "boolean value", required = false) boolean value) {
         return false;
     }
 
