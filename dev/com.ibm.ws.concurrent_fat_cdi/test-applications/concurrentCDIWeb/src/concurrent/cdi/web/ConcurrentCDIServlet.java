@@ -21,12 +21,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -56,12 +51,7 @@ import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Inject;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Status;
 import jakarta.transaction.UserTransaction;
 
@@ -70,6 +60,7 @@ import javax.naming.NamingException;
 
 import org.junit.Test;
 
+import componenttest.app.FATServlet;
 import concurrent.cdi.context.location.Location;
 import concurrent.cdi.ejb.Invoker;
 import concurrent.cdi.ejb.anno.ClearingAppContext;
@@ -131,7 +122,7 @@ import concurrent.cdi.ejb.anno.PropagatingLocationContext;
 @SuppressWarnings("serial")
 @ApplicationScoped
 @WebServlet("/*")
-public class ConcurrentCDIServlet extends HttpServlet {
+public class ConcurrentCDIServlet extends FATServlet {
 
     /**
      * Maximum number of nanoseconds to wait for a task to finish.
@@ -248,59 +239,13 @@ public class ConcurrentCDIServlet extends HttpServlet {
     private ExecutorService unmanagedThreads;
 
     @Override
-    public void destroy() {
+    public void after() {
         unmanagedThreads.shutdownNow();
     }
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
+    public void before() {
         unmanagedThreads = Executors.newFixedThreadPool(5); // TODO switch to virtual threads?
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String method = request.getParameter("testMethod");
-
-        System.out.println(">>> BEGIN: " + method);
-        System.out.println("Request URL: " + request.getRequestURL() + '?' + request.getQueryString());
-        PrintWriter writer = response.getWriter();
-        if (method != null && method.length() > 0) {
-            try {
-                // Use reflection to try invoking various test method signatures:
-                // 1)  method(HttpServletRequest request, HttpServletResponse response)
-                // 2)  method()
-                // 3)  use custom method invocation by calling invokeTest(method, request, response)
-                try {
-                    Method mthd = getClass().getMethod(method, HttpServletRequest.class, HttpServletResponse.class);
-                    mthd.invoke(this, request, response);
-                } catch (NoSuchMethodException nsme) {
-                    Method mthd = getClass().getMethod(method, (Class<?>[]) null);
-                    mthd.invoke(this);
-                }
-
-                writer.println("SUCCESS");
-            } catch (Throwable t) {
-                if (t instanceof InvocationTargetException) {
-                    t = t.getCause();
-                }
-
-                System.out.println("ERROR: " + t);
-                StringWriter sw = new StringWriter();
-                t.printStackTrace(new PrintWriter(sw));
-                System.err.print(sw);
-
-                writer.println("ERROR: Caught exception attempting to call test method " + method + " on servlet " + getClass().getName());
-                t.printStackTrace(writer);
-            }
-        } else {
-            System.out.println("ERROR: expected testMethod parameter");
-            writer.println("ERROR: expected testMethod parameter");
-        }
-
-        writer.flush();
-        writer.close();
-
-        System.out.println("<<< END:   " + method);
     }
 
     /**
@@ -725,10 +670,10 @@ public class ConcurrentCDIServlet extends HttpServlet {
                 result.completeExceptionally(e);
             }
 
-            // NOTE: The ConcurrentCDITest deploys both the ConcurrentCDITest.ear and ConcurrentCDI4Test.war
+            // NOTE: The ConcurrentCDITest deploys both the ConcurrentCDITest.ear and concurrentCDIApp2.war
             // applications so this class should be available (just not by this application classloader)
             try {
-                Class.forName("concurrent.cdi4.web.TaskBean"); //Exists in a different application
+                Class.forName("concurrent.cdi.web2.TestException"); //Exists in a different application
                 result.completeExceptionally(new IllegalStateException("Should not have been able to load a class from another application."));
             } catch (ClassNotFoundException e) {
                 // expected
