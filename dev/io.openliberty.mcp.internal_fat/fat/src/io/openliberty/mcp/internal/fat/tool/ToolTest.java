@@ -10,8 +10,6 @@
 package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -1068,6 +1066,21 @@ public class ToolTest extends FATServletClient {
                                         "name": "testStringStructuredContentResponse",
                                         "description": "A tool to return a string with structuredContent set. The tool should ignore this and not return a structuredContent field when the response is string.",
                                         "title": "Structured Content String Response"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "description": "boolean value",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": []
+                                        },
+                                        "name": "testToolArgIsNotRequired",
+                                        "description": "ToolArgNotRequired",
+                                        "title": "ToolArgNotRequired"
                                     },
                                 ]
                             },
