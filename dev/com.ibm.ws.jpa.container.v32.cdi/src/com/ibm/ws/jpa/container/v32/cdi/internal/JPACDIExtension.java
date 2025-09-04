@@ -45,6 +45,12 @@ public class JPACDIExtension implements Extension {
     private final JPAComponent jpaComponent = JPAAccessor.getJPAComponent();
 
     public void afterBeanDiscovery(@Observes AfterBeanDiscovery abd, BeanManager bm) {
+
+        //JPA PersistenceUnit are scoped to modules, but in getCurrentAppJ2EEName I strip
+        //out the app name. This is because of a limitation in our CDI implementation that
+        //means we cannot scope an Extension to just a single module.
+        //
+        //This is a tech debt that really should be fixed.
         J2EEName j2EEName = getCurrentAppJ2EEName();
         List<PersistenceUnitInfo> persistenceUnits = jpaComponent.getPersistenceUnits(j2EEName);
 
@@ -88,6 +94,9 @@ public class JPACDIExtension implements Extension {
         ComponentMetaData cmd = ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor().getComponentMetaData();
         if (cmd != null) {
             J2EEName j2eeName = cmd.getJ2EEName();
+
+            //Tech debt.
+            //When CDI is able to handle per-module extensions, just return j2eeName
             return new AppOnlyJ2EEName(j2eeName.getApplication());
         }
         return null;
