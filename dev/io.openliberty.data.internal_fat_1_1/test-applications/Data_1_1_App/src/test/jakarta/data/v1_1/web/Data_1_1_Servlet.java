@@ -12,15 +12,15 @@
  *******************************************************************************/
 package test.jakarta.data.v1_1.web;
 
-import static componenttest.annotation.SkipIfSysProp.DB_DB2;
-import static componenttest.annotation.SkipIfSysProp.DB_Not_Default;
-import static componenttest.annotation.SkipIfSysProp.DB_Oracle;
-import static componenttest.annotation.SkipIfSysProp.DB_Postgres;
-import static componenttest.annotation.SkipIfSysProp.DB_SQLServer;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import jakarta.data.Order;
+import jakarta.data.Sort;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
@@ -28,25 +28,67 @@ import jakarta.servlet.annotation.WebServlet;
 
 import org.junit.Test;
 
-import componenttest.annotation.OnlyIfSysProp;
-import componenttest.annotation.SkipIfSysProp;
 import componenttest.app.FATServlet;
 
 @SuppressWarnings("serial")
 @WebServlet("/*")
 public class Data_1_1_Servlet extends FATServlet {
 
+    @Inject
+    Fractions fractions;
+
+    /**
+     * Initialize read-only data that is prepopulated for tests
+     */
     @Override
     public void init(ServletConfig config) throws ServletException {
-        // Some read-only data that is prepopulated for tests:
-        // TODO
+        // Fractions including 1/2, 1/3, 2/3, ... 19/20
+        Set<Fraction> fractionsToAdd = new HashSet<Fraction>();
+        for (int d = 2; d <= 20; d++)
+            for (int n = 1; n < d; n++) {
+                Fraction f = Fraction.of(n, d);
+                System.out.println(f);
+                fractionsToAdd.add(f);
+            }
+        fractions.supply(fractionsToAdd);
     }
 
     /**
-     * TODO replace this with a useful test
+     * Tests that the Is annotation can be applied to repository method parameters
+     * to enforce constraints on minimum and maximum values.
      */
     @Test
-    public void testData_1_1() {
-        System.out.println("testData_1_1 running");
+    public void testIsAnnoAtLeastAndAtMost() {
+
+        assertEquals(List.of("One Third",
+                             "One Fourth",
+                             "One Fifth",
+                             "Two Thirds",
+                             "Two Fourths",
+                             "Two Fifths",
+                             "Three Fourths",
+                             "Three Fifths",
+                             "Four Fifths"),
+                     fractions.havingDenoninatorWithin(3, 5)
+                                     .map(f -> f.name)
+                                     .collect(Collectors.toList()));
+    }
+
+    /**
+     * Tests that the Is annotation can be applied to repository method parameters
+     * to enforce constraints on equality and inequality.
+     */
+    @Test
+    public void testIsAnnoEqualityAndInequality() {
+        Order<Fraction> order = Order.by(Sort.desc("value"));
+
+        assertEquals(List.of("Four Fifths",
+                             "Two Fifths",
+                             "One Fifth"),
+                     fractions.withDenominatorButNotNumerator(5,
+                                                              3,
+                                                              order)
+                                     .map(f -> f.name)
+                                     .collect(Collectors.toList()));
     }
 }
