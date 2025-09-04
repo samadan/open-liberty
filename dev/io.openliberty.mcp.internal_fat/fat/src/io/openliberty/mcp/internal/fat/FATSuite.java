@@ -26,11 +26,11 @@ import io.openliberty.mcp.internal.fat.tool.ToolTest;
 @RunWith(Suite.class)
 @SuiteClasses({
                 BeanLifecycleTest.class,
+                DeploymentProblemTest.class,
                 HttpTest.class,
                 LifecycleTest.class,
                 ProtocolVersionTest.class,
-                ToolTest.class,
-                DeploymentProblemTest.class
+                ToolTest.class
 
 })
 public class FATSuite {

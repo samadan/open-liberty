@@ -37,7 +37,7 @@ public class McpCdiExtension implements Extension {
         for (AnnotatedMethod<?> m : type.getMethods()) {
             Tool toolAnnotation = m.getAnnotation(Tool.class);
             if (toolAnnotation != null) {
-                registerTool(toolAnnotation, pmb.getBean(), m, javaClass.getPackageName() + "." + javaClass.getSimpleName());
+                registerTool(toolAnnotation, pmb.getBean(), m, javaClass.getName());
             }
         }
     }
@@ -46,8 +46,7 @@ public class McpCdiExtension implements Extension {
 
         // prune items that are not duplicates
         duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
-        StringBuilder sb = new StringBuilder();
-
+        StringBuilder sb = new StringBuilder("More than one MCP tool has the same name: \n");
         for (String toolName : duplicateToolsMap.keySet()) {
             LinkedList<String> qualifiedNames = duplicateToolsMap.get(toolName);
             sb.append("Tool: ").append(toolName);
@@ -58,7 +57,7 @@ public class McpCdiExtension implements Extension {
         }
 
         if (duplicateToolsMap.size() != 0) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception("More than one MCP tool has the same name: \n" + sb.toString()));
+            afterDeploymentValidation.addDeploymentProblem(new Exception(sb.toString()));
         }
     }
 
