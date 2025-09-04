@@ -9,10 +9,16 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat;
 
+import static componenttest.rules.repeater.EERepeatActions.EE10;
+import static componenttest.rules.repeater.EERepeatActions.EE11;
+
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
+import componenttest.rules.repeater.EERepeatActions;
+import componenttest.rules.repeater.RepeatTests;
 import io.openliberty.mcp.internal.fat.lifecycle.tests.BeanLifecycleTest;
 import io.openliberty.mcp.internal.fat.lifecycle.tests.LifecycleTest;
 import io.openliberty.mcp.internal.fat.protocol.HttpTest;
@@ -35,4 +41,6 @@ import io.openliberty.mcp.internal.fat.tool.ToolTest;
 })
 public class FATSuite {
 
+    @ClassRule
+    public static RepeatTests r = EERepeatActions.repeat(null, /* skipTransformation */ true, EE10, EE11);
 }

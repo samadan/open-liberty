@@ -4,7 +4,6 @@ visibility=public
 IBM-App-ForceRestart: install, \
  uninstall
 IBM-API-Package: \
- io.openliberty.mcp, \
  io.openliberty.mcp.annotations, \
  io.openliberty.mcp.content, \
  io.openliberty.mcp.encoders, \
@@ -14,7 +13,8 @@ IBM-API-Package: \
 IBM-ShortName: mcp-1.0
 Subsystem-Name: Model Context Protocol 1.0
 -features=com.ibm.websphere.appserver.servlet-6.0;ibm.tolerates:=6.1,\
- io.openliberty.cdi-4.0;ibm.tolerates:=4.1
+ io.openliberty.cdi-4.0;ibm.tolerates:=4.1,\
+ io.openliberty.jsonb-3.0
 -bundles=io.openliberty.mcp, \
  io.openliberty.mcp.internal
 kind=noship
