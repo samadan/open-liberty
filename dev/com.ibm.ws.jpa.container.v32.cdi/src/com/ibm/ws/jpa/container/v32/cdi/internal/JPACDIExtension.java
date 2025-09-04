@@ -67,20 +67,24 @@ public class JPACDIExtension implements Extension {
     private void createBeanForPersistenceUnit(AfterBeanDiscovery abd, final PersistenceUnitInfo pui, final J2EEName j2eeName) throws ClassNotFoundException {
 
         Set<Annotation> qualfiiers = getQualifiers(pui);
-        Class<? extends Annotation> scope = getScope(pui);
+        //TODO ask JPA team if anything needs to happen when any of these go out of scope.
+        Class<? extends Annotation> scopeForEntityManager = getScope(pui, jakarta.transaction.TransactionScoped.class);
+        Class<? extends Annotation> scopeForEntityManagerFactory = jakarta.enterprise.context.ApplicationScoped.class;
+        Class<? extends Annotation> scopeForOthers = jakarta.enterprise.inject.Default.class;
 
-        abd.addBean().types(EntityManager.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManager(j2eeName, pui));
-        abd.addBean().types(EntityManagerFactory.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName, pui));
-        abd.addBean().types(PersistenceUnitUtil.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
-                                                                                                                                                             pui).getPersistenceUnitUtil());
-        abd.addBean().types(CriteriaBuilder.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
-                                                                                                                                                         pui).getCriteriaBuilder());
-        abd.addBean().types(Cache.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
-                                                                                                                                               pui).getCache());
-        abd.addBean().types(Metamodel.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
-                                                                                                                                                   pui).getMetamodel());
-        abd.addBean().types(SchemaManager.class).addQualifiers(qualfiiers).scope(scope).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
-                                                                                                                                                       pui).getSchemaManager());
+        abd.addBean().types(EntityManager.class).addQualifiers(qualfiiers).scope(scopeForEntityManager).produceWith((instance) -> jpaComponent.getEntityManager(j2eeName, pui));
+        abd.addBean().types(EntityManagerFactory.class).addQualifiers(qualfiiers).scope(scopeForEntityManagerFactory).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                                                     pui));
+        abd.addBean().types(PersistenceUnitUtil.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                                      pui).getPersistenceUnitUtil());
+        abd.addBean().types(CriteriaBuilder.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                                  pui).getCriteriaBuilder());
+        abd.addBean().types(Cache.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                        pui).getCache());
+        abd.addBean().types(Metamodel.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                            pui).getMetamodel());
+        abd.addBean().types(SchemaManager.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+                                                                                                                                                                pui).getSchemaManager());
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             String qualifiersString = qualfiiers.stream().map(Annotation::annotationType).map(Class::getName).collect(Collectors.joining(", "));
@@ -102,12 +106,12 @@ public class JPACDIExtension implements Extension {
         return null;
     }
 
-    private Class<? extends Annotation> getScope(PersistenceUnitInfo pui) throws ClassNotFoundException {
+    private Class<? extends Annotation> getScope(PersistenceUnitInfo pui, Class<? extends Annotation> defaultScope) throws ClassNotFoundException {
         String scopeName = pui.getScopeAnnotationName();
 
         Class<? extends Annotation> scope;
         if (scopeName == null || scopeName.equals("")) {
-            scope = jakarta.transaction.TransactionScoped.class;
+            scope = defaultScope;
         } else {
             //The TCCL will be set by CDIRuntimeImpl to the app classloader.
             scope = Class.forName(scopeName, false, Thread.currentThread().getContextClassLoader()).asSubclass(Annotation.class);
