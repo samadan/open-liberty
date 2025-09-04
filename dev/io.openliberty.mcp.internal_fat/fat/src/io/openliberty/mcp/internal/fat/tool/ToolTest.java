@@ -36,10 +36,6 @@ import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 @RunWith(FATRunner.class)
 public class ToolTest extends FATServletClient {
 
-    private static final String ACCEPT_HEADER = "application/json, text/event-stream";
-    private static final String MCP_PROTOCOL_HEADER = "MCP-Protocol-Version";
-    private static final String MCP_PROTOCOL_VERSION = "2025-06-18";
-
     @Server("mcp-server")
     public static LibertyServer server;
 

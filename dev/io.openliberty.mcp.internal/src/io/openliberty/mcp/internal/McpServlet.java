@@ -25,15 +25,15 @@ import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.HttpResponseException;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
+import io.openliberty.mcp.internal.requests.CancellationImpl;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpNotificationParams;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
-import io.openliberty.mcp.internal.requests.CancellationImpl;
 import io.openliberty.mcp.internal.requests.RequestId;
 import io.openliberty.mcp.internal.responses.McpInitializeResult;
 import io.openliberty.mcp.internal.responses.McpInitializeResult.ServerInfo;
-import io.openliberty.mcp.tools.ToolResponse;
 import io.openliberty.mcp.messaging.Cancellation;
+import io.openliberty.mcp.tools.ToolResponse;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
@@ -155,7 +155,7 @@ public class McpServlet extends HttpServlet {
         } catch (IllegalArgumentException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
         } finally {
-            if (requestId != null && connection.isOngoingRequest(requestId)) {
+            if (connection.isOngoingRequest(requestId)) {
                 connection.deregisterOngoingRequest(requestId);
             }
             try {
@@ -173,10 +173,13 @@ public class McpServlet extends HttpServlet {
     }
 
     private void checkAndParseCancellationObject(Object[] argumentsArray, RequestId requestId) {
-        for (Object argument : argumentsArray) {
-            if (argument instanceof Cancellation cancellation) {
-                ((CancellationImpl) cancellation).setRequestId(requestId);
+        for (int i = 0; i < argumentsArray.length; i++) {
+            Object argument = argumentsArray[i];
+            if (argument == SpecialArgumentType.CANCELLATION) {
+                CancellationImpl cancellation = new CancellationImpl();
+                cancellation.setRequestId(requestId);
                 connection.registerOngoingRequest(requestId, cancellation);
+                argumentsArray[i] = cancellation;
                 break;
             }
         }
@@ -234,13 +237,12 @@ public class McpServlet extends HttpServlet {
         RequestId requestId = new RequestId(notificationParams.getRequestId(), transport.getRequestIpAddress());
         Optional<String> reason = Optional.ofNullable(notificationParams.getReason());
 
-        Cancellation cancellation = connection.getOngoingRequestCancelation(requestId);
+        Cancellation cancellation = connection.getOngoingRequestCancellation(requestId);
 
         if (cancellation != null) {
             ((CancellationImpl) cancellation).cancel(reason);
-            transport.sendEmptyResponse();
         }
-        //Ignore notification if there is no request to cancel
+        transport.sendEmptyResponse();
     }
 
     private RequestId createOngoingRequestId(McpTransport transport) {

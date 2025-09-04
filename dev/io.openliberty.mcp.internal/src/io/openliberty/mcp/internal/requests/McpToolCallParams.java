@@ -97,14 +97,10 @@ public class McpToolCallParams {
             return results;
         }
 
-        HashSet<String> specialArgsProcessed = new HashSet<>();
         for (var entry : specialArguments.entrySet()) {
             SpecialArgumentMetadata specialArgsMetadata = entry.getValue();
             results[specialArgsMetadata.index()] = specialArgsMetadata.type();
-            specialArgsProcessed.add(entry.getKey());
         }
-
-        validateProcessedArgs(specialArgsProcessed, specialArguments.keySet());
 
         return results;
     }

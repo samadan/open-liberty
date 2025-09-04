@@ -32,6 +32,11 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
 
     public record SpecialArgumentMetadata(SpecialArgumentType type, int index) {}
 
+    public ToolMetadata {
+        arguments = ((arguments == null) ? Collections.emptyMap() : arguments);
+        specialArguments = ((specialArguments == null) ? Collections.emptyMap() : specialArguments);
+    }
+
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
 
         String name = annotation.name().equals(Tool.ELEMENT_NAME) ? method.getJavaMember().getName() : annotation.name();
@@ -54,7 +59,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                 }
             }
         }
-        return result.isEmpty() ? Collections.emptyMap() : Map.copyOf(result);
+        return result.isEmpty() ? Collections.emptyMap() : result;
     }
 
     private static Map<String, SpecialArgumentMetadata> getSpecialArgumentMap(AnnotatedMethod<?> method) {
@@ -66,6 +71,6 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                 result.put(p.getBaseType().getTypeName(), pData);
             }
         }
-        return result.isEmpty() ? Collections.emptyMap() : Map.copyOf(result);
+        return result.isEmpty() ? Collections.emptyMap() : result;
     }
 }

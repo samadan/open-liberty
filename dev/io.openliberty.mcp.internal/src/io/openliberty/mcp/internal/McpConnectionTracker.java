@@ -12,9 +12,12 @@ package io.openliberty.mcp.internal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.RequestId;
 import io.openliberty.mcp.messaging.Cancellation;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import static io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode.INVALID_PARAMS;
 
 /**
  * This is a connection tracker bean. It keeps track of ongoing tool call requests
@@ -34,17 +37,17 @@ public class McpConnectionTracker {
     }
 
     public void registerOngoingRequest(RequestId id, Cancellation cancellation) {
-        ongoingRequests.putIfAbsent(id.getUniqueId(), cancellation);
+        Cancellation previous = ongoingRequests.putIfAbsent(id.getUniqueId(), cancellation);
+        if (previous != null) {
+            throw new JSONRPCException(INVALID_PARAMS, "A request with id " + id.id() + " is already in progress");
+        }
     }
 
     public boolean isOngoingRequest(RequestId id) {
         return ongoingRequests.containsKey(id.getUniqueId());
     }
 
-    public Cancellation getOngoingRequestCancelation(RequestId id) {
-        if (isOngoingRequest(id)) {
-            return ongoingRequests.get(id.getUniqueId());
-        }
-        return null;
+    public Cancellation getOngoingRequestCancellation(RequestId id) {
+        return ongoingRequests.get(id.getUniqueId());
     }
 }

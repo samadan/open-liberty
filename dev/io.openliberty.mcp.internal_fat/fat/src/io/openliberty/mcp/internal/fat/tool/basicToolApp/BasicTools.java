@@ -294,10 +294,11 @@ public class BasicTools {
     public String cancellationTool(Cancellation cancellation) throws InterruptedException {
         LOG.info("Cancelling Request");
         int counter = 0;
-        TimeUnit.MILLISECONDS.sleep(500);
-        while (counter++ < 5) {
+        while (counter++ < 20) {
+            TimeUnit.MILLISECONDS.sleep(500);
+            LOG.info("Checking if tool is cancelled");
             if (cancellation.check().isRequested()) {
-                LOG.info("Checking if tool is cancelled");
+                LOG.info("tool is cancelled");
                 throw new OperationCancellationException();
             }
         }

@@ -198,12 +198,11 @@ public class McpTransport {
     }
 
     public String getRequestIpAddress() {
-        String idAddress = req.getHeader("X-Forwarded-For");
-        if (idAddress == null || idAddress.isEmpty() || "unknown".equalsIgnoreCase(idAddress)) {
-            idAddress = req.getRemoteAddr();
-        } else if (idAddress.contains(",")) {
-            idAddress = idAddress.split(",")[0].trim();
+        String ipAddress = req.getRemoteAddr();
+        String proxyAddress = req.getHeader("X-Forwarded-For");
+        if (proxyAddress != null && !proxyAddress.equals(ipAddress)) {
+            throw new HttpResponseException(HttpServletResponse.SC_FORBIDDEN, "Unknown proxy address.");
         }
-        return idAddress;
+        return ipAddress;
     }
 }

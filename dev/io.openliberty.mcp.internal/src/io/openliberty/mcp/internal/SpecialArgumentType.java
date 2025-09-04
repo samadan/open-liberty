@@ -22,10 +22,10 @@ public enum SpecialArgumentType {
         this.typeClass = typeClass;
     }
 
-    public static SpecialArgumentType fromClass(Type type2) {
-        for (SpecialArgumentType type : values()) {
-            if (type.typeClass.equals(type2)) {
-                return type;
+    public static SpecialArgumentType fromClass(Type type) {
+        for (SpecialArgumentType specialArgType : values()) {
+            if (specialArgType.typeClass.equals(type)) {
+                return specialArgType;
             }
         }
         throw new IllegalArgumentException();
