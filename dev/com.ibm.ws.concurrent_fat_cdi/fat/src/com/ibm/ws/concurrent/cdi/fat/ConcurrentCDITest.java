@@ -33,6 +33,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import concurrent.cdi.web.ConcurrentCDIServlet;
+import concurrent.cdi.web2.ConcurrentCDIAdditionalServlet;
 import concurrent.cdi4.web.ConcurrentCDI4Servlet;
 
 @RunWith(FATRunner.class)
@@ -41,16 +42,19 @@ public class ConcurrentCDITest extends FATServletClient {
 
     public static final String APP_NAME = "concurrentCDIApp";
     public static final String APP_NAME_EE10 = "concurrentCDI4App";
+    public static final String APP_NAME_EE10_2 = "concurrentCDIWeb2";
 
     @Server("concurrent_fat_cdi")
     @TestServlets({
                     @TestServlet(servlet = ConcurrentCDIServlet.class, contextRoot = APP_NAME),
-                    @TestServlet(servlet = ConcurrentCDI4Servlet.class, contextRoot = APP_NAME_EE10)
+                    @TestServlet(servlet = ConcurrentCDI4Servlet.class, contextRoot = APP_NAME_EE10),
+                    @TestServlet(servlet = ConcurrentCDIAdditionalServlet.class, contextRoot = APP_NAME_EE10_2)
     })
     public static LibertyServer server;
 
     @BeforeClass
     public static void setUp() throws Exception {
+        // Create location-context.jar
         // fake third-party library that includes a thread context provider
         JavaArchive locationContextProviderJar = ShrinkWrap.create(JavaArchive.class, "location-context.jar")
                         .addPackage("concurrent.cdi.context.location")
@@ -58,6 +62,7 @@ public class ConcurrentCDITest extends FATServletClient {
                                               "concurrent.cdi.context.location.LocationContextProvider");
         ShrinkHelper.exportToServer(server, "lib", locationContextProviderJar);
 
+        // Create concurrentCDIApp.ear
         JavaArchive cdiExtensionJar = ShrinkWrap
                         .create(JavaArchive.class, "cdi-extension.jar")
                         .addPackage("concurrent.cdi.ext")
@@ -83,9 +88,14 @@ public class ConcurrentCDITest extends FATServletClient {
         ShrinkHelper.addDirectory(concurrentCDIApp, "test-applications/concurrentCDIApp/resources");
         ShrinkHelper.exportAppToServer(server, concurrentCDIApp);
 
+        // Create concurrentCDI4App.war
         // TODO Adding "concurrent.cu3.web" to the following would cause conflict with app-defined ManagedExecutorService.
         // There is a spec proposal to detect conflict and avoid automatically adding the bean.
         ShrinkHelper.defaultDropinApp(server, APP_NAME_EE10, "concurrent.cdi4.web");
+
+        // Create concurrentCDIWeb2.war
+        ShrinkHelper.defaultDropinApp(server, APP_NAME_EE10_2, "concurrent.cdi.web2");
+
         server.startServer();
         runTest(server, APP_NAME_EE10 + '/' + ConcurrentCDI4Servlet.class.getSimpleName(), "initTransactionService");
     }
