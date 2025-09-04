@@ -280,12 +280,12 @@ public class FeatureAuditor implements EnvironmentPostProcessor {
                 // Feature springBoot-1.5 or springBoot-2.0 or springBoot-3.0 is provisioned
                 // and the application has Spring 4.0 content."
             } else if ( appUsesServlets && !libertyHasJakartaServlets ) {
-                ApplicationTr.error("error.spring4.requires.servlet60.or.later.application");
-                // "CWWKC0277E: Error: Feature servlet-6.0 or later must be provisioned:
+                ApplicationTr.error("error.spring4.requires.servlet61.or.later.application");
+                // "CWWKC0277E: Error: Feature servlet-6.1 or later must be provisioned:
                 // Feature springBoot-4.0 is provisioned and the application uses Servlets."
             } else if ( appUsesWebsockets && !libertyHasJakartaWebsockets ) {
-                ApplicationTr.error("error.spring4.requires.websocket21.or.later.application");
-                // "CWWKC0278E: Error: Feature websocket-2.1 or later must be provisioned:
+                ApplicationTr.error("error.spring4.requires.websocket22.or.later.application");
+                // "CWWKC0278E: Error: Feature websocket-2.2 or later must be provisioned:
                 // Feature springBoot-4.0 is provisioned and the application uses WebSockets."
             }
         } else if ( appHasSpring30 ) {
