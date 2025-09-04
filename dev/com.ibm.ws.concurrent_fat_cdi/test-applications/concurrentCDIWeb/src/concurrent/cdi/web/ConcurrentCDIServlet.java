@@ -18,6 +18,7 @@ import static jakarta.enterprise.concurrent.ContextServiceDefinition.TRANSACTION
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -234,6 +235,9 @@ public class ConcurrentCDIServlet extends HttpServlet {
     @Inject
     @WithoutLocationContext
     ContextService withoutLocationContext;
+
+    @Inject
+    AppBean appBean;
 
     @Inject
     TestBean testBean;
@@ -692,6 +696,142 @@ public class ConcurrentCDIServlet extends HttpServlet {
         } finally {
             Location.clear();
         }
+    }
+
+    // Task that will verify that the same ManagedThreadFactory is used throughout
+    // the application and that the same Thread Context ClassLoader is used.
+    public static Runnable getTCCLTask(final CompletableFuture<String> result) {
+        return () -> {
+            try {
+                assertNotNull("Expected context classloader to be non-null",
+                              Thread.currentThread().getContextClassLoader());
+
+                System.out.println("Using thread context classloader: " + Thread.currentThread().getContextClassLoader());
+            } catch (AssertionError e) {
+                result.completeExceptionally(e);
+            }
+
+            try {
+                Class.forName("java.lang.Integer"); //Exists as part of JVM
+
+                Class.forName("concurrent.cdi.ejb.anno.ClearingAppContext"); //Exists inside EAR/lib
+
+                Class.forName("concurrent.cdi.web.MyAsync"); //Exists inside EAR/Web Module
+                Class.forName("concurrent.cdi.ext.ConcurrentCDIExtension"); // Exists inside EAR/Web Module/lib
+                Class.forName("concurrent.cdi.ejb.Invoker"); //Exists inside EAR/EJB Module
+
+                Class.forName("concurrent.cdi.context.location.Location"); //Exists outside EAR with commonLibraryRef
+            } catch (ClassNotFoundException e) {
+                result.completeExceptionally(e);
+            }
+
+            // NOTE: The ConcurrentCDITest deploys both the ConcurrentCDITest.ear and ConcurrentCDI4Test.war
+            // applications so this class should be available (just not by this application classloader)
+            try {
+                Class.forName("concurrent.cdi4.web.TaskBean"); //Exists in a different application
+                result.completeExceptionally(new IllegalStateException("Should not have been able to load a class from another application."));
+            } catch (ClassNotFoundException e) {
+                // expected
+            }
+
+            result.complete("SUCCESS");
+        };
+    }
+
+    /**
+     * Inject an instance of the default ManagedThreadFactory resource
+     * and verify the Thread Context ClassLoader is scoped to the application.
+     */
+    @Test
+    public void testInjectManagedThreadFactoryDefaultTCCLServlet() throws Exception {
+        assertNotNull(defaultManagedThreadFactory);
+
+        CompletableFuture<String> future = new CompletableFuture<>();
+        Runnable task = getTCCLTask(future);
+
+        Thread thread = defaultManagedThreadFactory.newThread(task);
+        thread.start();
+
+        String result = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+        assertEquals("SUCCESS", result);
+    }
+
+    /**
+     * Inject an instance of an application scoped ManagedThreadFactory resource via qualifier
+     * and verify the Thread Context Classloader is scoped to the application.
+     */
+    @Test
+    public void testInjectManagedThreadFactoryQualifiedTCCLServlet() throws Exception {
+        assertNotNull(threadFactoryWithAppContext);
+
+        CompletableFuture<String> future = new CompletableFuture<>();
+        Runnable task = getTCCLTask(future);
+
+        Thread thread = threadFactoryWithAppContext.newThread(task);
+        thread.start();
+
+        String result = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+        assertEquals("SUCCESS", result);
+    }
+
+    /**
+     * Inject an instance of the default ManagedThreadFactory resource into an app bean
+     * and verify the Thread Context ClassLoader is scoped to the application.
+     */
+    @Test
+    public void testInjectManagedThreadFactoryDefaultTCCLBean() throws Exception {
+        assertNotNull(appBean);
+
+        CompletableFuture<String> future = new CompletableFuture<>();
+        Runnable task = getTCCLTask(future);
+
+        appBean.runTaskUsingDefaultManagedThreadFactory(task);
+
+        String result = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+        assertEquals("SUCCESS", result);
+    }
+
+    /**
+     * Inject an instance of the default ManagedThreadFactory resource in an EJB
+     * and verify the Thread Context ClassLoader is scoped to the application.
+     */
+    @Test
+    public void testInjectManagedThreadFactoryDefaultTCCLEJB() throws Exception {
+        assertNotNull(ejb);
+
+        CompletableFuture<String> future = new CompletableFuture<>();
+        Runnable task = getTCCLTask(future);
+
+        ejb.runTaskUsingDefaultManagedThreadFactory(task);
+
+        String result = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+        assertEquals("SUCCESS", result);
+    }
+
+    /**
+     * Lookup an instance of the default ManagedThreadFactory resource using CDI
+     * and verify the Thread Context ClassLoader is scoped to the application.
+     */
+    @Test
+    public void testInjectManagedThreadFactoryDefaultTCCLLookup() throws Exception {
+        Instance<ManagedThreadFactory> defaultManagedThreadFactoryInstance = CDI.current() //
+                        .select(ManagedThreadFactory.class, new Annotation[] { Default.Literal.INSTANCE });
+
+        assertTrue("ManagedTheadFactoryBean should have been avaialble with default qualifier",
+                   defaultManagedThreadFactoryInstance.isResolvable());
+
+        ManagedThreadFactory defaultManagedThreadFactory = defaultManagedThreadFactoryInstance.get();
+
+        assertNotNull(defaultManagedThreadFactory);
+
+        CompletableFuture<String> future = new CompletableFuture<>();
+        Runnable task = getTCCLTask(future);
+
+        Thread thread = defaultManagedThreadFactory.newThread(task);
+        thread.start();
+
+        String result = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+        assertEquals("SUCCESS", result);
     }
 
     /**
