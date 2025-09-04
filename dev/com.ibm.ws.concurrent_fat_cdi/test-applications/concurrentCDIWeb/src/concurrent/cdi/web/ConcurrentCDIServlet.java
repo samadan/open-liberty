@@ -70,11 +70,11 @@ import javax.naming.NamingException;
 import org.junit.Test;
 
 import concurrent.cdi.context.location.Location;
-import concurrent.cdi.ejb.ClearingAppContext;
-import concurrent.cdi.ejb.IgnoringTransactionContext;
 import concurrent.cdi.ejb.Invoker;
-import concurrent.cdi.ejb.PropagatingAppContext;
-import concurrent.cdi.ejb.PropagatingLocationContext;
+import concurrent.cdi.ejb.anno.ClearingAppContext;
+import concurrent.cdi.ejb.anno.IgnoringTransactionContext;
+import concurrent.cdi.ejb.anno.PropagatingAppContext;
+import concurrent.cdi.ejb.anno.PropagatingLocationContext;
 
 @ContextServiceDefinition(name = "java:app/concurrent/with-app-context",
                           qualifiers = WithAppContext.class,

@@ -71,12 +71,15 @@ public class ConcurrentCDITest extends FATServletClient {
         ShrinkHelper.addDirectory(concurrentCDIWeb,
                                   "test-applications/concurrentCDIWeb/resources");
 
+        JavaArchive concurrentCDIEJBLib = ShrinkHelper.buildJavaArchive("concurrentCDIEJB", "concurrent.cdi.ejb.anno");
+
         JavaArchive concurrentCDIEJB = ShrinkHelper.buildJavaArchive("concurrentCDIEJB", "concurrent.cdi.ejb");
         ShrinkHelper.addDirectory(concurrentCDIEJB, "test-applications/concurrentCDIEJB/resources");
 
         EnterpriseArchive concurrentCDIApp = ShrinkWrap.create(EnterpriseArchive.class, "concurrentCDIApp.ear");
         concurrentCDIApp.addAsModule(concurrentCDIWeb);
         concurrentCDIApp.addAsModule(concurrentCDIEJB);
+        concurrentCDIApp.addAsLibraries(concurrentCDIEJBLib);
         ShrinkHelper.addDirectory(concurrentCDIApp, "test-applications/concurrentCDIApp/resources");
         ShrinkHelper.exportAppToServer(server, concurrentCDIApp);
 
