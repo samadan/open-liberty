@@ -5,6 +5,7 @@ description: Creates notification of a new issue opened by an external contribut
 triggers:
 - type: event
   triggerName: external-contributor-label-trigger
+  groups: ["LibertyDev"]
   eventType: GitHubIssueData
   eventFilters:
   - property: action
