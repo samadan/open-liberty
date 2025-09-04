@@ -30,4 +30,4 @@ tested.features: \
 	com.ibm.ws.logging;version=latest,\
 	com.ibm.websphere.appserver.spi.logging,\
 	com.ibm.ws.logging.core,\
-	io.openliberty.jakarta.annotation.3.0
+	io.openliberty.jakarta.annotation.2.1

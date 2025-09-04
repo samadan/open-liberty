@@ -12,27 +12,10 @@
  *******************************************************************************/
 apply from: '../wlp-gradle/subprojects/repos.gradle'
 
-configurations {
-  json
-}
-
-configurations.json {
+configurations.requiredLibs {
   transitive = false
 }
-
 dependencies {
-  json 'org.json:json:20080701',
-    'org.skyscreamer:jsonassert:2.0-rc1'
+  requiredLibs 'org.json:json:20080701',
+               'org.skyscreamer:jsonassert:2.0-rc1'
 }
-
-
-task addJson(type: Copy) {
-  from configurations.json
-  into "${buildDir}/autoFVT/lib"
-}
-
-addRequiredLibraries {
-  dependsOn addJson
-}
-
-addRequiredLibraries.dependsOn addJakartaTransformer
