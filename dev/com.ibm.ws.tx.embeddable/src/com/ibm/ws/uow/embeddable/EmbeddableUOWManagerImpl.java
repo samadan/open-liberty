@@ -19,6 +19,7 @@ import javax.transaction.Synchronization;
 import javax.transaction.Transaction;
 
 import com.ibm.tx.TranConstants;
+import com.ibm.tx.config.ConfigurationProviderManager;
 import com.ibm.tx.jta.embeddable.EmbeddableTransactionManagerFactory;
 import com.ibm.tx.jta.embeddable.impl.EmbeddableTransactionImpl;
 import com.ibm.tx.jta.embeddable.impl.EmbeddableUserTransactionImpl;
@@ -833,7 +834,11 @@ public class EmbeddableUOWManagerImpl implements UOWManager, UOWScopeCallback, U
 
         switch (uowType) {
             case UOWSynchronizationRegistry.UOW_TYPE_GLOBAL_TRANSACTION:
-                UserTransactionImpl.instance().commit();
+                if (ConfigurationProviderManager.getConfigurationProvider().isCorrectUOWScopeCallbacks()) {
+                    UserTransactionImpl.instance().commit();
+                } else {
+                    EmbeddableTransactionManagerFactory.getTransactionManager().commit();
+                }
                 break;
 
             case UOWSynchronizationRegistry.UOW_TYPE_LOCAL_TRANSACTION:
@@ -855,7 +860,11 @@ public class EmbeddableUOWManagerImpl implements UOWManager, UOWScopeCallback, U
 
         switch (uowType) {
             case UOWSynchronizationRegistry.UOW_TYPE_GLOBAL_TRANSACTION:
-                UserTransactionImpl.instance().rollback();
+                if (ConfigurationProviderManager.getConfigurationProvider().isCorrectUOWScopeCallbacks()) {
+                    UserTransactionImpl.instance().rollback();;
+                } else {
+                    EmbeddableTransactionManagerFactory.getTransactionManager().rollback();
+                }
                 break;
 
             case UOWSynchronizationRegistry.UOW_TYPE_LOCAL_TRANSACTION:

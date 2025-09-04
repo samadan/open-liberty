@@ -17,10 +17,9 @@ import static org.junit.Assert.assertTrue;
 import javax.annotation.Resource;
 import javax.servlet.annotation.WebServlet;
 
-import org.junit.Test;
-
 import com.ibm.tx.jta.ut.util.TxTestUtils;
 import com.ibm.websphere.uow.UOWSynchronizationRegistry;
+import com.ibm.ws.uow.UOWScopeCallback;
 import com.ibm.wsspi.uow.UOWAction;
 import com.ibm.wsspi.uow.UOWManager;
 
@@ -33,23 +32,53 @@ public class UOWScopeCallbackServlet extends FATServlet {
     @Resource
     UOWManager uowm;
 
-    @Test
-    public void testUOWScopeCallback() throws Exception {
+    public void testBadBehavior() throws Exception {
 
-        TxTestUtils.registerUOWScopeCallback();
+        UOWScopeCallback cb = null;
 
-        final long localUOWId = uowm.getLocalUOWId();
+        try {
+            cb = TxTestUtils.registerUOWScopeCallback();
 
-        uowm.runUnderUOW(UOWSynchronizationRegistry.UOW_TYPE_GLOBAL_TRANSACTION, false, new UOWAction() {
-            @Override
-            public void run() throws Exception {
+            final long localUOWId = uowm.getLocalUOWId();
 
-                if (localUOWId == uowm.getLocalUOWId()) {
-                    throw new Exception("UOWAction not run under new UOW");
+            uowm.runUnderUOW(UOWSynchronizationRegistry.UOW_TYPE_GLOBAL_TRANSACTION, false, new UOWAction() {
+                @Override
+                public void run() throws Exception {
+
+                    if (localUOWId == uowm.getLocalUOWId()) {
+                        throw new Exception("UOWAction not run under new UOW");
+                    }
                 }
-            }
-        });
+            });
 
-        assertTrue("Not all UOWScopeCallbacks were called", TxTestUtils.allCallbacksCalled());
+            assertTrue("END UOWScopeCallbacks should not have been called", TxTestUtils.onlyBeginCallbacksCalled(cb));
+        } finally {
+            TxTestUtils.unregisterUOWScopeCallback(cb);
+        }
+    }
+
+    public void testGoodBehavior() throws Exception {
+
+        UOWScopeCallback cb = null;
+
+        try {
+            cb = TxTestUtils.registerUOWScopeCallback();
+
+            final long localUOWId = uowm.getLocalUOWId();
+
+            uowm.runUnderUOW(UOWSynchronizationRegistry.UOW_TYPE_GLOBAL_TRANSACTION, false, new UOWAction() {
+                @Override
+                public void run() throws Exception {
+
+                    if (localUOWId == uowm.getLocalUOWId()) {
+                        throw new Exception("UOWAction not run under new UOW");
+                    }
+                }
+            });
+
+            assertTrue("Not all UOWScopeCallbacks were called", TxTestUtils.allCallbacksCalled(cb));
+        } finally {
+            TxTestUtils.unregisterUOWScopeCallback(cb);
+        }
     }
 }

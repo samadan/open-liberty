@@ -147,34 +147,36 @@ public class TxTestUtils {
         requestContext.put("javax.xml.ws.client.connectionTimeout", timeout);
         requestContext.put("javax.xml.ws.client.receiveTimeout", timeout);
     }
-    
-    public static void registerUOWScopeCallback() {
-    	UserTransactionImpl.instance().registerCallback(UOWScopeCallbackImpl.instance());
+
+    public static UOWScopeCallback registerUOWScopeCallback() {
+    	UOWScopeCallback cb = new UOWScopeCallbackImpl();
+    	UserTransactionImpl.instance().registerCallback(cb);
+    	return cb;
+    }
+
+    public static void unregisterUOWScopeCallback(UOWScopeCallback cb) {
+    	UserTransactionImpl.instance().unregisterCallback(cb);
+    }
+
+    public static boolean allCallbacksCalled(UOWScopeCallback cb) {
+    	return ((UOWScopeCallbackImpl)cb).allCallbacksCalled();
     }
     
-    public static boolean allCallbacksCalled() {
-    	return UOWScopeCallbackImpl.allCallbacksCalled();
+    public static boolean onlyBeginCallbacksCalled(UOWScopeCallback cb) {
+    	return ((UOWScopeCallbackImpl)cb).onlyBeginCallbacksCalled();
     }
 
     private static class UOWScopeCallbackImpl implements UOWScopeCallback {
-    	
-    	private static UOWScopeCallbackImpl _instance;
-    	private static Set<Integer> _contextChanges = new HashSet<Integer>();
 
-    	private UOWScopeCallbackImpl() {
+    	private Set<Integer> _contextChanges = new HashSet<Integer>();
+
+    	public boolean allCallbacksCalled() {
+			return _contextChanges.contains(PRE_BEGIN) && _contextChanges.contains(POST_BEGIN) && _contextChanges.contains(PRE_END) && _contextChanges.contains(POST_END);
 		}
     	
-    	public static boolean allCallbacksCalled() {
-			return _contextChanges.contains(PRE_BEGIN) &&_contextChanges.contains(POST_BEGIN) &&_contextChanges.contains(PRE_END) &&_contextChanges.contains(POST_END);
+    	public boolean onlyBeginCallbacksCalled() {
+			return _contextChanges.contains(PRE_BEGIN) && _contextChanges.contains(POST_BEGIN) && !_contextChanges.contains(PRE_END) && !_contextChanges.contains(POST_END);
 		}
-
-		public static UOWScopeCallback instance() {
-    		if (!(_instance instanceof UOWScopeCallback)) {
-    			_instance = new UOWScopeCallbackImpl();
-    		}
-    		
-    		return _instance;
-    	}
 
         @Override
         public void contextChange(int changeType, UOWScope uowScope) throws IllegalStateException {
