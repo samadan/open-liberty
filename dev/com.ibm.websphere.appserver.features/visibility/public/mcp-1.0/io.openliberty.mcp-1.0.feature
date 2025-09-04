@@ -4,7 +4,6 @@ visibility=public
 IBM-App-ForceRestart: install, \
  uninstall
 IBM-API-Package: \
- io.openliberty.mcp, \
  io.openliberty.mcp.annotations, \
  io.openliberty.mcp.content, \
  io.openliberty.mcp.encoders, \
