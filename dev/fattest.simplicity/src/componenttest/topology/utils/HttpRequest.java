@@ -54,7 +54,6 @@ public class HttpRequest {
     private String json = null;
     private String basicAuth = null;
     private final Map<String, String> props = new HashMap<String, String>();
-    private final Map<String, String> responseHeaders = new HashMap<>();
     private Integer timeout;
     private boolean silent = false;
     private int responseCode = -1;
@@ -236,10 +235,6 @@ public class HttpRequest {
             }
             httpClient.executeMethod(request);
 
-            for (org.apache.commons.httpclient.Header header : request.getResponseHeaders()) {
-                responseHeaders.put(header.getName(), header.getValue());
-            }
-
             /*
              * Check for the expected response code.
              */
@@ -250,7 +245,7 @@ public class HttpRequest {
             if (!expectedResponseCode.contains(responseCode)) {
                 Log.info(c, "run", "Got unexpected response code: " + responseCode);
                 String responseBody = request.getResponseBodyAsString();
-                Log.info(c, "run", "Response body: " + responseBody);
+                printResponseContents(responseBody);
                 throw new Exception("Unexpected response: " + responseCode + "\nResponse Body: " + responseBody);
             }
 
@@ -280,10 +275,6 @@ public class HttpRequest {
 
     public int getResponseCode() {
         return responseCode;
-    }
-
-    public Map<String, String> getResponseHeaders() {
-        return responseHeaders;
     }
 
     private void printResponseContents(String contents) {
