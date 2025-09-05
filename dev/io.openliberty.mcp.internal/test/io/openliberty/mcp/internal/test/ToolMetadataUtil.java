@@ -14,19 +14,21 @@ import java.util.Map;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
+import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 
 /**
  *
  */
 public class ToolMetadataUtil {
 
-    public static ToolMetadata createToolMetadataFrom(Tool annotation, Map<String, ArgumentMetadata> arguments) {
+    public static ToolMetadata createToolMetadataFrom(Tool annotation, Map<String, ArgumentMetadata> arguments,
+                                                      Map<String, SpecialArgumentMetadata> specialArguments) {
 
         String title = annotation.title();
         if (title.equals("")) {
             title = null;
         }
 
-        return new ToolMetadata(annotation, null, null, arguments, annotation.name(), title, annotation.description());
+        return new ToolMetadata(annotation, null, null, arguments, specialArguments, annotation.name(), title, annotation.description());
     }
 }

@@ -26,6 +26,7 @@ public enum RequestMethod {
     TOOLS_LIST("tools/list"),
     INITIALIZE("initialize"),
     INITIALIZED("notifications/initialized"),
+    CANCELLED("notifications/cancelled"),
     PING("ping");
 
     private static final Map<String, RequestMethod> METHODS_BY_NAME;

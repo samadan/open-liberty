@@ -926,6 +926,26 @@ public class ToolTest extends FATServletClient {
                                       "description": "A tool that does not have a title"
                                     },
                                     {
+                                        "inputSchema": {
+                                          "properties": {},
+                                          "required": [],
+                                          "type": "object"
+                                        },
+                                        "name": "cancellationTool",
+                                        "title": "Cancellable tool",
+                                        "description": "A tool that waits to be cancelled"
+                                    },
+                                    {
+                                        "inputSchema": {
+                                          "properties": {},
+                                          "required": [],
+                                          "type": "object"
+                                        },
+                                        "name": "cancellationToolNoWait",
+                                        "title": "Cancellable tool NoWait",
+                                        "description": "A tool that does not waits to be cancelled"
+                                    },
+                                    {
                                       "inputSchema": {
                                         "type": "object",
                                         "properties": {

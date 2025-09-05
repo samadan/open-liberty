@@ -10,6 +10,8 @@
 package io.openliberty.mcp.internal.fat.tool.basicToolApp;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.Tool.Annotations;
@@ -18,6 +20,8 @@ import io.openliberty.mcp.content.AudioContent;
 import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.content.ImageContent;
 import io.openliberty.mcp.content.TextContent;
+import io.openliberty.mcp.messaging.Cancellation;
+import io.openliberty.mcp.messaging.Cancellation.OperationCancellationException;
 import io.openliberty.mcp.tools.ToolResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -26,6 +30,8 @@ import jakarta.enterprise.context.ApplicationScoped;
  */
 @ApplicationScoped
 public class BasicTools {
+    private static final Logger LOG = Logger.getLogger(BasicTools.class.getName());
+
     @Tool(name = "mixedContentTool", title = "Mixed Content Tool", description = "Returns Text, Audio or Image Content")
     public ToolResponse mixedContentTool(@ToolArg(name = "input", description = "input to echo") String input) {
         TextContent text = new TextContent("Echo: " + input);
@@ -290,4 +296,34 @@ public class BasicTools {
         return false;
     }
 
+
+    @Tool(name = "cancellationTool", title = "Cancellable tool", description = "A tool that waits to be cancelled")
+    public String cancellationTool(Cancellation cancellation) throws InterruptedException {
+        LOG.info("Cancelling Request");
+        int counter = 0;
+        while (counter++ < 20) {
+            TimeUnit.MILLISECONDS.sleep(500);
+            LOG.info("Checking if tool is cancelled");
+            if (cancellation.check().isRequested()) {
+                LOG.info("tool is cancelled");
+                throw new OperationCancellationException();
+            }
+        }
+        LOG.info("the tool was not cancelled");
+        return "If this String is returned, then the tool was not cancelled";
+    }
+
+    @Tool(name = "cancellationToolNoWait", title = "Cancellable tool NoWait", description = "A tool that does not waits to be cancelled")
+    public String cancellationToolNoWait(Cancellation cancellation) {
+        LOG.info("Cancelling Request");
+        int counter = 0;
+        while (counter++ < 5) {
+            if (cancellation.check().isRequested()) {
+                LOG.info("Checking if tool is cancelled");
+                throw new OperationCancellationException();
+            }
+        }
+        LOG.info("the tool was not cancelled");
+        return "If this String is returned, then the tool was not cancelled";
+    }
 }

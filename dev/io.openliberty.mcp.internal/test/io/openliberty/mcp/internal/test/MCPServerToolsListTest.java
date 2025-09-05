@@ -9,6 +9,7 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.test;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,7 @@ public class MCPServerToolsListTest {
     }
 
     private List<ToolDescription> generateResponse(Tool numberTestTool, Map<String, ArgumentMetadata> arguments) {
-        return List.of(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments)));
+        return List.of(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments, Collections.emptyMap())));
     }
 
     @Test
@@ -305,10 +306,10 @@ public class MCPServerToolsListTest {
                                                           "var2", new ArgumentMetadata(boolean.class, 1, "operand 2", true));
 
         LinkedList<ToolDescription> toolDescriptions = new LinkedList<>();
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3)));
-        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4)));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(weatherTool, arguments, Collections.emptyMap())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(additionTool, arguments2, Collections.emptyMap())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(subtractionTool, arguments3, Collections.emptyMap())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(booleanTool, arguments4, Collections.emptyMap())));
 
         String responseString = jsonb.toJson(toolDescriptions);
         String expectedString = """

@@ -14,6 +14,7 @@ import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.Map;
 
 import org.junit.BeforeClass;
@@ -31,6 +32,7 @@ import io.openliberty.mcp.internal.ToolRegistry;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
 import io.openliberty.mcp.internal.requests.McpInitializeParams.ClientInfo;
+import io.openliberty.mcp.internal.requests.McpNotificationParams;
 import io.openliberty.mcp.internal.requests.McpRequest;
 import io.openliberty.mcp.internal.requests.McpToolCallParams;
 import jakarta.json.JsonException;
@@ -49,16 +51,16 @@ public class MessageParsingTest {
 
         Tool testTool = Literals.tool("echo", "Echo", "Echos the input");
         Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, "", true));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(testTool, arguments));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(testTool, arguments, Collections.emptyMap()));
 
         Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
         Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, "", true),
                                                             "num2", new ArgumentMetadata(Integer.class, 1, "", true));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(addTestTool, additionArgs));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(addTestTool, additionArgs, Collections.emptyMap()));
 
         Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
         Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value", true));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(toogleTestTool, booleanArgs));
+        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(toogleTestTool, booleanArgs, Collections.emptyMap()));
     }
 
     @Test
@@ -233,6 +235,29 @@ public class MessageParsingTest {
 
             request = jsonb.fromJson(reader, McpRequest.class);
             assertThat(request.getRequestMethod(), equalTo(RequestMethod.INITIALIZED));
+        }
+    }
+
+    @Test
+    public void parseCancelledNotification() throws Exception {
+        McpRequest request;
+        try (Jsonb jsonb = JsonbBuilder.create()) {
+            var reader = new StringReader("""
+                            {
+                               "jsonrpc": "2.0",
+                               "method": "notifications/cancelled",
+                               "params": {
+                                 "requestId": "123",
+                                 "reason": "User requested cancellation"
+                               }
+                             }
+                            """);
+            request = jsonb.fromJson(reader, McpRequest.class);
+            assertThat(request.getRequestMethod(), equalTo(RequestMethod.CANCELLED));
+
+            McpNotificationParams notificationRequest = request.getParams(McpNotificationParams.class, jsonb);
+            assertThat(notificationRequest.getRequestId(), equalTo("123"));
+            assertThat(notificationRequest.getReason(), equalTo("User requested cancellation"));
         }
     }
 

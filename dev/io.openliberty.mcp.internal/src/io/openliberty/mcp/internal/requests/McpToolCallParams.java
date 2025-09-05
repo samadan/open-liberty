@@ -13,10 +13,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
+import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 import io.openliberty.mcp.internal.ToolRegistry;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
@@ -73,7 +75,10 @@ public class McpToolCallParams {
 
     private Object[] parseArguments(JsonObject arguments2, Jsonb jsonb) {
         JsonObject argsObject = arguments2.asJsonObject();
-        Object[] results = new Object[metadata.arguments().size()];
+        Map<String, ArgumentMetadata> arguments = metadata.arguments();
+        Map<String, SpecialArgumentMetadata> specialArguments = metadata.specialArguments();
+        Object[] results = new Object[arguments.size() + specialArguments.size()];
+
         HashSet<String> argsProcessed = new HashSet<>();
         for (var entry : argsObject.entrySet()) {
             String argName = entry.getKey();
@@ -82,17 +87,29 @@ public class McpToolCallParams {
             if (argMetadata != null) {
                 String json = jsonb.toJson(argValue);
                 results[argMetadata.index()] = jsonb.fromJson(json, argMetadata.type());
-
             }
             argsProcessed.add(argName);
         }
 
-        if (!argsProcessed.equals(metadata.arguments().keySet())) {
-            List<String> data = generateArgumentMismatchData(argsProcessed, metadata.arguments().keySet());
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
+        validateProcessedArgs(argsProcessed, arguments.keySet());
+
+        if (specialArguments.isEmpty()) {
+            return results;
+        }
+
+        for (var entry : specialArguments.entrySet()) {
+            SpecialArgumentMetadata specialArgsMetadata = entry.getValue();
+            results[specialArgsMetadata.index()] = specialArgsMetadata.type();
         }
 
         return results;
+    }
+
+    private void validateProcessedArgs(Set<String> processedArgs, Set<String> expectedArgs) {
+        if (!processedArgs.equals(expectedArgs)) {
+            List<String> data = generateArgumentMismatchData(processedArgs, expectedArgs);
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, data);
+        }
     }
 
     public List<String> generateArgumentMismatchData(Set<String> processed, Set<String> expected) {
