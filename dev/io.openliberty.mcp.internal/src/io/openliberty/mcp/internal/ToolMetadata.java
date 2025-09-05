@@ -10,8 +10,10 @@
 package io.openliberty.mcp.internal;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.openliberty.mcp.annotations.Tool;
@@ -25,7 +27,7 @@ import jakarta.enterprise.inject.spi.Bean;
  */
 public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
                            Map<String, ArgumentMetadata> arguments,
-                           Map<String, SpecialArgumentMetadata> specialArguments,
+                           List<SpecialArgumentMetadata> specialArguments,
                            String name, String title, String description) {
 
     public record ArgumentMetadata(Type type, int index, String description, boolean required) {}
@@ -34,7 +36,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
 
     public ToolMetadata {
         arguments = ((arguments == null) ? Collections.emptyMap() : arguments);
-        specialArguments = ((specialArguments == null) ? Collections.emptyMap() : specialArguments);
+        specialArguments = ((specialArguments == null) ? Collections.emptyList() : specialArguments);
     }
 
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
@@ -43,7 +45,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         String title = annotation.title().isEmpty() ? null : annotation.title();
         String description = annotation.description().isEmpty() ? null : annotation.description();
 
-        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentMap(method), name, title, description);
+        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentList(method), name, title, description);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
@@ -62,15 +64,15 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         return result.isEmpty() ? Collections.emptyMap() : result;
     }
 
-    private static Map<String, SpecialArgumentMetadata> getSpecialArgumentMap(AnnotatedMethod<?> method) {
-        Map<String, SpecialArgumentMetadata> result = new HashMap<>();
+    private static List<SpecialArgumentMetadata> getSpecialArgumentList(AnnotatedMethod<?> method) {
+        List<SpecialArgumentMetadata> result = new ArrayList<>();
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo == null) {
                 SpecialArgumentMetadata pData = new SpecialArgumentMetadata(SpecialArgumentType.fromClass(p.getBaseType()), p.getPosition());
-                result.put(p.getBaseType().getTypeName(), pData);
+                result.add(pData);
             }
         }
-        return result.isEmpty() ? Collections.emptyMap() : result;
+        return Collections.unmodifiableList(result);
     }
 }

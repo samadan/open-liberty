@@ -22,6 +22,7 @@ import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
 import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
+import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.HttpResponseException;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
@@ -128,9 +129,13 @@ public class McpServlet extends HttpServlet {
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
             Object[] arguments = params.getArguments(jsonb);
-            checkAndParseCancellationObject(arguments, requestId);
+            addSpecialArguments(arguments, requestId, params.getMetadata());
             Object result = params.getMethod().invoke(bean, arguments);
+
+            // Call the tool method
             boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
+
+            // Map method response to a ToolResponse
             if (result instanceof ToolResponse response) {
                 transport.sendResponse(response);
             } else if (result instanceof List<?> list && !list.isEmpty() && list.stream().allMatch(item -> item instanceof Content)) {
@@ -172,15 +177,22 @@ public class McpServlet extends HttpServlet {
         return ToolResponse.error(msg);
     }
 
-    private void checkAndParseCancellationObject(Object[] argumentsArray, RequestId requestId) {
-        for (int i = 0; i < argumentsArray.length; i++) {
-            Object argument = argumentsArray[i];
-            if (argument == SpecialArgumentType.CANCELLATION) {
-                CancellationImpl cancellation = new CancellationImpl();
-                cancellation.setRequestId(requestId);
-                connection.registerOngoingRequest(requestId, cancellation);
-                argumentsArray[i] = cancellation;
-                break;
+    /**
+     * Adds the values for any special arguments to {@code argumentsArray}
+     *
+     * @param argumentsArray the array of arguments for the tool method
+     * @param requestId the ongoing request Id
+     * @param toolMetadata the tool metadata
+     */
+    private void addSpecialArguments(Object[] argumentsArray, RequestId requestId, ToolMetadata toolMetadata) {
+        for (SpecialArgumentMetadata argMetadata : toolMetadata.specialArguments()) {
+            switch (argMetadata.type()) {
+                case CANCELLATION -> {
+                    CancellationImpl cancellation = new CancellationImpl();
+                    cancellation.setRequestId(requestId);
+                    connection.registerOngoingRequest(requestId, cancellation);
+                    argumentsArray[argMetadata.index()] = cancellation;
+                }
             }
         }
     }

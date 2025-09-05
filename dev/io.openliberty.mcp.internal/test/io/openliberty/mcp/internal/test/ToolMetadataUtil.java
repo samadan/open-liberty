@@ -9,6 +9,7 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.test;
 
+import java.util.List;
 import java.util.Map;
 
 import io.openliberty.mcp.annotations.Tool;
@@ -22,7 +23,7 @@ import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 public class ToolMetadataUtil {
 
     public static ToolMetadata createToolMetadataFrom(Tool annotation, Map<String, ArgumentMetadata> arguments,
-                                                      Map<String, SpecialArgumentMetadata> specialArguments) {
+                                                      List<SpecialArgumentMetadata> specialArguments) {
 
         String title = annotation.title();
         if (title.equals("")) {
