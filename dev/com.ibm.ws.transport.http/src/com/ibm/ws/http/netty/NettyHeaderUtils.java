@@ -71,10 +71,12 @@ public class NettyHeaderUtils {
     }
 
     /**
-     * @param acceptEncodingHeader
-     * @return
+     * Strip whitespace from a given String.
+     *
+     * @param string The String to strip whitespace from.
+     * @return an empty String if the given String is null, otherwise a String with all whitespace removed.
      */
-    public static String stripWhiteSpaces(String string) {
+    public static String stripWhiteSpace(String string) {
         return Objects.isNull(string) ? HttpConstants.EMPTY_STRING : string.replaceAll("\\s+", "");
     }
 
