@@ -58,6 +58,7 @@ import com.ibm.ws.container.service.app.deploy.extended.LibraryContainerInfo.Lib
 import com.ibm.ws.ffdc.FFDCFilter;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 import com.ibm.ws.javaee.dd.permissions.PermissionsConfig;
+import com.ibm.ws.kernel.productinfo.ProductInfo;
 import com.ibm.wsspi.adaptable.module.AdaptableModuleFactory;
 import com.ibm.wsspi.adaptable.module.Container;
 import com.ibm.wsspi.adaptable.module.UnableToAdaptException;
@@ -270,11 +271,11 @@ public abstract class DeployedAppInfoBase extends SimpleDeployedAppInfoBase impl
                     Configuration cfg = classloaderConfigs[0];
                     Dictionary<String, Object> props = cfg.getProperties();
                     if (props != null) {
-                        String[] libraryPIDs = (String[]) props.get("privateLibraryRef");
-                        processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.PRIVATE_LIB);
-
-                        libraryPIDs = (String[]) props.get("overrideLibraryRef");
+                        String[] libraryPIDs = ProductInfo.getBetaEdition() ? (String[]) props.get("overrideLibraryRef") : null;
                         processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.OVERRIDE_LIB);
+
+                        libraryPIDs = (String[]) props.get("privateLibraryRef");
+                        processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.PRIVATE_LIB);
 
                         libraryPIDs = (String[]) props.get("commonLibraryRef");
                         processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.COMMON_LIB);
