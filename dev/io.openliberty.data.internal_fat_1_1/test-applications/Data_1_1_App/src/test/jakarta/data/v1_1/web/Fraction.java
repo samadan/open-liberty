@@ -147,8 +147,12 @@ public class Fraction {
         if (numerator < 0 || numerator >= NUMERATOR_NAMES.length)
             throw new IllegalArgumentException("numerator: " + numerator);
 
-        if (denominator < 0 || denominator >= DENOMINATOR_NAMES.length)
+        if (denominator <= 0 || denominator >= DENOMINATOR_NAMES.length)
             throw new IllegalArgumentException("denominator: " + denominator);
+
+        if (numerator >= denominator)
+            throw new IllegalArgumentException(numerator + " / " + denominator +
+                                               " >= 1");
 
         Fraction f = new Fraction();
 
@@ -167,11 +171,7 @@ public class Fraction {
         f.value = (double) numerator / (double) denominator;
         f.inverse = (double) denominator / (double) numerator;
 
-        if (numerator >= denominator)
-            throw new IllegalArgumentException(numerator + " / " + denominator +
-                                               " >= 1");
-        else
-            f.reduced = true;
+        f.reduced = true;
 
         for (int i = 2; f.reduced && i <= numerator; i++)
             if (numerator % i == 0 &&

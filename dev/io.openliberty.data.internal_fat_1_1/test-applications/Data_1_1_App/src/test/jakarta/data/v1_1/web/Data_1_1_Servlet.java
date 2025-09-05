@@ -69,7 +69,7 @@ public class Data_1_1_Servlet extends FATServlet {
                              "Three Fourths",
                              "Three Fifths",
                              "Four Fifths"),
-                     fractions.havingDenoninatorWithin(3, 5)
+                     fractions.havingDenominatorWithin(3, 5)
                                      .map(f -> f.name)
                                      .collect(Collectors.toList()));
     }

@@ -35,7 +35,7 @@ public interface Fractions {
     @Find
     @OrderBy(_Fraction.NUMERATOR)
     @OrderBy(_Fraction.DENOMINATOR)
-    Stream<Fraction> havingDenoninatorWithin//
+    Stream<Fraction> havingDenominatorWithin//
     (@By(_Fraction.DENOMINATOR) @Is(AtLeast.class) long min,
      @By(_Fraction.DENOMINATOR) @Is(AtMost.class) long max);
 
