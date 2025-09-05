@@ -33,8 +33,8 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import concurrent.cdi.web.ConcurrentCDIServlet;
-import concurrent.cdi.web2.ConcurrentCDIAdditionalServlet;
 import concurrent.cdi4.web.ConcurrentCDI4Servlet;
+import concurrent.cdi4.webapp.ConcurrentCDIAdditionalServlet;
 
 @RunWith(FATRunner.class)
 @MinimumJavaLevel(javaLevel = 17)
@@ -42,13 +42,13 @@ public class ConcurrentCDITest extends FATServletClient {
 
     public static final String APP_NAME = "concurrentCDIApp";
     public static final String APP_NAME_EE10 = "concurrentCDI4App";
-    public static final String APP_NAME_EE10_2 = "concurrentCDIWeb2";
+    public static final String WEBAPP_NAME_EE10 = "concurrentCDI4WebApp";
 
     @Server("concurrent_fat_cdi")
     @TestServlets({
                     @TestServlet(servlet = ConcurrentCDIServlet.class, contextRoot = APP_NAME),
                     @TestServlet(servlet = ConcurrentCDI4Servlet.class, contextRoot = APP_NAME_EE10),
-                    @TestServlet(servlet = ConcurrentCDIAdditionalServlet.class, contextRoot = APP_NAME_EE10_2)
+                    @TestServlet(servlet = ConcurrentCDIAdditionalServlet.class, contextRoot = WEBAPP_NAME_EE10)
     })
     public static LibertyServer server;
 
@@ -94,7 +94,7 @@ public class ConcurrentCDITest extends FATServletClient {
         ShrinkHelper.defaultDropinApp(server, APP_NAME_EE10, "concurrent.cdi4.web");
 
         // Create concurrentCDIWeb2.war
-        ShrinkHelper.defaultDropinApp(server, APP_NAME_EE10_2, "concurrent.cdi.web2");
+        ShrinkHelper.defaultDropinApp(server, WEBAPP_NAME_EE10, "concurrent.cdi4.webapp");
 
         server.startServer();
         runTest(server, APP_NAME_EE10 + '/' + ConcurrentCDI4Servlet.class.getSimpleName(), "initTransactionService");

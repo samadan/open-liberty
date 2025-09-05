@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package concurrent.cdi.web2;
+package concurrent.cdi4.webapp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -62,7 +62,7 @@ public class ConcurrentCDIAdditionalServlet extends FATServlet {
             try {
                 Class.forName("java.lang.Integer"); //Exists as part of JVM
 
-                Class.forName("concurrent.cdi.web2.TestException"); //Exists inside WAR/Web Module
+                Class.forName("concurrent.cdi4.webapp.TestException"); //Exists inside WAR/Web Module
             } catch (ClassNotFoundException e) {
                 result.completeExceptionally(e);
             }

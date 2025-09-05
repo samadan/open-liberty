@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package concurrent.cdi.web2;
+package concurrent.cdi4.webapp;
 
 /**
  * Some other class that we verify can be loaded

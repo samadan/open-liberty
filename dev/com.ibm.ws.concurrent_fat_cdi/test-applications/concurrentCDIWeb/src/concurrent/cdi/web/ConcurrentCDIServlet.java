@@ -673,7 +673,7 @@ public class ConcurrentCDIServlet extends FATServlet {
             // NOTE: The ConcurrentCDITest deploys both the ConcurrentCDITest.ear and concurrentCDIApp2.war
             // applications so this class should be available (just not by this application classloader)
             try {
-                Class.forName("concurrent.cdi.web2.TestException"); //Exists in a different application
+                Class.forName("concurrent.cdi4.webapp.TestException"); //Exists in a different application
                 result.completeExceptionally(new IllegalStateException("Should not have been able to load a class from another application."));
             } catch (ClassNotFoundException e) {
                 // expected
