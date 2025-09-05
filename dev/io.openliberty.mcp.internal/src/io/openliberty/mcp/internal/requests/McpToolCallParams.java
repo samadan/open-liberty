@@ -76,7 +76,7 @@ public class McpToolCallParams {
     private Object[] parseArguments(JsonObject arguments2, Jsonb jsonb) {
         JsonObject argsObject = arguments2.asJsonObject();
         Map<String, ArgumentMetadata> arguments = metadata.arguments();
-        Map<String, SpecialArgumentMetadata> specialArguments = metadata.specialArguments();
+        List<SpecialArgumentMetadata> specialArguments = metadata.specialArguments();
         Object[] results = new Object[arguments.size() + specialArguments.size()];
 
         HashSet<String> argsProcessed = new HashSet<>();
@@ -92,15 +92,6 @@ public class McpToolCallParams {
         }
 
         validateProcessedArgs(argsProcessed, arguments.keySet());
-
-        if (specialArguments.isEmpty()) {
-            return results;
-        }
-
-        for (var entry : specialArguments.entrySet()) {
-            SpecialArgumentMetadata specialArgsMetadata = entry.getValue();
-            results[specialArgsMetadata.index()] = specialArgsMetadata.type();
-        }
 
         return results;
     }
