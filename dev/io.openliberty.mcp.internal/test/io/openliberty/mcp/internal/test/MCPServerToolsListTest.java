@@ -41,7 +41,7 @@ public class MCPServerToolsListTest {
     }
 
     private List<ToolDescription> generateResponse(Tool numberTestTool, Map<String, ArgumentMetadata> arguments) {
-        return List.of(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments, null)));
+        return List.of(new ToolDescription(ToolMetadataUtil.createToolMetadataFrom(numberTestTool, arguments, Collections.emptyMap())));
     }
 
     @Test

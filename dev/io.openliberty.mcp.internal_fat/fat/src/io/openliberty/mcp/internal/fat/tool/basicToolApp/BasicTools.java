@@ -314,7 +314,7 @@ public class BasicTools {
     }
 
     @Tool(name = "cancellationToolNoWait", title = "Cancellable tool NoWait", description = "A tool that does not waits to be cancelled")
-    public String cancellationToolNoWait(Cancellation cancellation) throws InterruptedException {
+    public String cancellationToolNoWait(Cancellation cancellation) {
         LOG.info("Cancelling Request");
         int counter = 0;
         while (counter++ < 5) {
