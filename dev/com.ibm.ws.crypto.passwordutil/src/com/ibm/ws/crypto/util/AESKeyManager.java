@@ -32,6 +32,7 @@ import com.ibm.wsspi.security.crypto.KeyStringResolver;
  *
  */
 public class AESKeyManager {
+
     public static final String NAME_WLP_PASSWORD_ENCRYPTION_KEY = "wlp.password.encryption.key";
     public static final String NAME_WLP_BASE64_AES_ENCRYPTION_KEY = "wlp.aes.encryption.key";
     public static final String PROPERTY_WLP_PASSWORD_ENCRYPTION_KEY = "${" + NAME_WLP_PASSWORD_ENCRYPTION_KEY + "}";
@@ -47,6 +48,7 @@ public class AESKeyManager {
         // AES_V2 allows users to specify a raw AES-256 key to encrypt / decrypt. This is specified in base64 format in property PROPERTY_WLP_BASE64_AES_ENCRYPTION_KEY.
         AES_V0(CryptoUtils.PBKDF2_WITH_HMAC_SHA1, CryptoUtils.PBKDF2HMACSHA1_ITERATIONS, CryptoUtils.AES_128_KEY_LENGTH_BITS, CryptoUtils.AES_V0_SALT, PROPERTY_WLP_PASSWORD_ENCRYPTION_KEY),
         AES_V1(CryptoUtils.PBKDF2_WITH_HMAC_SHA512, CryptoUtils.PBKDF2HMACSHA512_ITERATIONS, CryptoUtils.AES_256_KEY_LENGTH_BITS, CryptoUtils.AES_V1_SALT, PROPERTY_WLP_PASSWORD_ENCRYPTION_KEY),
+        // AES_v2 omits salt and iterations since it doesn't use PBKDF for key derivation, unlike V0 and V1.
         AES_V2(CryptoUtils.ENCRYPT_ALGORITHM_AES, 0, CryptoUtils.AES_256_KEY_LENGTH_BITS, null, PROPERTY_WLP_BASE64_AES_ENCRYPTION_KEY);
 
         private final AtomicReference<KeyHolder> _key = new AtomicReference<KeyHolder>();
@@ -79,12 +81,7 @@ public class AESKeyManager {
                 byte[] data;
                 byte[] iv;
                 if (CryptoUtils.ENCRYPT_ALGORITHM_AES.equals(alg)) {
-                    data = decodeBase64Key(keyChars);
-                    int keyBitLength = data.length * 8;
-                    if (keyBitLength != this.keyLength) {
-                        //TODO do we need an NLS message for this exception?
-                        throw new InvalidKeySpecException("Error: The provided key is not " + this.keyLength + " bits.");
-                    }
+                    data = decodeAesBase64Key(keyChars);
                 } else {
                     data = buildAesKeyWithPbkdf2(keyChars);
                 }
@@ -102,13 +99,19 @@ public class AESKeyManager {
          * @return keyChars as a base64 decoded byte array.
          * @throws InvalidKeySpecException if keyChars does not represent a valid base64 value.
          */
-        private byte[] decodeBase64Key(char[] keyChars) throws InvalidKeySpecException {
+        public byte[] decodeAesBase64Key(char[] keyChars) throws InvalidKeySpecException {
             byte[] data;
+            if (keyChars == null || PROPERTY_WLP_BASE64_AES_ENCRYPTION_KEY.equals(new String(keyChars))) {
+                throw new InvalidKeySpecException(MessageUtils.getMessage("AESKEYMANAGER_BASE64_VARIABLE_NOT_SET"));
+            }
             try {
                 data = Base64.getDecoder().decode(new String(keyChars));
             } catch (IllegalArgumentException iae) {
-                // TODO do we need an NLS message?
-                throw new InvalidKeySpecException("Key was not in base64 format", iae);
+                throw new InvalidKeySpecException(MessageUtils.getMessage("AESKEYMANAGER_NOT_BASE64_EXCEPTION"), iae);
+            }
+            int keyBitLength = data.length * 8;
+            if (keyBitLength != this.keyLength) {
+                throw new InvalidKeySpecException(MessageUtils.getMessage("AESKEYMANAGER_INVALID_KEYLENGTH_EXCEPTION"));
             }
             return data;
         }

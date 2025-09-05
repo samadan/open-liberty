@@ -28,7 +28,6 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.websphere.crypto.InvalidPasswordEncodingException;
 import com.ibm.websphere.crypto.PasswordUtil;
 import com.ibm.websphere.crypto.UnsupportedCryptoAlgorithmException;
-import com.ibm.ws.crypto.util.AESKeyManager;
 import com.ibm.ws.crypto.util.PasswordCipherUtil;
 import com.ibm.ws.crypto.util.UnsupportedConfigurationException;
 import com.ibm.ws.kernel.productinfo.ProductInfo;
@@ -42,27 +41,16 @@ import com.ibm.ws.security.utility.utils.SAFEncryptionKey;
  */
 public class EncodeTask extends BaseCommandTask {
     private static final String ATTR_NAME = "name";
-    private static final String ARG_ENCODING = "--encoding";
-    public static final String ARG_KEY = "--key";
-    private static final String ARG_PASSWORD = "--password";
-    private static final String ARG_NO_TRIM = "--notrim";
-    private static final String ARG_LIST_CUSTOM = "--listCustom";
-    private static final String ARG_HASH_SALT = "--salt";
-    private static final String ARG_HASH_ITERATION = "--iteration";
-    private static final String ARG_HASH_ALGORITHM = "--algorithm";
-    private static final String ARG_HASH_ENCODED = "--encoded"; // this is for debug
-    private static final String ARG_KEYRING = "--keyring";
-    private static final String ARG_KEYRING_TYPE = "--keyringType";
-    private static final String ARG_KEY_LABEL = "--keyLabel";
-    public static final String ARG_BASE64_KEY = "--base64Key";
-    public static final String ARG_ENCRYPTION_XML_FILE = "--xmlFile";
-
     private static final List<Set<String>> EXCLUSIVE_ARGUMENTS = Arrays.asList(
-                                                                               new HashSet<String>(Arrays.asList(ARG_KEY, ARG_BASE64_KEY, ARG_ENCRYPTION_XML_FILE)));
+                                                                               new HashSet<String>(Arrays.asList(BaseCommandTask.ARG_KEY, BaseCommandTask.ARG_BASE64_KEY,
+                                                                                                                 BaseCommandTask.ARG_AES_CONFIG_FILE)));
 
-    private static final List<String> ARG_TABLE = Arrays.asList(ARG_ENCODING, ARG_KEY, ARG_LIST_CUSTOM, ARG_PASSWORD, ARG_HASH_SALT, ARG_HASH_ITERATION, ARG_HASH_ALGORITHM,
-                                                                ARG_HASH_ENCODED, ARG_KEYRING, ARG_KEYRING_TYPE, ARG_KEY_LABEL);
-    private static final List<String> BETA_ARG_TABLE = Arrays.asList(ARG_BASE64_KEY, ARG_ENCRYPTION_XML_FILE);
+    private static final List<String> ARG_TABLE = Arrays.asList(BaseCommandTask.ARG_ENCODING, BaseCommandTask.ARG_KEY, BaseCommandTask.ARG_LIST_CUSTOM,
+                                                                BaseCommandTask.ARG_PASSWORD, BaseCommandTask.ARG_HASH_SALT, BaseCommandTask.ARG_HASH_ITERATION,
+                                                                BaseCommandTask.ARG_HASH_ALGORITHM,
+                                                                BaseCommandTask.ARG_HASH_ENCODED, BaseCommandTask.ARG_KEYRING, BaseCommandTask.ARG_KEYRING_TYPE,
+                                                                BaseCommandTask.ARG_KEY_LABEL);
+    private static final List<String> BETA_ARG_TABLE = Arrays.asList(BaseCommandTask.ARG_BASE64_KEY, BaseCommandTask.ARG_AES_CONFIG_FILE);
     private static final List<String> BETA_OPTS = BETA_ARG_TABLE.stream().map(s -> s.startsWith("--") ? s.substring(2) : s).collect(Collectors.toList());
 
     public EncodeTask(String scriptName) {
@@ -136,15 +124,15 @@ public class EncodeTask extends BaseCommandTask {
     @Override
     public SecurityUtilityReturnCodes handleTask(ConsoleWrapper stdin, PrintStream stdout, PrintStream stderr, String[] args) throws Exception {
         Map<String, String> argMap = parseArgumentList(args);
-        if (argMap.containsKey(ARG_LIST_CUSTOM)) {
+        if (argMap.containsKey(BaseCommandTask.ARG_LIST_CUSTOM)) {
             String output = PasswordCipherUtil.listCustom();
             if (output == null) {
                 output = getMessage("no.custom.encyption");
             }
             stdout.println(output);
         } else {
-            String encoding = argMap.get(ARG_ENCODING);
-            Map<String, String> props = convertToProperties(argMap, stdout);
+            String encoding = argMap.get(BaseCommandTask.ARG_ENCODING);
+            Map<String, String> props = BaseCommandTask.convertToProperties(argMap, stdout);
             // need to add the key if this is AES/SAF and keyring parameters are provided
             if (isZOS()) {
                 props = getKeyIfSAF(encoding, props);
@@ -152,10 +140,10 @@ public class EncodeTask extends BaseCommandTask {
                 //Not z/OS just make sure Z specific parameters are not used
                 checkForZArgs(props);
             }
-            if (!!!argMap.containsKey(ARG_PASSWORD)) {
+            if (!!!argMap.containsKey(BaseCommandTask.ARG_PASSWORD)) {
                 stdout.println(encode(stderr, promptForText(stdin, stdout), encoding, props));
             } else {
-                stdout.println(encode(stderr, argMap.get(ARG_PASSWORD), encoding, props));
+                stdout.println(encode(stderr, argMap.get(BaseCommandTask.ARG_PASSWORD), encoding, props));
             }
         }
 
@@ -228,7 +216,7 @@ public class EncodeTask extends BaseCommandTask {
         for (int i = 1; i < args.length; i++) {
             arg = args[i];
             if (arg.startsWith("--")) {
-                if (arg.equals(ARG_NO_TRIM) || arg.equals(ARG_LIST_CUSTOM)) {
+                if (arg.equals(BaseCommandTask.ARG_NO_TRIM) || arg.equals(BaseCommandTask.ARG_LIST_CUSTOM)) {
                     result.put(arg, "true");
                 } else {
                     int index = arg.indexOf('=');
@@ -246,37 +234,19 @@ public class EncodeTask extends BaseCommandTask {
                     } else if (value == null) {
                         throw new IllegalArgumentException(getMessage("missingValue", arg));
                     }
-                    validateMutuallyExclusiveKeys(arg, result);
                     result.put(arg, value);
                 }
-            } else if (result.containsKey(ARG_PASSWORD)) {
+            } else if (result.containsKey(BaseCommandTask.ARG_PASSWORD)) {
                 // A non-option argument to be encoded has already been recorded
                 throw new IllegalArgumentException(getMessage("invalidArg", arg));
             } else {
                 // The first non-option argument is assumed to be the value to be encoded
-                result.put(ARG_PASSWORD, arg);
+                result.put(BaseCommandTask.ARG_PASSWORD, arg);
             }
+            this.validateMutuallyExclusiveArgs(arg, result);
         }
 
         return result;
-    }
-
-    /**
-     * Validates whether adding a new argument would violate any mutually exclusive constraints.
-     *
-     * @param arg      the argument we are testing
-     * @param inputMap the inputMap of arguments already parsed.
-     */
-    private void validateMutuallyExclusiveKeys(String arg, Map<String, String> inputMap) {
-        for (Set<String> group : EXCLUSIVE_ARGUMENTS) {
-            if (group.contains(arg)) {
-                for (String key : group) {
-                    if (!key.equals(arg) && inputMap.containsKey(key)) {
-                        throw new IllegalArgumentException(getMessage("encode.mutuallyExclusiveArgError", key, arg));
-                    }
-                }
-            }
-        }
     }
 
     /** {@inheritDoc} */
@@ -295,7 +265,7 @@ public class EncodeTask extends BaseCommandTask {
     /** {@inheritDoc} */
     @Override
     void checkRequiredArguments(String[] args) {
-        // validateArgumentList is not used by this implementation
+        // checkRequiredArguments is not used by this implementation
     }
 
     /**
@@ -331,84 +301,14 @@ public class EncodeTask extends BaseCommandTask {
         return sb.toString();
     }
 
-    /**
-     * Convert the properties for encoding from the command line parameters.
-     *
-     * @param stdout a PrintStream to write informational messages.
-     * @throws Exception
-     */
-    protected static Map<String, String> convertToProperties(Map<String, String> argMap, PrintStream stdout) throws Exception {
-        HashMap<String, String> props = new HashMap<String, String>();
-
-        String value = argMap.get(ARG_KEY);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_CRYPTO_KEY, value);
-        }
-        if (argMap.containsKey(ARG_NO_TRIM)) {
-            props.put(PasswordUtil.PROPERTY_NO_TRIM, "true");
-        }
-        value = argMap.get(ARG_HASH_SALT);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_HASH_SALT, value);
-        }
-        value = argMap.get(ARG_HASH_ITERATION);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_HASH_ITERATION, value);
-        }
-        value = argMap.get(ARG_HASH_ALGORITHM);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_HASH_ALGORITHM, value);
-        }
-        // following value are for debug
-        value = argMap.get(ARG_HASH_ENCODED);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_HASH_ENCODED, value);
-        }
-        value = argMap.get(ARG_KEYRING);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_KEYRING, value);
-        }
-        value = argMap.get(ARG_KEYRING_TYPE);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_KEYRING_TYPE, value);
-        }
-        value = argMap.get(ARG_KEY_LABEL);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_KEY_LABEL, value);
-        }
-        value = argMap.get(ARG_BASE64_KEY);
-        if (value != null) {
-            props.put(PasswordUtil.PROPERTY_AES_KEY, value);
-        }
-        value = argMap.get(ARG_ENCRYPTION_XML_FILE);
-        if (value != null) {
-            Map<String, String> aesEncodingProps = PasswordUtil.parseAesEncryptionXmlFile(value);
-            if (aesEncodingProps.containsKey(PasswordUtil.PROPERTY_CRYPTO_KEY) && aesEncodingProps.containsKey(PasswordUtil.PROPERTY_AES_KEY)) {
-                stdout.println(getMessage("encode.xmlEncryptionAmbiguous", AESKeyManager.NAME_WLP_BASE64_AES_ENCRYPTION_KEY, AESKeyManager.NAME_WLP_PASSWORD_ENCRYPTION_KEY));
-            }
-            String propertyFound;
-
-            //if both are specified in the xml file, use the BASE64 key.
-            if (aesEncodingProps.containsKey(PasswordUtil.PROPERTY_AES_KEY)) {
-                props.put(PasswordUtil.PROPERTY_AES_KEY, aesEncodingProps.get(PasswordUtil.PROPERTY_AES_KEY));
-                propertyFound = AESKeyManager.NAME_WLP_BASE64_AES_ENCRYPTION_KEY;
-            } else if (aesEncodingProps.containsKey(PasswordUtil.PROPERTY_CRYPTO_KEY)) {
-                String key = aesEncodingProps.get(PasswordUtil.PROPERTY_CRYPTO_KEY);
-                props.put(PasswordUtil.PROPERTY_CRYPTO_KEY, key);
-                propertyFound = AESKeyManager.NAME_WLP_PASSWORD_ENCRYPTION_KEY;
-            } else {
-                throw new IllegalArgumentException(getMessage("encode.xmlMissingEncryptionVariables", AESKeyManager.NAME_WLP_BASE64_AES_ENCRYPTION_KEY,
-                                                              AESKeyManager.NAME_WLP_PASSWORD_ENCRYPTION_KEY));
-            }
-            stdout.println(getMessage("encode.xmlVariableFound", propertyFound));
-
-        }
-        return props;
-    }
-
     @Override
     protected List<String> getBetaOptions() {
         return BETA_OPTS;
+    }
+
+    @Override
+    protected List<Set<String>> getExclusiveArguments() {
+        return EXCLUSIVE_ARGUMENTS;
     }
 
 }

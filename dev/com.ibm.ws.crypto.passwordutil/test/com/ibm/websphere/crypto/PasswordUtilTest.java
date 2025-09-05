@@ -30,17 +30,17 @@ import java.util.Map;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.xml.sax.SAXException;
 
 import com.ibm.ws.common.crypto.CryptoUtils;
 import com.ibm.ws.crypto.util.AESKeyManager;
 import com.ibm.ws.crypto.util.AESKeyManager.KeyVersion;
+import com.ibm.ws.crypto.util.AesConfigFileParser;
 import com.ibm.ws.kernel.productinfo.ProductInfo;
+import com.ibm.wsspi.security.crypto.PasswordEncryptException;
 
 import test.common.SharedOutputManager;
 
@@ -150,9 +150,7 @@ public class PasswordUtilTest {
 
     @Test
     public void testAESEncoding() throws Exception {
-        try (MockedStatic<ProductInfo> productInfoMock = Mockito.mockStatic(ProductInfo.class)) {
-            productInfoMock.when(() -> ProductInfo.getBetaEdition()).thenReturn(true);
-            
+
         String encoding = PasswordUtil.encode("WebAS", "aes");
         assertTrue("The encoded password should start with {aes} " + encoding, encoding.startsWith("{aes}"));
         String encoding2 = PasswordUtil.encode("WebAS", "aes");
@@ -166,7 +164,7 @@ public class PasswordUtilTest {
                      PasswordUtil.decode("{aes}AEmVKa+jOeA7pos+sSfpHNmH1MVfwg8ZoV29iDi6I0ZGcov6hSZsAxMhFr91jTSBYQ=="));
         assertEquals("Did not decode password encoded with AES_V1 (AES-256) encoded password", "alternatepwd",
                      PasswordUtil.decode("{aes}ARABGAM7S4HrIRtZWJ229TnxuKZrrPN3dsKrrQzCQE/3U5F4zp3UrDQ+Czmnvz1kaQyN7JktDzieJxelwu077ZYET2V+7/1Gi37iztr7lY0i+j4dlHOFIi5PESnZ7V8XOmdSbH9DSgkuJaXNoEqb"));
-    }
+
     }
 
     @Test
@@ -219,7 +217,7 @@ public class PasswordUtilTest {
             mock.when(() -> AESKeyManager.getKeyCharsUsingResolver(KeyVersion.AES_V2, null)).thenReturn(keyString.toCharArray());
 
             String encodedPassword = PasswordUtil.encode(decoded_string, "aes", props);
-
+            assertEquals("AES_V2 byte marker not set", getAesVersionFromEncodedPassword(encodedPassword), 2);
             assertEquals("Decoded value does not match original value", decoded_string, PasswordUtil.decode(encodedPassword));
 
             // two invocations, one for encode and one for decode.
@@ -227,6 +225,39 @@ public class PasswordUtilTest {
             mock.verify(() -> AESKeyManager.getKeyCharsUsingResolver(KeyVersion.AES_V2, null), times(1));
 
         }
+    }
+
+    /**
+     * Test wlp.aes.encryption.key not set with v2 password.
+     */
+    @Test
+    public void testBase64KeyPropertyNotSet() throws Exception {
+
+        try (MockedStatic<ProductInfo> productInfoMock = Mockito.mockStatic(ProductInfo.class);
+                        MockedStatic<AESKeyManager> mock = Mockito.mockStatic(AESKeyManager.class, Mockito.CALLS_REAL_METHODS)) {
+            productInfoMock.when(() -> ProductInfo.getBetaEdition()).thenReturn(true);
+            mock.when(() -> AESKeyManager.getKeyCharsUsingResolver(KeyVersion.AES_V2, null)).thenReturn(AESKeyManager.PROPERTY_WLP_BASE64_AES_ENCRYPTION_KEY.toCharArray());
+            String v2Password = "{aes}AhBGFEeJlillfrTtgxuEL8rV+U0wtouKfmrDj0oYeoFaD4HWATqpJdEmXVacQtxJpWgMTrzBGOzwnsUZLKqmgRmrs9MPpMF4fY5vPrK1N/jOyCxyl3OzqQMwxXopecmoQIxL+lsUmw==";
+            try {
+                PasswordUtil.decode(v2Password);
+                fail("Exception should be thrown when decoding with out the wlp.aes.encryption.key set");
+            } catch (InvalidPasswordDecodingException e) {
+                //intentionally empty, test should pass if exception is caught
+            }
+
+            // two invocations, one for encode and one for decode.
+            productInfoMock.verify(() -> ProductInfo.getBetaEdition(), times(1));
+            mock.verify(() -> AESKeyManager.getKeyCharsUsingResolver(KeyVersion.AES_V2, null), times(1));
+
+        }
+    }
+
+    /**
+     * @param encodedPassword
+     * @return
+     */
+    private byte getAesVersionFromEncodedPassword(String encodedPassword) {
+        return Base64.getDecoder().decode(encodedPassword.substring(5))[0];
     }
 
     /**
@@ -259,7 +290,7 @@ public class PasswordUtilTest {
     public void testInvalidBase64KeyFails() {
         try (MockedStatic<ProductInfo> productInfoMock = Mockito.mockStatic(ProductInfo.class)) {
             productInfoMock.when(() -> ProductInfo.getBetaEdition()).thenReturn(true);
-            
+
             Map<String, String> props = new HashMap<>();
             // Invalid base64 string: contains characters not valid in Base64 encoding
             String invalidKey = "Not@Valid*Base64==";
@@ -273,32 +304,32 @@ public class PasswordUtilTest {
             } catch (Exception e) {
                 // Verify we get the expected exception type
                 assertTrue("Exception should be InvalidPasswordEncodingException",
-                          e instanceof InvalidPasswordEncodingException);
+                           e instanceof InvalidPasswordEncodingException);
             }
         }
     }
 
     /**
-     * Test that attempting to parse an AES encryption XML file with a non-existent path
+     * Test that attempting to parse an AES encryption file with a non-existent path
      * results in an appropriate exception.
      */
     @Test
-    public void testParseAesEncryptionXmlFileWithInvalidPath() {
+    public void testParseAesEncryptionaesConfigFileWithInvalidPath() {
 
         try (MockedStatic<ProductInfo> productInfoMock = Mockito.mockStatic(ProductInfo.class)) {
             productInfoMock.when(() -> ProductInfo.getBetaEdition()).thenReturn(true);
-        // Use a path that definitely doesn't exist
-        String invalidPath = "/non/existent/path/to/aeskey.xml";
+            // Use a path that definitely doesn't exist
+            String invalidPath = "/non/existent/path/to/aeskey.xml";
 
-        try {
-            PasswordUtil.parseAesEncryptionXmlFile(invalidPath);
-            fail("Expected IOException for non-existent XML file path");
-        } catch (Exception e) {
-            // We expect some kind of IOException or parsing failure
-            assertTrue(
-                       "Unexpected exception type: " + e,
-                       e instanceof IOException);
-        }
+            try {
+                AesConfigFileParser.parseAesEncryptionFile(invalidPath);
+                fail("Expected IOException for non-existent XML file path");
+            } catch (Exception e) {
+                // We expect some kind of IOException or parsing failure
+                assertTrue(
+                           "Unexpected exception type: " + e,
+                           e instanceof PasswordEncryptException);
+            }
         }
     }
 
@@ -307,28 +338,90 @@ public class PasswordUtilTest {
      * results in an appropriate exception.
      */
     @Test
-    public void testParseAesEncryptionXmlFileWithMalformedXml() throws IOException {
+    public void testParseAesEncryptionaesConfigFileWithMalformedXml() throws IOException {
 
         try (MockedStatic<ProductInfo> productInfoMock = Mockito.mockStatic(ProductInfo.class)) {
             productInfoMock.when(() -> ProductInfo.getBetaEdition()).thenReturn(true);
-        // Create a temporary file with invalid XML content
-        File badXml = File.createTempFile("bad-xml", ".xml");
-        try (FileWriter writer = new FileWriter(badXml)) {
-            // Write intentionally malformed XML content
-            writer.write("<variable name=\"wlp.aes.encryption.key\" value=\"someValue\" >"); // Missing closing tag
-        }
+            // Create a temporary file with invalid XML content
+            File badXml = File.createTempFile("bad-xml", ".xml");
+            try (FileWriter writer = new FileWriter(badXml)) {
+                // Write intentionally malformed XML content
+                writer.write("<variable name=\"wlp.aes.encryption.key\" value=\"someValue\" >"); // Missing closing tag
+            }
 
-        try {
-            PasswordUtil.parseAesEncryptionXmlFile(badXml.getAbsolutePath());
-            fail("Expected SAXException or ParserConfigurationException for malformed XML content");
-        } catch (Exception e) {
-            assertTrue(
-                       "Unexpected exception type: " + e,
-                       e instanceof SAXException || e instanceof ParserConfigurationException);
-        } finally {
-            // Clean up the temporary file
-            badXml.delete();
+            try {
+                AesConfigFileParser.parseAesEncryptionFile(badXml.getAbsolutePath());
+                fail("Expected UnsupportedConfigurationException for malformed XML content");
+            } catch (Exception e) {
+                assertTrue(
+                           "Unexpected exception type: " + e,
+                           e instanceof UnsupportedCryptoAlgorithmException);
+            } finally {
+                // Clean up the temporary file
+                badXml.delete();
+            }
         }
     }
+
+    /**
+     * Test that attempting to parse an AES encryption XML file which has both
+     * wlp.aes.encryption.key and wlp.password.encryption.key specified
+     */
+    @Test
+    public void testParseAesEncryptionaesConfigFileWithBothPropertiesSpecified() throws IOException {
+
+        try (MockedStatic<ProductInfo> productInfoMock = Mockito.mockStatic(ProductInfo.class)) {
+            productInfoMock.when(() -> ProductInfo.getBetaEdition()).thenReturn(true);
+            // Create a temporary file with invalid XML content
+            File badXml = File.createTempFile("bad-xml", ".xml");
+            try (FileWriter writer = new FileWriter(badXml)) {
+                // Write intentionally malformed XML content
+                writer.write("<variable name=\"wlp.aes.encryption.key\" value=\"someValue\" />");
+                writer.write("<variable name=\"wlp.password.encryption.key\" value=\"someValue\" />");
+
+            }
+
+            try {
+                AesConfigFileParser.parseAesEncryptionFile(badXml.getAbsolutePath());
+                fail("Expected UnsupportedConfigurationException for malformed XML content");
+            } catch (Exception e) {
+                assertTrue(
+                           "Unexpected exception type: " + e,
+                           e instanceof UnsupportedCryptoAlgorithmException);
+            } finally {
+                // Clean up the temporary file
+                badXml.delete();
+            }
+        }
+    }
+
+    /**
+     * Test that attempting to parse an AES encryption XML file which has both
+     * wlp.aes.encryption.key and wlp.password.encryption.key specified
+     */
+    @Test
+    public void testParseAesEncryptionaesConfigFileWithNoPropertiesSpecified() throws IOException {
+
+        try (MockedStatic<ProductInfo> productInfoMock = Mockito.mockStatic(ProductInfo.class)) {
+            productInfoMock.when(() -> ProductInfo.getBetaEdition()).thenReturn(true);
+            // Create a temporary file with invalid XML content
+            File badXml = File.createTempFile("bad-xml", ".xml");
+            try (FileWriter writer = new FileWriter(badXml)) {
+                // Write intentionally malformed XML content
+                writer.write("<variable name=\"name1\" value=\"someValue\" />");
+            }
+
+            try {
+                AesConfigFileParser.parseAesEncryptionFile(badXml.getAbsolutePath());
+                fail("Expected UnsupportedCryptoAlgorithmException for malformed XML content");
+            } catch (Exception e) {
+                assertTrue(
+                           "Unexpected exception type: " + e,
+                           e instanceof UnsupportedCryptoAlgorithmException);
+            } finally {
+                // Clean up the temporary file
+                badXml.delete();
+            }
+        }
     }
 }
