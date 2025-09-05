@@ -85,6 +85,7 @@ public class ManagedThreadFactoryBean implements Bean<ManagedThreadFactory>, Pas
         this.qualifiers = qualifiers;
 
         // Find the Application classloader for this component
+        // TODO handle possible null value for bundleContext
         BundleContext bc = FrameworkUtil.getBundle(ClassLoaderIdentifierService.class).getBundleContext();
         ServiceReference<ClassLoaderIdentifierService> ref = bc.getServiceReference(ClassLoaderIdentifierService.class);
         ClassLoaderIdentifierService classloaderIdSvc = bc.getService(ref);
@@ -95,11 +96,10 @@ public class ManagedThreadFactoryBean implements Bean<ManagedThreadFactory>, Pas
             foundClassLoader = classloaderIdSvc.getClassLoader("WebModule:" + cmd.getJ2EEName().getApplication() + "#" + cmd.getJ2EEName().getModule());
         }
 
-        // TODO - Is there anywhere else you would be able to inject a default managed thread factory
-        // like an application client?
         if (foundClassLoader == null && tc.isDebugEnabled()) {
             Tr.debug(tc, "No application classloader found for component: " + cmd.getJ2EEName()
                          + ", while initalizing the default MangedThreadFactory bean.");
+            // TODO throw exception?
         }
 
         this.declaringClassLoader = foundClassLoader;
