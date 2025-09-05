@@ -1087,6 +1087,21 @@ public class ToolTest extends FATServletClient {
                                         "description": "A tool to return a string with structuredContent set. The tool should ignore this and not return a structuredContent field when the response is string.",
                                         "title": "Structured Content String Response"
                                     },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "description": "boolean value",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": []
+                                        },
+                                        "name": "testToolArgIsNotRequired",
+                                        "description": "ToolArgNotRequired",
+                                        "title": "ToolArgNotRequired"
+                                    },
                                 ]
                             },
                             "id": 1,

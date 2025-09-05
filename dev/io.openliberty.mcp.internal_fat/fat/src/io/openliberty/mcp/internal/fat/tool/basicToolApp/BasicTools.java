@@ -290,6 +290,13 @@ public class BasicTools {
 
     public record City(String name, String country, int population, boolean isCapital) {};
 
+    // Test ToolArg.required is always true by default, check that it works when it is set to true
+    @Tool(name = "testToolArgIsNotRequired", title = "ToolArgNotRequired", description = "ToolArgNotRequired")
+    public boolean testToolArgNotRequired(@ToolArg(name = "value", description = "boolean value", required = false) boolean value) {
+        return false;
+    }
+
+
     @Tool(name = "cancellationTool", title = "Cancellable tool", description = "A tool that waits to be cancelled")
     public String cancellationTool(Cancellation cancellation) throws InterruptedException {
         LOG.info("Cancelling Request");

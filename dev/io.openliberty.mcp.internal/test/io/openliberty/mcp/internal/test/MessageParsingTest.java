@@ -50,16 +50,16 @@ public class MessageParsingTest {
         ToolRegistry.set(registry);
 
         Tool testTool = Literals.tool("echo", "Echo", "Echos the input");
-        Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, ""));
+        Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, "", true));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(testTool, arguments, Collections.emptyMap()));
 
         Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
-        Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, ""),
-                                                            "num2", new ArgumentMetadata(Integer.class, 1, ""));
+        Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, "", true),
+                                                            "num2", new ArgumentMetadata(Integer.class, 1, "", true));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(addTestTool, additionArgs, Collections.emptyMap()));
 
         Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
-        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value"));
+        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value", true));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(toogleTestTool, booleanArgs, Collections.emptyMap()));
     }
 

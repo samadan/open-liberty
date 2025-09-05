@@ -20,7 +20,8 @@ fat.project: true
 
 
 tested.features: \
-    jsonb-3.0
+    cdi-4.1,\
+    servlet-6.1
 
 -buildpath: \
 	io.openliberty.jakarta.cdi.4.0;version=latest,\
@@ -30,4 +31,4 @@ tested.features: \
 	com.ibm.ws.logging;version=latest,\
 	com.ibm.websphere.appserver.spi.logging,\
 	com.ibm.ws.logging.core,\
-	io.openliberty.jakarta.annotation.3.0
+	io.openliberty.jakarta.annotation.2.1

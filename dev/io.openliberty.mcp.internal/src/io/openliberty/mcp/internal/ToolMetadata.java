@@ -28,7 +28,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                            Map<String, SpecialArgumentMetadata> specialArguments,
                            String name, String title, String description) {
 
-    public record ArgumentMetadata(Type type, int index, String description) {}
+    public record ArgumentMetadata(Type type, int index, String description, boolean required) {}
 
     public record SpecialArgumentMetadata(SpecialArgumentType type, int index) {}
 
@@ -51,7 +51,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo != null) {
-                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description());
+                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description(), pInfo.required());
                 if (pInfo.name().equals(Tool.ELEMENT_NAME)) {
                     result.put(method.getJavaMember().getName(), pData);
                 } else {
