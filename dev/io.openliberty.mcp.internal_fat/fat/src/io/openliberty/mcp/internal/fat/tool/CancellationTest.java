@@ -119,7 +119,7 @@ public class CancellationTest extends FATServletClient {
         String request = """
                           {
                           "jsonrpc": "2.0",
-                          "id": "2",
+                          "id": "3",
                           "method": "tools/call",
                           "params": {
                             "name": "cancellationToolNoWait",
@@ -131,7 +131,7 @@ public class CancellationTest extends FATServletClient {
         String response = HttpTestUtils.callMCP(server, "/toolTest", request);
 
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text", "text": "If this String is returned, then the tool was not cancelled"}],"isError":false}}
+                        {"id":"3","jsonrpc":"2.0","result":{"content":[{"type":"text", "text": "If this String is returned, then the tool was not cancelled"}],"isError":false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
