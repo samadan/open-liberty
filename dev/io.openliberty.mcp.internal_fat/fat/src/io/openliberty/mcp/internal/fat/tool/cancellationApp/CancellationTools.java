@@ -31,32 +31,33 @@ public class CancellationTools {
 
     @Tool(name = "cancellationTool", title = "Cancellable tool", description = "A tool that waits to be cancelled")
     public String cancellationTool(Cancellation cancellation) throws InterruptedException {
-        LOG.info("Cancelling Request");
+        LOG.info("[cancellationTool] Starting");
         toolStatus.setRunning();
         int counter = 0;
         while (counter++ < 20) {
             TimeUnit.MILLISECONDS.sleep(500);
-            LOG.info("Checking if tool is cancelled");
+            LOG.info("[cancellationTool] Checking if tool is cancelled");
             if (cancellation.check().isRequested()) {
-                LOG.info("tool is cancelled");
+                LOG.info("[cancellationTool] tool is cancelled");
                 throw new OperationCancellationException();
             }
         }
-        LOG.info("the tool was not cancelled");
+        LOG.info("[cancellationTool] the tool was not cancelled");
         return "If this String is returned, then the tool was not cancelled";
     }
 
     @Tool(name = "cancellationToolNoWait", title = "Cancellable tool NoWait", description = "A tool that does not waits to be cancelled")
     public String cancellationToolNoWait(Cancellation cancellation) {
-        LOG.info("Cancelling Request");
+        LOG.info("[cancellationToolNoWait] Starting");
         int counter = 0;
         while (counter++ < 5) {
+            LOG.info("[cancellationToolNoWait] Checking if tool is cancelled");
             if (cancellation.check().isRequested()) {
-                LOG.info("Checking if tool is cancelled");
+                LOG.info("[cancellationToolNoWait] tool is cancelled");
                 throw new OperationCancellationException();
             }
         }
-        LOG.info("the tool was not cancelled");
+        LOG.info("[cancellationToolNoWait] the tool was not cancelled");
         return "If this String is returned, then the tool was not cancelled";
     }
 
