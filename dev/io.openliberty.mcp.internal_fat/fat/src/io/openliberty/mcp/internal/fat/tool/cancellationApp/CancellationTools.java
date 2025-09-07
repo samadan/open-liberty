@@ -16,6 +16,7 @@ import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.messaging.Cancellation;
 import io.openliberty.mcp.messaging.Cancellation.OperationCancellationException;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * Tools for CancellationTest
@@ -25,9 +26,13 @@ public class CancellationTools {
 
     private static final Logger LOG = Logger.getLogger(CancellationTools.class.getName());
 
+    @Inject
+    private ToolStatus toolStatus;
+
     @Tool(name = "cancellationTool", title = "Cancellable tool", description = "A tool that waits to be cancelled")
     public String cancellationTool(Cancellation cancellation) throws InterruptedException {
         LOG.info("Cancelling Request");
+        toolStatus.setRunning();
         int counter = 0;
         while (counter++ < 20) {
             TimeUnit.MILLISECONDS.sleep(500);

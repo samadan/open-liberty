@@ -32,6 +32,7 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
+import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.cancellationApp.CancellationTools;
 import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
@@ -104,8 +105,8 @@ public class CancellationTest extends FATServletClient {
         //make sure the tool call request has started
         latch.await();
 
-        //wait to make sure the tool call is registered before trying to cancel it
-        TimeUnit.MILLISECONDS.sleep(1000);
+        // Call AwaitToolServlet to wait for the tool to start running
+        new HttpRequest(server, "/cancellationTest/awaitTool").run(String.class);
 
         HttpTestUtils.callMCPNotification(server, "/cancellationTest", cancellationRequestNotification);
 
