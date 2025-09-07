@@ -66,28 +66,28 @@ public class JPACDIExtension implements Extension {
 
     private void createBeanForPersistenceUnit(AfterBeanDiscovery abd, final PersistenceUnitInfo pui, final J2EEName j2eeName) throws ClassNotFoundException {
 
-        Set<Annotation> qualfiiers = getQualifiers(pui);
+        Set<Annotation> qualifiers = getQualifiers(pui);
         //TODO ask JPA team if anything needs to happen when any of these go out of scope.
         Class<? extends Annotation> scopeForEntityManager = getScope(pui, jakarta.transaction.TransactionScoped.class);
         Class<? extends Annotation> scopeForEntityManagerFactory = jakarta.enterprise.context.ApplicationScoped.class;
-        Class<? extends Annotation> scopeForOthers = jakarta.enterprise.inject.Default.class;
+        Class<? extends Annotation> scopeForOthers = jakarta.enterprise.context.Dependent.class;
 
-        abd.addBean().types(EntityManager.class).addQualifiers(qualfiiers).scope(scopeForEntityManager).produceWith((instance) -> jpaComponent.getEntityManager(j2eeName, pui));
-        abd.addBean().types(EntityManagerFactory.class).addQualifiers(qualfiiers).scope(scopeForEntityManagerFactory).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+        abd.addBean().types(EntityManager.class).addQualifiers(qualifiers).scope(scopeForEntityManager).produceWith((instance) -> jpaComponent.getEntityManager(j2eeName, pui));
+        abd.addBean().types(EntityManagerFactory.class).addQualifiers(qualifiers).scope(scopeForEntityManagerFactory).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
                                                                                                                                                                                      pui));
-        abd.addBean().types(PersistenceUnitUtil.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+        abd.addBean().types(PersistenceUnitUtil.class).addQualifiers(qualifiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
                                                                                                                                                                       pui).getPersistenceUnitUtil());
-        abd.addBean().types(CriteriaBuilder.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+        abd.addBean().types(CriteriaBuilder.class).addQualifiers(qualifiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
                                                                                                                                                                   pui).getCriteriaBuilder());
-        abd.addBean().types(Cache.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+        abd.addBean().types(Cache.class).addQualifiers(qualifiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
                                                                                                                                                         pui).getCache());
-        abd.addBean().types(Metamodel.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+        abd.addBean().types(Metamodel.class).addQualifiers(qualifiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
                                                                                                                                                             pui).getMetamodel());
-        abd.addBean().types(SchemaManager.class).addQualifiers(qualfiiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
+        abd.addBean().types(SchemaManager.class).addQualifiers(qualifiers).scope(scopeForOthers).produceWith((instance) -> jpaComponent.getEntityManagerFactory(j2eeName,
                                                                                                                                                                 pui).getSchemaManager());
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            String qualifiersString = qualfiiers.stream().map(Annotation::annotationType).map(Class::getName).collect(Collectors.joining(", "));
+            String qualifiersString = qualifiers.stream().map(Annotation::annotationType).map(Class::getName).collect(Collectors.joining(", "));
             Tr.debug(tc, "Creating beans for a persistence unit (and related) with scope " + scopeForEntityManager + " and qualifiers: " + qualifiersString);
         }
 
@@ -122,7 +122,7 @@ public class JPACDIExtension implements Extension {
 
     private Set<Annotation> getQualifiers(PersistenceUnitInfo pui) throws ClassNotFoundException {
         List<String> qualifierNames = pui.getQualifierAnnotationNames();
-        Set<Annotation> qualfiiers = new HashSet<Annotation>();
+        Set<Annotation> qualifiers = new HashSet<Annotation>();
         for (String qualifierName : qualifierNames) {
 
             final Class<? extends Annotation> qualifierClass = Class.forName(qualifierName, false, Thread.currentThread().getContextClassLoader()).asSubclass(Annotation.class);
@@ -133,9 +133,9 @@ public class JPACDIExtension implements Extension {
                     return qualifierClass;
                 }
             };
-            qualfiiers.add(qualifierAnnotationLiteral);
+            qualifiers.add(qualifierAnnotationLiteral);
         }
-        return qualfiiers;
+        return qualifiers;
     }
 
     private static class AppOnlyJ2EEName implements J2EEName {
