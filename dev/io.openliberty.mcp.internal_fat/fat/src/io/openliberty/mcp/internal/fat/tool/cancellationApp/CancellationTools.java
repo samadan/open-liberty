@@ -1,0 +1,58 @@
+/*******************************************************************************
+ * Copyright (c) 2025 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *******************************************************************************/
+package io.openliberty.mcp.internal.fat.tool.cancellationApp;
+
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
+import io.openliberty.mcp.annotations.Tool;
+import io.openliberty.mcp.messaging.Cancellation;
+import io.openliberty.mcp.messaging.Cancellation.OperationCancellationException;
+import jakarta.enterprise.context.ApplicationScoped;
+
+/**
+ * Tools for CancellationTest
+ */
+@ApplicationScoped
+public class CancellationTools {
+
+    private static final Logger LOG = Logger.getLogger(CancellationTools.class.getName());
+
+    @Tool(name = "cancellationTool", title = "Cancellable tool", description = "A tool that waits to be cancelled")
+    public String cancellationTool(Cancellation cancellation) throws InterruptedException {
+        LOG.info("Cancelling Request");
+        int counter = 0;
+        while (counter++ < 20) {
+            TimeUnit.MILLISECONDS.sleep(500);
+            LOG.info("Checking if tool is cancelled");
+            if (cancellation.check().isRequested()) {
+                LOG.info("tool is cancelled");
+                throw new OperationCancellationException();
+            }
+        }
+        LOG.info("the tool was not cancelled");
+        return "If this String is returned, then the tool was not cancelled";
+    }
+
+    @Tool(name = "cancellationToolNoWait", title = "Cancellable tool NoWait", description = "A tool that does not waits to be cancelled")
+    public String cancellationToolNoWait(Cancellation cancellation) {
+        LOG.info("Cancelling Request");
+        int counter = 0;
+        while (counter++ < 5) {
+            if (cancellation.check().isRequested()) {
+                LOG.info("Checking if tool is cancelled");
+                throw new OperationCancellationException();
+            }
+        }
+        LOG.info("the tool was not cancelled");
+        return "If this String is returned, then the tool was not cancelled";
+    }
+
+}

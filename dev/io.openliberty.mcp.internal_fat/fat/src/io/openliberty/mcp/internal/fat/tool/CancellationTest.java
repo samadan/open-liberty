@@ -32,7 +32,7 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
-import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
+import io.openliberty.mcp.internal.fat.tool.cancellationApp.CancellationTools;
 import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
 @RunWith(FATRunner.class)
@@ -44,7 +44,7 @@ public class CancellationTest extends FATServletClient {
 
     @BeforeClass
     public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "toolTest.war").addPackage(BasicTools.class.getPackage());
+        WebArchive war = ShrinkWrap.create(WebArchive.class, "cancellationTest.war").addPackage(CancellationTools.class.getPackage());
 
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
@@ -55,8 +55,12 @@ public class CancellationTest extends FATServletClient {
 
     @AfterClass
     public static void teardown() throws Exception {
-        executor.shutdown();
         server.stopServer();
+    }
+
+    @AfterClass
+    public static void shutdownExecutor() {
+        executor.shutdown();
     }
 
     @Test
@@ -79,7 +83,7 @@ public class CancellationTest extends FATServletClient {
                                 """;
                 //make sure this tread executes first
                 latch.countDown();
-                return HttpTestUtils.callMCP(server, "/toolTest", request);
+                return HttpTestUtils.callMCP(server, "/cancellationTest", request);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -103,7 +107,7 @@ public class CancellationTest extends FATServletClient {
         //wait to make sure the tool call is registered before trying to cancel it
         TimeUnit.MILLISECONDS.sleep(1000);
 
-        HttpTestUtils.callMCPNotification(server, "/toolTest", cancellationRequestNotification);
+        HttpTestUtils.callMCPNotification(server, "/cancellationTest", cancellationRequestNotification);
 
         String response = future.get(10, TimeUnit.SECONDS);
 
@@ -128,7 +132,7 @@ public class CancellationTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = HttpTestUtils.callMCP(server, "/cancellationTest", request);
 
         String expectedResponseString = """
                         {"id":"3","jsonrpc":"2.0","result":{"content":[{"type":"text", "text": "If this String is returned, then the tool was not cancelled"}],"isError":false}}
