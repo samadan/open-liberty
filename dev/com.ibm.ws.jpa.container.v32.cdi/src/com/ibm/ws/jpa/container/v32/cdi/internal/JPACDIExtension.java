@@ -88,7 +88,7 @@ public class JPACDIExtension implements Extension {
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             String qualifiersString = qualfiiers.stream().map(Annotation::annotationType).map(Class::getName).collect(Collectors.joining(", "));
-            Tr.debug(tc, "Creating beans for a persistence unit (and related) with scope {0} and qualifiers {1}", scope.getName(), qualifiersString);
+            Tr.debug(tc, "Creating beans for a persistence unit (and related) with scope " + scopeForEntityManager + " and qualifiers: " + qualifiersString);
         }
 
     }
@@ -138,7 +138,6 @@ public class JPACDIExtension implements Extension {
         return qualfiiers;
     }
 
-    //TODO ask JPA if they object to adding appOnly to jpaComponent.getPersistenceUnits (or overloading the method)
     private static class AppOnlyJ2EEName implements J2EEName {
 
         private final String appName;
