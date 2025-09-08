@@ -95,8 +95,8 @@ public class ManagedThreadFactoryBean implements Bean<ManagedThreadFactory>, Pas
             }
 
             return null; // Should be unreachable
-        }).orElseThrow(() -> new NullPointerException("Could not find the classloader for the application application " + cmd.getJ2EEName()
-                                                      + "during the creation of the the default managed thread factory bean."));
+        }).orElseThrow(() -> new NullPointerException("Could not find the classloader for the application " + cmd.getJ2EEName()
+                                                      + " during the creation of the default managed thread factory bean."));
 
         // The Concurrency extension could be running under any module/component of the application.
         ApplicationMetaData amd = cmd.getModuleMetaData().getApplicationMetaData();
