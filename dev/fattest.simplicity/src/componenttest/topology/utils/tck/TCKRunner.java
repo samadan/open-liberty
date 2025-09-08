@@ -123,7 +123,7 @@ public class TCKRunner {
     private Boolean failSafeUndeployment = Boolean.TRUE;
     private Duration appDeployTimeout = Duration.ofSeconds(180);
     private Duration appUndeployTimeout = Duration.ofSeconds(60);
-    private Duration mbeanTimeout = Duration.ofMillis(60000);
+    private Duration mbeanTimeout = Duration.ofSeconds(60);
 
     /////////// Builder methods //////////////////
 
