@@ -66,7 +66,6 @@ public class JPACDIExtension implements Extension {
     private void createBeanForPersistenceUnit(AfterBeanDiscovery abd, final PersistenceUnitInfo pui, final J2EEName j2eeName) throws ClassNotFoundException {
 
         Set<Annotation> qualifiers = getQualifiers(pui);
-        //TODO ask JPA team if anything needs to happen when any of these go out of scope.
         Class<? extends Annotation> scopeForEntityManager = getScope(pui, jakarta.transaction.TransactionScoped.class);
         Class<? extends Annotation> scopeForEntityManagerFactory = jakarta.enterprise.context.ApplicationScoped.class;
         Class<? extends Annotation> scopeForOthers = jakarta.enterprise.context.Dependent.class;
@@ -112,8 +111,7 @@ public class JPACDIExtension implements Extension {
         if (scopeName == null || scopeName.equals("")) {
             scope = defaultScope;
         } else {
-            //The TCCL will be set by CDIRuntimeImpl to the app classloader.
-            scope = Class.forName(scopeName, false, Thread.currentThread().getContextClassLoader()).asSubclass(Annotation.class);
+            scope = Class.forName(scopeName, false, pui.getClassLoader()).asSubclass(Annotation.class);
         }
 
         return scope;
@@ -124,7 +122,7 @@ public class JPACDIExtension implements Extension {
         Set<Annotation> qualifiers = new HashSet<Annotation>();
         for (String qualifierName : qualifierNames) {
 
-            final Class<? extends Annotation> qualifierClass = Class.forName(qualifierName, false, Thread.currentThread().getContextClassLoader()).asSubclass(Annotation.class);
+            final Class<? extends Annotation> qualifierClass = Class.forName(qualifierName, false, pui.getClassLoader()).asSubclass(Annotation.class);
             @SuppressWarnings("rawtypes")
             Annotation qualifierAnnotationLiteral = new AnnotationLiteral() {
                 @Override
