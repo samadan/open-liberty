@@ -28,5 +28,3 @@ public interface FileManagerClient extends AutoCloseable {
     @Path("upload")
     Response uploadFile(List<EntityPart> entityParts) throws IOException;
 }
-
-// Made with Bob

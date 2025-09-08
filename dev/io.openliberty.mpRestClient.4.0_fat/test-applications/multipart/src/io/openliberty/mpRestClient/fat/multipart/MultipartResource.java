@@ -48,5 +48,3 @@ public class MultipartResource {
         return Response.status(201).entity(jsonBuilder.build()).build();
     }
 }
-
-// Made with Bob

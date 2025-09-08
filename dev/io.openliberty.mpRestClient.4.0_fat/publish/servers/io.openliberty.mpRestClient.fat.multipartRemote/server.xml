@@ -12,5 +12,3 @@
                  httpPort="8020"
                  httpsPort="8021"/>
 </server>
-
-<!-- Made with Bob -->

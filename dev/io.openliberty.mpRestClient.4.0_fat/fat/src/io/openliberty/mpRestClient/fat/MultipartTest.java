@@ -66,5 +66,3 @@ public class MultipartTest extends FATServletClient {
         }
     }
 }
-
-// Made with Bob

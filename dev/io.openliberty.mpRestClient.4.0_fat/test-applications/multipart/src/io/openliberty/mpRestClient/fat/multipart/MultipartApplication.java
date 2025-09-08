@@ -16,5 +16,3 @@ import jakarta.ws.rs.core.Application;
 public class MultipartApplication extends Application {
 
 }
-
-// Made with Bob

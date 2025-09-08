@@ -11,5 +11,3 @@
     <javaPermission className="java.util.PropertyPermission" name="*" actions="read" />
     <javaPermission className="javax.net.ssl.SSLPermission" name="*" actions="setHostnameVerifier" />
 </server>
-
-<!-- Made with Bob -->

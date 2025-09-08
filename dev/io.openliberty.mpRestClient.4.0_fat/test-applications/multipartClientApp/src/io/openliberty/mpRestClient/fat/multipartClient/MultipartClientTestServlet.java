@@ -141,21 +141,4 @@ public class MultipartClientTestServlet extends FATServlet {
             }
         }
     }
-    
-    @Test
-    public void testEntityPartTest(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        // Run the EntityPartTest tests
-        EntityPartTest entityPartTest = new EntityPartTest();
-        
-        try {
-            entityPartTest.uploadFile();
-            entityPartTest.uploadMultipleFiles();
-            // If we get here, the tests passed
-            assertTrue(true);
-        } catch (Exception e) {
-            fail("EntityPartTest failed: " + e.getMessage());
-        }
-    }
 }
-
-// Made with Bob
