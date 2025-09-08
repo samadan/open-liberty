@@ -417,7 +417,7 @@ public class Recovery {
 
 			for (ResourceAction ra : resourceActions) {
 				final Serializable xaResInfo = XAResourceInfoFactory
-						.getXAResourceInfo(resourceCount);
+						.getXAResourceInfo();
 
 				final KillProfile kp;
 				if (killProfiles == null || resourceCount >= killProfiles.length) {
