@@ -17,6 +17,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivilegedAction;
+import java.security.Provider;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Arrays;
@@ -83,6 +84,7 @@ public class CryptoUtils {
     public static String OPENJCE_PLUS_FIPS_PROVIDER = "com.ibm.crypto.plus.provider.OpenJCEPlusFIPS";
 
     public static final String IBMJCE_NAME = "IBMJCE";
+    public static final String IBMJCECCA_NAME = "IBMJCECCA";
     public static final String IBMJCE_PLUS_FIPS_NAME = "IBMJCEPlusFIPS";
     public static final String OPENJCE_PLUS_NAME = "OpenJCEPlus";
     public static final String OPENJCE_PLUS_FIPS_NAME = "OpenJCEPlusFIPS";
@@ -632,8 +634,15 @@ public class CryptoUtils {
     public static byte[] generateRandomBytes(int length) {
         byte[] seed = null;
         SecureRandom rand = new SecureRandom();
-        seed = new byte[length];
-        rand.nextBytes(seed);
+        Provider provider = rand.getProvider();
+        String providerName = provider.getName();
+
+        if (providerName.equals(IBMJCECCA_NAME)) {
+            seed = new byte[length];
+            rand.nextBytes(seed);
+        } else {
+            seed = rand.generateSeed(length);
+        }
 
         return seed;
     }
