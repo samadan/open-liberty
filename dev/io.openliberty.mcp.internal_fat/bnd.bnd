@@ -25,6 +25,7 @@ tested.features: \
 
 -buildpath: \
 	io.openliberty.jakarta.cdi.4.0;version=latest,\
+	io.openliberty.jakarta.servlet.6.0;version=latest,\
 	io.openliberty.mcp;version=latest,\
 	org.json:json;version=20080701,\
 	org.skyscreamer:jsonassert,\
