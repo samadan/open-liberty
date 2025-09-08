@@ -2074,7 +2074,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
     }
 
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/30534")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/30534
     public void testOLGH30534() throws Exception {
 
         County county1 = new County("CountyA");
