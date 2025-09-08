@@ -162,12 +162,7 @@ public class ContextBeginnerEnderImpl implements ContextBeginnerEnder {
 
     @Override
     public Optional<J2EEName> getJ2EEName() {
-
-        if (cmd != null) {
-            return Optional.of(cmd.getJ2EEName());
-        }
-
-        return Optional.empty();
+        return Optional.ofNullable(cmd.getJ2EEName());
     }
 
     public static ContextBeginnerEnderImpl getCurrentlyActive() {
