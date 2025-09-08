@@ -2283,8 +2283,9 @@ public class JakartaDataRecreateServlet extends FATServlet {
     }
 
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31558")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31558
     public void testOLGH31558() throws Exception {
+        deleteCollectionTable("ShippingAddress_RECIPIENTINFO");
         deleteAllEntities(ShippingAddress.class);
 
         ShippingAddress a1 = new ShippingAddress();
@@ -2346,6 +2347,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
     @Test
     @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31559")
     public void testOLGH31559() throws Exception {
+        deleteCollectionTable("ShippingAddress_RECIPIENTINFO");
         deleteAllEntities(ShippingAddress.class);
 
         ShippingAddress a1 = new ShippingAddress();
@@ -2495,5 +2497,17 @@ public class JakartaDataRecreateServlet extends FATServlet {
                         .executeUpdate();
         tx.commit();
     }
+    
+    /**
+     * Deletes all rows from the specified collection table using native SQL.
+     *
+     * @param tableName the exact name of the table to delete from (e.g., "ShippingAddress_RECIPIENTINFO")
+     */
+    private void deleteCollectionTable(String tableName) throws Exception{
+        tx.begin();
+        em.createNativeQuery("DELETE FROM " + tableName).executeUpdate();
+        tx.commit();
+    }
+
 
 }
