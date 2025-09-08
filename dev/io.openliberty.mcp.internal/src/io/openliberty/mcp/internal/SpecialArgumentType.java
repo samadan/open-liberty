@@ -28,6 +28,6 @@ public enum SpecialArgumentType {
                 return specialArgType;
             }
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Special argument type not supported: " + type.getTypeName());
     }
 }
