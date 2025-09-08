@@ -2,14 +2,21 @@
     <featureManager>
         <feature>servlet-4.0</feature>
         <feature>jdbc-4.0</feature>
+        <feature>jca-1.7</feature>
+        <feature>jms-2.0</feature>
+        <feature>localConnector-1.0</feature>
         <feature>componenttest-1.0</feature>
     </featureManager>
 
     <include location="../fatTestPorts.xml"/>
 
     <webApplication location="testOverrideLib.war">
-        <classloader overrideLibraryRef="testOverrideA,testOverrideB" privateLibraryRef="testOverrideC,testOverrideD"/>
+        <classloader overrideLibraryRef="testOverrideA,testOverrideB" privateLibraryRef="testOverrideC,testOverrideD" classProviderRef="DummyRA1"/>
     </webApplication>
+
+    <resourceAdapter id="DummyRA1" location="${server.config.dir}/ras/testDummyRA.rar">
+      <classloader overrideLibraryRef="testOverrideE"/>
+    </resourceAdapter>
 
     <library id="testOverrideA">
        <path name="libs/testLib1.jar"/>
@@ -26,6 +33,9 @@
     <library id="testOverrideD">
        <path name="libs/testLib7.jar"/>
        <path name="libs/testLib8.jar"/>
+    </library>
+    <library id="testOverrideE">
+       <path name="libs/testLib9.jar"/>
     </library>
 
     <javaPermission codeBase="${server.config.dir}/apps/testOverrideLib.war" className="java.lang.RuntimePermission" name="getClassLoader"/>
