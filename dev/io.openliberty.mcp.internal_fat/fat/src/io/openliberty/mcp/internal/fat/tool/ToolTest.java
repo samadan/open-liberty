@@ -28,7 +28,6 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
-import io.openliberty.mcp.internal.fat.tool.basicToolApp.BusinessException.ToolErrorHandlingTools;
 import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
 /**
@@ -42,7 +41,7 @@ public class ToolTest extends FATServletClient {
 
     @BeforeClass
     public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "toolTest.war").addPackage(BasicTools.class.getPackage()).addPackage(ToolErrorHandlingTools.class.getPackage());
+        WebArchive war = ShrinkWrap.create(WebArchive.class, "toolTest.war").addPackage(BasicTools.class.getPackage());
 
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
@@ -1084,148 +1083,12 @@ public class ToolTest extends FATServletClient {
                                         "description": "ToolArgNotRequired",
                                         "title": "ToolArgNotRequired"
                                       },
-                                      {
-                                         "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "input": {
-                                                    "description": "Handles business tool error",
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "input"
-                                            ]
-                                        },
-                                        "name": "businessErrorTool",
-                                        "description": "This tool throws error on business tool",
-                                        "title": "Business Error Handler"
-                                    },
-                                    {
-                                        "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "input": {
-                                                    "description": "Throws raw exception",
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "input"
-                                            ]
-                                        },
-                                        "name": "unwrappedExceptionTool",
-                                        "description": "Throws unwrapped RuntimeException",
-                                        "title": "Unwrapped Exception Tool"
-                                    },
-                                    {
-                                        "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "input": {
-                                                    "description": "Error Triggers",
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "input"
-                                            ]
-                                        },
-                                        "name": "wrappedNoArgsTool",
-                                        "description": "Throws raw exception with @WrapBusinessException but no types listed",
-                                        "title": "Tool with no Args"
-                                    },
-                                    {
-                                        "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "input": {
-                                                    "description": "Invalid input",
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "input"
-                                            ]
-                                        },
-                                        "name": "listedWrappedExceptionTool",
-                                        "description": "Tool throws exception listed in WrapBusinessException",
-                                        "title": "Listed Wrapped Exception"
-                                    },
-                                    {
-                                        "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "input": {
-                                                    "description": "This is input",
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "input"
-                                            ]
-                                        },
-                                        "name": "superclassWrappedExceptionTool",
-                                        "description": "Tool throws subclass exception",
-                                        "title": "Superclass Listed"
-                                    },
-                                    {
-                                        "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "input": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "input"
-                                            ]
-                                        },
-                                        "name": "excludeExceptionTool",
-                                        "description": "Throws a business exception not listed in WrapBusinessException",
-                                        "title": "Excludes exception Tool"
-                                    },
-                                    {
-                                        "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "input": {
-                                                    "description": "Checked exception Triggers",
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "input"
-                                            ]
-                                        },
-                                        "name": "checkedExceptionTool",
-                                        "description": "Throws a checked exception",
-                                        "title": "Checked Exception"
-                                    },
-                                    {
-                                        "inputSchema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "input": {
-                                                    "description": "Unchecked exception Triggers",
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "input"
-                                            ]
-                                        },
-                                        "name": "uncheckedExceptionTool",
-                                        "description": "Throws a runtime exception",
-                                        "title": "Unchecked Exception"
-                                    },
                                 ]
                             },
                             "id": 1,
                             "jsonrpc": "2.0"
                         }
                          """;
-        System.out.println(jsonResponse);
 
         // Lenient mode test (false boolean in 3rd parameter
         JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);

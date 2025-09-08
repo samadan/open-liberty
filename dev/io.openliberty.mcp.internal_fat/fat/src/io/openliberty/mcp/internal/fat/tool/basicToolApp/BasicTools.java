@@ -15,6 +15,7 @@ import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.Tool.Annotations;
 import io.openliberty.mcp.annotations.ToolArg;
 import io.openliberty.mcp.content.AudioContent;
+import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.content.ImageContent;
 import io.openliberty.mcp.content.TextContent;
 import io.openliberty.mcp.tools.ToolResponse;
@@ -45,7 +46,7 @@ public class BasicTools {
     }
 
     @Tool(name = "mixedContentListTool", title = "Mixed Content List Tool", description = "Returns Text, Audio or Image Content List")
-    public List<Record> mixedContentListTool(@ToolArg(name = "input", description = "input to echo") String input) {
+    public List<Content> mixedContentListTool(@ToolArg(name = "input", description = "input to echo") String input) {
         return List.of(
                        new TextContent("Echo: " + input),
 

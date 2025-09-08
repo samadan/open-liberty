@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat.tool.basicToolApp.BusinessException;
+package io.openliberty.mcp.internal.fat.tool.businessExceptionApp;
 
 import java.io.IOException;
 
