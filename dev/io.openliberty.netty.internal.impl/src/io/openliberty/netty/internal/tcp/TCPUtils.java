@@ -15,6 +15,7 @@ import java.net.SocketAddress;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -125,7 +126,7 @@ public class TCPUtils {
 
 				// Listener to stop channel on close
 				// This should just log that the channel stopped
-				channel.closeFuture().addListener(innerFuture -> logChannelStopped(channel));
+				channel.closeFuture().addListener(innerFuture -> logChannelStopped(innerFuture, channel));
 
                 if(config.isInbound()) {
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
@@ -365,6 +366,20 @@ public class TCPUtils {
 		} else {
 			if(TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
 				Tr.debug(tc, "Socket channel closed, local: " + channel.localAddress() + " remote: " + channel.remoteAddress());
+		}
+	}
+
+	/**
+	 * Overrides method above to also log the state of the future.
+	 * 
+	 * @param channel
+	 */
+	public static void logChannelStopped(Future<?> future, Channel channel) {
+		logChannelStopped(channel);
+		boolean completed = future.isDone() && !future.isCancelled();
+		if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+			Tr.debug(tc, "Channel stop future: done and not cancelled --> {0} for port {1}", 
+					completed, String.valueOf(channel.attr(ConfigConstants.PORT_KEY).get()));
 		}
 	}
 
