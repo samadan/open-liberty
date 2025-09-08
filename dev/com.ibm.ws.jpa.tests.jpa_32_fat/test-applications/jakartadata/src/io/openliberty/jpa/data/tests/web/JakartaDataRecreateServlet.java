@@ -2247,8 +2247,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
             assertEquals(4, h1.getNumBedrooms());
 
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException();
+            throw e;
         }
     }
 
