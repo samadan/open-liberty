@@ -15,14 +15,19 @@ package test.concurrent.no.vt.web;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.Resource;
 import jakarta.enterprise.concurrent.ManagedExecutorDefinition;
 import jakarta.enterprise.concurrent.ManagedExecutorService;
+import jakarta.enterprise.concurrent.ManagedScheduledExecutorDefinition;
+import jakarta.enterprise.concurrent.ManagedScheduledExecutorService;
 import jakarta.enterprise.concurrent.ManagedThreadFactory;
 import jakarta.enterprise.concurrent.ManagedThreadFactoryDefinition;
 import jakarta.servlet.ServletConfig;
@@ -33,10 +38,15 @@ import org.junit.Test;
 
 import componenttest.app.FATServlet;
 
-@ManagedExecutorDefinition(name = "java:comp/concurrent/AnnoExecutorToOverride",
-                           virtual = true)
-@ManagedThreadFactoryDefinition(name = "java:module/concurrent/AnnoThreadFactoryToOverride",
-                                virtual = true)
+@ManagedExecutorDefinition //
+(name = "java:comp/concurrent/AnnoExecutorToOverride",
+ virtual = true)
+@ManagedScheduledExecutorDefinition //
+(name = "java:app/concurrent/AnnoScheduledExecutorToOverride",
+ virtual = true)
+@ManagedThreadFactoryDefinition //
+(name = "java:module/concurrent/AnnoThreadFactoryToOverride",
+ virtual = true)
 @WebServlet("/*")
 @SuppressWarnings("serial")
 public class ConcurrentVTDisabledServlet extends FATServlet {
@@ -49,6 +59,15 @@ public class ConcurrentVTDisabledServlet extends FATServlet {
 
     @Resource(lookup = "java:global/concurrent/WebXMLExecutorToOverride")
     ManagedExecutorService overriddenManagedExecutorFromWebXML;
+
+    @Resource(lookup = "java:app/concurrent/AnnoScheduledExecutorToOverride")
+    ManagedScheduledExecutorService overriddenManagedScheduledExecutorFromAnno;
+
+    @Resource(lookup = "concurrent/ServerXMLScheduledExecutorToOverride")
+    ManagedScheduledExecutorService overriddenManagedScheduledExecutorFromServerXML;
+
+    @Resource(lookup = "java:module/concurrent/WebXMLScheduledExecutorToOverride")
+    ManagedScheduledExecutorService overriddenManagedScheduledExecutorFromWebXML;
 
     @Resource(lookup = "java:module/concurrent/AnnoThreadFactoryToOverride")
     ManagedThreadFactory overriddenThreadFactoryFromAnno;
@@ -100,9 +119,9 @@ public class ConcurrentVTDisabledServlet extends FATServlet {
     @Test
     public void testOverrideVirtualManagedExecutorFromAnno() throws Exception {
 
-        CompletableFuture<Thread> future = overriddenManagedExecutorFromWebXML
-                        .completedFuture("testOverrideVirtualManagedExecutorFromAnno")
-                        .thenApplyAsync(testName -> {
+        String testName = "testOverrideVirtualManagedExecutorFromAnno";
+        Future<Thread> future = overriddenManagedExecutorFromAnno
+                        .submit(() -> {
                             System.out.println("Task from " + testName);
                             return Thread.currentThread();
                         });
@@ -113,24 +132,47 @@ public class ConcurrentVTDisabledServlet extends FATServlet {
     }
 
     /**
-     * A managedExecutor defined in server.xml with virtual=true runs async tasks on
-     * platform threads instead of virtual threads when the ThreadTypeOverride SPI
-     * instructs Liberty to avoid creating virtual threads. The task runs
-     * successfully.
+     * A managedExecutorService defined in server.xml with virtual=true runs async
+     * tasks on platform threads instead of virtual threads when the
+     * ThreadTypeOverride SPI instructs Liberty to avoid creating virtual threads.
+     * The task runs successfully on Java SE 21+, but is rejected on Java SE 17.
      */
     @Test
     public void testOverrideVirtualManagedExecutorFromServerXML() throws Exception {
 
-        CompletableFuture<Thread> future = overriddenManagedExecutorFromServerXML
-                        .completedFuture("testOverrideVirtualManagedExecutorFromServerXML")
-                        .thenApplyAsync(testName -> {
-                            System.out.println("Task from " + testName);
-                            return Thread.currentThread();
-                        });
+        String testName = "testOverrideVirtualManagedExecutorFromServerXML";
 
-        Thread thread = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+        Callable<Thread> task = () -> {
+            System.out.println("Task from " + testName);
+            return Thread.currentThread();
+        };
 
-        assertEquals(false, isVirtual(thread));
+        if (Runtime.version().feature() == 17)
+            try {
+                overriddenManagedExecutorFromServerXML
+                                .invokeAll(List.of(task),
+                                           TIMEOUT_NS,
+                                           TimeUnit.NANOSECONDS);
+                fail("Virtual=true should not be allowed on Java SE 17.");
+            } catch (IllegalArgumentException x) {
+                if (Runtime.version().feature() == 17)
+                    return; // expected
+                else
+                    throw x;
+            }
+        else {
+            Future<Thread> future = overriddenManagedExecutorFromServerXML
+                            .invokeAll(List.of(task),
+                                       TIMEOUT_NS,
+                                       TimeUnit.NANOSECONDS)
+                            .get(0);
+
+            assertEquals(true, future.isDone());
+
+            Thread thread = future.get();
+
+            assertEquals(false, isVirtual(thread));
+        }
     }
 
     /**
@@ -148,6 +190,91 @@ public class ConcurrentVTDisabledServlet extends FATServlet {
                             System.out.println("Task from " + testName);
                             return Thread.currentThread();
                         });
+
+        Thread thread = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+
+        assertEquals(false, isVirtual(thread));
+    }
+
+    /**
+     * A ManagedEScheduledxecutorDefinition with virtual=true runs async tasks on
+     * platform threads instead of virtual threads when the ThreadTypeOverride SPI
+     * instructs Liberty to avoid creating virtual threads. The task runs
+     * successfully.
+     */
+    @Test
+    public void testOverrideVirtualManagedScheduledExecutorFromAnno() //
+                    throws Exception {
+
+        String name = "testOverrideVirtualManagedScheduledExecutorFromAnno";
+        CompletableFuture<Thread> future = //
+                        overriddenManagedScheduledExecutorFromAnno
+                                        .completedFuture(name)
+                                        .thenApplyAsync(testName -> {
+                                            System.out.println("Task from " + testName);
+                                            return Thread.currentThread();
+                                        });
+
+        Thread thread = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+
+        assertEquals(false, isVirtual(thread));
+    }
+
+    /**
+     * A managedScheduledExecutorService defined in server.xml with virtual=true runs
+     * async tasks on platform threads instead of virtual threads when the
+     * ThreadTypeOverride SPI instructs Liberty to avoid creating virtual threads.
+     * The task runs successfully on Java SE 21+, but is rejected on Java SE 17.
+     */
+    @Test
+    public void testOverrideVirtualManagedScheduledExecutorFromServerXML() //
+                    throws Exception {
+
+        String testName = "testOverrideVirtualManagedScheduledExecutorFromServerXML";
+        Callable<Thread> task = () -> {
+            System.out.println("Task from " + testName);
+            return Thread.currentThread();
+        };
+
+        if (Runtime.version().feature() == 17)
+            try {
+                overriddenManagedScheduledExecutorFromServerXML
+                                .submit(task);
+                fail("Virtual=true should not be allowed on Java SE 17.");
+            } catch (IllegalArgumentException x) {
+                if (Runtime.version().feature() == 17)
+                    return; // expected
+                else
+                    throw x;
+            }
+        else {
+            Future<Thread> future = //
+                            overriddenManagedScheduledExecutorFromServerXML
+                                            .submit(task);
+
+            Thread thread = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
+
+            assertEquals(false, isVirtual(thread));
+        }
+    }
+
+    /**
+     * A managed-scheduled-executor defined in web.xml with virtual=true runs
+     * async tasks on platform threads instead of virtual threads when the
+     * ThreadTypeOverride SPI instructs Liberty to avoid creating virtual threads.
+     * The task runs successfully.
+     */
+    @Test
+    public void testOverrideVirtualManagedScheduledExecutorFromWebXML() //
+                    throws Exception {
+
+        String testName = "testOverrideVirtualManagedScheduledExecutorFromWebXML";
+        Future<Thread> future = //
+                        overriddenManagedScheduledExecutorFromWebXML
+                                        .schedule(() -> {
+                                            System.out.println("Task from " + testName);
+                                            return Thread.currentThread();
+                                        }, 250, TimeUnit.MILLISECONDS);
 
         Thread thread = future.get(TIMEOUT_NS, TimeUnit.NANOSECONDS);
 

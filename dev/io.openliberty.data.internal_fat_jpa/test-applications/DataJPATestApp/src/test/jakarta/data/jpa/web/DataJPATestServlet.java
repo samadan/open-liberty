@@ -1332,20 +1332,27 @@ public class DataJPATestServlet extends FATServlet {
                                              .map(a -> a.houseNumber + " " + a.streetName)
                                              .collect(Collectors.toList()));
 
-        // TODO Enable once EclipseLink bug #31558 is fixed:
-        // List<ShippingAddress> found = shippingAddresses
-        //                .findByStreetAddressRecipientInfoNotEmpty();
+        List<ShippingAddress> found = shippingAddresses
+                        .findByStreetAddressRecipientInfoNotEmpty();
+        ShippingAddress a = null;
+        for (ShippingAddress s : found) {
+            if (a1.id.equals(s.id))
+                a = s;
+        }
+        // TODO Replace above for loop with the following once EclipseLink bug #31559 is fixed
         // assertEquals(1, found.size());
-        // ShippingAddress a = found.get(0);
-        // assertEquals(a1.id, a.id);
-        // assertEquals(a1.city, a.city);
-        // assertEquals(a1.state, a.state);
-        // assertEquals(a1.zipCode, a.zipCode);
-        // assertEquals(a1.streetAddress.houseNumber, a.streetAddress.houseNumber);
-        // assertEquals(a1.streetAddress.streetName, a.streetAddress.streetName);
-        // assertEquals(a1.streetAddress.recipientInfo, a.streetAddress.recipientInfo);
+        // a = found.get(0);
+        assertEquals(a1.id, a.id);
+        assertEquals(a1.city, a.city);
+        assertEquals(a1.state, a.state);
+        assertEquals(a1.zipCode, a.zipCode);
+        assertEquals(a1.streetAddress.houseNumber, a.streetAddress.houseNumber);
+        assertEquals(a1.streetAddress.streetName, a.streetAddress.streetName);
+        assertEquals(a1.streetAddress.recipientInfo, a.streetAddress.recipientInfo);
 
-        // assertEquals(3L, shippingAddresses.countByStreetAddressRecipientInfoEmpty());
+        long count = shippingAddresses.countByStreetAddressRecipientInfoEmpty();
+        // TODO Enable once EclipseLink bug #31559 is fixed:
+        // assertEquals(3L, count);
 
         // [EclipseLink-4002] Internal Exception: java.sql.SQLIntegrityConstraintViolationException:
         //                    DELETE on table 'SHIPPINGADDRESS' caused a violation of foreign key constraint 'SHPPNGSHPPNGDDRSSD' for key (1001)
@@ -1439,13 +1446,15 @@ public class DataJPATestServlet extends FATServlet {
                                                  .map(t -> t.ssn)
                                                  .collect(Collectors.toList()));
 
-        // TODO enable once issue #31558 and
-        // TODO subsequently #32263 is fixed in EclipseLink
-        if (false)
-            assertIterableEquals(List.of(789007890L),
-                                 taxpayers.findByBankAccountsNotEmpty()
-                                                 .map(t -> t.ssn)
-                                                 .collect(Collectors.toList()));
+        assertEquals(List.of(123001230L,
+                             234002340L,
+                             345003450L,
+                             456004560L,
+                             567005670L,
+                             678006780L),
+                     taxpayers.findByBankAccountsNotEmpty()
+                                     .map(t -> t.ssn)
+                                     .collect(Collectors.toList()));
 
         taxpayers.delete();
     }
@@ -2007,8 +2016,7 @@ public class DataJPATestServlet extends FATServlet {
     /**
      * Verify that JPQL can be used to EXTRACT the DATE from a LocalDateTime.
      */
-    // TODO enable once EclipseLink bug #31802 is fixed
-    //@Test
+    @Test
     public void testExtractDate() {
         rebates.reset();
 
@@ -2131,8 +2139,7 @@ public class DataJPATestServlet extends FATServlet {
     /**
      * Verify that JPQL can be used to EXTRACT the TIME from a LocalDateTime.
      */
-    // TODO enable once EclipseLink bug #31802 is fixed
-    //@Test
+    @Test
     public void testExtractTime() {
         rebates.reset();
 
