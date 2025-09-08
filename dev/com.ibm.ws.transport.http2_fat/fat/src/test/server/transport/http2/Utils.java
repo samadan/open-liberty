@@ -63,7 +63,6 @@ public class Utils {
     public static class CustomTestName extends TestName {
         @Override
         public String getMethodName() {
-            // TODO Auto-generated method stub
             String name = super.getMethodName();
             if (name.contains("_"))
                 return name.substring(0, name.indexOf("_"));
