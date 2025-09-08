@@ -12,6 +12,8 @@
  *******************************************************************************/
 package dsdfat_override_lib;
 
+import java.sql.Connection;
+
 import javax.annotation.Resource;
 import javax.annotation.sql.DataSourceDefinition;
 import javax.sql.DataSource;
@@ -32,7 +34,9 @@ public class DSDOverrideLibTestServlet extends FATServlet {
     DataSource xmlDS;
 
     public void testDataSourceDefOverrideLib() throws Exception {
-        annoDS.getConnection().close();
-        xmlDS.getConnection().close();
+        try (Connection con = annoDS.getConnection()) {
+        }
+        try (Connection con = xmlDS.getConnection()) {
+        }
     }
 }
