@@ -891,7 +891,7 @@ public class JakartaPersistenceServlet extends FATServlet {
      * @throws Exception
      */
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31802")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31802
     public void testExtractYearFromLocalData() throws Exception {
         deleteAllEntities(DateTimeEntity.class);
         DateTimeEntity q1 = new DateTimeEntity(1, "q1", LocalDate.of(2022, 06, 07), LocalTime.of(12, 0), LocalDateTime.of(2022, 06, 07, 12, 0));
@@ -928,7 +928,7 @@ public class JakartaPersistenceServlet extends FATServlet {
      * @throws Exception
      */
     @Test
-    @Ignore("Reference issue : https://github.com/OpenLiberty/open-liberty/issues/31802")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31802
     public void testExtractQuarterFromLocalData() throws Exception {
         deleteAllEntities(DateTimeEntity.class);
         DateTimeEntity q1 = new DateTimeEntity(1, "q1", LocalDate.of(2022, 06, 07), LocalTime.of(12, 0), LocalDateTime.of(2022, 06, 07, 12, 0));
