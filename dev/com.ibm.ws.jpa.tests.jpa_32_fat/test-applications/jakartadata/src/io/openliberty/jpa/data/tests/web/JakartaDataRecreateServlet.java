@@ -1453,7 +1453,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
     }
 
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/28905")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/28905
     public void testOLGH28905() throws Exception {
         Triangle t1_0 = Triangle.of((byte) 13, (byte) 84, (byte) 85);
 
@@ -1473,11 +1473,12 @@ public class JakartaDataRecreateServlet extends FATServlet {
                             .setParameter(3, (short) (198))
                             .executeUpdate();
 
+            tx.commit();
+            
             t1_1 = em.createQuery("SELECT o FROM Triangle o WHERE o.distinctKey=?1", Triangle.class)
-                            .setParameter(0, t1_0.distinctKey)
+                            .setParameter(1, t1_0.distinctKey)
                             .getSingleResult();
 
-            tx.commit();
         } catch (Exception e) {
             tx.rollback();
             /*
