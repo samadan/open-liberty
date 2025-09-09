@@ -921,6 +921,7 @@ org.seleniumhq.selenium:selenium-chromium-driver:4.8.3
 org.seleniumhq.selenium:selenium-remote-driver:4.8.3
 org.seleniumhq.selenium:selenium-support:4.8.3
 org.seleniumhq.webdriver:webdriver-common:0.9.7376
+org.skyscreamer:jsonassert:2.0-rc1
 org.slf4j:slf4j-api:1.7.36
 org.slf4j:slf4j-jdk14:1.7.36
 org.slf4j:slf4j-simple:1.7.36
