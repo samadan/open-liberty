@@ -9,8 +9,10 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.test.schema;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -19,6 +21,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
+import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.schemas.SchemaDirection;
 import io.openliberty.mcp.internal.schemas.SchemaRegistryTwo;
 import jakarta.json.bind.annotation.JsonbProperty;
@@ -176,6 +179,194 @@ public class SchemaTestTwo {
                         }
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    public record Widget(String name, int flangeCount) {};
+
+    @Tool(description = "Updates a widget in the database")
+    public Widget updateWidget(@ToolArg(name = "id", description = "The ID of the widget to update") long id,
+                               @ToolArg(name = "widget", description = "The new widget data") Widget widget) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Test
+    public void testToolInputSchema() throws NoSuchMethodException, SecurityException {
+        ToolMetadata toolMetadata = findTool("updateWidget");
+
+        String toolInputSchema = SchemaRegistryTwo.getToolInputSchema(toolMetadata);
+        String expectedSchema = """
+                        {
+                        "type" : "object",
+                        "properties" : {
+                            "id" : {
+                                "type": "number",
+                                "description": "The ID of the widget to update"
+                            },
+                            "widget" : {
+                                "type": "object",
+                                "description": "The new widget data",
+                                "properties": {
+                                    "name": {
+                                        "type" : "string"
+                                    },
+                                    "flangeCount": {
+                                        "type" : "integer"
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "flangeCount"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "widget",
+                            "id"
+                        ]
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
+    }
+
+    @Test
+    public void testToolOutputSchema() throws NoSuchMethodException, SecurityException {
+        ToolMetadata toolMetadata = findTool("updateWidget");
+
+        String toolInputSchema = SchemaRegistryTwo.getToolOuputSchema(toolMetadata);
+        String expectedSchema = """
+                        {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type" : "string"
+                                },
+                                "flangeCount": {
+                                    "type" : "integer"
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "flangeCount"
+                            ]
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
+    }
+
+    /**
+     * Finds a tool method in the current class by name
+     *
+     * @param name the name of the tool
+     * @return the tool metadata
+     */
+    private ToolMetadata findTool(String name) {
+        List<ToolMetadata> tools = Arrays.stream(SchemaTestTwo.class.getDeclaredMethods())
+                                         .filter(m -> m.isAnnotationPresent(Tool.class))
+                                         .map(m -> ToolMetadata.createFrom(m.getAnnotation(Tool.class), null, new MockAnnotatedMethod<>(m)))
+                                         .filter(m -> m.name().equals(name))
+                                         .collect(Collectors.toList());
+        if (tools.size() != 1) {
+            throw new RuntimeException("Found " + tools.size() + " tools with name " + name);
+        }
+
+        return tools.get(0);
+    }
+
+    public record CompositeWidget(String name, int flangeCount, List<CompositeWidget> subwidgets) {}
+
+    @Tool(description = "combine two widgets to make a new widget")
+    public CompositeWidget combineWidgets(@ToolArg(name = "widgetA", description = "the first widget") CompositeWidget widgetA,
+                                          @ToolArg(name = "widgetB", description = "the second widget") CompositeWidget widgetB) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Test
+    public void testToolInputRecursive() {
+        ToolMetadata toolMetadata = findTool("combineWidgets");
+        String toolInputSchema = SchemaRegistryTwo.getToolInputSchema(toolMetadata);
+
+        String expectedSchema = """
+                        {
+                            "$defs": {
+                                "CompositeWidget": {
+                                    "type" : "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "flangeCount": {
+                                            "type": "integer"
+                                        },
+                                        "subwidgets": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/$defs/CompositeWidget"
+                                            }
+                                        }
+                                    },
+                                    "required" : [
+                                        "name",
+                                        "flangeCount",
+                                        "subwidgets"
+                                    ]
+                                }
+                            },
+                            "type": "object",
+                            "properties": {
+                                "widgetA": {
+                                    "$ref": "#/$defs/CompositeWidget",
+                                    "description": "the first widget"
+                                },
+                                "widgetB": {
+                                    "$ref": "#/$defs/CompositeWidget",
+                                    "description": "the second widget"
+                                }
+                            },
+                            "required": [
+                                "widgetB",
+                                "widgetA"
+                            ]
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
+    }
+
+    @Test
+    public void testToolOutputRecursive() {
+        ToolMetadata toolMetadata = findTool("combineWidgets");
+        String toolInputSchema = SchemaRegistryTwo.getToolOuputSchema(toolMetadata);
+
+        String expectedSchema = """
+                        {
+                            "$defs": {
+                                "CompositeWidget": {
+                                    "type" : "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "flangeCount": {
+                                            "type": "integer"
+                                        },
+                                        "subwidgets": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/$defs/CompositeWidget"
+                                            }
+                                        }
+                                    },
+                                    "required" : [
+                                        "name",
+                                        "flangeCount",
+                                        "subwidgets"
+                                    ]
+                                }
+                            },
+                            "$ref": "#/$defs/CompositeWidget",
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
+
     }
 
 //    @Test

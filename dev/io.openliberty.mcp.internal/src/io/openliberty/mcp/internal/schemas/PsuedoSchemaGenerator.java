@@ -231,7 +231,7 @@ public class PsuedoSchemaGenerator {
                 System.out.println("");
             }
             if (defs.containsKey(name) && defs.get(name) instanceof JsonSchema) {
-                return new JsonSchemaPrimitive(null, null, getDefsRef(name));
+                return new JsonSchemaPrimitive(null, description, getDefsRef(name));
             }
             Schema schemaAnn = (Schema) Arrays.stream(annotations()).filter(a -> a.annotationType().equals(Schema.class)).findAny().orElse(null);
             if (schemaAnn != null && schemaAnn.value() != null) {
@@ -269,11 +269,14 @@ public class PsuedoSchemaGenerator {
                     required.add(fi.name());
                 }
             }
+            boolean storeInDefs = typeFrequency.get(tmpKey);
+            String schemaDescription = storeInDefs ? null : description;
+
             JsonSchema schema;
             if (baseClass && !defs.isEmpty() && typeFrequency.get(tmpKey) == false) {
-                schema = new JsonSchemaObject("object", description, properties, required, defs, null);
+                schema = new JsonSchemaObject("object", schemaDescription, properties, required, defs, null);
             } else {
-                schema = new JsonSchemaObject("object", description, properties, required, null, null);
+                schema = new JsonSchemaObject("object", schemaDescription, properties, required, null, null);
             }
 
             if (typeFrequency.get(tmpKey) == true) {
@@ -281,9 +284,9 @@ public class PsuedoSchemaGenerator {
                     defs.put(name, schema);
                 }
                 if (baseClass == false) {
-                    return new JsonSchemaPrimitive(null, null, getDefsRef(name));
+                    return new JsonSchemaPrimitive(null, description, getDefsRef(name));
                 } else {
-                    return new JsonSchemaObject(null, null, null, null, defs, getDefsRef(name));
+                    return new JsonSchemaObject(null, description, null, null, defs, getDefsRef(name));
                 }
 
             }

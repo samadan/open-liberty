@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Objects;
 
 import io.openliberty.mcp.internal.McpCdiExtension;
+import io.openliberty.mcp.internal.ToolMetadata;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
@@ -62,6 +63,16 @@ public class SchemaRegistryTwo {
 
     }
 
+    public static String getToolInputSchema(ToolMetadata toolMetadata) {
+        ToolKey key = new ToolKey(toolMetadata, SchemaDirection.INPUT);
+        return cacheString.computeIfAbsent(key, k -> SchemaGenerator.generateToolInputSchema(toolMetadata));
+    }
+
+    public static String getToolOuputSchema(ToolMetadata toolMetadata) {
+        ToolKey key = new ToolKey(toolMetadata, SchemaDirection.OUTPUT);
+        return cacheString.computeIfAbsent(key, k -> SchemaGenerator.generateToolOutputSchema(toolMetadata));
+    }
+
     public interface SchemaKey {}
 
     public record ClassKey(Class<?> cls, SchemaDirection direction) implements SchemaKey {
@@ -78,6 +89,8 @@ public class SchemaRegistryTwo {
         }
 
     };
+
+    public record ToolKey(ToolMetadata tool, SchemaDirection direction) implements SchemaKey {};
 
     public record MethodKey(Method method, SchemaDirection direction) implements SchemaKey {};
 
