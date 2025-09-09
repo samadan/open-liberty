@@ -10,5 +10,5 @@
     <httpEndpoint id="defaultHttpEndpoint"
                  host="*"
                  httpPort="${bvt.prop.HTTP_secondary}"
-                 httpsPort="8021"/>
+                 httpsPort="${bvt.prop.HTTP_secondary.secure}"/>
 </server>
