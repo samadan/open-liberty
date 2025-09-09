@@ -308,8 +308,4 @@ public class BasicTools {
     public boolean testToolArgNotRequired(@ToolArg(name = "value", description = "boolean value", required = false) boolean value) {
         return false;
     }
-
-    @Tool(name = "unsupportedSpecialArgsTool", title = "unsupportedSpecialArgsTool", description = "unsupportedSpecialArgsTool")
-    public void unsupportedSpecialArgsTool(City unsuportedArgs) {
-    }
 }

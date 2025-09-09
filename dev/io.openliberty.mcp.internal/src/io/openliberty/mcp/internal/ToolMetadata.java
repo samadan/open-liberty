@@ -64,10 +64,15 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
 
     private static List<SpecialArgumentMetadata> getSpecialArgumentList(AnnotatedMethod<?> method) {
         List<SpecialArgumentMetadata> result = new ArrayList<>();
+        Map<SpecialArgumentType, Integer> resultCountMap = new HashMap<>();
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo == null) {
                 SpecialArgumentMetadata pData = new SpecialArgumentMetadata(SpecialArgumentType.fromClass(p.getBaseType()), p.getPosition());
+                resultCountMap.merge(pData.type, 1, Integer::sum);
+                if (resultCountMap.get(pData.type) > 1) {
+                    throw new IllegalArgumentException("Only 1 instance of type: " + pData.type + " is allowed");
+                }
                 result.add(pData);
             }
         }
