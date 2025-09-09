@@ -71,7 +71,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                 SpecialArgumentMetadata pData = new SpecialArgumentMetadata(SpecialArgumentType.fromClass(p.getBaseType()), p.getPosition());
                 resultCountMap.merge(pData.type, 1, Integer::sum);
                 if (resultCountMap.get(pData.type) > 1) {
-                    throw new IllegalArgumentException("Only 1 instance of type: " + pData.type + " is allowed");
+                    throw new IllegalArgumentException("Only 1 instance of type " + pData.type + " is allowed");
                 }
                 result.add(pData);
             }
