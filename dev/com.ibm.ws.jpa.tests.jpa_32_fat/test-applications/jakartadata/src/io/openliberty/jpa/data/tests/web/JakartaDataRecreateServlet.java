@@ -453,7 +453,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
     }
 
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/28931")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/28931
     public void testOLGH28931() throws Exception {
         Business ibmRoc = Business.of(44.05887f, -92.50355f, "Rochester", "Minnesota", 55901, 2800, "37th St", "NW",
                                       "IBM Rochester");
