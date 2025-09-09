@@ -1788,6 +1788,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
 
     @Test
     @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/30501")
+    //Issue closed. Error is valid and now provides a meaningful message
     public void testOLGH30501() throws Exception{
         deleteAllEntities(Prime.class); 
 
@@ -1815,7 +1816,8 @@ public class JakartaDataRecreateServlet extends FATServlet {
     }   
 
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/29475")
+    //Original issue: https://github.com/OpenLiberty/open-liberty/issues/29475
+    @Ignore("Additional issue: https://github.com/OpenLiberty/open-liberty/issues/28589")
     public void testOLGH29475() throws Exception {
         Rating.Reviewer jimmy = Rating.Reviewer.of("Jimothy", "Scramble", "J.Scramble@example.com");
         Rating.Item blueBerry = Rating.Item.of("BlueBerry 10", 299.99f);
@@ -2174,7 +2176,8 @@ public class JakartaDataRecreateServlet extends FATServlet {
     }
     
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/30789")
+    //Original issue: https://github.com/OpenLiberty/open-liberty/issues/30789
+    @Ignore("Additional issue: https://github.com/OpenLiberty/open-liberty/issues/28925")
     public void testOLGH30789() throws Exception {
         try {
             deleteAllEntities(House.class);
@@ -2253,6 +2256,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
 
     @Test
     @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/32263")
+    //Issue closed. Error is valid and now provides a meaningful message
     public void testOLGH32263() throws Exception {
         deleteAllEntities(TaxPayer.class);
 
@@ -2436,6 +2440,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
     
     @Test
     @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/32246") 
+    //Error due to valid behavioural change introduced in B09. Passes for B08 and below.
     public void testOLGH32246() throws Exception {
         deleteAllEntities(Student.class);
 
