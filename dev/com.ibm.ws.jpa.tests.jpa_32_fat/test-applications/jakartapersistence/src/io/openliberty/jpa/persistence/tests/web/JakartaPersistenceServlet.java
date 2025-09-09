@@ -892,6 +892,9 @@ public class JakartaPersistenceServlet extends FATServlet {
      */
     @Test
     //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31802
+    @SkipIfSysProp({
+        DB_SQLServer //Failing on SQLServer (No mention of NULLS FIRST/LAST keywords in Documentation)
+    })
     public void testExtractYearFromLocalData() throws Exception {
         deleteAllEntities(DateTimeEntity.class);
         DateTimeEntity q1 = new DateTimeEntity(1, "q1", LocalDate.of(2022, 06, 07), LocalTime.of(12, 0), LocalDateTime.of(2022, 06, 07, 12, 0));
@@ -916,9 +919,9 @@ public class JakartaPersistenceServlet extends FATServlet {
         List<Integer> result = em.createQuery(criteriaQuery).getResultList();
         assertEquals(4, result.size());
         assertEquals(null, result.get(0));
-        assertEquals("Extracted Year should be 2021", Integer.valueOf(2021), result.get(1));
-        assertEquals("Extracted Year should be 2020", Integer.valueOf(2020), result.get(2));
-        assertEquals("Extracted Year should be 2022", Integer.valueOf(2022), result.get(3));
+        assertEquals("Extracted Year should be 2021", 2021, ((Number) result.get(1)).intValue());
+        assertEquals("Extracted Year should be 2020", 2020, ((Number) result.get(2)).intValue());
+        assertEquals("Extracted Year should be 2022", 2022, ((Number) result.get(3)).intValue());
 
     }
 
@@ -929,6 +932,9 @@ public class JakartaPersistenceServlet extends FATServlet {
      */
     @Test
     //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31802
+    @SkipIfSysProp({
+        DB_SQLServer //Failing on SQLServer (No mention of NULLS FIRST/LAST keywords in Documentation)
+    })
     public void testExtractQuarterFromLocalData() throws Exception {
         deleteAllEntities(DateTimeEntity.class);
         DateTimeEntity q1 = new DateTimeEntity(1, "q1", LocalDate.of(2022, 06, 07), LocalTime.of(12, 0), LocalDateTime.of(2022, 06, 07, 12, 0));
@@ -953,9 +959,9 @@ public class JakartaPersistenceServlet extends FATServlet {
         List<Integer> result = em.createQuery(criteriaQuery).getResultList();
         assertEquals(4, result.size());
         assertEquals(null, result.get(0));
-        assertEquals("Extracted Quarter should be 1", Integer.valueOf(1), result.get(1));
-        assertEquals("Extracted Quarter should be 4", Integer.valueOf(4), result.get(2));
-        assertEquals("Extracted Quarter should be 2", Integer.valueOf(2), result.get(3));
+        assertEquals("Extracted Quarter should be 1", 1, ((Number) result.get(1)).intValue());
+        assertEquals("Extracted Quarter should be 4", 4, ((Number) result.get(2)).intValue());
+        assertEquals("Extracted Quarter should be 2", 2, ((Number) result.get(3)).intValue());
 
     }
 
