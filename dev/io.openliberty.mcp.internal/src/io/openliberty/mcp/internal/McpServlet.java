@@ -11,7 +11,6 @@ package io.openliberty.mcp.internal;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +20,6 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
-import io.openliberty.mcp.annotations.WrapBusinessError;
 import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
 import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
@@ -161,8 +159,7 @@ public class McpServlet extends HttpServlet {
             if (isBusinessException(t, params)) {
                 transport.sendResponse(toErrorResponse(e.getCause()));
             } else {
-
-                transport.sendResponse(toErrorResponse(new RuntimeException("Internal server error")));
+                transport.sendResponse(ToolResponse.error("Internal server error"));
             }
         } catch (IllegalAccessException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
@@ -190,16 +187,9 @@ public class McpServlet extends HttpServlet {
         }
 
         if (params != null && params.getMetadata() != null) {
-            Method method = params.getMethod();
-
-            if (method != null) {
-                WrapBusinessError annotation = method.getAnnotation(WrapBusinessError.class);;
-                if (annotation != null) {
-                    for (Class<? extends Throwable> clazz : annotation.value()) {
-                        if (clazz.isAssignableFrom(t.getClass())) {
-                            return true;
-                        }
-                    }
+            for (Class<? extends Throwable> clazz : params.getMetadata().businessExceptions()) {
+                if (clazz.isAssignableFrom(t.getClass())) {
+                    return true;
                 }
             }
         }

@@ -22,6 +22,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import com.ibm.websphere.simplicity.ShrinkHelper;
+import com.ibm.websphere.simplicity.log.Log;
 
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
@@ -306,14 +307,16 @@ public class ToolErrorHandlingTest extends FATServletClient {
     }
 
     @Test
-    public void testUncheckedExceptionTool() throws Exception {
+    public void testCheckedExceptionTool_Unwrapped() throws Exception {
+        server.setMarkToEndOfLog();
+
         String request = """
                         {
                           "jsonrpc": "2.0",
-                          "id": 1,
+                          "id": 2,
                           "method": "tools/call",
                           "params": {
-                            "name": "uncheckedExceptionTool",
+                            "name": "unwrappedCheckedExceptionTool",
                             "arguments": {
                               "input": "abc"
                             }
@@ -322,10 +325,11 @@ public class ToolErrorHandlingTest extends FATServletClient {
                         """;
 
         String response = HttpTestUtils.callMCP(server, ENDPOINT, request);
+        Log.info(getClass(), "unwrappedCheckedExceptionTool", "Raw MCP response: " + response);
 
         String expectedResponse = """
                         {
-                          "id": 1,
+                          "id": 2,
                           "jsonrpc": "2.0",
                           "result": {
                             "isError": true,
@@ -340,6 +344,8 @@ public class ToolErrorHandlingTest extends FATServletClient {
                         """;
 
         JSONAssert.assertEquals(expectedResponse, response, true);
+
+        server.waitForStringInLogUsingMark("Unwrapped checked error for: abc", server.getDefaultLogFile());
     }
 
     @Test
@@ -485,7 +491,7 @@ public class ToolErrorHandlingTest extends FATServletClient {
                                                "type": "object",
                                                "properties": {
                                                    "input": {
-                                                       "description": "Unchecked exception Triggers",
+                                                       "description": "Triggers unwrapped checked",
                                                        "type": "string"
                                                    }
                                                },
@@ -493,10 +499,11 @@ public class ToolErrorHandlingTest extends FATServletClient {
                                                    "input"
                                                ]
                                            },
-                                           "name": "uncheckedExceptionTool",
-                                           "description": "Throws a runtime exception",
-                                           "title": "Unchecked Exception"
-                                       },]
+                                           "name": "unwrappedCheckedExceptionTool",
+                                           "description": "Throws IOException but not listed",
+                                           "title": "Unwrapped Checked"
+                                       },
+                                     ]
                                     },
                                     "id":1,
                                     "jsonrpc":"2.0"
