@@ -11,6 +11,7 @@ package io.openliberty.mcp.internal;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -20,6 +21,7 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
+import io.openliberty.mcp.annotations.WrapBusinessError;
 import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
 import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
@@ -34,6 +36,7 @@ import io.openliberty.mcp.internal.requests.RequestId;
 import io.openliberty.mcp.internal.responses.McpInitializeResult;
 import io.openliberty.mcp.internal.responses.McpInitializeResult.ServerInfo;
 import io.openliberty.mcp.messaging.Cancellation;
+import io.openliberty.mcp.tools.ToolCallException;
 import io.openliberty.mcp.tools.ToolResponse;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -154,7 +157,13 @@ public class McpServlet extends HttpServlet {
         } catch (JSONRPCException e) {
             throw e;
         } catch (InvocationTargetException e) {
-            transport.sendResponse(toErrorResponse(e.getCause()));
+            Throwable t = e.getCause();
+            if (isBusinessException(t, params)) {
+                transport.sendResponse(toErrorResponse(e.getCause()));
+            } else {
+
+                transport.sendResponse(toErrorResponse(new RuntimeException("Internal server error")));
+            }
         } catch (IllegalAccessException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
         } catch (IllegalArgumentException e) {
@@ -169,6 +178,32 @@ public class McpServlet extends HttpServlet {
                 Tr.warning(tc, "Failed to release bean: " + ex);
             }
         }
+    }
+
+    /**
+     * @param t
+     * @return
+     */
+    private boolean isBusinessException(Throwable t, McpToolCallParams params) {
+        if (t instanceof ToolCallException) {
+            return true;
+        }
+
+        if (params != null && params.getMetadata() != null) {
+            Method method = params.getMethod();
+
+            if (method != null) {
+                WrapBusinessError annotation = method.getAnnotation(WrapBusinessError.class);;
+                if (annotation != null) {
+                    for (Class<? extends Throwable> clazz : annotation.value()) {
+                        if (clazz.isAssignableFrom(t.getClass())) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     // Helper method for ToolResponse Error

@@ -1078,20 +1078,25 @@ public class ToolTest extends FATServletClient {
                                             },
                                             "required": []
                                         },
+
                                         "name": "testToolArgIsNotRequired",
                                         "description": "ToolArgNotRequired",
                                         "title": "ToolArgNotRequired"
-                                    },
+                                      },
                                 ]
                             },
                             "id": 1,
                             "jsonrpc": "2.0"
                         }
-                                                                """;
+                         """;
 
         // Lenient mode test (false boolean in 3rd parameter
         JSONAssert.assertEquals(expectedString, jsonResponse.toString(), JSONCompareMode.NON_EXTENSIBLE);
     }
+
+    /**
+     *
+     */
 
     @Test
     public void testEchoMethodCallError() throws Exception {
@@ -1113,7 +1118,7 @@ public class ToolTest extends FATServletClient {
         JSONObject jsonResponse = new JSONObject(response);
 
         String expectedResponseString = """
-                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Method call caused runtime exception"}], "isError": true}}
+                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Internal server error"}], "isError": true}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
