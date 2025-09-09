@@ -28,6 +28,7 @@ import io.openliberty.mcp.internal.Capabilities.Sampling;
 import io.openliberty.mcp.internal.Literals;
 import io.openliberty.mcp.internal.RequestMethod;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
+import io.openliberty.mcp.internal.ToolMetadata.ToolArgStatus;
 import io.openliberty.mcp.internal.ToolRegistry;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.McpInitializeParams;
@@ -50,16 +51,16 @@ public class MessageParsingTest {
         ToolRegistry.set(registry);
 
         Tool testTool = Literals.tool("echo", "Echo", "Echos the input");
-        Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, "", true));
+        Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, "", true, ToolArgStatus.PASSED_VALIDATION));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(testTool, arguments, Collections.emptyList()));
 
         Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
-        Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, "", true),
-                                                            "num2", new ArgumentMetadata(Integer.class, 1, "", true));
+        Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, "", true, ToolArgStatus.PASSED_VALIDATION),
+                                                            "num2", new ArgumentMetadata(Integer.class, 1, "", true, ToolArgStatus.PASSED_VALIDATION));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(addTestTool, additionArgs, Collections.emptyList()));
 
         Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
-        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value", true));
+        Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value", true, ToolArgStatus.PASSED_VALIDATION));
         registry.addTool(ToolMetadataUtil.createToolMetadataFrom(toogleTestTool, booleanArgs, Collections.emptyList()));
     }
 

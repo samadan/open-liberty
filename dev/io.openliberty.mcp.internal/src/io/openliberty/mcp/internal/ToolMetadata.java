@@ -13,8 +13,10 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
@@ -32,7 +34,13 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                            String name, String title, String description,
                            List<Class<? extends Throwable>> businessExceptions) {
 
-    public record ArgumentMetadata(Type type, int index, String description, boolean required) {}
+    public enum ToolArgStatus {
+        BLANK,
+        DUPLICATE,
+        PASSED_VALIDATION
+    }
+
+    public record ArgumentMetadata(Type type, int index, String description, boolean required, ToolArgStatus toolArgumentStatus) {}
 
     public record SpecialArgumentMetadata(SpecialArgumentType type, int index) {}
 
@@ -55,18 +63,36 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
         Map<String, ArgumentMetadata> result = new HashMap<>();
+        Set<String> argNamesDupCheck = new HashSet<>();
+
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo != null) {
-                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description(), pInfo.required());
-                if (pInfo.name().equals(Tool.ELEMENT_NAME)) {
-                    result.put(method.getJavaMember().getName(), pData);
-                } else {
-                    result.put(pInfo.name(), pData);
-                }
+                setArgumentData(method, result, p, pInfo, argNamesDupCheck);
             }
         }
         return result.isEmpty() ? Collections.emptyMap() : result;
+    }
+
+    private static void setArgumentData(AnnotatedMethod<?> method, Map<String, ArgumentMetadata> result, AnnotatedParameter<?> p, ToolArg pInfo, Set<String> argNamesDupCheck) {
+        String actualArgName = p.getJavaParameter().getName(); // needs a gradle "-parameter" compilation flag to work
+        String toolArgName = pInfo.name();
+        Type type = p.getBaseType();
+        int position = p.getPosition();
+        String description = pInfo.description();
+        boolean required = pInfo.required();
+
+        if (toolArgName.equals(Tool.ELEMENT_NAME)) {
+            result.put(actualArgName, new ArgumentMetadata(type, position, description, required, ToolArgStatus.PASSED_VALIDATION));
+        } else if (toolArgName.isBlank()) {
+            result.put(toolArgName, new ArgumentMetadata(type, position, description, required, ToolArgStatus.BLANK));
+        } else {
+            if (!argNamesDupCheck.add(toolArgName)) {
+                result.put(toolArgName, new ArgumentMetadata(type, position, description, required, ToolArgStatus.DUPLICATE));
+            } else {
+                result.put(toolArgName, new ArgumentMetadata(type, position, description, required, ToolArgStatus.PASSED_VALIDATION));
+            }
+        }
     }
 
     private static List<SpecialArgumentMetadata> getSpecialArgumentList(AnnotatedMethod<?> method) {

@@ -10,12 +10,14 @@
 package io.openliberty.mcp.internal;
 
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 
 import io.openliberty.mcp.annotations.Tool;
+import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
@@ -47,7 +49,50 @@ public class McpCdiExtension implements Extension {
     }
 
     void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
+        reportOnDuplicateTools(afterDeploymentValidation);
+        reportOnToolArgEdgeCases(afterDeploymentValidation);
+    }
 
+    /**
+     * @param afterDeploymentValidation
+     */
+    private void reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
+
+        StringBuilder sbBlankArgs = new StringBuilder("Blank arguments found in MCP Tool:");
+        StringBuilder sbDuplicateArgs = new StringBuilder("Duplicate arguments found in MCP Tool:");
+        boolean blanksFound = false;
+        boolean duplicatesFound = false;
+
+        for (ToolMetadata tmd : tools.getAllTools()) {
+            Map<String, ArgumentMetadata> arguments = tmd.arguments();
+            for (String arg : arguments.keySet()) {
+                ArgumentMetadata argMetadata = arguments.get(arg);
+
+                switch (argMetadata.toolArgumentStatus()) {
+                    case PASSED_VALIDATION:
+                        break;
+                    case BLANK:
+                        sbBlankArgs.append("\n").append("Tool: " + tmd.name());
+                        blanksFound = true;
+                        break;
+                    case DUPLICATE:
+                        sbDuplicateArgs.append("\n").append("Tool: " + tmd.name() + " -  Argument: " + arg);
+                        duplicatesFound = true;
+                        break;
+                    //default:
+                    //   throw new IllegalArgumentException("Unexpected toolArgumentStatus value: " + argMetadata.toolArgumentStatus());
+                }
+            }
+        }
+        if (blanksFound) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception(sbBlankArgs.toString()));
+        }
+        if (duplicatesFound) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception(sbDuplicateArgs.toString()));
+        }
+    }
+
+    private void reportOnDuplicateTools(AfterDeploymentValidation afterDeploymentValidation) {
         // prune items that are not duplicates
         duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
         StringBuilder sb = new StringBuilder("More than one MCP tool has the same name: \n");

@@ -26,21 +26,20 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
-import io.openliberty.mcp.internal.fat.tool.duplicateToolErrorApps.DuplicateToolErrorTest;
-import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
+import io.openliberty.mcp.internal.fat.tool.toolArgEdgeCasesApp.ToolArgEdgeCasesApp;
 
 /**
  *
  */
 @RunWith(FATRunner.class)
-public class DeploymentProblemTest extends FATServletClient {
+public class ToolArgEdgeCasesTest extends FATServletClient {
 
     @Server("mcp-server")
     public static LibertyServer server;
 
     @BeforeClass
     public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "DeploymentProblemTest.war").addPackage(DuplicateToolErrorTest.class.getPackage());
+        WebArchive war = ShrinkWrap.create(WebArchive.class, "ToolArgEdgeCasesApp.war").addPackage(ToolArgEdgeCasesApp.class.getPackage());
         ShrinkHelper.exportDropinAppToServer(server, war, DISABLE_VALIDATION, SERVER_ONLY);
         server.startServer();
     }
@@ -51,28 +50,12 @@ public class DeploymentProblemTest extends FATServletClient {
     }
 
     @Test
-    public void testDuplicateToolDeploymentError() throws Exception {
-        String request = """
-                        {
-                          "jsonrpc": "2.0",
-                          "id": 1,
-                          "method": "tools/list",
-                          "params": {
-                            "cursor": "optional-cursor-value"
-                          }
-                        }
-                        """;
+    public void testToolArgumentEdgeCases() throws Exception {
 
-        boolean deploymentErrorOccured = false;
+        String line1 = server.waitForStringInLog("Blank arguments found in MCP Tool", 5 * 1000);
+        String line2 = server.waitForStringInLog("Duplicate arguments found in MCP Tool", 5 * 1000);
+        boolean foundExpectedErrorinLogs = (line1 != null) || (line2 != null);
 
-        try {
-            HttpTestUtils.callMCP(server, "/toolTest", request);
-        } catch (Exception e) {
-            if (!server.findStringsInLogs("More than one MCP tool has the same name").isEmpty()) {
-                deploymentErrorOccured = true;
-            }
-        }
-
-        assertTrue("Expected a deployment error due to duplicate MCP Tools being present, no error was present", deploymentErrorOccured);
+        assertTrue("Expected a deployment error due to incorrect Tool Arguments", foundExpectedErrorinLogs);
     }
 }
