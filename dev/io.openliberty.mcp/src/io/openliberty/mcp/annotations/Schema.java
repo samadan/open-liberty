@@ -38,8 +38,10 @@ import java.lang.annotation.Target;
 @Target({ TYPE, FIELD, METHOD, PARAMETER })
 public @interface Schema {
 
-    String value();
+    public final static String UNSET = "<<unset>>";
 
-    String description() default "";
+    String value() default UNSET;
+
+    String description() default UNSET;
 
 }

@@ -37,7 +37,7 @@ public class SchemaTestTwo {
 
     public static record address(int number, street street, String postcode, @JsonbTransient String directions) {};
 
-    @Schema("{ \"$anchor\": \"street\", \"properties\": {  \"streetName\": { \"type\": \"string\" }, \"roadType\": { \"type\": \"string\" } }, \"required\": [ \"streetName\" ], \"type\": \"object\" }")
+    @Schema("{\"properties\": {  \"streetName\": { \"type\": \"string\" }, \"roadType\": { \"type\": \"string\" } }, \"required\": [ \"streetName\" ], \"type\": \"object\"}")
     public static record street(String streetname, String roadtype) {}
 
     public static record company(String name, address address, List<person> employees,

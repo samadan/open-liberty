@@ -9,7 +9,6 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.schemas;
 
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -51,7 +50,7 @@ public class SchemaGenerator {
         if (cls.isAnnotationPresent(Schema.class)) {
             Schema schema = cls.getAnnotation(Schema.class);
             try {
-                JsonSchema resultObj = jsonb.fromJson(schema.value(), JsonSchemaObject.class);
+                JsonSchema resultObj = jsonb.fromJson(schema.value(), JsonSchema.class);
                 return schema.value();
             } catch (JsonbException e) {
                 throw new RuntimeException("Schema annotation not valid: " + cls.getName());
@@ -111,7 +110,7 @@ public class SchemaGenerator {
         for (ArgumentMetadata argument : tool.arguments().values()) {
             // - create a pseudo schema
             Parameter type = parameters[argument.index()];
-            generatePsuedoSchema(type.getAnnotatedType());
+            generatePsuedoSchema(type.getType());
         }
 
         for (ArgumentMetadata argument : tool.arguments().values()) {
@@ -148,9 +147,9 @@ public class SchemaGenerator {
         HashMap<TypeKey, Boolean> typeFrequency = new HashMap<>();
         HashMap<String, Integer> nameGenerator = new HashMap<>();
 
-        AnnotatedType returnType = tool.method().getJavaMember().getAnnotatedReturnType();
+        Type returnType = tool.method().getJavaMember().getReturnType();
         generatePsuedoSchema(returnType);
-        TypeKey key = new TypeKey(returnType.getType(), SchemaDirection.OUTPUT);
+        TypeKey key = new TypeKey(returnType, SchemaDirection.OUTPUT);
         calculateClassFrequency(key, typeFrequency, nameGenerator, nameMap);
 
         PsuedoSchema ps = cache.get(key);
@@ -158,11 +157,11 @@ public class SchemaGenerator {
         return jsonb.toJson(outputSchema);
     }
 
-    public static void generatePsuedoSchema(AnnotatedType type) {
-        TypeKey tmpTKIn = new TypeKey(type.getType(), SchemaDirection.INPUT);
-        TypeKey tmpTKOut = new TypeKey(type.getType(), SchemaDirection.OUTPUT);
+    public static void generatePsuedoSchema(Type type) {
+        TypeKey tmpTKIn = new TypeKey(type, SchemaDirection.INPUT);
+        TypeKey tmpTKOut = new TypeKey(type, SchemaDirection.OUTPUT);
         if (!cache.containsKey(tmpTKIn) || !cache.containsKey(tmpTKOut)) {
-            Type baseType = type.getType();
+            Type baseType = type;
             if (!isPrimitive(baseType)) {
                 if (baseType instanceof Class<?> cls) {
                     if (cls.isEnum()) {
@@ -270,9 +269,12 @@ public class SchemaGenerator {
 
             } else if (cls.isArray()) {
                 ListPsuedoSchema ps = (ListPsuedoSchema) cache.get(typeKey);
-                calculateClassFrequency(new TypeKey(ps.itemType().getType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
+                calculateClassFrequency(new TypeKey(ps.itemType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
 
             } else if (cls.isRecord() || cls instanceof Class<?>) {
+                if (cache.get(typeKey) instanceof ListPsuedoSchema) {
+                    System.out.println("erroras List is in place of class");
+                }
                 ClassPsuedoSchema ps = (ClassPsuedoSchema) cache.get(typeKey);
                 String name;
                 if (nameGenerator.containsKey(typeKey.type().getClass().getSimpleName())) {
@@ -288,20 +290,20 @@ public class SchemaGenerator {
                 nameMap.put(typeKey, name);
 
                 for (FieldInfo fi : ps.fields()) {
-                    calculateClassFrequency(new TypeKey(fi.type().getType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
+                    calculateClassFrequency(new TypeKey(fi.type(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
                 }
             }
 
         } else if (baseType instanceof ParameterizedType pt) {
             if (Optional.class.isAssignableFrom((Class<?>) pt.getRawType())) {
                 OptionalPsuedoSchema ps = (OptionalPsuedoSchema) cache.get(typeKey);
-                calculateClassFrequency(new TypeKey(ps.optionalType().getType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
+                calculateClassFrequency(new TypeKey(ps.optionalType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
             } else if (Map.class.isAssignableFrom((Class<?>) pt.getRawType())) {
                 MapPsuedoSchema ps = (MapPsuedoSchema) cache.get(typeKey);
-                calculateClassFrequency(new TypeKey(ps.valueType().getType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
+                calculateClassFrequency(new TypeKey(ps.valueType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
             } else if (Collection.class.isAssignableFrom((Class<?>) pt.getRawType())) {
                 ListPsuedoSchema ps = (ListPsuedoSchema) cache.get(typeKey);
-                calculateClassFrequency(new TypeKey(ps.itemType().getType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
+                calculateClassFrequency(new TypeKey(ps.itemType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
 
             }
 
