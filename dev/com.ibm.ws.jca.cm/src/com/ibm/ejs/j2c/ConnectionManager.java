@@ -334,6 +334,14 @@ public final class ConnectionManager implements com.ibm.ws.j2c.ConnectionManager
                 mcWrapper.setPoolState(poolState);
                 com.ibm.ws.ffdc.FFDCFilter.processException(e, "com.ibm.ejs.j2c.ConnectionManager.allocateConnection", "344", this);
                 Tr.error(tc, "FAILED_CONNECTION_J2CA0021", new Object[] { e, _pm.gConfigProps.cfName });
+                // Decrement the handle count that was incremented during getConnection
+                if (mcWrapper.getHandleCount() > 0) {
+                    if (isTraceOn && tc.isDebugEnabled()) {
+                        Tr.debug(this, tc, "getConnection failed, decrementing handle count from " + mcWrapper.getHandleCount());
+                    }
+                    mcWrapper.decrementHandleCount();
+                }
+
 
                 /*
                  * If the Resource Adapter throws a ResourceException and we are not in a
