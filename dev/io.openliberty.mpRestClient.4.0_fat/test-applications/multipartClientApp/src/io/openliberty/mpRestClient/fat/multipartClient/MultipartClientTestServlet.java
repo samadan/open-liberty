@@ -51,7 +51,7 @@ public class MultipartClientTestServlet extends FATServlet {
 
     @Override
     public void init() throws ServletException {
-        String baseUrlStr = "http://localhost:8020/multipart";
+        String baseUrlStr = "http://localhost:" + Integer.getInteger("bvt.prop.HTTP_secondary") + "/multipart";
         LOG.info("baseUrl = " + baseUrlStr);
         URL baseUrl;
         try {
