@@ -27,6 +27,7 @@ import io.openliberty.mcp.internal.Capabilities.Roots;
 import io.openliberty.mcp.internal.Capabilities.Sampling;
 import io.openliberty.mcp.internal.Literals;
 import io.openliberty.mcp.internal.RequestMethod;
+import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ToolArgStatus;
 import io.openliberty.mcp.internal.ToolRegistry;
@@ -52,16 +53,16 @@ public class MessageParsingTest {
 
         Tool testTool = Literals.tool("echo", "Echo", "Echos the input");
         Map<String, ArgumentMetadata> arguments = Map.of("input", new ArgumentMetadata(String.class, 0, "", true, ToolArgStatus.PASSED_VALIDATION));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(testTool, arguments, Collections.emptyList()));
+        registry.addTool(ToolMetadata.createFrom(testTool, arguments, Collections.emptyList()));
 
         Tool addTestTool = Literals.tool("add", "Add", "Addition calculator");
         Map<String, ArgumentMetadata> additionArgs = Map.of("num1", new ArgumentMetadata(Integer.class, 0, "", true, ToolArgStatus.PASSED_VALIDATION),
                                                             "num2", new ArgumentMetadata(Integer.class, 1, "", true, ToolArgStatus.PASSED_VALIDATION));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(addTestTool, additionArgs, Collections.emptyList()));
+        registry.addTool(ToolMetadata.createFrom(addTestTool, additionArgs, Collections.emptyList()));
 
         Tool toogleTestTool = Literals.tool("toggle", "Toggle", "Toggle a boolean");
         Map<String, ArgumentMetadata> booleanArgs = Map.of("input", new ArgumentMetadata(Boolean.class, 0, "boolean value", true, ToolArgStatus.PASSED_VALIDATION));
-        registry.addTool(ToolMetadataUtil.createToolMetadataFrom(toogleTestTool, booleanArgs, Collections.emptyList()));
+        registry.addTool(ToolMetadata.createFrom(toogleTestTool, booleanArgs, Collections.emptyList()));
     }
 
     @Test

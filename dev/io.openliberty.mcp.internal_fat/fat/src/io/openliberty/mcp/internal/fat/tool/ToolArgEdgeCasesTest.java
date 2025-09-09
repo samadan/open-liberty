@@ -51,7 +51,6 @@ public class ToolArgEdgeCasesTest extends FATServletClient {
 
     @Test
     public void testToolArgumentEdgeCases() throws Exception {
-
         String line1 = server.waitForStringInLog("Blank arguments found in MCP Tool", 5 * 1000);
         String line2 = server.waitForStringInLog("Duplicate arguments found in MCP Tool", 5 * 1000);
         boolean foundExpectedErrorinLogs = (line1 != null) || (line2 != null);

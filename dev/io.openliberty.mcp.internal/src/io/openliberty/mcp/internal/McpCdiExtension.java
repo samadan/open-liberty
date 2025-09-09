@@ -43,7 +43,8 @@ public class McpCdiExtension implements Extension {
         for (AnnotatedMethod<?> m : type.getMethods()) {
             Tool toolAnnotation = m.getAnnotation(Tool.class);
             if (toolAnnotation != null) {
-                registerTool(toolAnnotation, pmb.getBean(), m, javaClass.getName());
+                String qualifiedName = javaClass.getName() + "." + m.getJavaMember().getName() + "()";
+                registerTool(toolAnnotation, pmb.getBean(), m, qualifiedName);
             }
         }
     }
@@ -53,41 +54,37 @@ public class McpCdiExtension implements Extension {
         reportOnToolArgEdgeCases(afterDeploymentValidation);
     }
 
-    /**
-     * @param afterDeploymentValidation
-     */
     private void reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
 
         StringBuilder sbBlankArgs = new StringBuilder("Blank arguments found in MCP Tool:");
         StringBuilder sbDuplicateArgs = new StringBuilder("Duplicate arguments found in MCP Tool:");
-        boolean blanksFound = false;
-        boolean duplicatesFound = false;
+        boolean blankArgumentsFound = false;
+        boolean duplicateArgumentsFound = false;
 
         for (ToolMetadata tmd : tools.getAllTools()) {
             Map<String, ArgumentMetadata> arguments = tmd.arguments();
-            for (String arg : arguments.keySet()) {
-                ArgumentMetadata argMetadata = arguments.get(arg);
+            for (String argName : arguments.keySet()) {
+                ArgumentMetadata argMetadata = arguments.get(argName);
 
                 switch (argMetadata.toolArgumentStatus()) {
                     case PASSED_VALIDATION:
                         break;
                     case BLANK:
-                        sbBlankArgs.append("\n").append("Tool: " + tmd.name());
-                        blanksFound = true;
+                        sbBlankArgs.append("\n").append("Tool: " + tmd.qualifiedName());
+                        blankArgumentsFound = true;
                         break;
                     case DUPLICATE:
-                        sbDuplicateArgs.append("\n").append("Tool: " + tmd.name() + " -  Argument: " + arg);
-                        duplicatesFound = true;
+                        sbDuplicateArgs.append("\n").append("Tool: " + tmd.qualifiedName() + " -  Argument: " + argName);
+                        duplicateArgumentsFound = true;
                         break;
-                    //default:
-                    //   throw new IllegalArgumentException("Unexpected toolArgumentStatus value: " + argMetadata.toolArgumentStatus());
+                    default: //unsupported (ignore)
                 }
             }
         }
-        if (blanksFound) {
+        if (blankArgumentsFound) {
             afterDeploymentValidation.addDeploymentProblem(new Exception(sbBlankArgs.toString()));
         }
-        if (duplicatesFound) {
+        if (duplicateArgumentsFound) {
             afterDeploymentValidation.addDeploymentProblem(new Exception(sbDuplicateArgs.toString()));
         }
     }
@@ -111,8 +108,8 @@ public class McpCdiExtension implements Extension {
     }
 
     private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method, String qualifiedName) {
-        ToolMetadata toolmd = ToolMetadata.createFrom(tool, bean, method);
-        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(qualifiedName + "." + method.getJavaMember().getName() + "()");
+        ToolMetadata toolmd = ToolMetadata.createFrom(tool, bean, method, qualifiedName);
+        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(qualifiedName);
         tools.addTool(toolmd);
         if (TraceComponent.isAnyTracingEnabled()) {
             if (tc.isDebugEnabled()) {
