@@ -797,7 +797,6 @@ public class JakartaDataRecreateServlet extends FATServlet {
     }
 
     @Test
-    @Ignore
     //Reference issue : https://github.com/OpenLiberty/open-liberty/issues/30444
     public void testOLGH30444() throws Exception {
         deleteAllEntities(Package.class); 
@@ -814,7 +813,7 @@ public class JakartaDataRecreateServlet extends FATServlet {
 
         tx.begin();
         try {
-            results = em.createQuery("SELECT ID FROM Package ORDER BY WIDTH DESC", Integer.class)
+            results = em.createQuery("SELECT id FROM Package ORDER BY width DESC", Integer.class)
                             .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                             .setMaxResults(1)
                             .getResultList();
