@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -10,13 +10,13 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package concurrent.cdi.ejb;
+package concurrent.cdi4.webapp;
 
-import java.util.concurrent.Callable;
+/**
+ * Some other class that we verify can be loaded
+ */
+public class TestException extends Exception {
 
-public interface Invoker {
+    private static final long serialVersionUID = 1L;
 
-    public <T> T runInEJB(Callable<T> testCode) throws Exception;
-
-    public void runTaskUsingDefaultManagedThreadFactory(Runnable task);
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024 IBM Corporation and others.
+ * Copyright (c) 2024, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package concurrent.cdi.ejb;
+package concurrent.cdi.ejb.anno;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -24,12 +24,12 @@ import jakarta.inject.Qualifier;
 @Qualifier
 @Retention(RUNTIME)
 @Target(FIELD)
-public @interface PropagatingLocationContext {
+public @interface IgnoringTransactionContext {
 
-    public static class Literal extends AnnotationLiteral<PropagatingLocationContext> implements PropagatingLocationContext {
-        private static final long serialVersionUID = 493685977414133505L;
+    public static class Literal extends AnnotationLiteral<IgnoringTransactionContext> implements IgnoringTransactionContext {
+        private static final long serialVersionUID = 1111215772967657236L;
 
-        public static final PropagatingLocationContext INSTANCE = new Literal();
+        public static final IgnoringTransactionContext INSTANCE = new Literal();
 
         private Literal() {
         }

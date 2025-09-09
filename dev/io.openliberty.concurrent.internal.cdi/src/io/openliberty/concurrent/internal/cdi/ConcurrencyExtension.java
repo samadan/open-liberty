@@ -107,6 +107,7 @@ public class ConcurrencyExtension implements Extension {
 
         J2EEName jeeName = cmd.getJ2EEName();
 
+        // TODO handle possible null value for bundleContext
         BundleContext bundleContext = FrameworkUtil.getBundle(ConcurrencyExtension.class).getBundleContext();
         ServiceReference<QualifiedResourceFactories> ref = bundleContext.getServiceReference(QualifiedResourceFactories.class);
         extSvc = (ConcurrencyExtensionMetadata) bundleContext.getService(ref);
