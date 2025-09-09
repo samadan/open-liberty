@@ -111,7 +111,18 @@ public class NettyChain extends HttpChain {
                     }
 
                     nettyFramework.stop(serverChannel, -1);
-                    serverChannel.closeFuture().syncUninterruptibly();
+                    ChannelFuture stopFuture = serverChannel.closeFuture().syncUninterruptibly();
+                    stopFuture.addListener(future -> {
+                    if (future.isSuccess()){
+                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                            Tr.debug(this, tc, "Server Channel was successfully closed");
+                        }
+                    } else {
+                        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                            Tr.debug(this, tc, "Server Channel failed to close! Trying again...");
+                        }
+                        serverChannel.closeFuture().syncUninterruptibly();
+                    }});
                     serverChannel = null;
                 }
 
