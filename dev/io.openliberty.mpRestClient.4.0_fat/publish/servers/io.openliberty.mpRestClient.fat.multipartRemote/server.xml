@@ -9,6 +9,6 @@
     
     <httpEndpoint id="defaultHttpEndpoint"
                  host="*"
-                 httpPort="8020"
+                 httpPort="${bvt.prop.HTTP_secondary}"
                  httpsPort="8021"/>
 </server>
