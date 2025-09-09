@@ -298,7 +298,7 @@ public class ResponseCompressionHandler {
             return;
         }
 
-        acceptEncodingHeader = NettyHeaderUtils.stripWhiteSpaces(acceptEncodingHeader).toLowerCase();
+        acceptEncodingHeader = NettyHeaderUtils.stripWhiteSpace(acceptEncodingHeader).toLowerCase();
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, method, "parsing [" + acceptEncodingHeader + "]");
