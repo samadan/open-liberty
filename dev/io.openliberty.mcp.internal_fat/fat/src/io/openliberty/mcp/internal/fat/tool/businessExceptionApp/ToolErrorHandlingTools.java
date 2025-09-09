@@ -67,9 +67,9 @@ public class ToolErrorHandlingTools {
         throw new IOException("Checked error for: " + input);
     }
 
-    @Tool(name = "uncheckedExceptionTool", title = "Unchecked Exception", description = "Throws a runtime exception")
+    @Tool(name = "unwrappedCheckedExceptionTool", title = "Unwrapped Checked", description = "Throws IOException but not listed")
     @WrapBusinessError({})
-    public String uncheckedExceptionTool(@ToolArg(name = "input", description = "Unchecked exception Triggers") String input) {
-        throw new IllegalArgumentException("Unchecked error for: " + input);
+    public String unwrappedCheckedExceptionTool(@ToolArg(name = "input", description = "Triggers unwrapped checked") String input) throws IOException {
+        throw new IOException("Unwrapped checked error for: " + input);
     }
 }

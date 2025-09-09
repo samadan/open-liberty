@@ -18,6 +18,7 @@ import java.util.Map;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
+import io.openliberty.mcp.annotations.WrapBusinessError;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
 import jakarta.enterprise.inject.spi.AnnotatedParameter;
 import jakarta.enterprise.inject.spi.Bean;
@@ -28,7 +29,8 @@ import jakarta.enterprise.inject.spi.Bean;
 public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
                            Map<String, ArgumentMetadata> arguments,
                            List<SpecialArgumentMetadata> specialArguments,
-                           String name, String title, String description) {
+                           String name, String title, String description,
+                           List<Class<? extends Throwable>> businessExceptions) {
 
     public record ArgumentMetadata(Type type, int index, String description, boolean required) {}
 
@@ -45,7 +47,10 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         String title = annotation.title().isEmpty() ? null : annotation.title();
         String description = annotation.description().isEmpty() ? null : annotation.description();
 
-        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentList(method), name, title, description);
+        WrapBusinessError wrapAnnotation = method.getAnnotation(WrapBusinessError.class);
+        List<Class<? extends Throwable>> businessExceptions = (wrapAnnotation != null) ? List.of(wrapAnnotation.value()) : Collections.emptyList();
+
+        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentList(method), name, title, description, businessExceptions);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {

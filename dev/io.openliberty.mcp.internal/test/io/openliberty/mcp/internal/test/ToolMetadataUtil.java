@@ -9,6 +9,7 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,8 @@ public class ToolMetadataUtil {
         if (title.equals("")) {
             title = null;
         }
+        List<Class<? extends Throwable>> businessExceptions = Collections.emptyList();
 
-        return new ToolMetadata(annotation, null, null, arguments, specialArguments, annotation.name(), title, annotation.description());
+        return new ToolMetadata(annotation, null, null, arguments, specialArguments, annotation.name(), title, annotation.description(), businessExceptions);
     }
 }
