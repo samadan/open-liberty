@@ -47,15 +47,20 @@ public class SchemaGenerator {
     public record TypeKey(Type type, SchemaDirection direction) {}
 
     public static String generateSchema(Class<?> cls, SchemaDirection direction) {
-        if (cls.isAnnotationPresent(Schema.class)) {
-            Schema schema = cls.getAnnotation(Schema.class);
+        Schema schema = cls.getAnnotation(Schema.class);
+        if (schema != null && schema.value() != Schema.UNSET) {
             try {
                 JsonSchema resultObj = jsonb.fromJson(schema.value(), JsonSchema.class);
                 return schema.value();
             } catch (JsonbException e) {
                 throw new RuntimeException("Schema annotation not valid: " + cls.getName());
             }
+
         } else {
+            String description = null;
+            if (schema != null && schema.description() != Schema.UNSET) {
+                description = schema.description();
+            }
             TypeKey tmpTKIn = new TypeKey(cls, SchemaDirection.INPUT);
             TypeKey tmpTKOut = new TypeKey(cls, SchemaDirection.OUTPUT);
             if (cls.isRecord()) {
@@ -88,8 +93,8 @@ public class SchemaGenerator {
             JsonSchema result = null;
 
             switch (direction) {
-                case INPUT -> result = cache.get(tmpTKIn).toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, true, null);
-                case OUTPUT -> result = cache.get(tmpTKOut).toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, true, null);
+                case INPUT -> result = cache.get(tmpTKIn).toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, true, description);
+                case OUTPUT -> result = cache.get(tmpTKOut).toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, true, description);
             }
             return jsonb.toJson(result);
         }
@@ -110,14 +115,14 @@ public class SchemaGenerator {
         for (ArgumentMetadata argument : tool.arguments().values()) {
             // - create a pseudo schema
             Parameter type = parameters[argument.index()];
-            generatePsuedoSchema(type.getType());
+            generatePsuedoSchema(type.getParameterizedType());
         }
 
         for (ArgumentMetadata argument : tool.arguments().values()) {
             // - create a pseudo schema
             Parameter type = parameters[argument.index()];
 
-            TypeKey key = new TypeKey(type.getType(), SchemaDirection.INPUT);
+            TypeKey key = new TypeKey(type.getParameterizedType(), SchemaDirection.INPUT);
             calculateClassFrequency(key, typeFrequency, nameGenerator, nameMap);
         }
 
@@ -126,7 +131,7 @@ public class SchemaGenerator {
             ArgumentMetadata argument = entry.getValue();
             Parameter type = parameters[argument.index()];
 
-            TypeKey key = new TypeKey(type.getType(), SchemaDirection.INPUT);
+            TypeKey key = new TypeKey(type.getParameterizedType(), SchemaDirection.INPUT);
             PsuedoSchema ps = cache.get(key);
 
             JsonSchema parameterSchema = ps.toJsonSchemaObject(SchemaDirection.INPUT, nameMap, typeFrequency, defsBuilder, false, argument.description());
@@ -149,7 +154,7 @@ public class SchemaGenerator {
         HashMap<TypeKey, Boolean> typeFrequency = new HashMap<>();
         HashMap<String, Integer> nameGenerator = new HashMap<>();
 
-        Type returnType = tool.method().getJavaMember().getReturnType();
+        Type returnType = tool.method().getJavaMember().getGenericReturnType();
         generatePsuedoSchema(returnType);
         TypeKey key = new TypeKey(returnType, SchemaDirection.OUTPUT);
         calculateClassFrequency(key, typeFrequency, nameGenerator, nameMap);

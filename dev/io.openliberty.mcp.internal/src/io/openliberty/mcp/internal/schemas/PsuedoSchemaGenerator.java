@@ -28,6 +28,7 @@ import java.util.Optional;
 
 import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.internal.schemas.SchemaGenerator.TypeKey;
+import io.openliberty.mcp.internal.schemas.TypeUtility.MapTypes;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
@@ -99,25 +100,19 @@ public class PsuedoSchemaGenerator {
     }
 
     public static ListPsuedoSchema generateParameterizedCollectionPsuedoSchema(Type type) {
-        Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
+        Type elementType = TypeUtility.getCollectionType(type);
         return new ListPsuedoSchema(type, elementType);
     }
 
     public static MapPsuedoSchema generateParameterizedMapPsuedoSchema(Type type) {
-        Type[] elementTypes = ((ParameterizedType) type).getActualTypeArguments();
-        if (elementTypes.length == 2) {
-            // TODO: the following two lines are not always true, we should do a proper resolve for Map subtypes
-            Type keyType = elementTypes[0];
-            Type valueType = elementTypes[1];
-            if (keyType.equals(String.class) || isEnum(keyType)) {
-                return new MapPsuedoSchema(type, keyType, valueType);
-            } else {
-                throw new RuntimeException("Object keys not supported yet, provide custom schema instead");
-            }
+        MapTypes mapTypes = TypeUtility.getMapTypes(type);
+        Type keyType = mapTypes.key();
+        Type valueType = mapTypes.value();
+        if (keyType.equals(String.class) || isEnum(keyType)) {
+            return new MapPsuedoSchema(type, keyType, valueType);
         } else {
-            throw new RuntimeException("Processed invalid Map");
+            throw new RuntimeException(type + " represents a map which does not have String or Enum keys");
         }
-
     }
 
     private static boolean isEnum(Type type) {
@@ -285,6 +280,7 @@ public class PsuedoSchemaGenerator {
         /** {@inheritDoc} */
         @Override
         public JsonObject adaptToJson(JsonSchema arg0) throws Exception {
+            System.out.println("serializing  " + arg0.toString());
             String json = jsonb.toJson(arg0);
             return jsonb.fromJson(json, JsonObject.class);
         }
@@ -343,6 +339,7 @@ public class PsuedoSchemaGenerator {
                 } catch (JsonbException e) {
                     throw new RuntimeException("Schema annotation not valid: " + name);
                 }
+
             }
 
             Map<TypeKey, PsuedoSchema> cache = getPsuedoCache();
@@ -362,9 +359,21 @@ public class PsuedoSchemaGenerator {
                 JsonSchema subSchema = childSchemaAnn.schema()
                                                      .map(s -> jsonb.fromJson(s, JsonSchema.class))
                                                      .orElseGet(() -> ps.toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, false, fiDescripton));
-
+                if (fiDescripton != null) {
+                    if (subSchema instanceof JsonSchemaObject jso) {
+                        subSchema = new JsonSchemaObject(jso.type(), jso.description() != null ? fiDescripton : null, jso.properties(), jso.required(), jso.defs(), jso.ref());
+                    } else if (subSchema instanceof JsonSchemaArray jsa) {
+                        subSchema = new JsonSchemaArray(jsa.type(), jsa.description() != null ? fiDescripton : null, jsa.defs(), jsa.items());
+                    } else if (subSchema instanceof JsonSchemaMap jsm) {
+                        subSchema = new JsonSchemaMap(jsm.type(), jsm.description() != null ? fiDescripton : null, jsm.defs(), jsm.additionalProperties());
+                    } else if (subSchema instanceof JsonSchemaEnum jse) {
+                        subSchema = new JsonSchemaEnum(jse.type(), jse.description() != null ? fiDescripton : null, jse.enumList());
+                    } else if (subSchema instanceof JsonSchemaPrimitive jsp) {
+                        subSchema = new JsonSchemaPrimitive(jsp.type(), jsp.description() != null ? fiDescripton : null, jsp.ref());
+                    }
+                }
                 if (defsBuilder.containsKey(baseKey) && defsBuilder.get(baseKey) instanceof JsonSchemaPlaceholder) {
-                    defsBuilder.remove(baseType);
+                    defsBuilder.remove(baseKey);
                 }
 
                 properties.put(fi.name(), subSchema);
@@ -376,6 +385,7 @@ public class PsuedoSchemaGenerator {
             }
             boolean storeInDefs = typeFrequency.get(baseKey);
             String schemaDescription = storeInDefs ? null : description;
+            schemaDescription = (baseClass && typeFrequency.get(baseKey)) ? description : null;
 
             JsonSchema schema;
 
@@ -391,19 +401,18 @@ public class PsuedoSchemaGenerator {
             }
 
             if (typeFrequency.get(baseKey) == true) {
-                if (!defsBuilder.containsKey(name)) {
+                if (!defsBuilder.containsKey(baseKey)) {
                     defsBuilder.put(baseKey, schema);
                 }
                 HashMap<String, JsonSchema> defs = new HashMap<>();
                 defsBuilder.forEach((k, v) -> defs.put(nameMap.get(k), v));
                 if (baseClass == false) {
-                    return new JsonSchemaPrimitive(null, description, getDefsRef(name));
+                    return new JsonSchemaPrimitive(null, schemaDescription, getDefsRef(name));
                 } else {
-                    return new JsonSchemaObject(null, description, null, null, defs, getDefsRef(name));
+                    return new JsonSchemaObject(null, null, null, null, defs, getDefsRef(name));
                 }
 
             }
-
             return schema;
         }
     }
@@ -444,7 +453,6 @@ public class PsuedoSchemaGenerator {
                                              HashMap<TypeKey, JsonSchema> defsBuilder, boolean baseClass, String description) {
 
             TypeKey baseKey = new TypeKey(baseType, direction);
-            String name = nameMap.get(baseKey);
 
 //            Schema schemaAnn = (Schema) Arrays.stream(itemType.getAnnotations()).filter(a -> a.annotationType().equals(Schema.class)).findAny().orElse(null);
 //            if (schemaAnn != null && schemaAnn.value() != null) {
@@ -467,18 +475,26 @@ public class PsuedoSchemaGenerator {
 
             JsonSchema schema = new JsonSchemaArray("array", description, null, subSchema);
 
-            if (typeFrequency.get(baseKey) == true) {
-                if (!defsBuilder.containsKey(name)) {
-                    defsBuilder.put(baseKey, schema);
-                }
-
+//            if (typeFrequency.get(baseKey) == true) {
+//                if (!defsBuilder.containsKey(baseKey)) {
+//                    defsBuilder.put(baseKey, schema);
+//                }
+//
+//                HashMap<String, JsonSchema> defs = new HashMap<>();
+//                defsBuilder.forEach((k, v) -> defs.put(nameMap.get(k), v));
+//
+//                if (baseClass == true) {
+//                    JsonSchema items = new JsonSchemaPrimitive(null, description, getDefsRef(name));
+//                    return new JsonSchemaArray("array", "", defs, items);
+//                }
+//            }
+            TypeKey itemKey = new TypeKey(itemType, direction);
+            if (typeFrequency.get(itemKey) == true && baseClass == true) {
                 HashMap<String, JsonSchema> defs = new HashMap<>();
                 defsBuilder.forEach((k, v) -> defs.put(nameMap.get(k), v));
-
-                if (baseClass == true) {
-                    JsonSchema items = new JsonSchemaPrimitive(null, description, getDefsRef(name));
-                    return new JsonSchemaArray("array", "", defs, items);
-                }
+                String name = nameMap.get(itemKey);
+                JsonSchema items = new JsonSchemaPrimitive(null, description, getDefsRef(name));
+                return new JsonSchemaArray("array", description, defs, items);
             }
 
             return schema;
@@ -494,7 +510,6 @@ public class PsuedoSchemaGenerator {
                                              HashMap<TypeKey, JsonSchema> defsBuilder, boolean baseClass, String description) {
 
             TypeKey baseKey = new TypeKey(baseType, direction);
-            String name = nameMap.get(baseKey);
 
 //            Schema schemaAnn = (Schema) Arrays.stream(valueType.getAnnotations()).filter(a -> a.annotationType().equals(Schema.class)).findAny().orElse(null);
 //            if (schemaAnn != null && schemaAnn.value() != null) {
@@ -517,16 +532,25 @@ public class PsuedoSchemaGenerator {
 
             JsonSchemaMap schema = new JsonSchemaMap("object", description, null, valueSchema);
 
-            if (typeFrequency.get(baseKey) == true) {
-                if (!defsBuilder.containsKey(baseKey)) {
-                    defsBuilder.put(baseKey, schema);
-                }
+//            if (typeFrequency.get(baseKey) == true) {
+//                if (!defsBuilder.containsKey(baseKey)) {
+//                    defsBuilder.put(baseKey, schema);
+//                }
+//                HashMap<String, JsonSchema> defs = new HashMap<>();
+//                defsBuilder.forEach((k, v) -> defs.put(nameMap.get(k), v));
+//                if (baseClass == true) {
+//                    JsonSchema additionalProperties = new JsonSchemaPrimitive(null, null, getDefsRef(name));
+//                    return new JsonSchemaMap("object", description, defs, additionalProperties);
+//                }
+//            }
+            TypeKey valueKey = new TypeKey(valueType, direction);
+            if (typeFrequency.get(valueKey) == true && baseClass == true) {
                 HashMap<String, JsonSchema> defs = new HashMap<>();
                 defsBuilder.forEach((k, v) -> defs.put(nameMap.get(k), v));
-                if (baseClass == true) {
-                    JsonSchema additionalProperties = new JsonSchemaPrimitive(null, null, getDefsRef(name));
-                    return new JsonSchemaMap("object", description, defs, additionalProperties);
-                }
+
+                String name = nameMap.get(valueKey);
+                JsonSchema additionalProperties = new JsonSchemaPrimitive(null, null, getDefsRef(name));
+                return new JsonSchemaMap("object", description, defs, additionalProperties);
             }
 
             return schema;
@@ -599,7 +623,6 @@ public class PsuedoSchemaGenerator {
                                              HashMap<TypeKey, JsonSchema> defsBuilder, boolean baseClass, String description) {
 
             TypeKey baseKey = new TypeKey(baseType, direction);
-            String name = nameMap.get(baseKey);
 
 //            Schema schemaAnn = (Schema) Arrays.stream(optionalType.getAnnotations()).filter(a -> a.annotationType().equals(Schema.class)).findAny().orElse(null);
 //            if (schemaAnn != null && schemaAnn.value() != null) {
@@ -620,28 +643,31 @@ public class PsuedoSchemaGenerator {
             PsuedoSchema ps = cache.get(tmpTK);
             JsonSchema subSchema = ps.toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, false, null);
 
-            if (typeFrequency.get(baseKey) == true) {
-                if (!defsBuilder.containsKey(baseKey)) {
-                    defsBuilder.put(baseKey, subSchema);
-                }
+            if (typeFrequency.get(baseKey) == true && baseClass == true) {
+//                if (!defsBuilder.containsKey(baseKey)) {
+//                    defsBuilder.put(baseKey, subSchema);
+//                }
                 HashMap<String, JsonSchema> defs = new HashMap<>();
                 defsBuilder.forEach((k, v) -> defs.put(nameMap.get(k), v));
+
                 if (subSchema instanceof JsonSchemaObject jso) {
-                    if (baseClass == false) {
-                        return new JsonSchemaPrimitive(null, description, getDefsRef(name));
-                    } else {
-                        return new JsonSchemaObject(null, null, null, null, defs, getDefsRef(name));
-                    }
+                    Type t = ((ClassPsuedoSchema) ps).baseType();
+                    TypeKey optionalItemKey = new TypeKey(t, direction);
+                    String name = nameMap.get(optionalItemKey);
+                    return new JsonSchemaObject(null, null, null, null, defs, getDefsRef(name));
                 } else if (subSchema instanceof JsonSchemaArray jsa) {
-                    if (baseClass == true) {
-                        JsonSchema items = new JsonSchemaPrimitive(null, null, getDefsRef(name));
-                        return new JsonSchemaArray("array", description, defs, items);
-                    }
+                    Type t = ((ListPsuedoSchema) ps).itemType();
+                    TypeKey optionalItemKey = new TypeKey(t, direction);
+                    String name = nameMap.get(optionalItemKey);
+                    JsonSchema items = new JsonSchemaPrimitive(null, null, getDefsRef(name));
+                    return new JsonSchemaArray("array", description, defs, items);
                 } else if (subSchema instanceof JsonSchemaMap jsm) {
-                    if (baseClass == true) {
-                        JsonSchema additionalProperties = new JsonSchemaPrimitive(null, null, getDefsRef(name));
-                        return new JsonSchemaMap("object", description, defs, additionalProperties);
-                    }
+                    Type t = ((MapPsuedoSchema) ps).valueType();
+                    TypeKey optionalItemKey = new TypeKey(t, direction);
+                    String name = nameMap.get(optionalItemKey);
+                    JsonSchema additionalProperties = new JsonSchemaPrimitive(null, null, getDefsRef(name));
+                    return new JsonSchemaMap("object", description, defs, additionalProperties);
+
                 }
 
             }
