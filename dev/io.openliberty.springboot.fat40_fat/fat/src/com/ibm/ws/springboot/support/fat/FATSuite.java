@@ -44,7 +44,7 @@ import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
                 ExtractedAppTests40.class,
                 GenerateWebServerPluginTests40.class,
                 JakartaFeatureTests40.class,
-//                MimeMapping40.class,
+                MimeMapping40.class,
                 ConfigSpringBootApplicationTagWarTests40.class,
                 SpringBootUtilityThinTest.class,
                 JSPTests40.class,
