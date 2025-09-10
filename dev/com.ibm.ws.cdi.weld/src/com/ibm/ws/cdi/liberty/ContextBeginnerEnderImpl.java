@@ -9,9 +9,6 @@
  *******************************************************************************/
 package com.ibm.ws.cdi.liberty;
 
-import java.util.Optional;
-
-import com.ibm.websphere.csi.J2EEName;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.cdi.CDIException;
@@ -158,11 +155,6 @@ public class ContextBeginnerEnderImpl implements ContextBeginnerEnder {
     @Override
     public ContextBeginnerEnder clone() {
         return new ContextBeginnerEnderImpl(newTheadContextClassLoader, cmd, cmdLogStringSuffix, tcclLogStringSuffix);
-    }
-
-    @Override
-    public Optional<J2EEName> getJ2EEName() {
-        return Optional.ofNullable(cmd.getJ2EEName());
     }
 
     public static ContextBeginnerEnderImpl getCurrentlyActive() {

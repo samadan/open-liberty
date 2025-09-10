@@ -9,9 +9,6 @@
  *******************************************************************************/
 package com.ibm.ws.cdi.internal.interfaces;
 
-import java.util.Optional;
-
-import com.ibm.websphere.csi.J2EEName;
 import com.ibm.ws.cdi.CDIException;
 
 /**
@@ -91,10 +88,5 @@ public interface ContextBeginnerEnder extends AutoCloseable {
      */
     @Override
     public void close();
-
-    /**
-     * Returns the J2EEName of the ComponentMetaData extracted in extractComponentMetaData, or an empty Optional if extractComponentMetaData hasn't been called
-     */
-    Optional<J2EEName> getJ2EEName();
 
 }
