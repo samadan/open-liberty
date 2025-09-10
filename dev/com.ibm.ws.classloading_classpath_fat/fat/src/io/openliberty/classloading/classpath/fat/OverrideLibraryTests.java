@@ -10,6 +10,7 @@
 package io.openliberty.classloading.classpath.fat;
 
 import static io.openliberty.classloading.classpath.fat.FATSuite.OVERRIDE_LIB_WAR_TEST_SERVER;
+import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_DUMMY_RAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB1_JAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB2_JAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB3_JAR;
@@ -18,6 +19,7 @@ import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB5_JAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB6_JAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB7_JAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB8_JAR;
+import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB9_JAR;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_OVERRIDE_LIB_APP;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_OVERRIDE_LIB_WAR;
 
@@ -62,6 +64,8 @@ public class OverrideLibraryTests extends FATServletClient {
         ShrinkHelper.exportToServer(server, "/libs", TEST_LIB6_JAR, DeployOptions.SERVER_ONLY);
         ShrinkHelper.exportToServer(server, "/libs", TEST_LIB7_JAR, DeployOptions.SERVER_ONLY);
         ShrinkHelper.exportToServer(server, "/libs", TEST_LIB8_JAR, DeployOptions.SERVER_ONLY);
+        ShrinkHelper.exportToServer(server, "/ras", TEST_DUMMY_RAR, DeployOptions.SERVER_ONLY);
+        ShrinkHelper.exportToServer(server, "/libs", TEST_LIB9_JAR, DeployOptions.SERVER_ONLY);
 
         server.startServer();
     }

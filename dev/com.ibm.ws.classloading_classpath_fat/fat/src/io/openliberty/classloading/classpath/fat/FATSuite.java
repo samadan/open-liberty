@@ -24,6 +24,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import com.ibm.websphere.simplicity.ShrinkHelper;
 
+import dummy.ra.DummyME;
 import dummy.ra.DummyResourceAdapter;
 import io.openliberty.classloading.classpath.test.client1.ClientLib1;
 import io.openliberty.classloading.classpath.test.ejb1.InitBean1;
@@ -284,7 +285,8 @@ public class FATSuite {
                                                           FOverride.class.getPackage().getName(), //
                                                           GOverride.class.getPackage().getName(), //
                                                           HOverride.class.getPackage().getName());
-            TEST_LIB9_JAR = ShrinkHelper.buildJavaArchive(TEST_LIB9 + ".jar", Lib9.class.getPackage().getName());
+            TEST_LIB9_JAR = ShrinkHelper.buildJavaArchive(TEST_LIB9 + ".jar", Lib9.class.getPackage().getName(), //
+                                                          DummyME.class.getPackage().getName());
             TEST_LIB10_JAR = ShrinkHelper.buildJavaArchive(TEST_LIB10 + ".jar", Lib10.class.getPackage().getName());
             TEST_LIB11_JAR = ShrinkHelper.buildJavaArchive(TEST_LIB11 + ".jar", Lib11.class.getPackage().getName());
             TEST_LIB12_JAR = ShrinkHelper.buildJavaArchive(TEST_LIB12 + ".jar", Lib12.class.getPackage().getName());

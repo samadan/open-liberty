@@ -17,6 +17,7 @@ import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB5;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB6;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB7;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB8;
+import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_LIB9;
 import static io.openliberty.classloading.classpath.fat.FATSuite.TEST_OVERRIDE_LIB_APP;
 import static io.openliberty.classloading.classpath.util.TestUtils.assertCommonResourceFromArchive;
 import static io.openliberty.classloading.classpath.util.TestUtils.assertCommonResourceFromArchives;
@@ -79,6 +80,11 @@ public class OverrideLibraryTestServlet extends FATServlet{
     }
 
     @Test
+    public void testRAOverride() throws ClassNotFoundException {
+        assertEquals("Wrong jar used.", "testLib9.jar", CodeSourceUtil.getClassCodeSourceFileName(Class.forName("dummy.ra.DummyME")));
+    }
+
+    @Test
     public void testGetResourcesOrder() {
         List<String> expectedOrder = Arrays.asList(TEST_LIB1, //
                                                    TEST_LIB2, //
@@ -91,7 +97,8 @@ public class OverrideLibraryTestServlet extends FATServlet{
                                                    TEST_LIB5, //
                                                    TEST_LIB6, //
                                                    TEST_LIB7, //
-                                                   TEST_LIB8);
+                                                   TEST_LIB8,
+                                                   TEST_LIB9);
         assertCommonResourceFromArchives(getClass(), expectedOrder);
     }
 
