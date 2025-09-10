@@ -50,7 +50,6 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
     }
 
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method, String qualifiedName) {
-
         String name = annotation.name().equals(Tool.ELEMENT_NAME) ? method.getJavaMember().getName() : annotation.name();
         String title = annotation.title().isEmpty() ? null : annotation.title();
         String description = annotation.description().isEmpty() ? null : annotation.description();
@@ -61,14 +60,6 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentList(method), name, title, description, qualifiedName, businessExceptions);
     }
 
-    public static ToolMetadata createFrom(Tool annotation, Map<String, ArgumentMetadata> arguments, List<SpecialArgumentMetadata> specialArguments) {
-
-        // used for unit Tests that pre-populate argumentData and create Tools within the tests
-        String title = annotation.title().isEmpty() ? null : annotation.title();
-        String qualifiedName = ""; // for unit tests we do not output qualified names as these are for the CDI aftervalidation deploymentProblem events
-        return new ToolMetadata(annotation, null, null, arguments, specialArguments, annotation.name(), title, annotation.description(), qualifiedName, null);
-    }
-
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
         Map<String, ArgumentMetadata> result = new HashMap<>();
         Set<String> argNamesDuplicationCheck = new HashSet<>();
@@ -76,32 +67,24 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo != null) {
-                setArgumentData(method, result, p, pInfo, argNamesDuplicationCheck);
+                String toolArgName = (pInfo.name().equals(Tool.ELEMENT_NAME)) ? p.getJavaParameter().getName() : pInfo.name(); // p.getJavaParameter().getName() needs java compiler -parameter flag to work
+                ToolArgStatus validationStatus = validateArgumentData(toolArgName, argNamesDuplicationCheck);
+                result.put(toolArgName, new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description(), pInfo.required(), validationStatus));
             }
         }
         return result.isEmpty() ? Collections.emptyMap() : result;
     }
 
-    private static void setArgumentData(AnnotatedMethod<?> method, Map<String, ArgumentMetadata> result, AnnotatedParameter<?> p, ToolArg pInfo,
-                                        Set<String> argNamesDuplicationCheck) {
-        String actualArgName = p.getJavaParameter().getName(); // needs a gradle "-parameter" compilation flag to work
-        String toolArgName = pInfo.name();
-        Type type = p.getBaseType();
-        int position = p.getPosition();
-        String description = pInfo.description();
-        boolean required = pInfo.required();
-
+    private static ToolArgStatus validateArgumentData(String toolArgName, Set<String> argNamesDuplicationCheck) {
         if (toolArgName.equals(Tool.ELEMENT_NAME)) {
-            result.put(actualArgName, new ArgumentMetadata(type, position, description, required, ToolArgStatus.PASSED_VALIDATION));
+            return ToolArgStatus.PASSED_VALIDATION;
         } else if (toolArgName.isBlank()) {
-            result.put(toolArgName, new ArgumentMetadata(type, position, description, required, ToolArgStatus.BLANK));
-        } else {
-            if (!argNamesDuplicationCheck.add(toolArgName)) {
-                result.put(toolArgName, new ArgumentMetadata(type, position, description, required, ToolArgStatus.DUPLICATE));
-            } else {
-                result.put(toolArgName, new ArgumentMetadata(type, position, description, required, ToolArgStatus.PASSED_VALIDATION));
-            }
+            return ToolArgStatus.BLANK;
         }
+
+        boolean duplicateArgumentExists = !argNamesDuplicationCheck.add(toolArgName);
+        ToolArgStatus validationStatus = duplicateArgumentExists ? ToolArgStatus.DUPLICATE : ToolArgStatus.PASSED_VALIDATION;
+        return validationStatus;
     }
 
     private static List<SpecialArgumentMetadata> getSpecialArgumentList(AnnotatedMethod<?> method) {

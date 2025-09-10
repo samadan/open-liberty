@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat.tool.toolArgEdgeCasesApp;
+package io.openliberty.mcp.internal.fat.tool.deploymentErrorApps;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
@@ -17,7 +17,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  *
  */
 @ApplicationScoped
-public class ToolArgEdgeCasesApp {
+public class ToolArgValidationTest {
 
     // duplicate parameter names
     @Tool(name = "duplicateParam")

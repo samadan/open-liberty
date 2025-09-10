@@ -21,7 +21,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.Literals;
 import io.openliberty.mcp.internal.ToolDescription;
-import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ToolArgStatus;
 import jakarta.json.bind.Jsonb;
@@ -43,7 +42,7 @@ public class MCPServerToolsListTest {
     }
 
     private List<ToolDescription> generateResponse(Tool numberTestTool, Map<String, ArgumentMetadata> arguments) {
-        return List.of(new ToolDescription(ToolMetadata.createFrom(numberTestTool, arguments, Collections.emptyList())));
+        return List.of(new ToolDescription(ToolMetadataTestUtility.createFrom(numberTestTool, arguments, Collections.emptyList())));
     }
 
     @Test
@@ -308,10 +307,10 @@ public class MCPServerToolsListTest {
                                                           "var2", new ArgumentMetadata(boolean.class, 1, "operand 2", true, ToolArgStatus.PASSED_VALIDATION));
 
         LinkedList<ToolDescription> toolDescriptions = new LinkedList<>();
-        toolDescriptions.add(new ToolDescription(ToolMetadata.createFrom(weatherTool, arguments, Collections.emptyList())));
-        toolDescriptions.add(new ToolDescription(ToolMetadata.createFrom(additionTool, arguments2, Collections.emptyList())));
-        toolDescriptions.add(new ToolDescription(ToolMetadata.createFrom(subtractionTool, arguments3, Collections.emptyList())));
-        toolDescriptions.add(new ToolDescription(ToolMetadata.createFrom(booleanTool, arguments4, Collections.emptyList())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataTestUtility.createFrom(weatherTool, arguments, Collections.emptyList())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataTestUtility.createFrom(additionTool, arguments2, Collections.emptyList())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataTestUtility.createFrom(subtractionTool, arguments3, Collections.emptyList())));
+        toolDescriptions.add(new ToolDescription(ToolMetadataTestUtility.createFrom(booleanTool, arguments4, Collections.emptyList())));
 
         String responseString = jsonb.toJson(toolDescriptions);
         String expectedString = """
