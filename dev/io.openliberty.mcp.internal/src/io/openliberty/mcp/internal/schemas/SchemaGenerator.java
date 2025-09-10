@@ -83,13 +83,13 @@ public class SchemaGenerator {
                 case INPUT -> calculateClassFrequency(tmpTKIn, typeFrequency, nameGenerator, nameMap);
                 case OUTPUT -> calculateClassFrequency(tmpTKOut, typeFrequency, nameGenerator, nameMap);
             }
-            HashMap<String, JsonSchema> defs = new HashMap<>();
+            HashMap<TypeKey, JsonSchema> defsBuilder = new HashMap<>();
 
             JsonSchema result = null;
 
             switch (direction) {
-                case INPUT -> result = cache.get(tmpTKIn).toJsonSchemaObject(direction, nameMap, typeFrequency, defs, true, null);
-                case OUTPUT -> result = cache.get(tmpTKOut).toJsonSchemaObject(direction, nameMap, typeFrequency, defs, true, null);
+                case INPUT -> result = cache.get(tmpTKIn).toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, true, null);
+                case OUTPUT -> result = cache.get(tmpTKOut).toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, true, null);
             }
             return jsonb.toJson(result);
         }
@@ -100,7 +100,7 @@ public class SchemaGenerator {
         // create base schema components
         Map<String, JsonSchema> properties = new HashMap<>();
         List<String> required = new ArrayList<>();
-        HashMap<String, JsonSchema> defs = new HashMap<>();
+        HashMap<TypeKey, JsonSchema> defsBuilder = new HashMap<>();
         Parameter[] parameters = tool.method().getJavaMember().getParameters();
         HashMap<TypeKey, String> nameMap = new HashMap<>();
         HashMap<TypeKey, Boolean> typeFrequency = new HashMap<>();
@@ -129,7 +129,7 @@ public class SchemaGenerator {
             TypeKey key = new TypeKey(type.getType(), SchemaDirection.INPUT);
             PsuedoSchema ps = cache.get(key);
 
-            JsonSchema parameterSchema = ps.toJsonSchemaObject(SchemaDirection.INPUT, nameMap, typeFrequency, defs, false, argument.description());
+            JsonSchema parameterSchema = ps.toJsonSchemaObject(SchemaDirection.INPUT, nameMap, typeFrequency, defsBuilder, false, argument.description());
             // - add it as a property
             properties.put(argumentName, parameterSchema);
             // - add it as required (if it is)
@@ -137,12 +137,14 @@ public class SchemaGenerator {
                 required.add(argumentName);
             }
         }
+        HashMap<String, JsonSchema> defs = new HashMap<>();
+        defsBuilder.forEach((k, v) -> defs.put(nameMap.get(k), v));
         JsonSchemaObject rootSchema = new JsonSchemaObject("object", null, properties, required, defs.isEmpty() ? null : defs, null);
         return jsonb.toJson(rootSchema);
     }
 
     public static String generateToolOutputSchema(ToolMetadata tool) {
-        HashMap<String, JsonSchema> defs = new HashMap<>();
+        HashMap<TypeKey, JsonSchema> defsBuilder = new HashMap<>();
         HashMap<TypeKey, String> nameMap = new HashMap<>();
         HashMap<TypeKey, Boolean> typeFrequency = new HashMap<>();
         HashMap<String, Integer> nameGenerator = new HashMap<>();
@@ -153,7 +155,7 @@ public class SchemaGenerator {
         calculateClassFrequency(key, typeFrequency, nameGenerator, nameMap);
 
         PsuedoSchema ps = cache.get(key);
-        JsonSchema outputSchema = ps.toJsonSchemaObject(SchemaDirection.OUTPUT, nameMap, typeFrequency, defs, true, null);
+        JsonSchema outputSchema = ps.toJsonSchemaObject(SchemaDirection.OUTPUT, nameMap, typeFrequency, defsBuilder, true, null);
         return jsonb.toJson(outputSchema);
     }
 
