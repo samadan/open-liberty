@@ -15,10 +15,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 
-
-/*
- *  Add @Enity after fixing B10 Regression issue 
- */
 @Entity
 public class Ticket {
 
