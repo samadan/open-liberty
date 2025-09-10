@@ -25,8 +25,7 @@ import com.ibm.websphere.simplicity.ShrinkHelper;
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
-import io.openliberty.mcp.internal.fat.tool.duplicateArgsErrorTestApp.DuplicateArgsErrorTest;
-import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
+import io.openliberty.mcp.internal.fat.tool.invalidArgsErrorTestApp.InvalidArgsErrorTest;
 
 @RunWith(FATRunner.class)
 public class InvalidSpecialArgumentProblemTest {
@@ -35,7 +34,7 @@ public class InvalidSpecialArgumentProblemTest {
 
     @BeforeClass
     public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "InvalidSpecialArgumentProblemTest.war").addPackage(DuplicateArgsErrorTest.class.getPackage());
+        WebArchive war = ShrinkWrap.create(WebArchive.class, "InvalidSpecialArgumentProblemTest.war").addPackage(InvalidArgsErrorTest.class.getPackage());
         ShrinkHelper.exportDropinAppToServer(server, war, DISABLE_VALIDATION, SERVER_ONLY);
         server.startServer();
     }
@@ -47,29 +46,9 @@ public class InvalidSpecialArgumentProblemTest {
 
     @Test
     public void testInvalidArgsDeploymentError() throws Exception {
-        String request = """
-                        {
-                          "jsonrpc": "2.0",
-                          "id": 1,
-                          "method": "tools/call",
-                          "params": {
-                            "name": "invalidSpecialArgumentTool",
-                            "arguments": {}
-                          }
-                        }
-                        """;
-
-        boolean deploymentErrorOccured = false;
-
-        try {
-            HttpTestUtils.callMCP(server, "/toolTest", request);
-        } catch (Exception e) {
-            if (!server.findStringsInLogs("Special argument type not supported: ").isEmpty()) {
-                deploymentErrorOccured = true;
-            }
-        }
+        String errorInLogs = server.waitForStringInLog("Special argument type not supported: ", 5 * 1000);
 
         assertTrue("Expected a deployment error due to invalid arguments being present: The String `Special argument type not supported` was not present in logs",
-                   deploymentErrorOccured);
+                   errorInLogs != null);
     }
 }

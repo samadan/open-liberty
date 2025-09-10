@@ -9,8 +9,10 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ibm.websphere.ras.Tr;
@@ -36,6 +38,7 @@ public class McpCdiExtension implements Extension {
 
     private ToolRegistry tools = new ToolRegistry();
     private ConcurrentHashMap<String, LinkedList<String>> duplicateToolsMap = new ConcurrentHashMap<>();
+    private List<String> duplicateOrInvalidArgsErrors = new ArrayList<>();
 
     void registerTools(@Observes ProcessManagedBean<?> pmb) {
         AnnotatedType<?> type = pmb.getAnnotatedBeanClass();
@@ -45,6 +48,10 @@ public class McpCdiExtension implements Extension {
             if (toolAnnotation != null) {
                 //String qualifiedName = javaClass.getName() + "." + m.getJavaMember().getName();
                 registerTool(toolAnnotation, pmb.getBean(), m);
+                try {
+                    registerTool(toolAnnotation, pmb.getBean(), m);                } catch (IllegalArgumentException e) {
+                    duplicateOrInvalidArgsErrors.add(e.getMessage());
+                }
             }
         }
     }
@@ -99,6 +106,16 @@ public class McpCdiExtension implements Extension {
 
         if (duplicateToolsMap.size() != 0) {
             afterDeploymentValidation.addDeploymentProblem(new Exception(sb.toString()));
+        }
+
+        reportOnDuplicateOrInvalidArgs(afterDeploymentValidation);
+    }
+
+    private void reportOnDuplicateOrInvalidArgs(AfterDeploymentValidation afterDeploymentValidation) {
+        if (duplicateOrInvalidArgsErrors.size() != 0) {
+            for (String errorMessage : duplicateOrInvalidArgsErrors) {
+                afterDeploymentValidation.addDeploymentProblem(new Exception(errorMessage));
+            }
         }
     }
 
