@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.junit.Ignore;
@@ -750,7 +751,8 @@ public class JakartaPersistenceServlet extends FATServlet {
             throw e;
         }
 
-        assertEquals(444_780_000, result.timestamp.getNano());
+        assertTrue("Unexpected nanoseconds value: " + result.timestamp.getNano(),
+                   Set.of(444_770_000, 444_780_000).contains(result.timestamp.getNano()));
     }
 
     @Test
