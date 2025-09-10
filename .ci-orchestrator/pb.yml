@@ -129,6 +129,14 @@ steps:
     githubPRApi: ${github_pr_api}
     githubPRNumber: ${github_pr_number}
 
+- stepName: GenAI Assistance Code Check
+  workType: Jenkins
+  projectName: genAICodeCheck
+  timeoutInMinutes: 120
+  properties:
+    githubPRApi: ${github_pr_api}
+    githubPRNumber: ${github_pr_number}
+
 - stepName: DHE Server Artifacts Check
   workType: Jenkins
   projectName: dheServerCheck
