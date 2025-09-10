@@ -12,20 +12,16 @@
  *******************************************************************************/
 package io.openliberty.springboot.support.web.server.version40.container;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.beans.BeansException;
 import org.springframework.boot.SpringBootVersion;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.web.server.reactive.ConfigurableReactiveWebServerFactory;
-import org.springframework.boot.web.server.reactive.AbstractReactiveWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
-import org.springframework.boot.web.server.servlet.ServletWebServerSettings;
+import org.springframework.boot.web.server.reactive.AbstractReactiveWebServerFactory;
+import org.springframework.boot.web.server.reactive.ConfigurableReactiveWebServerFactory;
 import org.springframework.boot.web.server.servlet.ServletContextInitializers;
+import org.springframework.boot.web.server.servlet.ServletWebServerSettings;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.server.reactive.HttpHandler;
@@ -56,9 +52,9 @@ public class LibertyReactiveWebServerFactory extends AbstractReactiveWebServerFa
             registration.addMapping("/");
             registration.setAsyncSupported(true);
         } };
-        
+
         ServletContextInitializers mergedInitializers = ServletContextInitializers.from(settings, initializers);
-        
+
         if (SpringBootConfig.isBeforeCheckpoint()) {
             // for InstantOn we create a wrapper so that we can recreate the LibertyWebServer on restart
             return new WebServer() {
@@ -118,6 +114,6 @@ public class LibertyReactiveWebServerFactory extends AbstractReactiveWebServerFa
      */
     @Override
     public String getContextPath() {
-        return "/";
+        return this.settings.getContextPath().toString();
     }
 }

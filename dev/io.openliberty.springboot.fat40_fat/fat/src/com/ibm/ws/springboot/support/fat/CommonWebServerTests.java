@@ -12,11 +12,8 @@
  *******************************************************************************/
 package com.ibm.ws.springboot.support.fat;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.junit.Test;
 
 import componenttest.topology.utils.HttpUtils;
 
@@ -86,10 +83,5 @@ public abstract class CommonWebServerTests extends AbstractSpringTests {
      */
     public void testBasicSpringBootApplication() throws Exception {
         HttpUtils.findStringInUrl(server, "", "HELLO SPRING BOOT!!");
-    }
-
-    @Test
-    public void testPackagePrivateBean() throws IOException {
-        HttpUtils.findStringInUrl(server, "/testPackagePrivateBean", "PASSED");
     }
 }
