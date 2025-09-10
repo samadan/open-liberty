@@ -14,6 +14,7 @@ package io.openliberty.jakarta.validation.tck;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.time.Duration;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -103,6 +104,7 @@ public class ValidationTckLauncher {
                         .withPlatfromVersion("11")
                         .withSuiteFileName("tck-tests.xml")
                         .withAdditionalMvnProps(additionalProps)
+                        .withAppUndeployTimeout(Duration.ofSeconds(120))
                         .runTCK();
     }
 }
