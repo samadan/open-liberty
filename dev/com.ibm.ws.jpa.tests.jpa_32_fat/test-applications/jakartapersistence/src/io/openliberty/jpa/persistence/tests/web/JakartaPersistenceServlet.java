@@ -728,18 +728,18 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
-    @Ignore("Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884")
+    //Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884
     public void testSecondPrecision() throws Exception {
         deleteAllEntities(Event.class);
 
-        LocalDateTime original = LocalDateTime.of(2025, 6, 11, 12, 0, 0, 123_456_789); 
+        LocalDateTime original = LocalDateTime.of(2025, 6, 11, 12, 0, 0, 444_777_999); 
         Event event = new Event(1L, original);
 
         tx.begin();
         em.persist(event);
+        em.flush();
+        em.clear();
         tx.commit();
-
-        em.clear(); 
 
         Event result;
         try {
@@ -750,7 +750,7 @@ public class JakartaPersistenceServlet extends FATServlet {
             throw e;
         }
 
-        assertEquals(123_450_000, result.timestamp.getNano());
+        assertEquals(444_780_000, result.timestamp.getNano());
     }
 
     @Test
