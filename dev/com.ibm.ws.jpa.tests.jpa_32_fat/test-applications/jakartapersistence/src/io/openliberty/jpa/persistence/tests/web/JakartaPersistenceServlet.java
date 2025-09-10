@@ -730,6 +730,7 @@ public class JakartaPersistenceServlet extends FATServlet {
 
     @Test
     //Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884
+    @Ignore("Issue closed. Ignoring test as of now since Derby doesn't support fractional-second precision")
     public void testSecondPrecision() throws Exception {
         deleteAllEntities(Event.class);
 
