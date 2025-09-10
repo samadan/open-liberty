@@ -9,7 +9,7 @@
  *******************************************************************************/
 package io.openliberty.jpa.persistence.tests.web;
 
-
+import static componenttest.annotation.OnlyIfSysProp.DB_Not_Default;
 import static componenttest.annotation.SkipIfSysProp.DB_DB2;
 import static componenttest.annotation.SkipIfSysProp.DB_Oracle;
 import static componenttest.annotation.SkipIfSysProp.DB_SQLServer;
@@ -31,6 +31,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.Ignore;
 
+import componenttest.annotation.OnlyIfSysProp;
 import componenttest.annotation.SkipIfSysProp;
 import componenttest.app.FATServlet;
 import io.openliberty.jpa.persistence.tests.models.AsciiCharacter;
@@ -730,7 +731,7 @@ public class JakartaPersistenceServlet extends FATServlet {
 
     @Test
     //Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884
-    @Ignore("Issue closed. Ignoring test as of now since Derby doesn't support fractional-second precision")
+    @OnlyIfSysProp({ DB_Not_Default }) //Skips the test for Derby (default DB) as it doesn't support fractional-second precision
     public void testSecondPrecision() throws Exception {
         deleteAllEntities(Event.class);
 
