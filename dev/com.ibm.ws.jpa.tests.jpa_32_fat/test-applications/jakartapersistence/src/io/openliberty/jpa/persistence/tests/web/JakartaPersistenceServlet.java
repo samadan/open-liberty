@@ -182,7 +182,7 @@ public class JakartaPersistenceServlet extends FATServlet {
      * @throws Exception
      */
     @Test
-    @Ignore("https://github.com/OpenLiberty/open-liberty/issues/32688")
+    // Reference issue: https://github.com/OpenLiberty/open-liberty/issues/32688
     public void testEnumeratedValue() throws Exception {
 
         Ticket ticket1 = Ticket.of(1, "ticket1", TicketStatus.OPEN, Priority.HIGH);
