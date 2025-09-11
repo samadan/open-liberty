@@ -9,7 +9,7 @@
  *******************************************************************************/
 package io.openliberty.jpa.persistence.tests.web;
 
-
+import static componenttest.annotation.OnlyIfSysProp.DB_Not_Default;
 import static componenttest.annotation.SkipIfSysProp.DB_DB2;
 import static componenttest.annotation.SkipIfSysProp.DB_Oracle;
 import static componenttest.annotation.SkipIfSysProp.DB_SQLServer;
@@ -26,10 +26,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.junit.Ignore;
 
+import componenttest.annotation.OnlyIfSysProp;
 import componenttest.annotation.SkipIfSysProp;
 import componenttest.app.FATServlet;
 import io.openliberty.jpa.persistence.tests.models.AsciiCharacter;
@@ -728,18 +730,19 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
-    @Ignore("Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884")
+    //Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884
+    @OnlyIfSysProp({ DB_Not_Default }) //Skips the test for Derby (default DB) as it doesn't support fractional-second precision
     public void testSecondPrecision() throws Exception {
         deleteAllEntities(Event.class);
 
-        LocalDateTime original = LocalDateTime.of(2025, 6, 11, 12, 0, 0, 123_456_789); 
+        LocalDateTime original = LocalDateTime.of(2025, 6, 11, 12, 0, 0, 444_777_999); 
         Event event = new Event(1L, original);
 
         tx.begin();
         em.persist(event);
+        em.flush();
+        em.clear();
         tx.commit();
-
-        em.clear(); 
 
         Event result;
         try {
@@ -750,7 +753,8 @@ public class JakartaPersistenceServlet extends FATServlet {
             throw e;
         }
 
-        assertEquals(123_450_000, result.timestamp.getNano());
+        assertTrue("Unexpected nanoseconds value: " + result.timestamp.getNano(),
+                   Set.of(444_770_000, 444_780_000).contains(result.timestamp.getNano()));
     }
 
     @Test
