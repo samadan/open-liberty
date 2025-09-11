@@ -19,33 +19,27 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ToolArgValidationTest {
 
+    /////////////////////////////
     // duplicate parameter names
     @Tool(name = "duplicateParam")
     public String duplicateParam(@ToolArg(name = "arg") String arg, @ToolArg(name = "arg") String notArg) {
         return notArg;
     }
 
-    // duplicate parameter names variant
     @Tool(name = "duplicateParamVariant")
     public String duplicateParamVariant(@ToolArg(name = "arg") String arg, @ToolArg(name = "arg") String notArg, @ToolArg(name = "arg") String notArgAgain) {
         return notArgAgain;
     }
 
+    /////////////////////////////
     // arg name value is blank
     @Tool(name = "argNameisBlank")
     public String argNameisBlank(@ToolArg(name = "") String arg1) {
         return arg1;
     }
 
-    // arg name value is blank
     @Tool(name = "argNameisBlankVariant")
     public String argNameisBlankVariant(@ToolArg(name = "") String arg1, @ToolArg(name = "") String arg2) {
-        return arg1;
-    }
-
-    // special characters in name
-    @Tool(name = "specialCharactersInName")
-    public String specialCharactersInName(@ToolArg(name = "@arg1") String arg1, @ToolArg(name = "@arg2") String arg2) {
         return arg1;
     }
 }

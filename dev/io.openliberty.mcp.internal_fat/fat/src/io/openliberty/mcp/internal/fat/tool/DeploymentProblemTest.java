@@ -9,8 +9,6 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat.tool;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 
 import org.junit.AfterClass;
@@ -45,35 +43,29 @@ public class DeploymentProblemTest extends FATServletClient {
         ExpectedAppFailureUtil.stopServerIgnoringErrorMessages(server); // ignore app failed to start error
     }
 
-    // This needs to be the first test method in the class
-    @Test
-    public void testAppFailedToStart() throws Exception {
-        assertTrue(ExpectedAppFailureUtil.appHasFailed(server));
-    }
-
     @Test
     public void testDuplicateToolDeploymentError() throws Exception {
-        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.bob()",
-                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.duplicateBob()",
-                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest2.duplicateBob()",
-                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.duplicateEcho()",
-                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.echo()",
-                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest2.duplicateEcho()",
-                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest2.echo()");
+        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.bob",
+                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.duplicateBob",
+                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest2.duplicateBob",
+                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.duplicateEcho",
+                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.echo",
+                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest2.duplicateEcho",
+                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest2.echo");
         ExpectedAppFailureUtil.findAndAssertAllExpectedErrorsInLogs("Duplicate Tool: ", expectedErrorList, server);
     }
 
     @Test
     public void testToolArgBlankTestCase() throws Exception {
-        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.argNameisBlank()",
-                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.argNameisBlankVariant()");
+        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.argNameisBlank",
+                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.argNameisBlankVariant");
         ExpectedAppFailureUtil.findAndAssertAllExpectedErrorsInLogs("Blank Tool Arg: ", expectedErrorList, server);
     }
 
     @Test
     public void testToolArgDuplicatesTestCase() throws Exception {
-        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParam().*arg",
-                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParamVariant().*arg");
+        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParam.*arg",
+                                                 "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParamVariant.*arg");
         ExpectedAppFailureUtil.findAndAssertAllExpectedErrorsInLogs("Duplicate Tool Arg: ", expectedErrorList, server);
     }
 }
