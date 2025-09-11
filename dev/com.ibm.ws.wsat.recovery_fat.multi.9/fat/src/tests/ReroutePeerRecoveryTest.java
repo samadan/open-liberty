@@ -47,7 +47,8 @@ import componenttest.topology.utils.HttpUtils;
                        "java.io.IOException",
                        "java.io.EOFException",
                        "java.io.FileNotFoundException",
-                       "java.net.SocketException" })
+                       "java.net.SocketException",
+                       "java.nio.file.FileSystemException" })
 @RunWith(FATRunner.class)
 public class ReroutePeerRecoveryTest extends MultiRecoveryTest {
 
