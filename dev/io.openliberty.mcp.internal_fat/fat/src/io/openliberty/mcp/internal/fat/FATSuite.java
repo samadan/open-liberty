@@ -27,6 +27,7 @@ import io.openliberty.mcp.internal.fat.tool.CancellationTest;
 import io.openliberty.mcp.internal.fat.tool.DeploymentProblemTest;
 import io.openliberty.mcp.internal.fat.tool.DuplicateSpecialArgumentProblemTest;
 import io.openliberty.mcp.internal.fat.tool.InvalidSpecialArgumentProblemTest;
+import io.openliberty.mcp.internal.fat.tool.ToolErrorHandlingTest;
 import io.openliberty.mcp.internal.fat.tool.ToolTest;
 
 /**
@@ -42,6 +43,7 @@ import io.openliberty.mcp.internal.fat.tool.ToolTest;
                 InvalidSpecialArgumentProblemTest.class,
                 LifecycleTest.class,
                 ProtocolVersionTest.class,
+                ToolErrorHandlingTest.class,
                 ToolTest.class
 
 })
