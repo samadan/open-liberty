@@ -13,10 +13,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
@@ -34,13 +32,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                            String name, String title, String description, String qualifiedName,
                            List<Class<? extends Throwable>> businessExceptions) {
 
-    public enum ToolArgStatus {
-        BLANK,
-        DUPLICATE,
-        PASSED_VALIDATION
-    }
-
-    public record ArgumentMetadata(Type type, int index, String description, boolean required, ToolArgStatus toolArgumentStatus) {}
+    public record ArgumentMetadata(Type type, int index, String description, boolean required, boolean isDuplicate) {}
 
     public record SpecialArgumentMetadata(SpecialArgumentType type, int index) {}
 
@@ -62,29 +54,18 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
         Map<String, ArgumentMetadata> result = new HashMap<>();
-        Set<String> argNamesDuplicationCheck = new HashSet<>();
-
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo != null) {
                 String toolArgName = (pInfo.name().equals(Tool.ELEMENT_NAME)) ? p.getJavaParameter().getName() : pInfo.name(); // p.getJavaParameter().getName() needs java compiler -parameter flag to work
-                ToolArgStatus validationStatus = validateArgumentData(toolArgName, argNamesDuplicationCheck);
-                result.put(toolArgName, new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description(), pInfo.required(), validationStatus));
+                ArgumentMetadata ArgInfo = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description(), pInfo.required(), false);
+                boolean isDuplicateArg = result.put(toolArgName, ArgInfo) != null;
+                if (!toolArgName.isBlank() && isDuplicateArg) {
+                    result.put(toolArgName, new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description(), pInfo.required(), isDuplicateArg));
+                }
             }
         }
         return result.isEmpty() ? Collections.emptyMap() : result;
-    }
-
-    private static ToolArgStatus validateArgumentData(String toolArgName, Set<String> argNamesDuplicationCheck) {
-        if (toolArgName.equals(Tool.ELEMENT_NAME)) {
-            return ToolArgStatus.PASSED_VALIDATION;
-        } else if (toolArgName.isBlank()) {
-            return ToolArgStatus.BLANK;
-        }
-
-        boolean duplicateArgumentExists = !argNamesDuplicationCheck.add(toolArgName);
-        ToolArgStatus validationStatus = duplicateArgumentExists ? ToolArgStatus.DUPLICATE : ToolArgStatus.PASSED_VALIDATION;
-        return validationStatus;
     }
 
     private static List<SpecialArgumentMetadata> getSpecialArgumentList(AnnotatedMethod<?> method) {
@@ -98,5 +79,4 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         }
         return Collections.unmodifiableList(result);
     }
-
 }

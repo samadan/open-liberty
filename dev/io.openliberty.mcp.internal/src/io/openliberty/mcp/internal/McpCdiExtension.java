@@ -54,30 +54,25 @@ public class McpCdiExtension implements Extension {
         reportOnToolArgEdgeCases(afterDeploymentValidation);
     }
 
+    /**
+     * @param afterDeploymentValidation
+     */
     private void reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
-
         StringBuilder sbBlankArgs = new StringBuilder("Blank arguments found in MCP Tool:");
         StringBuilder sbDuplicateArgs = new StringBuilder("Duplicate arguments found in MCP Tool:");
         boolean blankArgumentsFound = false;
         boolean duplicateArgumentsFound = false;
 
-        for (ToolMetadata tmd : tools.getAllTools()) {
-            Map<String, ArgumentMetadata> arguments = tmd.arguments();
-            for (String argName : arguments.keySet()) {
-                ArgumentMetadata argMetadata = arguments.get(argName);
+        for (ToolMetadata tool : tools.getAllTools()) {
+            Map<String, ArgumentMetadata> arguments = tool.arguments();
 
-                switch (argMetadata.toolArgumentStatus()) {
-                    case PASSED_VALIDATION:
-                        break;
-                    case BLANK:
-                        sbBlankArgs.append("\n").append("Tool: " + tmd.qualifiedName());
-                        blankArgumentsFound = true;
-                        break;
-                    case DUPLICATE:
-                        sbDuplicateArgs.append("\n").append("Tool: " + tmd.qualifiedName() + " -  Argument: " + argName);
-                        duplicateArgumentsFound = true;
-                        break;
-                    default: //unsupported (ignore)
+            for (String argName : arguments.keySet()) {
+                if (argName.isBlank()) {
+                    sbBlankArgs.append("\n").append("Tool: " + tool.qualifiedName());
+                    blankArgumentsFound = true;
+                } else if (arguments.get(argName).isDuplicate()) {
+                    sbDuplicateArgs.append("\n").append("Tool: " + tool.qualifiedName() + " -  Argument: " + argName);
+                    duplicateArgumentsFound = true;
                 }
             }
         }
