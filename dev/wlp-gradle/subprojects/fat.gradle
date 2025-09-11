@@ -198,6 +198,7 @@ if (!hasMultipleSuites) {
 }
 
 task autoFVT {
+  shouldRunAfter cleanFat
   dependsOn jar
   dependsOn ':cnf:copyMavenLibs'
   dependsOn addRequiredLibraries
