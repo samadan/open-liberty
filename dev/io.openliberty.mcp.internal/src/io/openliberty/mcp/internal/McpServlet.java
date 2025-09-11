@@ -159,6 +159,9 @@ public class McpServlet extends HttpServlet {
             if (isBusinessException(t, params)) {
                 transport.sendResponse(toErrorResponse(e.getCause()));
             } else {
+                Tr.error(tc, "The {0} tool method threw an unexpected exception. The exception was {1}",
+                         params.getMetadata().name(),
+                         e.getCause());
                 transport.sendResponse(ToolResponse.error("Internal server error"));
             }
         } catch (IllegalAccessException e) {
