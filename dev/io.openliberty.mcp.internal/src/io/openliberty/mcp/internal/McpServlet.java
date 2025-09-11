@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -247,9 +248,18 @@ public class McpServlet extends HttpServlet {
      * @return
      * @throws IOException
      */
+    @FFDCIgnore(NoSuchElementException.class)
     private void initialize(McpTransport transport) throws IOException {
         McpInitializeParams params = transport.getParams(McpInitializeParams.class);
-        // TODO validate protocol
+
+        McpProtocolVersion version;
+        try {
+            version = McpProtocolVersion.parse(params.getProtocolVersion());
+        } catch (NoSuchElementException e) {
+            // Client requested version not supported
+            // Respond with our preferred version
+            version = McpProtocolVersion.V_2025_06_18;
+        }
         // TODO store client capabilities
         // TODO store client info
 
@@ -257,7 +267,7 @@ public class McpServlet extends HttpServlet {
 
         // TODO: provide a way for the user to set server info
         ServerInfo info = new ServerInfo("test-server", "Test Server", "0.1");
-        McpInitializeResult result = new McpInitializeResult("2025-06-18", caps, info, null);
+        McpInitializeResult result = new McpInitializeResult(version, caps, info, null);
         transport.sendResponse(result);
     }
 
