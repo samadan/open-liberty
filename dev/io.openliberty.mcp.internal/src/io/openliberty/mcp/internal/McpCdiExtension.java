@@ -12,6 +12,9 @@ package io.openliberty.mcp.internal;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+
 import io.openliberty.mcp.annotations.Tool;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
@@ -27,11 +30,12 @@ import jakarta.enterprise.inject.spi.ProcessManagedBean;
  */
 public class McpCdiExtension implements Extension {
 
+    private static final TraceComponent tc = Tr.register(McpCdiExtension.class);
+
     private ToolRegistry tools = new ToolRegistry();
     private ConcurrentHashMap<String, LinkedList<String>> duplicateToolsMap = new ConcurrentHashMap<>();
 
     void registerTools(@Observes ProcessManagedBean<?> pmb) {
-        // TODO: limit this to just bean types with Tool annotations?
         AnnotatedType<?> type = pmb.getAnnotatedBeanClass();
         Class<?> javaClass = type.getJavaClass();
         for (AnnotatedMethod<?> m : type.getMethods()) {
@@ -65,6 +69,13 @@ public class McpCdiExtension implements Extension {
         ToolMetadata toolmd = ToolMetadata.createFrom(tool, bean, method);
         duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(qualifiedName + "." + method.getJavaMember().getName() + "()");
         tools.addTool(toolmd);
+        if (TraceComponent.isAnyTracingEnabled()) {
+            if (tc.isDebugEnabled()) {
+                Tr.debug(this, tc, "Registered tool: " + toolmd.name(), toolmd);
+            } else if (tc.isEventEnabled()) {
+                Tr.event(this, tc, "Registered tool: " + toolmd.name(), method);
+            }
+        }
     }
 
     public ToolRegistry getToolRegistry() {

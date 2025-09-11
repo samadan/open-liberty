@@ -124,17 +124,27 @@ public class McpServlet extends HttpServlet {
     private void callTool(McpTransport transport) {
         RequestId requestId = createOngoingRequestId(transport);
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
+
         if (params.getMetadata() == null) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                Tr.event(this, tc, "Attempt to call non-existant tool: " + params.getName());
+            }
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
         }
+
         CreationalContext<Object> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
             Object[] arguments = params.getArguments(jsonb);
             addSpecialArguments(arguments, requestId, params.getMetadata());
-            Object result = params.getMethod().invoke(bean, arguments);
+
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                Tr.event(this, tc, "Calling tool " + params.getMetadata().name(), arguments);
+            }
 
             // Call the tool method
+            Object result = params.getMethod().invoke(bean, arguments);
+
             boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
 
             // Map method response to a ToolResponse
@@ -263,6 +273,10 @@ public class McpServlet extends HttpServlet {
         // TODO store client capabilities
         // TODO store client info
 
+        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            Tr.event(this, tc, "Client initializing: " + params.getClientInfo(), params.getCapabilities());
+        }
+
         ServerCapabilities caps = ServerCapabilities.of(new Capabilities.Tools(false));
 
         // TODO: provide a way for the user to set server info
@@ -272,6 +286,9 @@ public class McpServlet extends HttpServlet {
     }
 
     private void initialized(McpTransport transport) {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            Tr.event(this, tc, "Client initialized");
+        }
         transport.sendEmptyResponse();
     }
 
@@ -284,9 +301,15 @@ public class McpServlet extends HttpServlet {
         RequestId requestId = new RequestId(notificationParams.getRequestId(), transport.getRequestIpAddress());
         Optional<String> reason = Optional.ofNullable(notificationParams.getReason());
 
-        Cancellation cancellation = connection.getOngoingRequestCancellation(requestId);
+        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            Tr.event(this, tc, "Cancellation requested for " + requestId);
+        }
 
+        Cancellation cancellation = connection.getOngoingRequestCancellation(requestId);
         if (cancellation != null) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                Tr.event(this, tc, "Cancelling task");
+            }
             ((CancellationImpl) cancellation).cancel(reason);
         }
         transport.sendEmptyResponse();
