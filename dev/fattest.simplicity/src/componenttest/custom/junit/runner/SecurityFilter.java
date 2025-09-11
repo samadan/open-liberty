@@ -26,7 +26,8 @@ import componenttest.topology.utils.FATServletClient;
 import componenttest.topology.utils.PrivHelper;
 
 /**
- * Filter tests based on security system properties.
+ * Filter tests based on the attributes configured on the
+ * {@link SkipForSecurity} annotation
  */
 public class SecurityFilter extends Filter {
 
@@ -129,7 +130,8 @@ public class SecurityFilter extends Filter {
     private String getRuntimeForServer(Description desc) {
         Class<?> testClass = FilterUtils.getTestClass(desc, c);
 
-        // Someone might have put the SkipForSecurity on a test class that does not have a @Server field.
+        // Someone might have put the SkipForSecurity on a test class that we don't expect
+        // to have a @Server field
         if (!FATServletClient.class.isAssignableFrom(testClass)) {
             throw new IllegalStateException("The @SkipForSecurity annotation is only valid on a "
                                             + "FATServletClient test class and it's methods. The testClass "

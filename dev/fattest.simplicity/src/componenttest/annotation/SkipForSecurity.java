@@ -34,7 +34,7 @@ import componenttest.topology.impl.JavaInfo;
  * </p>
  * <p>
  * If a runtimeName is specified, {@link JavaInfo#runtimeName()} will be used to determine
- * if the current runtime's runtimeName contains the configured value [CASE SENSITIVE].
+ * if the server runtime's runtimeName contains the configured value [CASE SENSITIVE].
  * The default value is an empty string, which is this case will match any runtime name.
  * </p>
  *

@@ -37,7 +37,7 @@ import componenttest.topology.utils.FATServletClient;
 import jakarta.servlet.annotation.WebServlet;
 
 /**
- *
+ * Tests for the {@link SecurityFilter}
  */
 public class SecurityFilterTests {
 
@@ -213,7 +213,6 @@ public class SecurityFilterTests {
     }
 
     // ----
-
     public static class RuntimeTestsInClass extends FATServletClient {
         @Server("FAKE.SERVER")
         public static LibertyServer NOOP;
@@ -269,5 +268,4 @@ public class SecurityFilterTests {
 
         return mockLibertyServerFactory;
     }
-
 }
