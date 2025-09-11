@@ -1082,6 +1082,23 @@ public class ToolTest extends FATServletClient {
                                         "name": "testToolArgIsNotRequired",
                                         "description": "ToolArgNotRequired",
                                         "title": "ToolArgNotRequired"
+                                     },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "input": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "input"
+                                            ]
+                                        },
+
+                                        "name": "staticInnerTool",
+                                        "description": "Defined in static inner class",
+                                        "title": "Static Inner Tool"
                                       },
                                 ]
                             },
@@ -1745,6 +1762,43 @@ public class ToolTest extends FATServletClient {
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello World"}], "isError": false}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Test
+    public void testStaticInnerTool() throws Exception {
+        String request = """
+                        {
+                          "id": "2",
+                          "jsonrpc": "2.0",
+                          "method": "tools/call",
+                          "params": {
+                            "name": "staticInnerTool",
+                            "arguments": {
+                              "input": "World"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+
+        String expectedResponseString = """
+                                                  {
+                                                  "id":"2",
+                                                  "jsonrpc":"2.0",
+                                                  "result": {
+                                                    "content": [
+                                                      {
+                                                        "type":"text",
+                                                        "text":"Hello World"
+                                                      }
+                                                    ],
+                                                    "isError": false
+                                                  }
+                                                }
+                        """;
+
+        JSONAssert.assertEquals(expectedResponseString, response, false);
     }
 
 }
