@@ -11,9 +11,7 @@ package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.DISABLE_VALIDATION;
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
-import static org.junit.Assert.assertFalse;
-
-import java.util.List;
+import static org.junit.Assert.assertTrue;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -29,6 +27,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import io.openliberty.mcp.internal.fat.tool.duplicateToolErrorTestApps.DuplicateToolErrorTest;
+import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
 /**
  *
@@ -53,10 +52,27 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @Test
     public void testDuplicateToolDeploymentError() throws Exception {
-        List<String> logLines = server.findStringsInLogs("More than one MCP tool has the same name");
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 1,
+                          "method": "tools/list",
+                          "params": {
+                            "cursor": "optional-cursor-value"
+                          }
+                        }
+                        """;
 
-        logLines.forEach(line -> System.out.println("Log: " + line));
+        boolean deploymentErrorOccured = false;
 
-        assertFalse("Expected duplicate tool error log line not found", logLines.isEmpty());
+        try {
+            HttpTestUtils.callMCP(server, "/toolTest", request);
+        } catch (Exception e) {
+            if (!server.findStringsInLogs("More than one MCP tool has the same name").isEmpty()) {
+                deploymentErrorOccured = true;
+            }
+        }
+
+        assertTrue("Expected a deployment error due to duplicate MCP Tools being present, no error was present", deploymentErrorOccured);
     }
 }
