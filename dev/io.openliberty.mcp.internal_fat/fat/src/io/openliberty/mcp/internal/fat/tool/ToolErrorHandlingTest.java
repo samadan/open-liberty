@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
+import static org.junit.Assert.assertNotNull;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -345,7 +346,7 @@ public class ToolErrorHandlingTest extends FATServletClient {
 
         JSONAssert.assertEquals(expectedResponse, response, true);
 
-        server.waitForStringInLogUsingMark("Unwrapped checked error for: abc", server.getDefaultLogFile());
+        assertNotNull(server.waitForStringInLogUsingMark("Unwrapped checked error for: abc", server.getDefaultLogFile()));
     }
 
     @Test
