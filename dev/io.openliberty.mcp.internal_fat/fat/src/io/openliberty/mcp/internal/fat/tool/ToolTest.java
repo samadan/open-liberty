@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.fat.tool;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
+import static org.junit.Assert.assertNotNull;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -1139,7 +1140,7 @@ public class ToolTest extends FATServletClient {
                         {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Internal server error"}], "isError": true}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
-        server.waitForStringInLogUsingMark("Method call caused runtime exception", server.getDefaultLogFile());
+        assertNotNull(server.waitForStringInLogUsingMark("Method call caused runtime exception", server.getDefaultLogFile()));
     }
 
     @Test
