@@ -10,12 +10,14 @@
 package io.openliberty.mcp.internal;
 
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 
 import io.openliberty.mcp.annotations.Tool;
+import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
@@ -41,13 +43,48 @@ public class McpCdiExtension implements Extension {
         for (AnnotatedMethod<?> m : type.getMethods()) {
             Tool toolAnnotation = m.getAnnotation(Tool.class);
             if (toolAnnotation != null) {
-                registerTool(toolAnnotation, pmb.getBean(), m, javaClass.getName());
+                //String qualifiedName = javaClass.getName() + "." + m.getJavaMember().getName();
+                registerTool(toolAnnotation, pmb.getBean(), m);
             }
         }
     }
 
     void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
+        reportOnDuplicateTools(afterDeploymentValidation);
+        reportOnToolArgEdgeCases(afterDeploymentValidation);
+    }
 
+    /**
+     * @param afterDeploymentValidation
+     */
+    private void reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
+        StringBuilder sbBlankArgs = new StringBuilder("Blank arguments found in MCP Tool:");
+        StringBuilder sbDuplicateArgs = new StringBuilder("Duplicate arguments found in MCP Tool:");
+        boolean blankArgumentsFound = false;
+        boolean duplicateArgumentsFound = false;
+
+        for (ToolMetadata tool : tools.getAllTools()) {
+            Map<String, ArgumentMetadata> arguments = tool.arguments();
+
+            for (String argName : arguments.keySet()) {
+                if (argName.isBlank()) {
+                    sbBlankArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
+                    blankArgumentsFound = true;
+                } else if (arguments.get(argName).isDuplicate()) {
+                    sbDuplicateArgs.append("\n").append("Tool: " + tool.getToolQualifiedName() + " -  Argument: " + argName);
+                    duplicateArgumentsFound = true;
+                }
+            }
+        }
+        if (blankArgumentsFound) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception(sbBlankArgs.toString()));
+        }
+        if (duplicateArgumentsFound) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception(sbDuplicateArgs.toString()));
+        }
+    }
+
+    private void reportOnDuplicateTools(AfterDeploymentValidation afterDeploymentValidation) {
         // prune items that are not duplicates
         duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
         StringBuilder sb = new StringBuilder("More than one MCP tool has the same name: \n");
@@ -65,9 +102,9 @@ public class McpCdiExtension implements Extension {
         }
     }
 
-    private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method, String qualifiedName) {
+    private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method) {
         ToolMetadata toolmd = ToolMetadata.createFrom(tool, bean, method);
-        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(qualifiedName + "." + method.getJavaMember().getName() + "()");
+        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(toolmd.getToolQualifiedName());
         tools.addTool(toolmd);
         if (TraceComponent.isAnyTracingEnabled()) {
             if (tc.isDebugEnabled()) {
