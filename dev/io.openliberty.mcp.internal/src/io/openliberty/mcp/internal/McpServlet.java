@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -123,17 +124,27 @@ public class McpServlet extends HttpServlet {
     private void callTool(McpTransport transport) {
         RequestId requestId = createOngoingRequestId(transport);
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
+
         if (params.getMetadata() == null) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                Tr.event(this, tc, "Attempt to call non-existant tool: " + params.getName());
+            }
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
         }
+
         CreationalContext<Object> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
             Object[] arguments = params.getArguments(jsonb);
             addSpecialArguments(arguments, requestId, params.getMetadata());
-            Object result = params.getMethod().invoke(bean, arguments);
+
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                Tr.event(this, tc, "Calling tool " + params.getMetadata().name(), arguments);
+            }
 
             // Call the tool method
+            Object result = params.getMethod().invoke(bean, arguments);
+
             boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
 
             // Map method response to a ToolResponse
@@ -247,21 +258,37 @@ public class McpServlet extends HttpServlet {
      * @return
      * @throws IOException
      */
+    @FFDCIgnore(NoSuchElementException.class)
     private void initialize(McpTransport transport) throws IOException {
         McpInitializeParams params = transport.getParams(McpInitializeParams.class);
-        // TODO validate protocol
+
+        McpProtocolVersion version;
+        try {
+            version = McpProtocolVersion.parse(params.getProtocolVersion());
+        } catch (NoSuchElementException e) {
+            // Client requested version not supported
+            // Respond with our preferred version
+            version = McpProtocolVersion.V_2025_06_18;
+        }
         // TODO store client capabilities
         // TODO store client info
+
+        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            Tr.event(this, tc, "Client initializing: " + params.getClientInfo(), params.getCapabilities());
+        }
 
         ServerCapabilities caps = ServerCapabilities.of(new Capabilities.Tools(false));
 
         // TODO: provide a way for the user to set server info
         ServerInfo info = new ServerInfo("test-server", "Test Server", "0.1");
-        McpInitializeResult result = new McpInitializeResult("2025-06-18", caps, info, null);
+        McpInitializeResult result = new McpInitializeResult(version, caps, info, null);
         transport.sendResponse(result);
     }
 
     private void initialized(McpTransport transport) {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            Tr.event(this, tc, "Client initialized");
+        }
         transport.sendEmptyResponse();
     }
 
@@ -274,9 +301,15 @@ public class McpServlet extends HttpServlet {
         RequestId requestId = new RequestId(notificationParams.getRequestId(), transport.getRequestIpAddress());
         Optional<String> reason = Optional.ofNullable(notificationParams.getReason());
 
-        Cancellation cancellation = connection.getOngoingRequestCancellation(requestId);
+        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+            Tr.event(this, tc, "Cancellation requested for " + requestId);
+        }
 
+        Cancellation cancellation = connection.getOngoingRequestCancellation(requestId);
         if (cancellation != null) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                Tr.event(this, tc, "Cancelling task");
+            }
             ((CancellationImpl) cancellation).cancel(reason);
         }
         transport.sendEmptyResponse();
