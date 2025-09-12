@@ -43,7 +43,7 @@ public class SecurityFilter extends Filter {
     @Override
     public boolean shouldRun(Description desc) {
         boolean result = true; // default
-        String reason;
+        String reason = "";
 
         do {
             // Test: does method or class have the @SkipForSecurity annotation?
@@ -53,33 +53,35 @@ public class SecurityFilter extends Filter {
             }
 
             if (anno == null) {
-                reason = "Annotation @SkipForSecurity not present on method nor class";
+                reason += "Annotation @SkipForSecurity not present on method nor class";
                 break; // default true
             }
 
             // Test: does configured property match system state?
-            String property = anno.property();
-            boolean isPropertyEnabled;
+            String[] properties = anno.property();
+            boolean arePropertiesEnabled = true;
 
-            if (property.contains("=")) {
-                String[] key_value = anno.property().split("=", 2);
-                String actual = PrivHelper.getProperty(key_value[0]);
-                isPropertyEnabled = key_value[1].equals(actual);
-                reason = "The property " + key_value[0]
-                         + " had a value of " + actual
-                         + " expected " + key_value[1] + ".";
-            } else {
-                String actual = PrivHelper.getProperty(property);
-                isPropertyEnabled = Boolean.parseBoolean(actual);
-                reason = "The property " + property
-                         + " had a value of " + actual
-                         + " expected true.";
+            for (String property : properties) {
+                if (property.contains("=")) {
+                    String[] key_value = property.split("=", 2);
+                    String actual = PrivHelper.getProperty(key_value[0]);
+                    arePropertiesEnabled &= key_value[1].equals(actual);
+                    reason += "The property " + key_value[0]
+                              + " had a value of " + actual
+                              + " expected " + key_value[1] + ". ";
+                } else {
+                    String actual = PrivHelper.getProperty(property);
+                    arePropertiesEnabled &= Boolean.parseBoolean(actual);
+                    reason += "The property " + property
+                              + " had a value of " + actual
+                              + " expected true. ";
+                }
             }
 
-            if (isPropertyEnabled) {
-                reason = "Property matched: " + reason;
+            if (arePropertiesEnabled) {
+                reason = "All properties matched: " + reason;
             } else {
-                reason = "Property did not match: " + reason;
+                reason = "At least one property did not match: " + reason;
                 break; // default true
             }
 

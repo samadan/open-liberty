@@ -268,4 +268,37 @@ public class SecurityFilterTests {
 
         return mockLibertyServerFactory;
     }
+
+    // ----
+    public static class MultiplePropertyClass extends FATServletClient {
+        @Server("FAKE.SERVER")
+        public static LibertyServer NOOP;
+
+        @Test
+        @SkipForSecurity(property = { "sec.prop.true", "sec.prop.value=value" })
+        public void testShouldNotRunMultipleTrue() {}
+
+        @Test
+        @SkipForSecurity(property = { "sec.prop.false", "sec.prop.value=value" })
+        public void testShouldNotRunOneFalseOneTrue() {}
+
+        @Test
+        @SkipForSecurity(property = { "sec.prop.false", "sec.prop.value=notvalue" })
+        public void testShouldNotRunMultipleFalse() {}
+    }
+
+    @Test
+    public void testSecurityFilterMultipleProperties() throws Exception {
+        Description test1 = createDescriptionForTest(MultiplePropertyClass.class, "testShouldNotRunMultipleTrue");
+        assertFalse("Test should not have run since all system properties were true.",
+                    filter.shouldRun(test1));
+
+        Description test2 = createDescriptionForTest(MultiplePropertyClass.class, "testShouldNotRunOneFalseOneTrue");
+        assertTrue("Test should have run since one system property was false.",
+                   filter.shouldRun(test2));
+
+        Description test3 = createDescriptionForTest(MultiplePropertyClass.class, "testShouldNotRunMultipleFalse");
+        assertTrue("Test should have run since all system properties were false.",
+                   filter.shouldRun(test2));
+    }
 }

@@ -26,11 +26,15 @@ import componenttest.topology.impl.JavaInfo;
  *
  * <p>
  * If a property is specified with [key]=[value] format, System.getProperty(key) must return
- * a string value that equalsIgnoreCase the [value].
+ * a string value that equalsIgnoreCase the [value], for the test to be skipped.
  * </p>
  * <p>
  * If a property is specified with only a [key], System.getProperty(key) must return
- * a non-null boolean string 'true' or 'false'.
+ * a non-null boolean string 'true', for the test to be skipped.
+ * </p>
+ * <p>
+ * If more than one property is specified then all properties must meet the above requirements
+ * for the test to be skipped (logical AND).
  * </p>
  * <p>
  * If a runtimeName is specified, {@link JavaInfo#runtimeName()} will be used to determine
@@ -58,7 +62,7 @@ public @interface SkipForSecurity {
     /**
      * A boolean system property, or a key-value system property
      */
-    String property();
+    String[] property();
 
     /**
      * A JVM runtime name that supports the system property attribute
