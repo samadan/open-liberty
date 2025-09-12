@@ -12,7 +12,6 @@ package io.openliberty.mcp.internal.schemas;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
-import java.util.Objects;
 
 import io.openliberty.mcp.internal.McpCdiExtension;
 import io.openliberty.mcp.internal.ToolMetadata;
@@ -75,20 +74,7 @@ public class SchemaRegistryTwo {
 
     public interface SchemaKey {}
 
-    public record ClassKey(Class<?> cls, SchemaDirection direction) implements SchemaKey {
-        @Override
-        public boolean equals(Object obj) {
-            ClassKey givenClass = (ClassKey) obj;
-            return givenClass.cls().getCanonicalName() == cls.getCanonicalName();
-
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(cls.getCanonicalName());
-        }
-
-    };
+    public record ClassKey(Class<?> cls, SchemaDirection direction) implements SchemaKey {};
 
     public record ToolKey(ToolMetadata tool, SchemaDirection direction) implements SchemaKey {};
 

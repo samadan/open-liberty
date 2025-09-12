@@ -13,5 +13,5 @@ package io.openliberty.mcp.internal.schemas;
  *
  */
 public enum SchemaDirection {
-    INPUT, OUTPUT, INPUT_OUTPUT
+    INPUT, OUTPUT
 };

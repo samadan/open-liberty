@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Utility methods for inspecting types
@@ -46,11 +47,25 @@ public class TypeUtility {
      * <p>
      * If {@code rootType} is a parameterized type, then {@code T} may be type variables of {@code rootType}.
      *
-     * @param rootType the type that extends {@code List}
-     * @return the parameter type of {@code List}
+     * @param rootType the type that extends {@code Collection}
+     * @return the parameter type of {@code Collection}
      */
     public static Type getCollectionType(Type rootType) {
         List<Type> route = getRouteToType(rootType, Collection.class);
+        Type[] resolvedParameters = resolveTypeArguments(route);
+        return resolvedParameters[0];
+    }
+
+    /**
+     * Given a type which extends {@code Optional<T>}, find the parameter type {@code T}.
+     * <p>
+     * If {@code rootType} is a parameterized type, then {@code T} may be type variables of {@code rootType}.
+     *
+     * @param rootType the type that extends {@code Optional}
+     * @return the parameter type of {@code Optional}
+     */
+    public static Type getOptionalType(Type rootType) {
+        List<Type> route = getRouteToType(rootType, Optional.class);
         Type[] resolvedParameters = resolveTypeArguments(route);
         return resolvedParameters[0];
     }

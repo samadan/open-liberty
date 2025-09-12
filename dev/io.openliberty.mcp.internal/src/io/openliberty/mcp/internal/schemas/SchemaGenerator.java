@@ -9,15 +9,18 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.schemas;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.internal.ToolMetadata;
@@ -32,6 +35,7 @@ import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.MapPsuedoSchema
 import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.OptionalPsuedoSchema;
 import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.PrimitivePsuedoSchema;
 import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.PsuedoSchema;
+import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.SchemaInfo;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
@@ -40,62 +44,41 @@ import jakarta.json.bind.JsonbException;
  *
  */
 public class SchemaGenerator {
-    public static Map<TypeKey, PsuedoSchema> cache = new HashMap<>();
+    public static Map<Type, PsuedoSchema> cache = new HashMap<>();
 
     private static Jsonb jsonb = JsonbBuilder.create();
 
-    public record TypeKey(Type type, SchemaDirection direction) {}
-
     public static String generateSchema(Class<?> cls, SchemaDirection direction) {
         Schema schema = cls.getAnnotation(Schema.class);
-        if (schema != null && schema.value() != Schema.UNSET) {
+        if (schema != null && !schema.value().equals(Schema.UNSET)) {
             try {
                 JsonSchema resultObj = jsonb.fromJson(schema.value(), JsonSchema.class);
                 return schema.value();
             } catch (JsonbException e) {
-                throw new RuntimeException("Schema annotation not valid: " + cls.getName());
+                throw new RuntimeException("Schema annotation not valid: " + cls.getName(), e);
             }
 
         } else {
             String description = null;
-            if (schema != null && schema.description() != Schema.UNSET) {
+            if (schema != null && !schema.description().equals(Schema.UNSET)) {
                 description = schema.description();
             }
-            TypeKey tmpTKIn = new TypeKey(cls, SchemaDirection.INPUT);
-            TypeKey tmpTKOut = new TypeKey(cls, SchemaDirection.OUTPUT);
-            if (cls.isRecord()) {
-                PsuedoSchema ps = PsuedoSchemaGenerator.generateBaseClassPsuedoSchema(cls, SchemaDirection.INPUT_OUTPUT);
-                cache.put(tmpTKIn, ps);
-                cache.put(tmpTKOut, ps);
-            } else {
-                cache.put(tmpTKIn, PsuedoSchemaGenerator.generateBaseClassPsuedoSchema(cls, SchemaDirection.INPUT));
-                cache.put(tmpTKOut, PsuedoSchemaGenerator.generateBaseClassPsuedoSchema(cls, SchemaDirection.OUTPUT));
-            }
+            ClassPsuedoSchema classPs = PsuedoSchemaGenerator.generateClassPsuedoSchema(cls);
+            cache.put(cls, PsuedoSchemaGenerator.generateClassPsuedoSchema(cls));
 
-            List<FieldInfo> fields;
-
-            for (FieldInfo fi : ((ClassPsuedoSchema) cache.get(tmpTKIn)).fields()) {
+            for (FieldInfo fi : classPs.inputFields()) {
                 generatePsuedoSchema(fi.type());
             }
-            for (FieldInfo fi : ((ClassPsuedoSchema) cache.get(tmpTKOut)).fields()) {
+            for (FieldInfo fi : classPs.outputFields()) {
                 generatePsuedoSchema(fi.type());
             }
 
-            HashMap<TypeKey, Boolean> typeFrequency = new HashMap<>();
-            HashMap<String, Integer> nameGenerator = new HashMap<>();
-            HashMap<TypeKey, String> nameMap = new HashMap<>();
-            switch (direction) {
-                case INPUT -> calculateClassFrequency(tmpTKIn, typeFrequency, nameGenerator, nameMap);
-                case OUTPUT -> calculateClassFrequency(tmpTKOut, typeFrequency, nameGenerator, nameMap);
-            }
-            HashMap<TypeKey, JsonSchema> defsBuilder = new HashMap<>();
+            SchemaGenerationContext ctx = new SchemaGenerationContext();
+            calculateClassFrequency(cls, direction, ctx);
 
             JsonSchema result = null;
 
-            switch (direction) {
-                case INPUT -> result = cache.get(tmpTKIn).toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, true, description);
-                case OUTPUT -> result = cache.get(tmpTKOut).toJsonSchemaObject(direction, nameMap, typeFrequency, defsBuilder, true, description);
-            }
+            result = classPs.toJsonSchemaObject(direction, ctx, true, description);
             return jsonb.toJson(result);
         }
 
@@ -105,11 +88,8 @@ public class SchemaGenerator {
         // create base schema components
         Map<String, JsonSchema> properties = new HashMap<>();
         List<String> required = new ArrayList<>();
-        HashMap<TypeKey, JsonSchema> defsBuilder = new HashMap<>();
         Parameter[] parameters = tool.method().getJavaMember().getParameters();
-        HashMap<TypeKey, String> nameMap = new HashMap<>();
-        HashMap<TypeKey, Boolean> typeFrequency = new HashMap<>();
-        HashMap<String, Integer> nameGenerator = new HashMap<>();
+        SchemaGenerationContext ctx = new SchemaGenerationContext();
 
         // for each parameter
         for (ArgumentMetadata argument : tool.arguments().values()) {
@@ -120,10 +100,9 @@ public class SchemaGenerator {
 
         for (ArgumentMetadata argument : tool.arguments().values()) {
             // - create a pseudo schema
-            Parameter type = parameters[argument.index()];
+            Parameter parameter = parameters[argument.index()];
 
-            TypeKey key = new TypeKey(type.getParameterizedType(), SchemaDirection.INPUT);
-            calculateClassFrequency(key, typeFrequency, nameGenerator, nameMap);
+            calculateClassFrequency(parameter.getParameterizedType(), SchemaDirection.INPUT, ctx);
         }
 
         for (var entry : tool.arguments().entrySet()) {
@@ -131,10 +110,10 @@ public class SchemaGenerator {
             ArgumentMetadata argument = entry.getValue();
             Parameter type = parameters[argument.index()];
 
-            TypeKey key = new TypeKey(type.getParameterizedType(), SchemaDirection.INPUT);
-            PsuedoSchema ps = cache.get(key);
+            PsuedoSchema ps = cache.get(type.getParameterizedType());
 
-            JsonSchema parameterSchema = ps.toJsonSchemaObject(SchemaDirection.INPUT, nameMap, typeFrequency, defsBuilder, false, argument.description());
+            JsonSchema parameterSchema = ps.toJsonSchemaObject(SchemaDirection.INPUT, ctx, false, null);
+            parameterSchema = SchemaUtils.addDescriptionToJsonSchema(parameterSchema, argument.description());
             // - add it as a property
             properties.put(argumentName, parameterSchema);
             // - add it as required (if it is)
@@ -143,78 +122,61 @@ public class SchemaGenerator {
             }
         }
         HashMap<String, JsonSchema> defs = new HashMap<>();
-        defsBuilder.forEach((k, v) -> defs.put(nameMap.get(k), v));
+        ctx.getDefs().forEach((k, v) -> defs.put(ctx.getName(k), v));
         JsonSchemaObject rootSchema = new JsonSchemaObject("object", null, properties, required, defs.isEmpty() ? null : defs, null);
         return jsonb.toJson(rootSchema);
     }
 
     public static String generateToolOutputSchema(ToolMetadata tool) {
-        HashMap<TypeKey, JsonSchema> defsBuilder = new HashMap<>();
-        HashMap<TypeKey, String> nameMap = new HashMap<>();
-        HashMap<TypeKey, Boolean> typeFrequency = new HashMap<>();
-        HashMap<String, Integer> nameGenerator = new HashMap<>();
+        SchemaGenerationContext ctx = new SchemaGenerationContext();
 
         Type returnType = tool.method().getJavaMember().getGenericReturnType();
+        Annotation[] annotations = tool.method().getJavaMember().getAnnotatedReturnType().getAnnotations();
+        SchemaInfo returnSchemaAnn = SchemaInfo.read(annotations);
+        String description = returnSchemaAnn.description().orElse(null);
         generatePsuedoSchema(returnType);
-        TypeKey key = new TypeKey(returnType, SchemaDirection.OUTPUT);
-        calculateClassFrequency(key, typeFrequency, nameGenerator, nameMap);
+        calculateClassFrequency(returnType, SchemaDirection.OUTPUT, ctx);
 
-        PsuedoSchema ps = cache.get(key);
-        JsonSchema outputSchema = ps.toJsonSchemaObject(SchemaDirection.OUTPUT, nameMap, typeFrequency, defsBuilder, true, null);
+        PsuedoSchema ps = cache.get(returnType);
+        JsonSchema outputSchema = ps.toJsonSchemaObject(SchemaDirection.OUTPUT, ctx, true, null);
+        outputSchema = SchemaUtils.addDescriptionToJsonSchema(outputSchema, description);
         return jsonb.toJson(outputSchema);
     }
 
     public static void generatePsuedoSchema(Type type) {
-        TypeKey tmpTKIn = new TypeKey(type, SchemaDirection.INPUT);
-        TypeKey tmpTKOut = new TypeKey(type, SchemaDirection.OUTPUT);
-        if (!cache.containsKey(tmpTKIn) || !cache.containsKey(tmpTKOut)) {
+        if (!cache.containsKey(type)) {
             Type baseType = type;
             if (!isPrimitive(baseType)) {
                 if (baseType instanceof Class<?> cls) {
                     if (cls.isEnum()) {
                         EnumPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateEnumPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
+                        cache.put(type, psuedoSchema);
 
                     } else if (cls.isArray()) {
                         ListPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateArrayPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
+                        cache.put(type, psuedoSchema);
                         generatePsuedoSchema(psuedoSchema.itemType());
-
-                    } else if (cls.isRecord()) {
-                        ClassPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateRecordPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
-                        for (FieldInfo fi : psuedoSchema.fields()) {
-                            generatePsuedoSchema(fi.type());
-                        }
 
                     } else if (Optional.class.isAssignableFrom(cls)) {
                         OptionalPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateRawOptionalPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
+                        cache.put(type, psuedoSchema);
 
                     } else if (Map.class.isAssignableFrom(cls)) {
                         MapPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateRawMapPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
+                        cache.put(type, psuedoSchema);
 
                     } else if (Collection.class.isAssignableFrom(cls)) {
                         ListPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateRawCollectionPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
+                        cache.put(type, psuedoSchema);
 
                     } else {
-                        ClassPsuedoSchema psuedoSchemaIn = PsuedoSchemaGenerator.generateClassPsuedoSchema(type, SchemaDirection.INPUT);
-                        ClassPsuedoSchema psuedoSchemaOut = PsuedoSchemaGenerator.generateClassPsuedoSchema(type, SchemaDirection.OUTPUT);
-                        cache.put(tmpTKIn, psuedoSchemaIn);
-                        cache.put(tmpTKOut, psuedoSchemaOut);
+                        ClassPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateClassPsuedoSchema(type);
+                        cache.put(type, psuedoSchema);
 
-                        for (FieldInfo fi : psuedoSchemaIn.fields()) {
+                        for (FieldInfo fi : psuedoSchema.inputFields()) {
                             generatePsuedoSchema(fi.type());
                         }
-                        for (FieldInfo fi : psuedoSchemaOut.fields()) {
+                        for (FieldInfo fi : psuedoSchema.outputFields()) {
                             generatePsuedoSchema(fi.type());
                         }
                     }
@@ -222,18 +184,18 @@ public class SchemaGenerator {
                 } else if (baseType instanceof ParameterizedType pt) {
                     if (Optional.class.isAssignableFrom((Class<?>) pt.getRawType())) {
                         OptionalPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateParameterizedOptionalPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
+                        cache.put(type, psuedoSchema);
                         generatePsuedoSchema(psuedoSchema.optionalType());
+
                     } else if (Map.class.isAssignableFrom((Class<?>) pt.getRawType())) {
                         MapPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateParameterizedMapPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
+                        cache.put(type, psuedoSchema);
+                        generatePsuedoSchema(psuedoSchema.keyType());
                         generatePsuedoSchema(psuedoSchema.valueType());
+
                     } else if (Collection.class.isAssignableFrom((Class<?>) pt.getRawType())) {
                         ListPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateParameterizedCollectionPsuedoSchema(type);
-                        cache.put(tmpTKIn, psuedoSchema);
-                        cache.put(tmpTKOut, psuedoSchema);
+                        cache.put(type, psuedoSchema);
                         generatePsuedoSchema(psuedoSchema.itemType());
 
                     }
@@ -248,81 +210,123 @@ public class SchemaGenerator {
 //                }
             } else {
                 PrimitivePsuedoSchema psuedoSchema = new PrimitivePsuedoSchema(type, type.getClass());
-                cache.put(tmpTKIn, psuedoSchema);
-                cache.put(tmpTKOut, psuedoSchema);
+                cache.put(type, psuedoSchema);
             }
         }
     }
 
-    public static void calculateClassFrequency(TypeKey typeKey, HashMap<TypeKey, Boolean> typeFrequency, HashMap<String, Integer> nameGenerator, HashMap<TypeKey, String> nameMap) {
-        if (!isPrimitive(typeKey.type())) {
-            typeFrequency.compute(typeKey, (k, v) -> v == null ? false : true);
-            if (typeFrequency.get(typeKey) == false) {
-                calculateClassFrequencyTypeBranch(typeKey, typeFrequency, nameGenerator, nameMap);
-            }
+    public static class SchemaGenerationContext {
+        /** Map of type to whether it's been seen more than once */
+        private HashMap<Type, Boolean> typeMultiUse = new HashMap<>();
+        /** Map of type to name */
+        private HashMap<Type, String> nameMap = new HashMap<>();
+        /** The values of nameMap */
+        private Set<String> namesInUse = new HashSet<>();
+        /** Map of types and their corresponding JSON schemas which should be added to defs */
+        private HashMap<Type, JsonSchema> defs = new HashMap<>();
 
+        /**
+         * Registers a type as having been seen
+         *
+         * @param type the type
+         * @return {@code true} if this method was called for {@code type} before, otherwise {@code false}
+         */
+        public boolean registerSeen(Type type) {
+            // If this is the first time we've seen this type, add it to the map with false,
+            // If it's not the first time, set it to true
+            return typeMultiUse.compute(type, (k, v) -> v == null ? false : true);
+        }
+
+        /**
+         * Returns whether a type is used multiple times in the schema.
+         *
+         * @param type the type
+         * @return {@code true} if it was used multiple times, otherwise false
+         */
+        public boolean isMultiUse(Type type) {
+            return typeMultiUse.getOrDefault(type, false);
+        }
+
+        /**
+         * Reserve a name for a type. The name can be looked up later with {@link #getName(Type)}.
+         *
+         * @param type the type
+         * @param baseName the name to use. A suffix will be added if required to make the name unique.
+         */
+        public void reserveName(Type type, String baseName) {
+            String name = nameMap.get(type);
+            if (name == null) {
+                int suffix = 1;
+                name = baseName;
+                while (namesInUse.contains(name)) {
+                    suffix++;
+                    name = baseName + suffix;
+                }
+                nameMap.put(type, name);
+                namesInUse.add(name);
+            }
+        }
+
+        /**
+         * Get the name for a type.
+         * <p>
+         * The name must have been reserved earlier using {@link #reserveName(Type, String)}
+         *
+         * @param type the type
+         * @return the name
+         */
+        public String getName(Type type) {
+            return nameMap.get(type);
+        }
+
+        /**
+         * @return the typeFrequency
+         */
+        public HashMap<Type, Boolean> getTypeFrequency() {
+            return typeMultiUse;
+        }
+
+        /**
+         * @return the nameMap
+         */
+        public HashMap<Type, String> getNameMap() {
+            return nameMap;
+        }
+
+        public HashMap<Type, JsonSchema> getDefs() {
+            return defs;
         }
     }
 
-    public static void calculateClassFrequencyTypeBranch(TypeKey typeKey, HashMap<TypeKey, Boolean> typeFrequency, HashMap<String, Integer> nameGenerator,
-                                                         HashMap<TypeKey, String> nameMap) {
-        Type baseType = typeKey.type();
-        if (isPrimitive(baseType) == true) {
-            return;
-        }
-        if (baseType instanceof Class<?> cls) {
-            if (cls.isEnum()) {
-                return;
+    public static void calculateClassFrequency(Type type, SchemaDirection direction, SchemaGenerationContext ctx) {
+        PsuedoSchema ps = cache.get(type);
+        boolean previouslySeen = false;
+        if (ps.defsName().isPresent()) {
+            // We might add this type to defs, so we need to add it to the typeFrequency map
+            // If this is the first time we've seen this type, set it to false, if it's not the first time, set it to true
+            previouslySeen = ctx.registerSeen(type);
 
-            } else if (cls.isArray()) {
-                ListPsuedoSchema ps = (ListPsuedoSchema) cache.get(typeKey);
-                calculateClassFrequency(new TypeKey(ps.itemType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
-
-            } else if (cls.isRecord() || cls instanceof Class<?>) {
-                if (cache.get(typeKey) instanceof ListPsuedoSchema) {
-                    System.out.println("erroras List is in place of class");
-                }
-                ClassPsuedoSchema ps = (ClassPsuedoSchema) cache.get(typeKey);
-                String name;
-                if (nameGenerator.containsKey(typeKey.type().getClass().getSimpleName())) {
-                    if (typeFrequency.get(typeKey) == true) {
-                        nameGenerator.compute(cls.getSimpleName(), (k, v) -> v + 1);
-                        name = cls.getSimpleName() + nameGenerator.get(cls.getSimpleName());
-                    }
-                    name = cls.getSimpleName();
-                } else {
-                    nameGenerator.put(cls.getSimpleName(), 1);
-                    name = cls.getSimpleName();
-                }
-                nameMap.put(typeKey, name);
-
-                for (FieldInfo fi : ps.fields()) {
-                    calculateClassFrequency(new TypeKey(fi.type(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
-                }
+            if (previouslySeen) {
+                ctx.reserveName(type, ps.defsName().get());
             }
-
-        } else if (baseType instanceof ParameterizedType pt) {
-            if (Optional.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                OptionalPsuedoSchema ps = (OptionalPsuedoSchema) cache.get(typeKey);
-                calculateClassFrequency(new TypeKey(ps.optionalType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
-            } else if (Map.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                MapPsuedoSchema ps = (MapPsuedoSchema) cache.get(typeKey);
-                calculateClassFrequency(new TypeKey(ps.valueType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
-            } else if (Collection.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                ListPsuedoSchema ps = (ListPsuedoSchema) cache.get(typeKey);
-                calculateClassFrequency(new TypeKey(ps.itemType(), typeKey.direction()), typeFrequency, nameGenerator, nameMap);
-
-            }
-
         }
-//        else if (baseType instanceof WildcardType wt) {
-//
-//        } else if (baseType instanceof GenericArrayType gat) {
-//
-//        } else if (baseType instanceof TypeVariable<?> td) {
-//
-//        }
 
+        if (!previouslySeen) {
+            // Process children
+            if (ps instanceof ListPsuedoSchema listPs) {
+                calculateClassFrequency(listPs.itemType(), direction, ctx);
+            } else if (ps instanceof ClassPsuedoSchema classPs) {
+                List<FieldInfo> fields = direction == SchemaDirection.INPUT ? classPs.inputFields() : classPs.outputFields();
+                for (FieldInfo fi : fields) {
+                    calculateClassFrequency(fi.type(), direction, ctx);
+                }
+            } else if (ps instanceof MapPsuedoSchema mapPs) {
+                calculateClassFrequency(mapPs.valueType(), direction, ctx);
+                calculateClassFrequency(mapPs.keyType(), direction, ctx);
+            } else if (ps instanceof OptionalPsuedoSchema optionalPs) {
+                calculateClassFrequency(optionalPs.optionalType(), direction, ctx);
+            }
+        }
     }
 
     public static boolean isPrimitive(Type type) {
