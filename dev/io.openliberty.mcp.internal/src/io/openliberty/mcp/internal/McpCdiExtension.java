@@ -9,12 +9,10 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ibm.websphere.ras.Tr;
@@ -41,7 +39,6 @@ public class McpCdiExtension implements Extension {
 
     private ToolRegistry tools = new ToolRegistry();
     private ConcurrentHashMap<String, LinkedList<String>> duplicateToolsMap = new ConcurrentHashMap<>();
-    private List<String> duplicateOrInvalidArgsErrors = new ArrayList<>();
 
     void registerTools(@Observes ProcessManagedBean<?> pmb) {
         AnnotatedType<?> type = pmb.getAnnotatedBeanClass();
