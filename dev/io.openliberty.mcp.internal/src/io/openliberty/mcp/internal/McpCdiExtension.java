@@ -46,12 +46,7 @@ public class McpCdiExtension implements Extension {
         for (AnnotatedMethod<?> m : type.getMethods()) {
             Tool toolAnnotation = m.getAnnotation(Tool.class);
             if (toolAnnotation != null) {
-                //String qualifiedName = javaClass.getName() + "." + m.getJavaMember().getName();
                 registerTool(toolAnnotation, pmb.getBean(), m);
-                try {
-                    registerTool(toolAnnotation, pmb.getBean(), m);                } catch (IllegalArgumentException e) {
-                    duplicateOrInvalidArgsErrors.add(e.getMessage());
-                }
             }
         }
     }
