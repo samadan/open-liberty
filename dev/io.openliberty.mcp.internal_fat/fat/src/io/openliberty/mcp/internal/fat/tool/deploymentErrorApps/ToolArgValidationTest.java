@@ -13,9 +13,6 @@ import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
 import jakarta.enterprise.context.ApplicationScoped;
 
-/**
- *
- */
 @ApplicationScoped
 public class ToolArgValidationTest {
 
@@ -31,8 +28,6 @@ public class ToolArgValidationTest {
         return notArgAgain;
     }
 
-    /////////////////////////////
-    // arg name value is blank
     @Tool(name = "argNameisBlank")
     public String argNameisBlank(@ToolArg(name = "") String arg1) {
         return arg1;
