@@ -523,6 +523,86 @@ public class ToolTest extends FATServletClient {
                                         "inputSchema": {
                                             "type": "object",
                                             "properties": {
+                                                "@arg1!><": {
+                                                    "description": "specialCharactersInToolArgName",
+                                                    "type": "string"
+                                                },
+                                                "@arg2={}": {
+                                                    "description": "specialCharactersInToolArgName",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "@arg1!><",
+                                                "@arg2={}"
+                                            ]
+                                        },
+                                        "name": "specialCharactersInToolArgName",
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "@arg1'()": {
+                                                    "description": "specialCharactersInToolArgName",
+                                                    "type": "string"
+                                                },
+                                                "@arg2.%:": {
+                                                    "description": "specialCharactersInToolArgName",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "@arg1'()",
+                                                "@arg2.%:"
+                                            ]
+                                        },
+                                        "name": "specialCharactersInToolArgNameVariant2",
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "package": {
+                                                    "description": "reservedNamesInToolArgName",
+                                                    "type": "string"
+                                                },
+                                                "int": {
+                                                    "description": "reservedNamesInToolArgName",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "package",
+                                                "int"
+                                            ]
+                                        },
+                                        "name": "reservedNamesInToolArgName",
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "class": {
+                                                    "description": "reservedNamesInToolArgName",
+                                                    "type": "string"
+                                                },
+                                                "void": {
+                                                    "description": "reservedNamesInToolArgName",
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "class",
+                                                "void"
+                                            ]
+                                        },
+                                        "name": "reservedNamesInToolArgNameVariant",
+                                    },
+                                    {
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
                                                 "input": {
                                                     "description": "input to echo",
                                                     "type": "string"

@@ -308,4 +308,32 @@ public class BasicTools {
     public boolean testToolArgNotRequired(@ToolArg(name = "value", description = "boolean value", required = false) boolean value) {
         return false;
     }
+
+    //////////////////////////////////
+    // Special characters in tool args
+    @Tool(name = "specialCharactersInToolArgName")
+    public String specialCharactersInToolArgName(@ToolArg(name = "@arg1!><", description = "specialCharactersInToolArgName") String arg1,
+                                                 @ToolArg(name = "@arg2={}", description = "specialCharactersInToolArgName") String arg2) {
+        return arg1;
+    }
+
+    @Tool(name = "specialCharactersInToolArgNameVariant2")
+    public String specialCharactersInToolArgNameVariant2(@ToolArg(name = "@arg1'()", description = "specialCharactersInToolArgName") String arg1,
+                                                         @ToolArg(name = "@arg2.%:", description = "specialCharactersInToolArgName") String arg2) {
+        return arg1;
+    }
+
+    ////////////////////////////////
+    // reserved names in parameters
+    @Tool(name = "reservedNamesInToolArgName")
+    public String reservedNamesInToolArgName(@ToolArg(name = "package", description = "reservedNamesInToolArgName") String arg1,
+                                             @ToolArg(name = "int", description = "reservedNamesInToolArgName") String arg2) {
+        return arg1;
+    }
+
+    @Tool(name = "reservedNamesInToolArgNameVariant")
+    public String reservedNamesInToolArgNameVariant(@ToolArg(name = "class", description = "reservedNamesInToolArgName") String arg1,
+                                                    @ToolArg(name = "void", description = "reservedNamesInToolArgName") String arg2) {
+        return arg1;
+    }
 }
