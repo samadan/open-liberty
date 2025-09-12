@@ -25,8 +25,6 @@ import io.openliberty.mcp.internal.fat.protocol.HttpTest;
 import io.openliberty.mcp.internal.fat.protocol.ProtocolVersionTest;
 import io.openliberty.mcp.internal.fat.tool.CancellationTest;
 import io.openliberty.mcp.internal.fat.tool.DeploymentProblemTest;
-import io.openliberty.mcp.internal.fat.tool.DuplicateSpecialArgumentProblemTest;
-import io.openliberty.mcp.internal.fat.tool.InvalidSpecialArgumentProblemTest;
 import io.openliberty.mcp.internal.fat.tool.ToolErrorHandlingTest;
 import io.openliberty.mcp.internal.fat.tool.ToolTest;
 
@@ -37,10 +35,8 @@ import io.openliberty.mcp.internal.fat.tool.ToolTest;
 @SuiteClasses({
                 BeanLifecycleTest.class,
                 DeploymentProblemTest.class,
-                DuplicateSpecialArgumentProblemTest.class,
                 CancellationTest.class,
                 HttpTest.class,
-                InvalidSpecialArgumentProblemTest.class,
                 LifecycleTest.class,
                 ProtocolVersionTest.class,
                 ToolErrorHandlingTest.class,

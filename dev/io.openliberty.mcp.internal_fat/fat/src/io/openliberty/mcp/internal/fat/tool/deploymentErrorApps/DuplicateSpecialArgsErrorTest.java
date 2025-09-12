@@ -7,19 +7,18 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat.tool.invalidArgsErrorTestApp;
+package io.openliberty.mcp.internal.fat.tool.deploymentErrorApps;
 
 import io.openliberty.mcp.annotations.Tool;
+import io.openliberty.mcp.messaging.Cancellation;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class InvalidArgsErrorTest {
+public class DuplicateSpecialArgsErrorTest {
 
     ///////////////////
-    //// Invalid Special Argument Tool
-    @Tool(name = "invalidSpecialArgumentTool")
-    public void invalidSpecialArgumentTool(InvalidSpecialVariable invalidArgs) {}
-
-    public record InvalidSpecialVariable() {}
+    //// Duplicate cancellation
+    @Tool(name = "duplicateCancellation")
+    public void duplicateCancellation(Cancellation cancellation, Cancellation duplicateCancellation) {}
 
 }

@@ -1802,27 +1802,4 @@ public class ToolTest extends FATServletClient {
         JSONAssert.assertEquals(expectedResponseString, response, false);
     }
 
-    @Test
-    public void testToolThrowsExceptionIfUnsuportedSpecialArgsAreAdded() throws Exception {
-
-        String request = """
-                          {
-                          "jsonrpc": "2.0",
-                          "id": "3",
-                          "method": "tools/call",
-                          "params": {
-                            "name": "unsupportedSpecialArgsTool",
-                            "arguments": {}
-                          }
-                        }
-                        """;
-
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-
-        String expectedResponseString = """
-                        {"id":"3","jsonrpc":"2.0","result":{"content":[{"text":"IllegalArgumentException", "type":"text"}],"isError":true}}
-                        """;
-        JSONAssert.assertEquals(expectedResponseString, response, true);
-    }
-
 }

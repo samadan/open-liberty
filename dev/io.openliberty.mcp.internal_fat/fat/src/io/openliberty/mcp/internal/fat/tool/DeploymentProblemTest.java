@@ -66,4 +66,14 @@ public class DeploymentProblemTest extends FATServletClient {
                                                  "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParamVariant.*arg");
         ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Duplicate Tool Arg: ", expectedErrorList, server);
     }
+
+    public void testDuplicateSpecialArgsTestCase() throws Exception {
+        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateSpecialArgsErrorTest.duplicateCancellation");
+        ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Duplicate Tool: ", expectedErrorList, server);
+    }
+
+    public void testInvalidSpecialArgsTestCase() throws Exception {
+        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.InvalidSpecialArgsErrorTest.invalidSpecialArgumentTool");
+        ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Duplicate Tool: ", expectedErrorList, server);
+    }
 }

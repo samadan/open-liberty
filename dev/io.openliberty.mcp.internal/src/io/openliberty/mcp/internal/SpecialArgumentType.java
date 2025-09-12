@@ -47,9 +47,9 @@ public enum SpecialArgumentType {
         @Override
         public String toString() {
             if (specialArgsType == UNSUPPORTED) {
-                return "UNSUPPORTED(" + actualClass.getSimpleName() + ")";
+                return "UNSUPPORTED(" + actualClass.getName() + ")";
             }
-            return specialArgsType.name() + "(" + actualClass.getSimpleName() + ")";
+            return specialArgsType.name() + "(" + actualClass.getName() + ")";
         }
     }
 }

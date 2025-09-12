@@ -12,7 +12,6 @@ package io.openliberty.mcp.internal;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ibm.websphere.ras.Tr;
@@ -54,6 +53,8 @@ public class McpCdiExtension implements Extension {
     void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
         reportOnDuplicateTools(afterDeploymentValidation);
         reportOnToolArgEdgeCases(afterDeploymentValidation);
+        reportOnDuplicateSpecialArguments(afterDeploymentValidation);
+        reportOnInvalidSpecialArguments(afterDeploymentValidation);
     }
 
     /**
@@ -102,30 +103,34 @@ public class McpCdiExtension implements Extension {
         if (duplicateToolsMap.size() != 0) {
             afterDeploymentValidation.addDeploymentProblem(new Exception(sb.toString()));
         }
-
-        reportOnDuplicateSpecialArguments(afterDeploymentValidation);
-        reportOnInvalidSpecialArguments(afterDeploymentValidation);
     }
 
     private void reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+        StringBuilder sbDuplicateSpecialArgs = new StringBuilder("Only 1 instance is allowed, of type: ");
         for (ToolMetadata tool : tools.getAllTools()) {
             Map<SpecialArgumentType.Resolution, Integer> resultCountMap = new HashMap<>();
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
                 SpecialArgumentType.Resolution specialArgumentTypeResolution = specialArgument.typeResolution();
                 resultCountMap.merge(specialArgumentTypeResolution, 1, Integer::sum);
                 if (resultCountMap.get(specialArgumentTypeResolution) > 1) {
-                    afterDeploymentValidation.addDeploymentProblem(new Exception("Only 1 instance of type " + specialArgumentTypeResolution + " is allowed"));
+                    sbDuplicateSpecialArgs.append(specialArgumentTypeResolution);
+                    sbDuplicateSpecialArgs.append("\n  But more than 1 argument was found. Please remove the extra instance, or check if you meant to include @ToolArg to one of them");
+                    sbDuplicateSpecialArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
+                    afterDeploymentValidation.addDeploymentProblem(new Exception(sbDuplicateSpecialArgs.toString()));
                 }
             }
         }
     }
 
     private void reportOnInvalidSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+        StringBuilder sbInvalidSpecialArgs = new StringBuilder("Special argument type not supported: ");
         for (ToolMetadata tool : tools.getAllTools()) {
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
                 if (specialArgument.typeResolution().specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
-                    afterDeploymentValidation.addDeploymentProblem(new Exception("Special argument type not supported: " + specialArgument.typeResolution()
-                                                                                 + " - Please check if you have the correct class imported for your argument, or you meant to add include @ToolArg"));
+                    sbInvalidSpecialArgs.append(specialArgument.typeResolution());
+                    sbInvalidSpecialArgs.append("\n  Please check if you have the correct class imported for your argument, or you meant to include @ToolArg");
+                    sbInvalidSpecialArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
+                    afterDeploymentValidation.addDeploymentProblem(new Exception(sbInvalidSpecialArgs.toString()));
                 }
             }
         }
