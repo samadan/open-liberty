@@ -54,7 +54,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
             if (pInfo != null) {
-                String toolArgName = (pInfo.name().equals(Tool.ELEMENT_NAME)) ? p.getJavaParameter().getName() : pInfo.name(); // p.getJavaParameter().getName() needs java compiler -parameter flag to work
+                String toolArgName = (pInfo.name().equals(ToolArg.ELEMENT_NAME)) ? p.getJavaParameter().getName() : pInfo.name(); // p.getJavaParameter().getName() needs java compiler -parameter flag to work
                 ArgumentMetadata ArgInfo = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description(), pInfo.required(), false);
                 boolean isDuplicateArg = result.put(toolArgName, ArgInfo) != null;
                 if (!toolArgName.isBlank() && isDuplicateArg) {
