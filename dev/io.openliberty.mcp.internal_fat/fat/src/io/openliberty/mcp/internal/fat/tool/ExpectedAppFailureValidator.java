@@ -27,18 +27,18 @@ import com.ibm.websphere.simplicity.ShrinkHelper;
 import componenttest.matchers.Matchers;
 import componenttest.topology.impl.LibertyServer;
 
-public class ExpectedAppFailureUtil {
+public class ExpectedAppFailureValidator {
 
     private static String APP_STARTED_CODE = "CWWKZ000[13]I";
     public static String APP_START_FAILED_CODE = "CWWKZ000[24]E";
 
     /**
-     * @param server server the liberty server
+     * @param server server the liberty server (configured to disable validation for intentional app failures)
      * @param appName The name of the app used to encapsulate the application
      * @param packageInfo the package for where all of the test classes will be located
      * @throws Exception
      */
-    public static void setupAndStartServer(LibertyServer server, String appName, Package packageInfo) throws Exception {
+    public static void deployAppToAssertFailure(LibertyServer server, String appName, Package packageInfo) throws Exception {
         WebArchive war = ShrinkWrap.create(WebArchive.class, appName + ".war").addPackage(packageInfo);
         ShrinkHelper.exportDropinAppToServer(server, war, DISABLE_VALIDATION, SERVER_ONLY);
         server.startServer();
@@ -63,7 +63,7 @@ public class ExpectedAppFailureUtil {
      * @param server the liberty server
      * @throws Exception
      */
-    public static void findAndAssertAllExpectedErrorsInLogs(String errMsg, List<String> expectedErrorList, LibertyServer server) throws Exception {
+    public static void findAndAssertExpectedErrorsInLogs(String errMsg, List<String> expectedErrorList, LibertyServer server) throws Exception {
         for (String err : expectedErrorList) {
             assertTrue(errMsg + " [" + err + "] expected and not found", !server.findStringsInLogs(err).isEmpty());
         }
