@@ -77,7 +77,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         return Collections.unmodifiableList(result);
     }
 
-    /*
+    /**
      * Used for error reporting cases, such as locating Duplicate Tools and ToolArgs
      */
     public String getToolQualifiedName() {
