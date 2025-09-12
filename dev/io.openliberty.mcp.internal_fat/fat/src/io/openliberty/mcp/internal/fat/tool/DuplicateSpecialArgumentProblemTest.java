@@ -47,9 +47,9 @@ public class DuplicateSpecialArgumentProblemTest {
 
     @Test
     public void testDuplicateArgsDeploymentError() throws Exception {
-        String errorInLogs = server.waitForStringInLog("Only 1 instance of type CANCELLATION is allowed", 5 * 1000);
+        String errorInLogs = server.waitForStringInLog("Only 1 instance of type CANCELLATION(Cancellation) is allowed");
 
-        assertTrue("Expected a deployment error due to duplicate arguments being present: The String `Only 1 instance of type CANCELLATION is allowed` was not present in logs",
+        assertTrue("Expected a deployment error due to duplicate arguments being present: The String `Only 1 instance of type CANCELLATION(Cancellation) is allowed` was not present in logs",
                    errorInLogs != null);
     }
 

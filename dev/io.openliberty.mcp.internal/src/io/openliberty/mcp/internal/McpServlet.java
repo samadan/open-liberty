@@ -225,12 +225,14 @@ public class McpServlet extends HttpServlet {
      */
     private void addSpecialArguments(Object[] argumentsArray, RequestId requestId, ToolMetadata toolMetadata) {
         for (SpecialArgumentMetadata argMetadata : toolMetadata.specialArguments()) {
-            switch (argMetadata.type()) {
+            switch (argMetadata.typeResolution().specialArgsType()) {
                 case CANCELLATION -> {
                     CancellationImpl cancellation = new CancellationImpl();
                     cancellation.setRequestId(requestId);
                     connection.registerOngoingRequest(requestId, cancellation);
                     argumentsArray[argMetadata.index()] = cancellation;
+                }
+                default -> {
                 }
             }
         }

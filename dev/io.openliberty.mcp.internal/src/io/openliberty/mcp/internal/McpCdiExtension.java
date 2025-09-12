@@ -10,9 +10,11 @@
 package io.openliberty.mcp.internal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ibm.websphere.ras.Tr;
@@ -20,6 +22,7 @@ import com.ibm.websphere.ras.TraceComponent;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
+import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
@@ -108,13 +111,30 @@ public class McpCdiExtension implements Extension {
             afterDeploymentValidation.addDeploymentProblem(new Exception(sb.toString()));
         }
 
-        reportOnDuplicateOrInvalidArgs(afterDeploymentValidation);
+        reportOnDuplicateSpecialArguments(afterDeploymentValidation);
+        reportOnInvalidSpecialArguments(afterDeploymentValidation);
     }
 
-    private void reportOnDuplicateOrInvalidArgs(AfterDeploymentValidation afterDeploymentValidation) {
-        if (duplicateOrInvalidArgsErrors.size() != 0) {
-            for (String errorMessage : duplicateOrInvalidArgsErrors) {
-                afterDeploymentValidation.addDeploymentProblem(new Exception(errorMessage));
+    private void reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+        for (ToolMetadata tool : tools.getAllTools()) {
+            Map<SpecialArgumentType.Resolution, Integer> resultCountMap = new HashMap<>();
+            for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
+                SpecialArgumentType.Resolution specialArgumentTypeResolution = specialArgument.typeResolution();
+                resultCountMap.merge(specialArgumentTypeResolution, 1, Integer::sum);
+                if (resultCountMap.get(specialArgumentTypeResolution) > 1) {
+                    afterDeploymentValidation.addDeploymentProblem(new Exception("Only 1 instance of type " + specialArgumentTypeResolution + " is allowed"));
+                }
+            }
+        }
+    }
+
+    private void reportOnInvalidSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+        for (ToolMetadata tool : tools.getAllTools()) {
+            for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
+                if (specialArgument.typeResolution().specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
+                    afterDeploymentValidation.addDeploymentProblem(new Exception("Special argument type not supported: " + specialArgument.typeResolution()
+                                                                                 + " - Please check if you have the correct class imported for your argument, or you meant to add include @ToolArg"));
+                }
             }
         }
     }

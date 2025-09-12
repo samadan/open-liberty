@@ -46,9 +46,9 @@ public class InvalidSpecialArgumentProblemTest {
 
     @Test
     public void testInvalidArgsDeploymentError() throws Exception {
-        String errorInLogs = server.waitForStringInLog("Special argument type not supported: ", 5 * 1000);
+        String errorInLogs = server.waitForStringInLog("Special argument type not supported: ");
 
-        assertTrue("Expected a deployment error due to invalid arguments being present: The String `Special argument type not supported` was not present in logs",
+        assertTrue("Expected a deployment error due to invalid arguments being present: The String `Special argument type not supported:` was not present in logs",
                    errorInLogs != null);
     }
 }
