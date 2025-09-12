@@ -66,7 +66,6 @@ import jakarta.data.constraint.NotIn;
 import jakarta.data.constraint.NotLike;
 import jakarta.data.constraint.NotNull;
 import jakarta.data.constraint.Null;
-import jakarta.data.expression.Expression;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.By;
 import jakarta.data.repository.Delete;
@@ -551,53 +550,56 @@ public class Data_1_1 implements DataVersionCompatibility {
     }
 
     @Override
-    @Trivial
-    public Object toLiteralValue(Object constraintOrValue) {
+    @Trivial // avoid logging customer data
+    public Object[] toConstraintValues(Object constraintOrValue) {
         // TODO 1.1 this is not the correct implementation (doesn't account for
         // other types of expressions than literals) and is only here temporarily
         // so that we can complete remove some experimental code elsewhere without
         // breaking tests.
-        Expression<?, ?> exp = null;
+        boolean isList = false;
+        Object[] values;
         if (constraintOrValue instanceof AtLeast c)
-            exp = c.bound();
+            values = new Object[] { c.bound() };
         else if (constraintOrValue instanceof AtMost c)
-            exp = c.bound();
+            values = new Object[] { c.bound() };
+        else if (constraintOrValue instanceof Between c)
+            values = new Object[] { c.lowerBound(), c.upperBound() };
         else if (constraintOrValue instanceof EqualTo c)
-            exp = c.expression();
+            values = new Object[] { c.expression() };
         else if (constraintOrValue instanceof GreaterThan c)
-            exp = c.bound();
-        else if (constraintOrValue instanceof In c)
-            return toLiteralValues(c.expressions());
+            values = new Object[] { c.bound() };
+        else if (isList = constraintOrValue instanceof In)
+            values = ((In) constraintOrValue).expressions().toArray();
         else if (constraintOrValue instanceof LessThan c)
-            exp = c.bound();
+            values = new Object[] { c.bound() };
         else if (constraintOrValue instanceof Like c)
-            exp = c.pattern();
+            values = new Object[] { c.pattern() };
+        else if (constraintOrValue instanceof NotBetween c)
+            values = new Object[] { c.lowerBound(), c.upperBound() };
         else if (constraintOrValue instanceof NotEqualTo c)
-            exp = c.expression();
-        else if (constraintOrValue instanceof NotIn c)
-            return toLiteralValues(c.expressions());
+            values = new Object[] { c.expression() };
+        else if (isList = constraintOrValue instanceof NotIn)
+            values = ((NotIn) constraintOrValue).expressions().toArray();
         else if (constraintOrValue instanceof NotLike c)
-            exp = c.pattern();
+            values = new Object[] { c.pattern() };
+        else if (constraintOrValue instanceof NotNull ||
+                 constraintOrValue instanceof Null)
+            values = new Object[0];
         else if (constraintOrValue instanceof Constraint)
             throw new UnsupportedOperationException("Constraint: " +
                                                     constraintOrValue.getClass().getName());
         else
-            return constraintOrValue;
+            return null;
 
-        if (exp instanceof Literal)
-            return ((Literal) exp).value();
-        else
-            throw new UnsupportedOperationException(exp.getClass().getName());
-    }
-
-    @Trivial
-    private List<Object> toLiteralValues(List<Expression<?, ?>> exps) {
-        List<Object> list = new ArrayList<>(exps.size());
-        for (Expression<?, ?> exp : exps)
-            if (exp instanceof Literal)
-                list.add(((Literal) exp).value());
+        for (int i = 0; i < values.length; i++)
+            if (values[i] instanceof Literal)
+                values[i] = ((Literal) values[i]).value();
             else
-                throw new UnsupportedOperationException(exp.getClass().getName());
-        return list;
+                throw new UnsupportedOperationException(values[i].getClass().getName());
+
+        if (isList)
+            values = new Object[] { List.of(values) };
+
+        return values;
     }
 }
