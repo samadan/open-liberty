@@ -23,13 +23,10 @@ import jakarta.enterprise.inject.spi.AnnotatedMethod;
 import jakarta.enterprise.inject.spi.AnnotatedParameter;
 import jakarta.enterprise.inject.spi.Bean;
 
-/**
- *
- */
 public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method,
                            Map<String, ArgumentMetadata> arguments,
                            List<SpecialArgumentMetadata> specialArguments,
-                           String name, String title, String description, String qualifiedName,
+                           String name, String title, String description,
                            List<Class<? extends Throwable>> businessExceptions) {
 
     public record ArgumentMetadata(Type type, int index, String description, boolean required, boolean isDuplicate) {}
@@ -41,7 +38,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         specialArguments = ((specialArguments == null) ? Collections.emptyList() : specialArguments);
     }
 
-    public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method, String qualifiedName) {
+    public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
         String name = annotation.name().equals(Tool.ELEMENT_NAME) ? method.getJavaMember().getName() : annotation.name();
         String title = annotation.title().isEmpty() ? null : annotation.title();
         String description = annotation.description().isEmpty() ? null : annotation.description();
@@ -49,7 +46,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         WrapBusinessError wrapAnnotation = method.getAnnotation(WrapBusinessError.class);
         List<Class<? extends Throwable>> businessExceptions = (wrapAnnotation != null) ? List.of(wrapAnnotation.value()) : Collections.emptyList();
 
-        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentList(method), name, title, description, qualifiedName, businessExceptions);
+        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentList(method), name, title, description, businessExceptions);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
@@ -78,5 +75,12 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
             }
         }
         return Collections.unmodifiableList(result);
+    }
+
+    /*
+     * Used for error reporting cases, such as locating Duplicate Tools and ToolArgs
+     */
+    public String getToolQualifiedName() {
+        return bean.getBeanClass() + "." + method.getJavaMember().getName();
     }
 }

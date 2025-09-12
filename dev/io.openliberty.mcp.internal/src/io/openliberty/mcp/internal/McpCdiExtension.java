@@ -43,8 +43,8 @@ public class McpCdiExtension implements Extension {
         for (AnnotatedMethod<?> m : type.getMethods()) {
             Tool toolAnnotation = m.getAnnotation(Tool.class);
             if (toolAnnotation != null) {
-                String qualifiedName = javaClass.getName() + "." + m.getJavaMember().getName();
-                registerTool(toolAnnotation, pmb.getBean(), m, qualifiedName);
+                //String qualifiedName = javaClass.getName() + "." + m.getJavaMember().getName();
+                registerTool(toolAnnotation, pmb.getBean(), m);
             }
         }
     }
@@ -68,10 +68,10 @@ public class McpCdiExtension implements Extension {
 
             for (String argName : arguments.keySet()) {
                 if (argName.isBlank()) {
-                    sbBlankArgs.append("\n").append("Tool: " + tool.qualifiedName());
+                    sbBlankArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
                     blankArgumentsFound = true;
                 } else if (arguments.get(argName).isDuplicate()) {
-                    sbDuplicateArgs.append("\n").append("Tool: " + tool.qualifiedName() + " -  Argument: " + argName);
+                    sbDuplicateArgs.append("\n").append("Tool: " + tool.getToolQualifiedName() + " -  Argument: " + argName);
                     duplicateArgumentsFound = true;
                 }
             }
@@ -102,9 +102,9 @@ public class McpCdiExtension implements Extension {
         }
     }
 
-    private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method, String qualifiedName) {
-        ToolMetadata toolmd = ToolMetadata.createFrom(tool, bean, method, qualifiedName);
-        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(qualifiedName);
+    private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method) {
+        ToolMetadata toolmd = ToolMetadata.createFrom(tool, bean, method);
+        duplicateToolsMap.computeIfAbsent(toolmd.name(), key -> new LinkedList<>()).add(toolmd.getToolQualifiedName());
         tools.addTool(toolmd);
         if (TraceComponent.isAnyTracingEnabled()) {
             if (tc.isDebugEnabled()) {

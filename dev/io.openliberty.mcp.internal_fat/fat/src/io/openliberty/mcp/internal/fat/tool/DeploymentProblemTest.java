@@ -33,14 +33,12 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @BeforeClass
     public static void setup() throws Exception {
-        String warFileName = "DeploymentProblemTest.war";
-        Package packageName = DuplicateToolErrorTest.class.getPackage();
-        ExpectedAppFailureUtil.setupAndStartServer(server, warFileName, packageName);
+        ExpectedAppFailureUtil.setupAndStartServer(server, "DeploymentProblemTest", DuplicateToolErrorTest.class.getPackage());
     }
 
     @AfterClass
     public static void teardown() throws Exception {
-        ExpectedAppFailureUtil.stopServerIgnoringErrorMessages(server); // ignore app failed to start error
+        server.stopServer(ExpectedAppFailureUtil.APP_START_FAILED_CODE); // will be extended for translations
     }
 
     @Test
