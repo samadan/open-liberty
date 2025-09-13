@@ -112,7 +112,7 @@ public class McpCdiExtension implements Extension {
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
                 SpecialArgumentType.Resolution specialArgumentTypeResolution = specialArgument.typeResolution();
                 if (specialArgumentTypeResolution.specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
-                    return;
+                    continue;
                 }
                 resultCountMap.merge(specialArgumentTypeResolution, 1, Integer::sum);
                 if (resultCountMap.get(specialArgumentTypeResolution) > 1) {
