@@ -111,6 +111,9 @@ public class McpCdiExtension implements Extension {
             Map<SpecialArgumentType.Resolution, Integer> resultCountMap = new HashMap<>();
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
                 SpecialArgumentType.Resolution specialArgumentTypeResolution = specialArgument.typeResolution();
+                if (specialArgumentTypeResolution.specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
+                    return;
+                }
                 resultCountMap.merge(specialArgumentTypeResolution, 1, Integer::sum);
                 if (resultCountMap.get(specialArgumentTypeResolution) > 1) {
                     sbDuplicateSpecialArgs.append(specialArgumentTypeResolution);
