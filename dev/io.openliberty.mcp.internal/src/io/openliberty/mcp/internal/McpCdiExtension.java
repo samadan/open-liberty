@@ -9,6 +9,7 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +19,7 @@ import com.ibm.websphere.ras.TraceComponent;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
+import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
@@ -43,7 +45,6 @@ public class McpCdiExtension implements Extension {
         for (AnnotatedMethod<?> m : type.getMethods()) {
             Tool toolAnnotation = m.getAnnotation(Tool.class);
             if (toolAnnotation != null) {
-                //String qualifiedName = javaClass.getName() + "." + m.getJavaMember().getName();
                 registerTool(toolAnnotation, pmb.getBean(), m);
             }
         }
@@ -52,6 +53,8 @@ public class McpCdiExtension implements Extension {
     void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
         reportOnDuplicateTools(afterDeploymentValidation);
         reportOnToolArgEdgeCases(afterDeploymentValidation);
+        reportOnDuplicateSpecialArguments(afterDeploymentValidation);
+        reportOnInvalidSpecialArguments(afterDeploymentValidation);
     }
 
     /**
@@ -99,6 +102,40 @@ public class McpCdiExtension implements Extension {
 
         if (duplicateToolsMap.size() != 0) {
             afterDeploymentValidation.addDeploymentProblem(new Exception(sb.toString()));
+        }
+    }
+
+    private void reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+        StringBuilder sbDuplicateSpecialArgs = new StringBuilder("Only 1 instance is allowed, of type: ");
+        for (ToolMetadata tool : tools.getAllTools()) {
+            Map<SpecialArgumentType.Resolution, Integer> resultCountMap = new HashMap<>();
+            for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
+                SpecialArgumentType.Resolution specialArgumentTypeResolution = specialArgument.typeResolution();
+                if (specialArgumentTypeResolution.specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
+                    continue;
+                }
+                resultCountMap.merge(specialArgumentTypeResolution, 1, Integer::sum);
+                if (resultCountMap.get(specialArgumentTypeResolution) > 1) {
+                    sbDuplicateSpecialArgs.append(specialArgumentTypeResolution);
+                    sbDuplicateSpecialArgs.append("\n  But more than 1 argument was found. Please remove the extra instance, or check if you meant to include @ToolArg to one of them");
+                    sbDuplicateSpecialArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
+                    afterDeploymentValidation.addDeploymentProblem(new Exception(sbDuplicateSpecialArgs.toString()));
+                }
+            }
+        }
+    }
+
+    private void reportOnInvalidSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+        StringBuilder sbInvalidSpecialArgs = new StringBuilder("Special argument type not supported: ");
+        for (ToolMetadata tool : tools.getAllTools()) {
+            for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
+                if (specialArgument.typeResolution().specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
+                    sbInvalidSpecialArgs.append(specialArgument.typeResolution());
+                    sbInvalidSpecialArgs.append("\n  Please check if you have the correct class imported for your argument, or you meant to include @ToolArg");
+                    sbInvalidSpecialArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
+                    afterDeploymentValidation.addDeploymentProblem(new Exception(sbInvalidSpecialArgs.toString()));
+                }
+            }
         }
     }
 

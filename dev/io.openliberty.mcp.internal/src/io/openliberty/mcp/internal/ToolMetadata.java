@@ -31,7 +31,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
 
     public record ArgumentMetadata(Type type, int index, String description, boolean required, boolean isDuplicate) {}
 
-    public record SpecialArgumentMetadata(SpecialArgumentType type, int index) {}
+    public record SpecialArgumentMetadata(SpecialArgumentType.Resolution typeResolution, int index) {}
 
     public ToolMetadata {
         arguments = ((arguments == null) ? Collections.emptyMap() : arguments);
