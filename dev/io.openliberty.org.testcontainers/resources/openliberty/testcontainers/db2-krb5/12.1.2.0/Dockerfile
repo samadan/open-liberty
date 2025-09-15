@@ -1,7 +1,7 @@
 # Base image used by external users is overwritten at runtime
 # by a mirrored version from Artifactory for internal users.
 
-ARG BASE_IMAGE="icr.io/db2_community/db2:12.1.1.0"
+ARG BASE_IMAGE="icr.io/db2_community/db2:12.1.2.0"
 
 FROM ${BASE_IMAGE}
 
