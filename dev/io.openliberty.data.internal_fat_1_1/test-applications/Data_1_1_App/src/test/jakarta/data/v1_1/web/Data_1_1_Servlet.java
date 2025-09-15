@@ -20,11 +20,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import jakarta.data.Limit;
 import jakarta.data.Order;
 import jakarta.data.Sort;
 import jakarta.data.constraint.AtMost;
 import jakarta.data.constraint.Between;
 import jakarta.data.constraint.In;
+import jakarta.data.constraint.Like;
 import jakarta.data.constraint.NotBetween;
 import jakarta.data.constraint.NotNull;
 import jakarta.data.expression.TextExpression;
@@ -208,6 +210,74 @@ public class Data_1_1_Servlet extends FATServlet {
         assertEquals(1L, page4.numberOfElements());
         assertEquals(true, page4.hasPrevious());
         assertEquals(false, page4.hasNext());
+    }
+
+    /**
+     * Tests that the Like constraint types can be assigned to a repository
+     * method parameter to enforce that an entity attributes is matched
+     * according to a literal value.
+     */
+    @Test
+    public void testLikeConstraintWithLiteral() {
+
+        assertEquals(List.of("Seven Eighths"),
+                     fractions.named(Like.literal("Seven Eighths"),
+                                     Order.by(),
+                                     Limit.of(7)));
+
+        assertEquals(List.of(),
+                     fractions.named(Like.literal("Seven %"),
+                                     Order.by(),
+                                     Limit.of(8)));
+    }
+
+    /**
+     * Tests that the Like constraint types can be assigned to a repository
+     * method parameter to enforce that an entity attributes is matched
+     * according to an escaped pattern.
+     */
+    @Test
+    public void testLikeConstraintWithCustomEscapedPattern() {
+
+        assertEquals(List.of("Five Sixteenths",
+                             "Five Sixths",
+                             "Four Sixteenths",
+                             "Four Sixths"),
+                     fractions.named(Like.pattern("Fccc Sixxsthxs",
+                                                  'c', // char wildcard, normally _
+                                                  's', // string wildcard, normally %
+                                                  'x'), // escape char, normally \
+                                     Order.by(Sort.asc(_Fraction.NAME)),
+                                     Limit.of(6)));
+    }
+
+    /**
+     * Tests that the Like constraint types can be assigned to a repository
+     * method parameter to enforce that an entity attributes is matched
+     * according to a simple pattern with wildcards. Also use a Limit parameter
+     * to restrict the number of results returned.
+     */
+    @Test
+    public void testLikeConstraintWithPatternAndLimit() {
+
+        assertEquals(List.of("Three Fifths",
+                             "Three Ninths",
+                             "Three Sixths",
+                             "Two Fifths",
+                             "Two Ninths",
+                             "Two Sixths"),
+                     fractions.named(Like.pattern("T% _i_ths"),
+                                     Order.by(Sort.asc(_Fraction.NAME)),
+                                     Limit.of(10)));
+
+        // reversing the order and limiting to 4 results:
+        assertEquals(List.of("Two Sixths",
+                             "Two Ninths",
+                             "Two Fifths",
+                             "Three Sixths"),
+                     fractions.named(Like.pattern("T% _i_ths"),
+                                     Order.by(Sort.desc(_Fraction.NAME)),
+                                     Limit.of(4)));
     }
 
     /**

@@ -260,6 +260,12 @@ public class Data_1_1 implements DataVersionCompatibility {
                 q.append(attributeExpr).append(constraint.operator());
                 appendParam(q, ignoreCase, qp);
                 break;
+            case LikeEscaped:
+                q.append(attributeExpr).append(constraint.operator());
+                appendParam(q, ignoreCase, qp);
+                q.append(" ESCAPE ");
+                appendParam(q, false, qp + 1);
+                break;
             case Null:
                 q.append(attributeExpr).append(constraint.operator());
                 break;
@@ -389,7 +395,7 @@ public class Data_1_1 implements DataVersionCompatibility {
 
         for (Annotation anno : paramAnnos)
             if (anno instanceof Is) {
-                constraints[p] = toAttributeConstraint(((Is) anno).value());
+                constraints[p] = toAttributeConstraint(((Is) anno).value(), paramType);
             } else if (anno instanceof Assign) {
                 attrNames[p] = ((Assign) anno).value();
                 updateOps[p] = '=';
@@ -412,12 +418,8 @@ public class Data_1_1 implements DataVersionCompatibility {
                 qpNext++;
             }
 
-        if (Constraint.class.isAssignableFrom(paramType)) {
-            if (constraints[p] == null)
-                constraints[p] = toAttributeConstraint(paramType);
-
-            // TODO 1.1 implement handling of Constraint, check for collisions,
-            // and merge with subsequent code
+        if (constraints[p] == null && Constraint.class.isAssignableFrom(paramType)) {
+            constraints[p] = toAttributeConstraint(null, paramType);
         }
 
         if (qpNext == qpOriginal) {
@@ -510,10 +512,21 @@ public class Data_1_1 implements DataVersionCompatibility {
     /**
      * Convert a constraint subtype to its AttributeConstraint representation.
      *
-     * @param type subtype of Constraint.
+     * @param isAnnoConstraintType subtype of Constraint indicated by Is anno.
+     *                                 Otherwise null.
+     * @param methodParamType      repository method parameter type.
      * @return AttributeConstraint representation.
      */
-    private static final AttributeConstraint toAttributeConstraint(Class<?> type) {
+    private static AttributeConstraint toAttributeConstraint(Class<?> isAnnoConstraintType,
+                                                             Class<?> methodParamType) {
+        Class<?> type = isAnnoConstraintType == null ||
+                        Constraint.class.isAssignableFrom(methodParamType) //
+                                        ? methodParamType //
+                                        : isAnnoConstraintType;
+
+        if (isAnnoConstraintType != null && type != isAnnoConstraintType)
+            ; // TODO 1.1 error for collisions
+
         AttributeConstraint constraint;
         if (AtLeast.class.equals(type))
             constraint = AttributeConstraint.GreaterThanEqual;
@@ -530,7 +543,9 @@ public class Data_1_1 implements DataVersionCompatibility {
         else if (LessThan.class.equals(type))
             constraint = AttributeConstraint.LessThan;
         else if (Like.class.equals(type))
-            constraint = AttributeConstraint.Like;
+            constraint = Like.class.equals(methodParamType) //
+                            ? AttributeConstraint.LikeEscaped //
+                            : AttributeConstraint.Like;
         else if (NotBetween.class.equals(type))
             constraint = AttributeConstraint.NotBetween;
         else if (NotEqualTo.class.equals(type))
@@ -538,13 +553,18 @@ public class Data_1_1 implements DataVersionCompatibility {
         else if (NotIn.class.equals(type))
             constraint = AttributeConstraint.NotIn;
         else if (NotLike.class.equals(type))
-            constraint = AttributeConstraint.NotLike;
+            constraint = Like.class.equals(methodParamType) //
+                            ? AttributeConstraint.NotLikeEscaped //
+                            : AttributeConstraint.NotLike;
         else if (NotNull.class.equals(type))
             constraint = AttributeConstraint.NotNull;
         else if (Null.class.equals(type))
             constraint = AttributeConstraint.Null;
         else
+            // TODO 1.1 if isAnnoConstraintType == null handle generic Constraint else
             throw new UnsupportedOperationException("Constraint: " + type.getName()); // TODO NLS
+
+        // TODO 1.1: errors for types the Is annotation cannot support
 
         return constraint;
     }
@@ -573,7 +593,11 @@ public class Data_1_1 implements DataVersionCompatibility {
         else if (constraintOrValue instanceof LessThan c)
             values = new Object[] { c.bound() };
         else if (constraintOrValue instanceof Like c)
-            values = new Object[] { c.pattern() };
+            values = new Object[] { c.pattern(),
+                                    c.escape() == null ? '\\' : c.escape() };
+        // TODO API change requested to avoid null (above). If we do not get it, then
+        // the escape character will need to be inserted into the value of c.escape()
+        // whenever switching from null to \
         else if (constraintOrValue instanceof NotBetween c)
             values = new Object[] { c.lowerBound(), c.upperBound() };
         else if (constraintOrValue instanceof NotEqualTo c)
@@ -581,7 +605,11 @@ public class Data_1_1 implements DataVersionCompatibility {
         else if (isList = constraintOrValue instanceof NotIn)
             values = ((NotIn) constraintOrValue).expressions().toArray();
         else if (constraintOrValue instanceof NotLike c)
-            values = new Object[] { c.pattern() };
+            values = new Object[] { c.pattern(),
+                                    c.escape() == null ? '\\' : c.escape() };
+        // TODO API change requested to avoid null (above). If we do not get it, then
+        // the escape character will need to be inserted into the value of c.escape()
+        // whenever switching from null to \
         else if (constraintOrValue instanceof NotNull ||
                  constraintOrValue instanceof Null)
             values = new Object[0];
@@ -594,6 +622,8 @@ public class Data_1_1 implements DataVersionCompatibility {
         for (int i = 0; i < values.length; i++)
             if (values[i] instanceof Literal)
                 values[i] = ((Literal) values[i]).value();
+            else if (values[i] instanceof Character)
+                ; // the escape character for Like and NotLike
             else
                 throw new UnsupportedOperationException(values[i].getClass().getName());
 

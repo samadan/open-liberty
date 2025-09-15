@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
+import jakarta.data.Limit;
 import jakarta.data.Order;
 import jakarta.data.Sort;
 import jakarta.data.constraint.AtLeast;
@@ -55,6 +56,12 @@ public interface Fractions {
     Stream<Fraction> havingDenominatorWithin//
     (@By(_Fraction.DENOMINATOR) @Is(AtLeast.class) long min,
      @By(_Fraction.DENOMINATOR) @Is(AtMost.class) long max);
+
+    @Find
+    @Select(_Fraction.NAME)
+    List<String> named(@By(_Fraction.NAME) Like pattern,
+                       Order<Fraction> order,
+                       Limit limit);
 
     @Find
     @OrderBy(_Fraction.DENOMINATOR)
