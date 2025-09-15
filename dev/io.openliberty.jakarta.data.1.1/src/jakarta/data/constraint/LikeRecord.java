@@ -51,7 +51,11 @@ record LikeRecord(TextExpression<?> pattern, Character escape)
                (escape == null ? "" : " ESCAPE '" + escape + "'");
     }
 
-    static String translate(String pattern, char charWildcard, char stringWildcard, char escape) {
+    static String translate(String pattern,
+                            char charWildcard,
+                            char stringWildcard,
+                            char escape,
+                            boolean patternIsAlreadyEscaped) {
 
         if (charWildcard == stringWildcard) {
             throw new IllegalArgumentException(Character.toString(charWildcard));
@@ -63,21 +67,35 @@ record LikeRecord(TextExpression<?> pattern, Character escape)
 
         StringBuilder result = new StringBuilder();
 
-        for (int c = 0; c < pattern.length(); c++) {
-            char ch = pattern.charAt(c);
-            if (ch == charWildcard) {
+        boolean previousCharIsEscape = false;
+        for (int i = 0; i < pattern.length(); i++) {
+            final char ch = pattern.charAt(i);
+            if (previousCharIsEscape) {
+                if (ch == CHAR_WILDCARD ||
+                    ch == STRING_WILDCARD ||
+                    ch == escape) {
+                    result.append(escape);
+                }
+                result.append(ch);
+                previousCharIsEscape = false;
+            } else if (ch == charWildcard) {
                 result.append(CHAR_WILDCARD);
             } else if (ch == stringWildcard) {
                 result.append(STRING_WILDCARD);
+            } else if (ch == escape && patternIsAlreadyEscaped) {
+                previousCharIsEscape = true;
             } else {
-                if (ch == CHAR_WILDCARD ||
-                    ch == escape ||
-                    ch == STRING_WILDCARD) {
+                if (ch == STRING_WILDCARD ||
+                    ch == CHAR_WILDCARD ||
+                    ch == escape) {
                     result.append(escape);
                 }
                 result.append(ch);
             }
         }
+
+        if (previousCharIsEscape)
+            throw new IllegalArgumentException("pattern: " + pattern);
 
         return result.toString();
     }

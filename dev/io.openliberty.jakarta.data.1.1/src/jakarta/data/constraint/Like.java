@@ -48,8 +48,15 @@ public interface Like extends Constraint<String> {
     }
 
     static Like pattern(String pattern, char charWildcard, char stringWildcard) {
+        Messages.requireNonNull(pattern, "pattern");
 
-        return Like.pattern(pattern, charWildcard, stringWildcard, ESCAPE);
+        StringLiteral expression = StringLiteral.of(translate(pattern,
+                                                              charWildcard,
+                                                              stringWildcard,
+                                                              ESCAPE,
+                                                              false));
+
+        return new LikeRecord(expression, ESCAPE);
     }
 
     static Like pattern(String pattern,
@@ -62,7 +69,8 @@ public interface Like extends Constraint<String> {
         StringLiteral expression = StringLiteral.of(translate(pattern,
                                                               charWildcard,
                                                               stringWildcard,
-                                                              escape));
+                                                              escape,
+                                                              true));
 
         return new LikeRecord(expression, escape);
     }
