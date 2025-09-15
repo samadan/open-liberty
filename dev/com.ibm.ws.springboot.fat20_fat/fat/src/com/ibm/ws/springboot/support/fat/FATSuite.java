@@ -73,6 +73,7 @@ import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
                 NonZipExtensionFilesInBootInfLibTests20.class,
                 MultiModuleProjectTests20.class,
                 ApplicationStartedEventTests.class,
+                JNDINoEEContextAppTests.class,
                 JTAAppTests20.class,
                 JTAAppTests20War.class,
                 JPAHibernateAppTests20War.class,
