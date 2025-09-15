@@ -78,12 +78,10 @@ public class DB2KerberosTest extends FATServletClient {
     @BeforeClass
     public static void setUp() throws Exception {
         krbConfPath = Paths.get(server.getServerRoot(), "security", "krb5.conf");
-
-        //TODO switch
-        krbKeytabPath = Paths.get("publish", "servers", "com.ibm.ws.jdbc.fat.krb5", "security", "krb5.keytab");
-//        krbKeytabPath = Paths.get(server.getServerRoot(), "security", "krb5.keytab");
-
         FATSuite.krb5.generateConf(krbConfPath);
+
+        krbKeytabPath = Paths.get(server.getServerRoot(), "security", "krb5.keytab");
+        FATSuite.krb5.copyUserKeytab(krbKeytabPath, KRB5_USER);
 
         ShrinkHelper.defaultDropinApp(server, APP_NAME, "jdbc.krb5.db2.web");
 
@@ -95,17 +93,11 @@ public class DB2KerberosTest extends FATServletClient {
         server.addEnvVar("KRB5_USER", KRB5_USER);
         server.addEnvVar("KRB5_CONF", krbConfPath.toAbsolutePath().toString());
         server.addEnvVar("KRB5_KEYTAB", krbKeytabPath.toAbsolutePath().toString());
+
         List<String> jvmOpts = new ArrayList<>();
         jvmOpts.add("-Dsun.security.krb5.debug=true"); // Hotspot/OpenJ9
         jvmOpts.add("-Dcom.ibm.security.krb5.krb5Debug=true"); // IBM JDK
         jvmOpts.add("-Dsun.security.jgss.debug=true"); // Hotspot/OpenJ9
-
-        // TODO extract security files from container prior to server start
-        // TODO delete security files from git
-
-        // Extract keytab from container
-//        db2.copyFileFromContainer("/tmp/krb5.keytab", krbKeytabPath.toAbsolutePath().toString());
-
         server.setJvmOptions(jvmOpts);
 
         server.startServer();
