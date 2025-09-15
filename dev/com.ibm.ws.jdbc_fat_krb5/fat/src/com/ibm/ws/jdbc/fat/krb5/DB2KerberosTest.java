@@ -12,6 +12,9 @@
  *******************************************************************************/
 package com.ibm.ws.jdbc.fat.krb5;
 
+import static componenttest.annotation.SkipForSecurity.FIPS_140_3;
+import static componenttest.annotation.SkipForSecurity.SEMERU;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,16 +44,16 @@ import com.ibm.ws.jdbc.fat.krb5.rules.KerberosPlatformRule;
 
 import componenttest.annotation.AllowedFFDC;
 import componenttest.annotation.Server;
+import componenttest.annotation.SkipForSecurity;
 import componenttest.annotation.TestServlet;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.custom.junit.runner.Mode;
 import componenttest.custom.junit.runner.Mode.TestMode;
-import componenttest.rules.SkipJavaSemeruWithFipsEnabled;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import jdbc.krb5.db2.web.DB2KerberosTestServlet;
 
-@SkipJavaSemeruWithFipsEnabled.SkipJavaSemeruWithFipsEnabledRule
+@SkipForSecurity(property = FIPS_140_3, runtimeName = SEMERU)
 @RunWith(FATRunner.class)
 @Mode(TestMode.FULL)
 public class DB2KerberosTest extends FATServletClient {
@@ -61,10 +64,8 @@ public class DB2KerberosTest extends FATServletClient {
 
     public static final DB2KerberosContainer db2 = new DB2KerberosContainer(FATSuite.network);
 
-    private static final SkipJavaSemeruWithFipsEnabled skipJavaSemeruWithFipsEnabled = new SkipJavaSemeruWithFipsEnabled("com.ibm.ws.jdbc.fat.krb5");
-
     @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(skipJavaSemeruWithFipsEnabled).around(KerberosPlatformRule.instance()).around(db2);
+    public static RuleChain chain = RuleChain.outerRule(KerberosPlatformRule.instance()).around(db2);
 
     @Server("com.ibm.ws.jdbc.fat.krb5")
     @TestServlet(servlet = DB2KerberosTestServlet.class, contextRoot = APP_NAME)
