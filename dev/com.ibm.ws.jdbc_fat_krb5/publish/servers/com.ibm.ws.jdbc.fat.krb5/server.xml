@@ -8,7 +8,7 @@
   <include location="../fatTestPorts.xml"/>
 
   <library id="DB2JCCLib">
-    <file name="${shared.resource.dir}/jdbc/jcc.jar" />
+    <file name="${shared.resource.dir}/jcc/jcc.jar" />
   </library>
   
   <kerberos keytab="${KRB5_KEYTAB}" configFile="${KRB5_CONF}"/>
