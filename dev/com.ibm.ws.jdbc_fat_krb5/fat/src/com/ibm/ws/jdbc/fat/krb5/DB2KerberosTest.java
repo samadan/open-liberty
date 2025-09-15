@@ -57,8 +57,6 @@ public class DB2KerberosTest extends FATServletClient {
 
     private static final Class<?> c = DB2KerberosTest.class;
 
-    public static final String KRB5_USER = "dbuser";
-
     public static final String APP_NAME = "krb5-db2-app";
 
     public static final DB2KerberosContainer db2 = new DB2KerberosContainer(FATSuite.network);
@@ -81,7 +79,7 @@ public class DB2KerberosTest extends FATServletClient {
         FATSuite.krb5.generateConf(krbConfPath);
 
         krbKeytabPath = Paths.get(server.getServerRoot(), "security", "krb5.keytab");
-        FATSuite.krb5.copyUserKeytab(krbKeytabPath, KRB5_USER);
+        FATSuite.krb5.copyUserKeytab(krbKeytabPath, db2.getKerberosUsername());
 
         ShrinkHelper.defaultDropinApp(server, APP_NAME, "jdbc.krb5.db2.web");
 
@@ -90,7 +88,9 @@ public class DB2KerberosTest extends FATServletClient {
         server.addEnvVar("DB2_PORT", "" + db2.getMappedPort(50000));
         server.addEnvVar("DB2_USER", db2.getUsername());
         server.addEnvVar("DB2_PASS", db2.getPassword());
-        server.addEnvVar("KRB5_USER", KRB5_USER);
+        server.addEnvVar("KRB5_PRIN", db2.getKerberosPrinciple());
+        server.addEnvVar("KRB5_USER", db2.getKerberosUsername());
+        server.addEnvVar("KRB5_PASS", db2.getKerberosPassword());
         server.addEnvVar("KRB5_CONF", krbConfPath.toAbsolutePath().toString());
         server.addEnvVar("KRB5_KEYTAB", krbKeytabPath.toAbsolutePath().toString());
 
@@ -118,7 +118,7 @@ public class DB2KerberosTest extends FATServletClient {
     @Test
     @Mode(TestMode.FULL)
     public void testTicketCache() throws Exception {
-        String ccPath = Paths.get(server.getServerRoot(), "security", "krb5TicketCache_" + KRB5_USER).toAbsolutePath().toString();
+        String ccPath = Paths.get(server.getServerRoot(), "security", "krb5TicketCache_" + db2.getKerberosUsername()).toAbsolutePath().toString();
         try {
             generateTicketCache(ccPath, false);
         } catch (UnsupportedOperationException e) {
@@ -158,7 +158,7 @@ public class DB2KerberosTest extends FATServletClient {
     @Mode(TestMode.FULL)
     @AllowedFFDC({ "javax.resource.ResourceException", "javax.security.auth.login.LoginException" })
     public void testTicketCacheExpired() throws Exception {
-        String ccPath = Paths.get(server.getServerRoot(), "security", "krb5TicketCacheExpired_" + KRB5_USER).toAbsolutePath().toString();
+        String ccPath = Paths.get(server.getServerRoot(), "security", "krb5TicketCacheExpired_" + db2.getKerberosUsername()).toAbsolutePath().toString();
         try {
             generateTicketCache(ccPath, true);
         } catch (UnsupportedOperationException e) {
@@ -224,7 +224,7 @@ public class DB2KerberosTest extends FATServletClient {
         pb.command("kinit", "-k", "-t", krbKeytabPath.toAbsolutePath().toString(), //
                    "-c", "FILE:" + ccPath, //Some linux kinit installs require FILE:
                    "-l", expired ? "1" : "604800", //Ticket lifetime, if expired set the minimum of 1s, otherwise 7 days.
-                   KRB5_USER + "@" + KerberosContainer.KRB5_REALM);
+                   db2.getKerberosUsername() + "@" + KerberosContainer.KRB5_REALM);
 
         pb.redirectErrorStream(true);
         Process p = null;

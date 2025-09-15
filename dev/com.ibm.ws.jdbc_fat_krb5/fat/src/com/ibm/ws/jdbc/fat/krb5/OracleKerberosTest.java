@@ -80,12 +80,15 @@ public class OracleKerberosTest extends FATServletClient {
 
         // Setup environment variables
         server.addEnvVar("ORACLE_DRIVER", getDriverName());
-        server.addEnvVar("ORACLE_DBNAME", oracle.getDatabaseName());
+        server.addEnvVar("ORACLE_DB", oracle.getDatabaseName());
+        server.addEnvVar("ORACLE_SID", oracle.getSid());
         server.addEnvVar("ORACLE_HOSTNAME", oracle.getHost());
         server.addEnvVar("ORACLE_PORT", "" + oracle.getMappedPort(1521));
         server.addEnvVar("ORACLE_USER", oracle.getUsername());
         server.addEnvVar("ORACLE_PASS", oracle.getPassword());
+        server.addEnvVar("KRB5_PRIN", oracle.getKerberosPrinciple());
         server.addEnvVar("KRB5_USER", oracle.getKerberosUsername());
+        server.addEnvVar("KRB5_PASS", oracle.getKerberosPassword());
         server.addEnvVar("KRB5_KEYTAB", krb5KeytabPath.toAbsolutePath().toString());
         server.addEnvVar("KRB5_CONF", krbConfPath.toAbsolutePath().toString());
 

@@ -70,9 +70,8 @@ public class ErrorPathTest extends FATServletClient {
         Path krbConfPath = Paths.get(server.getServerRoot(), "security", "krb5.conf");
         FATSuite.krb5.generateConf(krbConfPath);
 
-        //TODO switch
-        Path krbKeytabPath = Paths.get("publish", "servers", "com.ibm.ws.jdbc.fat.krb5", "security", "krb5.keytab");
-//        krbKeytabPath = Paths.get(server.getServerRoot(), "security", "krb5.keytab");
+        Path krbKeytabPath = Paths.get(server.getServerRoot(), "security", "krb5.keytab");
+        FATSuite.krb5.copyUserKeytab(krbKeytabPath, db2.getKerberosUsername());
 
         ShrinkHelper.defaultDropinApp(server, APP_NAME, "jdbc.krb5.db2.web");
 
@@ -81,13 +80,15 @@ public class ErrorPathTest extends FATServletClient {
         server.addEnvVar("DB2_PORT", "" + db2.getMappedPort(50000));
         server.addEnvVar("DB2_USER", db2.getUsername());
         server.addEnvVar("DB2_PASS", db2.getPassword());
-        server.addEnvVar("KRB5_USER", DB2KerberosTest.KRB5_USER);
+        server.addEnvVar("KRB5_PRIN", db2.getKerberosPrinciple());
+        server.addEnvVar("KRB5_USER", db2.getKerberosUsername());
+        server.addEnvVar("KRB5_PASS", db2.getKerberosPassword());
         server.addEnvVar("KRB5_CONF", krbConfPath.toAbsolutePath().toString());
         server.addEnvVar("KRB5_KEYTAB", krbKeytabPath.toAbsolutePath().toString());
+
         List<String> jvmOpts = new ArrayList<>();
         jvmOpts.add("-Dsun.security.krb5.debug=true"); // Hotspot/OpenJ9
         jvmOpts.add("-Dcom.ibm.security.krb5.krb5Debug=true"); // IBM JDK
-
         server.setJvmOptions(jvmOpts);
 
         server.startServer();
