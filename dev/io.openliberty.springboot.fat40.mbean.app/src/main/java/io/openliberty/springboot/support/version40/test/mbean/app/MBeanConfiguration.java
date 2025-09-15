@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package io.openliberty.springboot.support.version30.test.mbean.app;
+package io.openliberty.springboot.support.version40.test.mbean.app;
 
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
