@@ -73,7 +73,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
     }
 
     private static String resolveArgumentName(AnnotatedParameter<?> param, ToolArg argAnnotation) {
-        if (ToolArg.ELEMENT_NAME.equals(argAnnotation.name())) {
+        if (argAnnotation.name().equals(ToolArg.ELEMENT_NAME)) {
             return argAnnotation.name();
         }
         if (param.getJavaParameter().isNamePresent()) {
