@@ -71,12 +71,14 @@ public class DeploymentProblemTest extends FATServletClient {
     }
 
     public void testDuplicateSpecialArgsTestCase() throws Exception {
+        String expectedErrorHeader = "Duplicate Special Arguments found:";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateSpecialArgsErrorTest.duplicateCancellation");
-        ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Duplicate Special Args: ", expectedErrorList, server);
+        ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Duplicate Special Args: ", expectedErrorHeader, expectedErrorList, server);
     }
 
     public void testInvalidSpecialArgsTestCase() throws Exception {
+        String expectedErrorHeader = "Invalid Special Arguments found:";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.InvalidSpecialArgsErrorTest.invalidSpecialArgumentTool");
-        ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Invalid Special Args: ", expectedErrorList, server);
+        ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Invalid Special Args: ", expectedErrorHeader, expectedErrorList, server);
     }
 }
