@@ -73,13 +73,17 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
     }
 
     private static String resolveArgumentName(AnnotatedParameter<?> param, ToolArg argAnnotation) {
-        if (argAnnotation.name().equals(ToolArg.ELEMENT_NAME)) {
-            return argAnnotation.name();
+        String argAnnotationName = argAnnotation.name();
+
+        if (!argAnnotationName.equals(ToolArg.ELEMENT_NAME)) {
+            return argAnnotationName;
         }
+
         if (param.getJavaParameter().isNamePresent()) {
             // needs java compiler -parameter flag to work
             return param.getJavaParameter().getName();
         }
+
         throw new IllegalStateException("Parameter name not set. Ensure that javac -parameter flag is enabled");
     }
 
