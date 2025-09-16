@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2017 IBM Corporation and others.
+ * Copyright (c) 2017, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -41,5 +41,14 @@ public @interface TestServlet {
      * The servlet class to scan for '@Test' annotations, which will be invoked automatically via HTTP GET request
      */
     Class<?> servlet();
+
+    /**
+     * The servlet class should only be scanned if the minimum java level is meet.
+     * This will be used to avoid attempting to initialize a test servlet class during
+     * child test discovery, but before additional test filtering.
+     *
+     * Default: 0
+     */
+    int minJavaLevel() default 0;
 
 }
