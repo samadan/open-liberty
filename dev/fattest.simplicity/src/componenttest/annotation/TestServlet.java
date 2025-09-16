@@ -44,8 +44,10 @@ public @interface TestServlet {
 
     /**
      * The servlet class should only be scanned if the minimum java level is meet.
-     * This will be used to avoid attempting to initialize a test servlet class during
-     * child test discovery, but before additional test filtering.
+     * This will be used to avoid attempting to load annotations on the servlet class
+     * that were compiled with a later version of java then the current runtime.
+     *
+     * Otherwise, developers should be using the {@link MinimumJavaLevel} annotation.
      *
      * Default: 0
      */
