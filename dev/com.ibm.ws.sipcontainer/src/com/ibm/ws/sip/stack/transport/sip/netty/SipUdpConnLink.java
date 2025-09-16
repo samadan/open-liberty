@@ -411,13 +411,7 @@ public class SipUdpConnLink implements UdpSender, ChannelFutureListener {
 	 */
 	void releaseOutboundBuffer() {
 		// No need to release the ByteBuf as the reference count should be 0 by this point. 
-		// If release is called, a warn would be logged. 
-		if(m_outboundBuffer.refCnt() > 0) {
-						System.out.println("NOT SKIPPED CNT: " + m_outboundBuffer.refCnt());
-			io.netty.util.ReferenceCountUtil.release(m_outboundBuffer);
-		} else {
-			System.out.println("Skipped release: cnt: " + m_outboundBuffer.refCnt());
-		}
+		// Reference count should have been handled by the writeandflush method
 		m_outboundBuffer = null;
 	}
 
