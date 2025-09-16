@@ -25,6 +25,7 @@ import com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions;
 import com.ibm.ws.microprofile.openapi.fat.utils.OpenAPIConnection;
 import com.ibm.ws.microprofile.openapi.fat.utils.OpenAPITestUtil;
 
+import componenttest.annotation.MaximumJavaLevel;
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.rules.repeater.RepeatTests;
@@ -137,6 +138,8 @@ public class ProxySupportTest extends FATServletClient {
      * @throws Exception
      */
     @Test
+    @MaximumJavaLevel(javaLevel = 23) // On JAVA 24 many JDKs are setting the Host variable to localhost despite its
+                                      // explicit definition
     public void testRefererSamePort() throws Exception {
         String referer = "http://openliberty.io:" + server.getHttpDefaultPort() + "/openapi";
         String openapi = OpenAPIConnection.openAPIDocsConnection(server, false).header(REFERER, referer).download();
@@ -181,6 +184,8 @@ public class ProxySupportTest extends FATServletClient {
      * @throws Exception
      */
     @Test
+    @MaximumJavaLevel(javaLevel = 23) // On JAVA 24 many JDKs are setting the Host variable to localhost despite its
+                                      // explicit definition
     public void testForwardedDifferentPort() throws Exception {
         String openapi = OpenAPIConnection.openAPIDocsConnection(server, false)
             .header(HOST, "openliberty.io")
@@ -231,6 +236,8 @@ public class ProxySupportTest extends FATServletClient {
      * @throws Exception
      */
     @Test
+    @MaximumJavaLevel(javaLevel = 23) // On JAVA 24 many JDKs are setting the Host variable to localhost despite its
+                                      // explicit definition
     public void testForwadedSamePortOtherScheme() throws Exception {
         String openapi = OpenAPIConnection.openAPIDocsConnection(server, false)
             .header(HOST, "openliberty.io:" + server.getHttpDefaultPort())

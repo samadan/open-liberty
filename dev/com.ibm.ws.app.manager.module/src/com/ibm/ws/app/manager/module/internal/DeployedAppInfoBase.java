@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2023 IBM Corporation and others.
+ * Copyright (c) 2012, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -58,6 +58,7 @@ import com.ibm.ws.container.service.app.deploy.extended.LibraryContainerInfo.Lib
 import com.ibm.ws.ffdc.FFDCFilter;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 import com.ibm.ws.javaee.dd.permissions.PermissionsConfig;
+import com.ibm.ws.kernel.productinfo.ProductInfo;
 import com.ibm.wsspi.adaptable.module.AdaptableModuleFactory;
 import com.ibm.wsspi.adaptable.module.Container;
 import com.ibm.wsspi.adaptable.module.UnableToAdaptException;
@@ -188,7 +189,7 @@ public abstract class DeployedAppInfoBase extends SimpleDeployedAppInfoBase impl
     /**
      * Capture creation of a library container.
      *
-     * @param libPath The path to the library container.
+     * @param libPath  The path to the library container.
      * @param supplier The supplier of the library container.
      *
      * @return A new supplier of the library container which will capture the
@@ -270,7 +271,10 @@ public abstract class DeployedAppInfoBase extends SimpleDeployedAppInfoBase impl
                     Configuration cfg = classloaderConfigs[0];
                     Dictionary<String, Object> props = cfg.getProperties();
                     if (props != null) {
-                        String[] libraryPIDs = (String[]) props.get("privateLibraryRef");
+                        String[] libraryPIDs = ProductInfo.getBetaEdition() ? (String[]) props.get("overrideLibraryRef") : null;
+                        processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.OVERRIDE_LIB);
+
+                        libraryPIDs = (String[]) props.get("privateLibraryRef");
                         processLibraryPIDs(deployedAppServices, classesContainerInfo, libraryPIDs, LibraryType.PRIVATE_LIB);
 
                         libraryPIDs = (String[]) props.get("commonLibraryRef");

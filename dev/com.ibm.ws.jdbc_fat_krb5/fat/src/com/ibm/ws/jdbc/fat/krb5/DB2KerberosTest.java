@@ -45,10 +45,12 @@ import componenttest.annotation.TestServlet;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.custom.junit.runner.Mode;
 import componenttest.custom.junit.runner.Mode.TestMode;
+import componenttest.rules.SkipJavaSemeruWithFipsEnabled;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import jdbc.krb5.db2.web.DB2KerberosTestServlet;
 
+@SkipJavaSemeruWithFipsEnabled.SkipJavaSemeruWithFipsEnabledRule
 @RunWith(FATRunner.class)
 @Mode(TestMode.FULL)
 public class DB2KerberosTest extends FATServletClient {
@@ -61,8 +63,10 @@ public class DB2KerberosTest extends FATServletClient {
 
     public static final DB2KerberosContainer db2 = new DB2KerberosContainer(FATSuite.network);
 
+    private static final SkipJavaSemeruWithFipsEnabled skipJavaSemeruWithFipsEnabled = new SkipJavaSemeruWithFipsEnabled("com.ibm.ws.jdbc.fat.krb5");
+
     @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(KerberosPlatformRule.instance()).around(db2);
+    public static RuleChain chain = RuleChain.outerRule(skipJavaSemeruWithFipsEnabled).around(KerberosPlatformRule.instance()).around(db2);
 
     @Server("com.ibm.ws.jdbc.fat.krb5")
     @TestServlet(servlet = DB2KerberosTestServlet.class, contextRoot = APP_NAME)
@@ -94,6 +98,7 @@ public class DB2KerberosTest extends FATServletClient {
         List<String> jvmOpts = new ArrayList<>();
         jvmOpts.add("-Dsun.security.krb5.debug=true"); // Hotspot/OpenJ9
         jvmOpts.add("-Dcom.ibm.security.krb5.krb5Debug=true"); // IBM JDK
+        jvmOpts.add("-Dsun.security.jgss.debug=true"); // Hotspot/OpenJ9
 
         // TODO extract security files from container prior to server start
         // TODO delete security files from git
@@ -127,6 +132,12 @@ public class DB2KerberosTest extends FATServletClient {
         } catch (UnsupportedOperationException e) {
             Log.info(c, testName.getMethodName(), "Skipping test because OS does not support 'kinit'");
             return;
+        }
+
+        try {
+            listTicketCache(ccPath);
+        } catch (UnsupportedOperationException e) {
+            //Ignore, only for debug purposes
         }
 
         ServerConfiguration config = server.getServerConfiguration();
@@ -234,7 +245,10 @@ public class DB2KerberosTest extends FATServletClient {
 
         boolean success = p.waitFor(2, TimeUnit.MINUTES);
         String kinitResult = readInputStream(p.getInputStream());
-        Log.info(c, m, "Output from creating ccache with kinit:\n" + kinitResult);
+        Log.info(c, m, "Stdout from creating ccache with kinit:\n" + kinitResult);
+
+        String kinitError = readInputStream(p.getErrorStream());
+        Log.info(c, m, "Stderr from creating ccache with kinit:\n" + kinitError);
 
         if (success && kinitResult.length() == 0) { //kinit should return silently if successful
             Log.info(c, m, "Successfully generated a ccache at: " + ccPath);
@@ -249,6 +263,47 @@ public class DB2KerberosTest extends FATServletClient {
         } else {
             throw new Exception("Failed to create Kerberos ticket cache. Kinit output was: " + kinitResult);
         }
+    }
+
+    /**
+     * Lists a ccache using klist on the local system.
+     *
+     * @param ccPath - Location to create the ccache
+     * @throws Exception
+     */
+    private static void listTicketCache(String ccPath) {
+        final String m = "listTicketCache";
+
+        ProcessBuilder pb = new ProcessBuilder();
+
+        try {
+            pb.environment().put("KRB5_CONFIG", krbConfPath.toAbsolutePath().toString());
+            pb.environment().put("KRB5_TRACE", File.createTempFile("klist", ".log", new File(server.getServerRoot(), "logs")).getAbsolutePath());
+            pb.command("klist", "-f", "-a", "-c", "FILE:" + ccPath); //Some linux klist installs require FILE:
+        } catch (IOException e) {
+            Log.info(c, m, "Failed to create klist command due to IOException" + e.getMessage());
+        }
+
+        pb.redirectErrorStream(true);
+        Process p = null;
+        try {
+            p = pb.start();
+        } catch (IOException e) {
+            Log.info(c, m, "Unable to start klist due to: " + e.getMessage());
+            throw new UnsupportedOperationException(e);
+        }
+
+        try {
+            p.waitFor(2, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            Log.info(c, m, "Failed to execute klist due to interruption: " + e.getMessage());
+        }
+
+        String klistResult = readInputStream(p.getInputStream());
+        Log.info(c, m, "Stdout from listing ccache with klist:\n" + klistResult);
+
+        String klistError = readInputStream(p.getErrorStream());
+        Log.info(c, m, "Stderr from listing ccache with klist:\n" + klistError);
     }
 
     private void updateConfigAndWait(ServerConfiguration config) throws Exception {

@@ -9,9 +9,10 @@
  *******************************************************************************/
 package io.openliberty.jpa.persistence.tests.web;
 
-
+import static componenttest.annotation.OnlyIfSysProp.DB_Not_Default;
 import static componenttest.annotation.SkipIfSysProp.DB_DB2;
 import static componenttest.annotation.SkipIfSysProp.DB_Oracle;
+import static componenttest.annotation.SkipIfSysProp.DB_Postgres;
 import static componenttest.annotation.SkipIfSysProp.DB_SQLServer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,15 +27,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.junit.Ignore;
 
+import componenttest.annotation.OnlyIfSysProp;
 import componenttest.annotation.SkipIfSysProp;
 import componenttest.app.FATServlet;
 import io.openliberty.jpa.persistence.tests.models.AsciiCharacter;
 import io.openliberty.jpa.persistence.tests.models.Book;
 import io.openliberty.jpa.persistence.tests.models.DateTimeEntity;
+import io.openliberty.jpa.persistence.tests.models.Employee;
 import io.openliberty.jpa.persistence.tests.models.Event;
 import io.openliberty.jpa.persistence.tests.models.Organization;
 import io.openliberty.jpa.persistence.tests.models.Participant;
@@ -182,6 +186,7 @@ public class JakartaPersistenceServlet extends FATServlet {
      * @throws Exception
      */
     @Test
+    // Reference issue: https://github.com/OpenLiberty/open-liberty/issues/32688
     public void testEnumeratedValue() throws Exception {
 
         Ticket ticket1 = Ticket.of(1, "ticket1", TicketStatus.OPEN, Priority.HIGH);
@@ -477,9 +482,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     @Test
     public void testRecordAsEmbeddable_NoMatchAndOrdering() throws Exception {
         // Clean up any existing data
-        tx.begin();
-        em.createQuery("DELETE FROM Participant").executeUpdate();
-        tx.commit();
+        deleteAllEntities(Participant.class);
 
         // Setup test data
         Participant p1 = Participant.of("Anna", "Brown", 4);
@@ -516,6 +519,8 @@ public class JakartaPersistenceServlet extends FATServlet {
     @Test
     @SkipIfSysProp(DB_Oracle)
     public void testRecordAsEmbeddable_NullEdgeCaseAndOrdering() throws Exception {
+        deleteAllEntities(Participant.class);
+        
         // Setup test data with null, empty, and edge case values
         Participant p1 = Participant.of("Anna", null, 13); // Null last name (should be excluded)
         Participant p2 = Participant.of("Mike", "Green", 14); // Valid
@@ -578,7 +583,9 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test // Verifies that a JPQL query using an alias returns the correct hexadecimal value for a persisted AsciiCharacter
-    public void testAsciiCharacterQueryReturnsHexadecimalWithAlias() {
+    public void testAsciiCharacterQueryReturnsHexadecimalWithAlias() throws Exception {
+        deleteAllEntities(AsciiCharacter.class);
+        
         int id = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
         AsciiCharacter character = new AsciiCharacter();
         character.setId(id);
@@ -608,7 +615,9 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
-    public void testInvalidFieldInAsciiCharacterQuery() {
+    public void testInvalidFieldInAsciiCharacterQuery() throws Exception {
+        deleteAllEntities(AsciiCharacter.class);
+        
         try {
             em.createQuery("SELECT nonExistentField FROM AsciiCharacter", String.class).getResultList();
         } catch (Exception e) {
@@ -622,7 +631,9 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test // Verifies that multiple persisted AsciiCharacter entries return correct hexadecimal values via JPQL query
-    public void testAsciiCharacterMultipleResultsQuery() {
+    public void testAsciiCharacterMultipleResultsQuery() throws Exception {
+        deleteAllEntities(AsciiCharacter.class);
+        
         try {
             tx.begin();
             em.persist(AsciiCharacter.of(65)); // 'A'
@@ -638,6 +649,8 @@ public class JakartaPersistenceServlet extends FATServlet {
 
     @Test
     public void testAsciiCharacterwithSpecialCharacter() throws Exception {
+        deleteAllEntities(AsciiCharacter.class);
+        
         AsciiCharacter character = AsciiCharacter.of(42); // *
         String result;
         tx.begin();
@@ -656,6 +669,7 @@ public class JakartaPersistenceServlet extends FATServlet {
 
     @Test(expected = AssertionError.class)
     public void testAsciiCharacterNullCharacter() throws Exception {
+        deleteAllEntities(AsciiCharacter.class);
         AsciiCharacter character = null;
         tx.begin();
         try {
@@ -673,6 +687,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     @Test
     @SkipIfSysProp({ DB_DB2, DB_Oracle })
     public void testAsciiCharacterNonExistentCharacter() throws Exception {
+        deleteAllEntities(AsciiCharacter.class);
         AsciiCharacter character = new AsciiCharacter();
         character.setThisCharacter((char) 200); // Choose a code outside standard ASCII (0-127)
         character.setHexadecimal(null); // set to null
@@ -717,18 +732,19 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
-    @Ignore("Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884")
+    //Reference issue:https://github.com/OpenLiberty/open-liberty/issues/31884
+    @OnlyIfSysProp({ DB_Not_Default }) //Skips the test for Derby (default DB) as it doesn't support fractional-second precision
     public void testSecondPrecision() throws Exception {
         deleteAllEntities(Event.class);
 
-        LocalDateTime original = LocalDateTime.of(2025, 6, 11, 12, 0, 0, 123_456_789); 
+        LocalDateTime original = LocalDateTime.of(2025, 6, 11, 12, 0, 0, 444_777_999); 
         Event event = new Event(1L, original);
 
         tx.begin();
         em.persist(event);
+        em.flush();
+        em.clear();
         tx.commit();
-
-        em.clear(); 
 
         Event result;
         try {
@@ -739,7 +755,8 @@ public class JakartaPersistenceServlet extends FATServlet {
             throw e;
         }
 
-        assertEquals(123_450_000, result.timestamp.getNano());
+        assertTrue("Unexpected nanoseconds value: " + result.timestamp.getNano(),
+                   Set.of(444_770_000, 444_780_000).contains(result.timestamp.getNano()));
     }
 
     @Test
@@ -880,7 +897,10 @@ public class JakartaPersistenceServlet extends FATServlet {
      * @throws Exception
      */
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31802")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31802
+    @SkipIfSysProp({
+        DB_SQLServer //Failing on SQLServer (No mention of NULLS FIRST/LAST keywords in Documentation)
+    })
     public void testExtractYearFromLocalData() throws Exception {
         deleteAllEntities(DateTimeEntity.class);
         DateTimeEntity q1 = new DateTimeEntity(1, "q1", LocalDate.of(2022, 06, 07), LocalTime.of(12, 0), LocalDateTime.of(2022, 06, 07, 12, 0));
@@ -905,9 +925,9 @@ public class JakartaPersistenceServlet extends FATServlet {
         List<Integer> result = em.createQuery(criteriaQuery).getResultList();
         assertEquals(4, result.size());
         assertEquals(null, result.get(0));
-        assertEquals("Extracted Year should be 2021", Integer.valueOf(2021), result.get(1));
-        assertEquals("Extracted Year should be 2020", Integer.valueOf(2020), result.get(2));
-        assertEquals("Extracted Year should be 2022", Integer.valueOf(2022), result.get(3));
+        assertEquals("Extracted Year should be 2021", 2021, ((Number) result.get(1)).intValue());
+        assertEquals("Extracted Year should be 2020", 2020, ((Number) result.get(2)).intValue());
+        assertEquals("Extracted Year should be 2022", 2022, ((Number) result.get(3)).intValue());
 
     }
 
@@ -917,7 +937,10 @@ public class JakartaPersistenceServlet extends FATServlet {
      * @throws Exception
      */
     @Test
-    @Ignore("Reference issue : https://github.com/OpenLiberty/open-liberty/issues/31802")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/31802
+    @SkipIfSysProp({
+        DB_SQLServer //Failing on SQLServer (No mention of NULLS FIRST/LAST keywords in Documentation)
+    })
     public void testExtractQuarterFromLocalData() throws Exception {
         deleteAllEntities(DateTimeEntity.class);
         DateTimeEntity q1 = new DateTimeEntity(1, "q1", LocalDate.of(2022, 06, 07), LocalTime.of(12, 0), LocalDateTime.of(2022, 06, 07, 12, 0));
@@ -942,10 +965,40 @@ public class JakartaPersistenceServlet extends FATServlet {
         List<Integer> result = em.createQuery(criteriaQuery).getResultList();
         assertEquals(4, result.size());
         assertEquals(null, result.get(0));
-        assertEquals("Extracted Quarter should be 1", Integer.valueOf(1), result.get(1));
-        assertEquals("Extracted Quarter should be 4", Integer.valueOf(4), result.get(2));
-        assertEquals("Extracted Quarter should be 2", Integer.valueOf(2), result.get(3));
+        assertEquals("Extracted Quarter should be 1", 1, ((Number) result.get(1)).intValue());
+        assertEquals("Extracted Quarter should be 4", 4, ((Number) result.get(2)).intValue());
+        assertEquals("Extracted Quarter should be 2", 2, ((Number) result.get(3)).intValue());
 
+    }
+    
+    @Test
+    @SkipIfSysProp({
+        DB_Postgres    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/32848
+    })
+    public void testOLGH32848() throws Exception {
+        deleteAllEntities(Employee.class);
+        Employee abc = Employee.of("ABC", 50000, "O+");
+        Employee xyz = Employee.of("XYZ", 35000, "AB-");
+        
+        tx.begin();
+        em.persist(abc);
+        em.persist(xyz);
+        tx.commit();
+        
+        tx.begin();
+        
+        try {
+        em.createQuery("UPDATE Employee e SET e.info = ?1 WHERE e.id = ?2")
+          .setParameter(1, null)
+          .setParameter(2, abc.id)
+          .executeUpdate();
+        
+        tx.commit();
+        
+        } catch (Exception e) {
+            tx.rollback();
+            throw e;
+        }
     }
 
     /**
