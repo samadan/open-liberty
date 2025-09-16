@@ -13,7 +13,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,17 +24,17 @@ import java.util.Set;
 import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.ClassPsuedoSchema;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.EnumPsuedoSchema;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.FieldInfo;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.JsonSchema;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.JsonSchemaObject;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.ListPsuedoSchema;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.MapPsuedoSchema;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.OptionalPsuedoSchema;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.PrimitivePsuedoSchema;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.PsuedoSchema;
-import io.openliberty.mcp.internal.schemas.PsuedoSchemaGenerator.SchemaInfo;
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.ClassSchemaCreationContext;
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.FieldInfo;
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.ListSchemaCreationContext;
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.MapSchemaCreationContext;
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.OptionalSchemaCreationContext;
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.SchemaCreationContext;
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.SchemaInfo;
+import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbException;
@@ -44,15 +43,25 @@ import jakarta.json.bind.JsonbException;
  *
  */
 public class SchemaGenerator {
-    public static Map<Type, PsuedoSchema> cache = new HashMap<>();
 
     private static Jsonb jsonb = JsonbBuilder.create();
 
+    /**
+     * <p>If Schema annotation is present then that will be returned if not then a psuedoschema will be generated for all properties that jsonb would serialise for both
+     * directions..
+     * After the `pseudoschema` is generated the method will check if any classes are duplicated.
+     * Using all the context info a JSON schema be generated from psuedoschema.</p>
+     *
+     * @param cls
+     * @param direction
+     * @return
+     */
     public static String generateSchema(Class<?> cls, SchemaDirection direction) {
+        Map<Type, SchemaCreationContext> cache = SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache();
         Schema schema = cls.getAnnotation(Schema.class);
         if (schema != null && !schema.value().equals(Schema.UNSET)) {
             try {
-                JsonSchema resultObj = jsonb.fromJson(schema.value(), JsonSchema.class);
+                JsonObject resultObj = jsonb.fromJson(schema.value(), JsonObject.class);
                 return schema.value();
             } catch (JsonbException e) {
                 throw new RuntimeException("Schema annotation not valid: " + cls.getName(), e);
@@ -63,31 +72,32 @@ public class SchemaGenerator {
             if (schema != null && !schema.description().equals(Schema.UNSET)) {
                 description = schema.description();
             }
-            ClassPsuedoSchema classPs = PsuedoSchemaGenerator.generateClassPsuedoSchema(cls);
-            cache.put(cls, PsuedoSchemaGenerator.generateClassPsuedoSchema(cls));
+            ClassSchemaCreationContext classPs = SchemaCreationContextGenerator.generateClassPsuedoSchema(cls);
+            cache.put(cls, SchemaCreationContextGenerator.generateClassPsuedoSchema(cls));
 
             for (FieldInfo fi : classPs.inputFields()) {
-                generatePsuedoSchema(fi.type());
+                generateSchemaCreationContext(fi.type());
             }
             for (FieldInfo fi : classPs.outputFields()) {
-                generatePsuedoSchema(fi.type());
+                generateSchemaCreationContext(fi.type());
             }
 
             SchemaGenerationContext ctx = new SchemaGenerationContext();
             calculateClassFrequency(cls, direction, ctx);
 
-            JsonSchema result = null;
+            JsonObject result = Json.createObjectBuilder().build();
 
-            result = classPs.toJsonSchemaObject(direction, ctx, true, description);
+            result = classPs.toJsonSchemaObject(direction, ctx, true, description).build();
             return jsonb.toJson(result);
         }
 
     }
 
     public static String generateToolInputSchema(ToolMetadata tool) {
+        Map<Type, SchemaCreationContext> cache = SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache();
         // create base schema components
-        Map<String, JsonSchema> properties = new HashMap<>();
-        List<String> required = new ArrayList<>();
+        JsonObjectBuilder properties = Json.createObjectBuilder();
+        JsonArrayBuilder required = Json.createArrayBuilder();
         Parameter[] parameters = tool.method().getJavaMember().getParameters();
         SchemaGenerationContext ctx = new SchemaGenerationContext();
 
@@ -95,7 +105,7 @@ public class SchemaGenerator {
         for (ArgumentMetadata argument : tool.arguments().values()) {
             // - create a pseudo schema
             Parameter type = parameters[argument.index()];
-            generatePsuedoSchema(type.getParameterizedType());
+            generateSchemaCreationContext(type.getParameterizedType());
         }
 
         for (ArgumentMetadata argument : tool.arguments().values()) {
@@ -110,108 +120,108 @@ public class SchemaGenerator {
             ArgumentMetadata argument = entry.getValue();
             Parameter type = parameters[argument.index()];
 
-            PsuedoSchema ps = cache.get(type.getParameterizedType());
+            SchemaCreationContext ps = cache.get(type.getParameterizedType());
 
-            JsonSchema parameterSchema = ps.toJsonSchemaObject(SchemaDirection.INPUT, ctx, false, null);
-            parameterSchema = SchemaUtils.addDescriptionToJsonSchema(parameterSchema, argument.description());
+            JsonObjectBuilder parameterSchemaBuilder = ps.toJsonSchemaObject(SchemaDirection.INPUT, ctx, false, null);
+            if (argument.description() != null) {
+                parameterSchemaBuilder.add("description", argument.description());
+            }
             // - add it as a property
-            properties.put(argumentName, parameterSchema);
+            properties.add(argumentName, parameterSchemaBuilder.build());
             // - add it as required (if it is)
             if (argument.required()) {
                 required.add(argumentName);
             }
         }
-        HashMap<String, JsonSchema> defs = new HashMap<>();
-        ctx.getDefs().forEach((k, v) -> defs.put(ctx.getName(k), v));
-        JsonSchemaObject rootSchema = new JsonSchemaObject("object", null, properties, required, defs.isEmpty() ? null : defs, null);
-        return jsonb.toJson(rootSchema);
+
+        JsonObjectBuilder schemaBuilder = Json.createObjectBuilder()
+                                              .add("type", "object")
+                                              .add("properties", properties.build())
+                                              .add("required", required.build());
+
+        if (!ctx.getDefsBuilder().isEmpty()) {
+            HashMap<String, JsonObject> defs = new HashMap<>();
+            ctx.getDefsBuilder().forEach((k, v) -> defs.put(ctx.getName(k), v));
+            schemaBuilder.add("$defs", SchemaCreationContextGenerator.defsToJsonObject(defs));
+        }
+        return jsonb.toJson(schemaBuilder.build());
     }
 
     public static String generateToolOutputSchema(ToolMetadata tool) {
+        Map<Type, SchemaCreationContext> cache = SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache();
         SchemaGenerationContext ctx = new SchemaGenerationContext();
 
         Type returnType = tool.method().getJavaMember().getGenericReturnType();
         Annotation[] annotations = tool.method().getJavaMember().getAnnotatedReturnType().getAnnotations();
         SchemaInfo returnSchemaAnn = SchemaInfo.read(annotations);
         String description = returnSchemaAnn.description().orElse(null);
-        generatePsuedoSchema(returnType);
+        generateSchemaCreationContext(returnType);
         calculateClassFrequency(returnType, SchemaDirection.OUTPUT, ctx);
 
-        PsuedoSchema ps = cache.get(returnType);
-        JsonSchema outputSchema = ps.toJsonSchemaObject(SchemaDirection.OUTPUT, ctx, true, null);
-        outputSchema = SchemaUtils.addDescriptionToJsonSchema(outputSchema, description);
-        return jsonb.toJson(outputSchema);
+        SchemaCreationContext ps = cache.get(returnType);
+        JsonObjectBuilder outputSchema = ps.toJsonSchemaObject(SchemaDirection.OUTPUT, ctx, true, null);
+        if (description != null) {
+            outputSchema.add("description", description);
+        }
+        return jsonb.toJson(outputSchema.build());
     }
 
-    public static void generatePsuedoSchema(Type type) {
-        if (!cache.containsKey(type)) {
-            Type baseType = type;
-            if (!isPrimitive(baseType)) {
-                if (baseType instanceof Class<?> cls) {
-                    if (cls.isEnum()) {
-                        EnumPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateEnumPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
+    /**
+     * generates pseudo schema and then adds it to {@code cache}
+     *
+     * @param type
+     */
+    public static SchemaCreationContext generateSchemaCreationContext(Type type) {
+        if (!isPrimitive(type)) {
+            if (type instanceof Class<?> cls) {
+                if (cls.isEnum()) {
+                    return SchemaCreationContextGenerator.generateEnumPsuedoSchema(type);
 
-                    } else if (cls.isArray()) {
-                        ListPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateArrayPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
-                        generatePsuedoSchema(psuedoSchema.itemType());
+                } else if (cls.isArray()) {
+                    return SchemaCreationContextGenerator.generateArrayPsuedoSchema(type);
 
-                    } else if (Optional.class.isAssignableFrom(cls)) {
-                        OptionalPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateRawOptionalPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
+                } else if (Optional.class.isAssignableFrom(cls)) {
+                    return SchemaCreationContextGenerator.generateRawOptionalPsuedoSchema(type);
 
-                    } else if (Map.class.isAssignableFrom(cls)) {
-                        MapPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateRawMapPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
+                } else if (Map.class.isAssignableFrom(cls)) {
+                    return SchemaCreationContextGenerator.generateRawMapPsuedoSchema(type);
 
-                    } else if (Collection.class.isAssignableFrom(cls)) {
-                        ListPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateRawCollectionPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
+                } else if (Collection.class.isAssignableFrom(cls)) {
+                    return SchemaCreationContextGenerator.generateRawCollectionPsuedoSchema(type);
 
-                    } else {
-                        ClassPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateClassPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
+                } else {
+                    ClassSchemaCreationContext schemaCreationContext = SchemaCreationContextGenerator.generateClassPsuedoSchema(type);
 
-                        for (FieldInfo fi : psuedoSchema.inputFields()) {
-                            generatePsuedoSchema(fi.type());
-                        }
-                        for (FieldInfo fi : psuedoSchema.outputFields()) {
-                            generatePsuedoSchema(fi.type());
-                        }
-                    }
-
-                } else if (baseType instanceof ParameterizedType pt) {
-                    if (Optional.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                        OptionalPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateParameterizedOptionalPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
-                        generatePsuedoSchema(psuedoSchema.optionalType());
-
-                    } else if (Map.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                        MapPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateParameterizedMapPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
-                        generatePsuedoSchema(psuedoSchema.keyType());
-                        generatePsuedoSchema(psuedoSchema.valueType());
-
-                    } else if (Collection.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                        ListPsuedoSchema psuedoSchema = PsuedoSchemaGenerator.generateParameterizedCollectionPsuedoSchema(type);
-                        cache.put(type, psuedoSchema);
-                        generatePsuedoSchema(psuedoSchema.itemType());
-
-                    }
-
+//                    for (FieldInfo fi : schemaCreationContext.inputFields()) {
+//                        generateSchemaCreationContext(fi.type());
+//                    }
+//                    for (FieldInfo fi : schemaCreationContext.outputFields()) {
+//                        generateSchemaCreationContext(fi.type());
+//                    }
+                    return schemaCreationContext;
                 }
-//                else if (baseType instanceof WildcardType wt) {
-//
-//                } else if (baseType instanceof GenericArrayType gat) {
-//
-//                } else if (baseType instanceof TypeVariable<?> td) {
-//
-//                }
+
+            } else if (type instanceof ParameterizedType pt) {
+                if (Optional.class.isAssignableFrom((Class<?>) pt.getRawType())) {
+                    return SchemaCreationContextGenerator.generateParameterizedOptionalPsuedoSchema(type);
+
+                } else if (Map.class.isAssignableFrom((Class<?>) pt.getRawType())) {
+                    return SchemaCreationContextGenerator.generateParameterizedMapPsuedoSchema(type);
+
+                } else if (Collection.class.isAssignableFrom((Class<?>) pt.getRawType())) {
+                    return SchemaCreationContextGenerator.generateParameterizedCollectionPsuedoSchema(type);
+                } else {
+                    return null;
+                }
+
             } else {
-                PrimitivePsuedoSchema psuedoSchema = new PrimitivePsuedoSchema(type, type.getClass());
-                cache.put(type, psuedoSchema);
+                return null;
+                //TODO: WildcardType, GenericArrayType, TypeVariable
+                //TODO: Log message and produce simple schema
             }
+
+        } else {
+            return SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache().get(type);
         }
     }
 
@@ -223,7 +233,7 @@ public class SchemaGenerator {
         /** The values of nameMap */
         private Set<String> namesInUse = new HashSet<>();
         /** Map of types and their corresponding JSON schemas which should be added to defs */
-        private HashMap<Type, JsonSchema> defs = new HashMap<>();
+        private HashMap<Type, JsonObject> defsBuilder = new HashMap<>();
 
         /**
          * Registers a type as having been seen
@@ -293,37 +303,38 @@ public class SchemaGenerator {
             return nameMap;
         }
 
-        public HashMap<Type, JsonSchema> getDefs() {
-            return defs;
+        public HashMap<Type, JsonObject> getDefsBuilder() {
+            return defsBuilder;
         }
     }
 
     public static void calculateClassFrequency(Type type, SchemaDirection direction, SchemaGenerationContext ctx) {
-        PsuedoSchema ps = cache.get(type);
+        Map<Type, SchemaCreationContext> cache = SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache();
+        SchemaCreationContext scc = cache.computeIfAbsent(type, k -> generateSchemaCreationContext(k));
         boolean previouslySeen = false;
-        if (ps.defsName().isPresent()) {
+        if (scc.defsName().isPresent()) {
             // We might add this type to defs, so we need to add it to the typeFrequency map
             // If this is the first time we've seen this type, set it to false, if it's not the first time, set it to true
             previouslySeen = ctx.registerSeen(type);
 
             if (previouslySeen) {
-                ctx.reserveName(type, ps.defsName().get());
+                ctx.reserveName(type, scc.defsName().get());
             }
         }
 
         if (!previouslySeen) {
             // Process children
-            if (ps instanceof ListPsuedoSchema listPs) {
+            if (scc instanceof ListSchemaCreationContext listPs) {
                 calculateClassFrequency(listPs.itemType(), direction, ctx);
-            } else if (ps instanceof ClassPsuedoSchema classPs) {
+            } else if (scc instanceof ClassSchemaCreationContext classPs) {
                 List<FieldInfo> fields = direction == SchemaDirection.INPUT ? classPs.inputFields() : classPs.outputFields();
                 for (FieldInfo fi : fields) {
                     calculateClassFrequency(fi.type(), direction, ctx);
                 }
-            } else if (ps instanceof MapPsuedoSchema mapPs) {
+            } else if (scc instanceof MapSchemaCreationContext mapPs) {
                 calculateClassFrequency(mapPs.valueType(), direction, ctx);
                 calculateClassFrequency(mapPs.keyType(), direction, ctx);
-            } else if (ps instanceof OptionalPsuedoSchema optionalPs) {
+            } else if (scc instanceof OptionalSchemaCreationContext optionalPs) {
                 calculateClassFrequency(optionalPs.optionalType(), direction, ctx);
             }
         }

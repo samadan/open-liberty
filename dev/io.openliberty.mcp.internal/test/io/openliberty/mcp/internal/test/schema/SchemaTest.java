@@ -9,16 +9,23 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.test.schema;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
+import io.openliberty.mcp.internal.ToolMetadata;
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextRegistry;
+import io.openliberty.mcp.internal.schemas.SchemaDirection;
 import io.openliberty.mcp.internal.schemas.SchemaRegistry;
 import jakarta.json.bind.annotation.JsonbProperty;
 import jakarta.json.bind.annotation.JsonbTransient;
@@ -28,16 +35,25 @@ import jakarta.json.bind.annotation.JsonbTransient;
  */
 public class SchemaTest {
     static SchemaRegistry registry;
+    static SchemaCreationContextRegistry sccRegistry;
 
+    @Schema(description = "A person object contains address, company objects")
     public static record person(@JsonbProperty("fullname") String name, address address, company company) {};
 
-    public static record address(int number, street street, String postcode, @JsonbTransient String directions) {};
+    public static record address(int number, @Schema(description = "A street object to represent complex streets") street street, String postcode,
+                                 @JsonbTransient String directions) {};
 
-    @Schema("{ \"$anchor\": \"street\", \"properties\": {  \"streetName\": { \"type\": \"string\" }, \"roadType\": { \"type\": \"string\" } }, \"required\": [ \"streetName\" ], \"type\": \"object\" }")
+    @Schema("{\"properties\": {  \"streetName\": { \"type\": \"string\" }, \"roadType\": { \"type\": \"string\" } }, \"required\": [ \"streetName\" ], \"type\": \"object\"}")
     public static record street(String streetname, String roadtype) {}
 
-    public static record company(String name, address address, List<person> employees,
-                                 @Schema(value = "{\"properties\": {\"key\":{ \"type\": \"integer\" }, \"value\":{ \"$ref\": \"#/$defs/company/employess/items\" }},\"required\": [ ], \"type\": \"object\"}") Map<Integer, person> employeeRegistry) {};
+    public static record company(String name, address address, @Schema(description = "A list of employees (person object)") List<person> employees,
+                                 @Schema(value = "{\"properties\": {\"key\":{ \"type\": \"integer\" }, \"value\":{ \"$ref\": \"#/$defs/person\" }},\"required\": [ ], \"type\": \"object\"}") Map<String, person> employeeRegistry) {};
+
+    public static record partialPerson(String name, Optional<address> address, partialCompany partialCompany) {}
+
+    public static record partialCompany(Optional<String> name, Optional<address> address,
+                                        @Schema(description = "A list of employees (person object)") Optional<List<partialPerson>> employees,
+                                        Optional<Map<String, Optional<partialPerson>>> employeeRegistry) {}
 
     public static class SoftwareCompanyEntry {
         SoftwareCompanyEntry.person person;
@@ -46,6 +62,35 @@ public class SchemaTest {
         public SoftwareCompanyEntry(SoftwareCompanyEntry.person person, String companyName) {}
 
         public static record person(SchemaTest.person person, int softwareid) {}
+
+        /**
+         * @return the person
+         */
+        public SoftwareCompanyEntry.person getPerson() {
+            return person;
+        }
+
+        /**
+         * @param person the person to set
+         */
+        public void setPerson(SoftwareCompanyEntry.person person) {
+            this.person = person;
+        }
+
+        /**
+         * @return the companyName
+         */
+        public String getCompanyName() {
+            return companyName;
+        }
+
+        /**
+         * @param companyName the companyName to set
+         */
+        public void setCompanyName(String companyName) {
+            this.companyName = companyName;
+        }
+
     };
 
     public static class ConstructionCompanyEntry {
@@ -55,6 +100,35 @@ public class SchemaTest {
         public ConstructionCompanyEntry(ConstructionCompanyEntry.person person, String companyName) {}
 
         public static record person(SchemaTest.person person, String constructionid) {}
+
+        /**
+         * @return the person
+         */
+        public ConstructionCompanyEntry.person getPerson() {
+            return person;
+        }
+
+        /**
+         * @param person the person to set
+         */
+        public void setPerson(ConstructionCompanyEntry.person person) {
+            this.person = person;
+        }
+
+        /**
+         * @return the companyName
+         */
+        public String getCompanyName() {
+            return companyName;
+        }
+
+        /**
+         * @param companyName the companyName to set
+         */
+        public void setCompanyName(String companyName) {
+            this.companyName = companyName;
+        }
+
     };
 
     public static class PortfolioEntry {
@@ -62,6 +136,34 @@ public class SchemaTest {
         ConstructionCompanyEntry cce;
 
         public PortfolioEntry(SoftwareCompanyEntry sce, ConstructionCompanyEntry cce) {}
+
+        /**
+         * @return the sce
+         */
+        public SoftwareCompanyEntry getSce() {
+            return sce;
+        }
+
+        /**
+         * @param sce the sce to set
+         */
+        public void setSce(SoftwareCompanyEntry sce) {
+            this.sce = sce;
+        }
+
+        /**
+         * @return the cce
+         */
+        public ConstructionCompanyEntry getCce() {
+            return cce;
+        }
+
+        /**
+         * @param cce the cce to set
+         */
+        public void setCce(ConstructionCompanyEntry cce) {
+            this.cce = cce;
+        }
 
     };
 
@@ -71,359 +173,463 @@ public class SchemaTest {
     }
 
     @Tool(name = "addPersonToList", title = "adds person to employee list", description = "adds person to employee list, returns nothing")
-    public void addPersonToList(@ToolArg(name = "employeeList", description = "List of people") List<person> employeeList,
-                                @ToolArg(name = "person", description = "Person object") person person) {
+    public @Schema(description = "Returns list of person object") List<person> addPersonToList(@ToolArg(name = "employeeList",
+                                                                                                        description = "List of people") List<person> employeeList,
+                                                                                               @ToolArg(name = "person", description = "Person object") person person) {
+        employeeList.add(person);
+        return employeeList;
         //comment
     }
 
     @BeforeClass
     public static void setup() {
         registry = new SchemaRegistry();
+        sccRegistry = new SchemaCreationContextRegistry();
         SchemaRegistry.set(registry);
+        SchemaCreationContextRegistry.set(sccRegistry);
     }
 
     @Test
     public void testPersonSchema() {
-        String response = SchemaRegistry.generateSchema(person.class);
+        String response = SchemaRegistry.getSchema(person.class, SchemaDirection.INPUT);
         String expectedResponseString = """
-                        {
-                          "$defs": {
-                            "address": {
-                              "properties": {
-                                "number": {
-                                  "type": "integer"
-                                },
-                                "street": {
-                                  "properties": {
-                                    "streetName": {
-                                      "type": "string"
-                                    },
-                                    "roadType": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "streetName"
-                                  ],
-                                  "type": "object"
-                                },
-                                "postcode": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "number",
-                                "street",
-                                "postcode"
-                              ],
-                              "type": "object"
-                            },
-                            "person": {
-                              "properties": {
+                            {
+                            "$defs": {
                                 "address": {
-                                  "$ref": "#/$defs/address"
-                                },
-                                "company": {
-                                  "properties": {
-                                    "address": {
-                                      "$ref": "#/$defs/address"
-                                    },
-                                    "name": {
-                                      "type": "string"
-                                    },
-                                    "employees": {
-                                      "items": {
-                                        "$ref": "#/$defs/person"
-                                      },
-                                      "type": "array"
-                                    },
-                                    "employeeRegistry": {
-                                      "properties": {
-                                        "value": {
-                                          "$ref": "#/$defs/company/employess/items"
+                                    "properties": {
+                                        "number": {
+                                            "type": "integer"
                                         },
-                                        "key": {
-                                          "type": "integer"
+                                        "street": {
+                                            "description": "A street object to represent complex streets",
+                                            "properties": {
+                                                "streetName": {
+                                                    "type": "string"
+                                                },
+                                                "roadType": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "streetName"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "postcode": {
+                                            "type": "string"
                                         }
-                                      },
-                                      "required": [],
-                                      "type": "object"
-                                    }
-                                  },
-                                  "required": [
-                                    "name",
-                                    "address",
-                                    "employees",
-                                    "employeeRegistry"
-                                  ],
-                                  "type": "object"
+                                    },
+                                    "required": [
+                                        "number",
+                                        "street",
+                                        "postcode"
+                                    ],
+                                    "type": "object"
                                 },
-                                "fullname": {
-                                  "type": "string"
+                                "person": {
+                                    "description": "A person object contains address, company objects",
+                                    "properties": {
+                                        "address": {
+                                            "$ref": "#/$defs/address"
+                                        },
+                                        "company": {
+                                            "properties": {
+                                                "address": {
+                                                    "$ref": "#/$defs/address"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "employees": {
+                                                    "description": "A list of employees (person object)",
+                                                    "items": {
+                                                        "$ref": "#/$defs/person"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "employeeRegistry": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "$ref": "#/$defs/person"
+                                                        },
+                                                        "key": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [],
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "required": [
+                                                "name",
+                                                "address",
+                                                "employees",
+                                                "employeeRegistry"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "fullname": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "fullname",
+                                        "address",
+                                        "company"
+                                    ],
+                                    "type": "object"
                                 }
-                              },
-                              "required": [
-                                "fullname",
-                                "address",
-                                "company"
-                              ],
-                              "type": "object"
+                            },
+                            "$ref": "#/$defs/person"
+                        }
+                            """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    public record Widget(String name, int flangeCount) {};
+
+    @Tool(description = "Updates a widget in the database")
+    public Widget updateWidget(@ToolArg(name = "id", description = "The ID of the widget to update") long id,
+                               @ToolArg(name = "widget", description = "The new widget data") Widget widget) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Test
+    public void testToolInputSchema() throws NoSuchMethodException, SecurityException {
+        ToolMetadata toolMetadata = findTool("updateWidget");
+
+        String toolInputSchema = SchemaRegistry.getToolInputSchema(toolMetadata);
+        String expectedSchema = """
+                        {
+                        "type" : "object",
+                        "properties" : {
+                            "id" : {
+                                "type": "number",
+                                "description": "The ID of the widget to update"
+                            },
+                            "widget" : {
+                                "type": "object",
+                                "description": "The new widget data",
+                                "properties": {
+                                    "name": {
+                                        "type" : "string"
+                                    },
+                                    "flangeCount": {
+                                        "type" : "integer"
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "flangeCount"
+                                ]
                             }
-                          },
-                          "$ref": "#/$defs/person"
+                        },
+                        "required": [
+                            "widget",
+                            "id"
+                        ]
                         }
                         """;
-        JSONAssert.assertEquals(expectedResponseString, response, true);
+        JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
+    }
+
+    @Test
+    public void testToolOutputSchema() throws NoSuchMethodException, SecurityException {
+        ToolMetadata toolMetadata = findTool("updateWidget");
+
+        String toolInputSchema = SchemaRegistry.getToolOuputSchema(toolMetadata);
+        String expectedSchema = """
+                        {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type" : "string"
+                                },
+                                "flangeCount": {
+                                    "type" : "integer"
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "flangeCount"
+                            ]
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
+    }
+
+    /**
+     * Finds a tool method in the current class by name
+     *
+     * @param name the name of the tool
+     * @return the tool metadata
+     */
+    private ToolMetadata findTool(String name) {
+        List<ToolMetadata> tools = Arrays.stream(SchemaTest.class.getDeclaredMethods())
+                                         .filter(m -> m.isAnnotationPresent(Tool.class))
+                                         .map(m -> ToolMetadata.createFrom(m.getAnnotation(Tool.class), null, new MockAnnotatedMethod<>(m)))
+                                         .filter(m -> m.name().equals(name))
+                                         .collect(Collectors.toList());
+        if (tools.size() != 1) {
+            throw new RuntimeException("Found " + tools.size() + " tools with name " + name);
+        }
+
+        return tools.get(0);
+    }
+
+    public record CompositeWidget(String name, int flangeCount, List<CompositeWidget> subwidgets) {}
+
+    @Tool(description = "combine two widgets to make a new widget")
+    public CompositeWidget combineWidgets(@ToolArg(name = "widgetA", description = "the first widget") CompositeWidget widgetA,
+                                          @ToolArg(name = "widgetB", description = "the second widget") CompositeWidget widgetB) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Test
+    public void testToolInputRecursive() {
+        ToolMetadata toolMetadata = findTool("combineWidgets");
+        String toolInputSchema = SchemaRegistry.getToolInputSchema(toolMetadata);
+
+        String expectedSchema = """
+                        {
+                            "$defs": {
+                                "CompositeWidget": {
+                                    "type" : "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "flangeCount": {
+                                            "type": "integer"
+                                        },
+                                        "subwidgets": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/$defs/CompositeWidget"
+                                            }
+                                        }
+                                    },
+                                    "required" : [
+                                        "name",
+                                        "flangeCount",
+                                        "subwidgets"
+                                    ]
+                                }
+                            },
+                            "type": "object",
+                            "properties": {
+                                "widgetA": {
+                                    "$ref": "#/$defs/CompositeWidget",
+                                    "description": "the first widget"
+                                },
+                                "widgetB": {
+                                    "$ref": "#/$defs/CompositeWidget",
+                                    "description": "the second widget"
+                                }
+                            },
+                            "required": [
+                                "widgetB",
+                                "widgetA"
+                            ]
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
+    }
+
+    @Test
+    public void testToolOutputRecursive() {
+        ToolMetadata toolMetadata = findTool("combineWidgets");
+        String toolInputSchema = SchemaRegistry.getToolOuputSchema(toolMetadata);
+        String expectedSchema = """
+                        {
+                            "$defs": {
+                                "CompositeWidget": {
+                                    "type" : "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "flangeCount": {
+                                            "type": "integer"
+                                        },
+                                        "subwidgets": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/$defs/CompositeWidget"
+                                            }
+                                        }
+                                    },
+                                    "required" : [
+                                        "name",
+                                        "flangeCount",
+                                        "subwidgets"
+                                    ]
+                                }
+                            },
+                            "$ref": "#/$defs/CompositeWidget",
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
+
     }
 
     @Test
     public void testPersonCheckToolSchema() throws NoSuchMethodException, SecurityException {
-        String response = SchemaRegistry.generateSchema(this.getClass().getDeclaredMethod("checkPerson", person.class, company.class));
+        ToolMetadata toolMetadata = findTool("checkPerson");
+        String response = SchemaRegistry.getToolInputSchema(toolMetadata);
         String expectedResponseString = """
                         {
-                          "$defs": {
-                            "address": {
-                              "properties": {
-                                "number": {
-                                  "type": "integer"
-                                },
-                                "street": {
-                                  "properties": {
-                                    "streetName": {
-                                      "type": "string"
-                                    },
-                                    "roadType": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "streetName"
-                                  ],
-                                  "type": "object"
-                                },
-                                "postcode": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "number",
-                                "street",
-                                "postcode"
-                              ],
-                              "type": "object"
-                            },
-                            "person": {
-                              "description": "Person object",
-                              "properties": {
+                            "$defs": {
                                 "address": {
-                                  "$ref": "#/$defs/address"
-                                },
-                                "company": {
-                                  "$ref": "#/$defs/company"
-                                },
-                                "fullname": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "fullname",
-                                "address",
-                                "company"
-                              ],
-                              "type": "object"
-                            },
-                            "company": {
-                              "description": "Company object",
-                              "properties": {
-                                "address": {
-                                  "$ref": "#/$defs/address"
-                                },
-                                "name": {
-                                  "type": "string"
-                                },
-                                "employees": {
-                                  "items": {
-                                    "$ref": "#/$defs/person"
-                                  },
-                                  "type": "array"
-                                },
-                                "employeeRegistry": {
-                                  "properties": {
-                                    "value": {
-                                      "$ref": "#/$defs/company/employess/items"
-                                    },
-                                    "key": {
-                                      "type": "integer"
-                                    }
-                                  },
-                                  "required": [],
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "name",
-                                "address",
-                                "employees",
-                                "employeeRegistry"
-                              ],
-                              "type": "object"
-                            }
-                          },
-                          "description": "Returns boolean",
-                          "properties": {
-                            "person": {
-                              "$ref": "#/$defs/person"
-                            },
-                            "company": {
-                              "$ref": "#/$defs/company"
-                            }
-                          },
-                          "required": [
-                            "person",
-                            "company"
-                          ],
-                          "type": "object"
-                        }
-                                                                """;
-        JSONAssert.assertEquals(expectedResponseString, response, true);
-    }
-
-    @Test
-    public void testPersonCheckToolPersonParamSchema() throws NoSuchMethodException, SecurityException {
-        String response = SchemaRegistry.generateSchema(this.getClass().getDeclaredMethod("checkPerson", person.class, company.class).getParameters()[0]);
-        String expectedResponseString = """
-                        {
-                          "$defs": {
-                            "address": {
-                              "properties": {
-                                "number": {
-                                  "type": "integer"
-                                },
-                                "street": {
-                                  "properties": {
-                                    "streetName": {
-                                      "type": "string"
-                                    },
-                                    "roadType": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "streetName"
-                                  ],
-                                  "type": "object"
-                                },
-                                "postcode": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "number",
-                                "street",
-                                "postcode"
-                              ],
-                              "type": "object"
-                            },
-                            "person": {
-                              "description": "Person object",
-                              "properties": {
-                                "address": {
-                                  "$ref": "#/$defs/address"
-                                },
-                                "company": {
-                                  "properties": {
-                                    "address": {
-                                      "$ref": "#/$defs/address"
-                                    },
-                                    "name": {
-                                      "type": "string"
-                                    },
-                                    "employees": {
-                                      "items": {
-                                        "$ref": "#/$defs/person"
-                                      },
-                                      "type": "array"
-                                    },
-                                    "employeeRegistry": {
-                                      "properties": {
-                                        "value": {
-                                          "$ref": "#/$defs/company/employess/items"
+                                    "properties": {
+                                        "number": {
+                                            "type": "integer"
                                         },
-                                        "key": {
-                                          "type": "integer"
+                                        "street": {
+                                            "description": "A street object to represent complex streets",
+                                            "properties": {
+                                                "streetName": {
+                                                    "type": "string"
+                                                },
+                                                "roadType": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "streetName"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "postcode": {
+                                            "type": "string"
                                         }
-                                      },
-                                      "required": [],
-                                      "type": "object"
-                                    }
-                                  },
-                                  "required": [
-                                    "name",
-                                    "address",
-                                    "employees",
-                                    "employeeRegistry"
-                                  ],
-                                  "type": "object"
+                                    },
+                                    "required": [
+                                        "number",
+                                        "street",
+                                        "postcode"
+                                    ],
+                                    "type": "object"
                                 },
-                                "fullname": {
-                                  "type": "string"
+                                "person": {
+                                    "description": "A person object contains address, company objects",
+                                    "properties": {
+                                        "address": {
+                                            "$ref": "#/$defs/address"
+                                        },
+                                        "company": {
+                                            "$ref": "#/$defs/company"
+                                        },
+                                        "fullname": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "fullname",
+                                        "address",
+                                        "company"
+                                    ],
+                                    "type": "object"
+                                },
+                                "company": {
+                                    "properties": {
+                                        "address": {
+                                            "$ref": "#/$defs/address"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "employees": {
+                                            "description": "A list of employees (person object)",
+                                            "items": {
+                                                "$ref": "#/$defs/person"
+                                            },
+                                            "type": "array"
+                                        },
+                                        "employeeRegistry": {
+                                            "properties": {
+                                                "value": {
+                                                    "$ref": "#/$defs/person"
+                                                },
+                                                "key": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [],
+                                            "type": "object"
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "address",
+                                        "employees",
+                                        "employeeRegistry"
+                                    ],
+                                    "type": "object"
                                 }
-                              },
-                              "required": [
-                                "fullname",
-                                "address",
+                            },
+                            "properties": {
+                                "person": {
+                                    "$ref": "#/$defs/person",
+                                    "description": "Person object"
+                                },
+                                "company": {
+                                    "$ref": "#/$defs/company",
+                                    "description": "Company object"
+                                }
+                            },
+                            "required": [
+                                "person",
                                 "company"
-                              ],
-                              "type": "object"
-                            }
-                          },
-                          "$ref": "#/$defs/person"
+                            ],
+                            "type": "object"
                         }
-                                                                """;
+                                                    """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
     @Test
     public void testAddressSchema() {
-        String response = SchemaRegistry.generateSchema(address.class);
+        String response = SchemaRegistry.getSchema(address.class, SchemaDirection.INPUT);
         String expectedResponseString = """
-                        {
-                          "properties": {
-                            "number": {
-                              "type": "integer"
-                            },
-                            "street": {
-                              "properties": {
-                                "streetName": {
-                                  "type": "string"
+                           {
+                            "properties": {
+                                "number": {
+                                    "type": "integer"
                                 },
-                                "roadType": {
-                                  "type": "string"
+                                "street": {
+                                    "description": "A street object to represent complex streets",
+                                    "properties": {
+                                        "streetName": {
+                                            "type": "string"
+                                        },
+                                        "roadType": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "streetName"
+                                    ],
+                                    "type": "object"
+                                },
+                                "postcode": {
+                                    "type": "string"
                                 }
-                              },
-                              "required": [
-                                "streetName"
-                              ],
-                              "type": "object"
                             },
-                            "postcode": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "number",
-                            "street",
-                            "postcode"
-                          ],
-                          "type": "object"
+                            "required": [
+                                "number",
+                                "street",
+                                "postcode"
+                            ],
+                            "type": "object"
                         }
-                        """;
+                            """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
     @Test
     public void testStreetSchema() {
-        String response = SchemaRegistry.generateSchema(street.class);
+        String response = SchemaRegistry.getSchema(street.class, SchemaDirection.INPUT);
         String expectedResponseString = """
                         {
                           "properties": {
@@ -445,460 +651,606 @@ public class SchemaTest {
 
     @Test
     public void testCompanySchema() {
-        String response = SchemaRegistry.generateSchema(company.class);
+        String response = SchemaRegistry.getSchema(company.class, SchemaDirection.INPUT);
         String expectedResponseString = """
-                        {
-                          "$defs": {
-                            "address": {
-                              "properties": {
-                                "number": {
-                                  "type": "integer"
-                                },
-                                "street": {
-                                  "properties": {
-                                    "streetName": {
-                                      "type": "string"
-                                    },
-                                    "roadType": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "streetName"
-                                  ],
-                                  "type": "object"
-                                },
-                                "postcode": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "number",
-                                "street",
-                                "postcode"
-                              ],
-                              "type": "object"
-                            },
-                            "company": {
-                              "properties": {
+                            {
+                            "$defs": {
                                 "address": {
-                                  "$ref": "#/$defs/address"
-                                },
-                                "name": {
-                                  "type": "string"
-                                },
-                                "employees": {
-                                  "items": {
                                     "properties": {
-                                      "address": {
-                                        "$ref": "#/$defs/address"
-                                      },
-                                      "company": {
-                                        "$ref": "#/$defs/company"
-                                      },
-                                      "fullname": {
-                                        "type": "string"
-                                      }
+                                        "number": {
+                                            "type": "integer"
+                                        },
+                                        "street": {
+                                            "description": "A street object to represent complex streets",
+                                            "properties": {
+                                                "streetName": {
+                                                    "type": "string"
+                                                },
+                                                "roadType": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "streetName"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "postcode": {
+                                            "type": "string"
+                                        }
                                     },
                                     "required": [
-                                      "fullname",
-                                      "address",
-                                      "company"
+                                        "number",
+                                        "street",
+                                        "postcode"
                                     ],
                                     "type": "object"
-                                  },
-                                  "type": "array"
                                 },
-                                "employeeRegistry": {
-                                  "properties": {
-                                    "value": {
-                                      "$ref": "#/$defs/company/employess/items"
+                                "person": {
+                                    "description": "A person object contains address, company objects",
+                                    "properties": {
+                                        "address": {
+                                            "$ref": "#/$defs/address"
+                                        },
+                                        "company": {
+                                            "$ref": "#/$defs/company"
+                                        },
+                                        "fullname": {
+                                            "type": "string"
+                                        }
                                     },
-                                    "key": {
-                                      "type": "integer"
-                                    }
-                                  },
-                                  "required": [],
-                                  "type": "object"
+                                    "required": [
+                                        "fullname",
+                                        "address",
+                                        "company"
+                                    ],
+                                    "type": "object"
+                                },
+                                "company": {
+                                    "properties": {
+                                        "address": {
+                                            "$ref": "#/$defs/address"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "employees": {
+                                            "description": "A list of employees (person object)",
+                                            "items": {
+                                                "$ref": "#/$defs/person"
+                                            },
+                                            "type": "array"
+                                        },
+                                        "employeeRegistry": {
+                                            "properties": {
+                                                "value": {
+                                                    "$ref": "#/$defs/person"
+                                                },
+                                                "key": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [],
+                                            "type": "object"
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "address",
+                                        "employees",
+                                        "employeeRegistry"
+                                    ],
+                                    "type": "object"
                                 }
-                              },
-                              "required": [
-                                "name",
-                                "address",
-                                "employees",
-                                "employeeRegistry"
-                              ],
-                              "type": "object"
-                            }
-                          },
-                          "$ref": "#/$defs/company"
+                            },
+                            "$ref": "#/$defs/company"
                         }
-                        """;
+                                """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
     @Test
     public void testPortfolioEntryDuplicateNameSchema() {
-        String response = SchemaRegistry.generateSchema(PortfolioEntry.class);
+        String response = SchemaRegistry.getSchema(PortfolioEntry.class, SchemaDirection.INPUT);
         String expectedResponseString = """
-                        {
-                          "$defs": {
-                            "person2": {
-                              "properties": {
+                            {
+                            "$defs": {
                                 "address": {
-                                  "$ref": "#/$defs/address"
-                                },
-                                "company": {
-                                  "properties": {
-                                    "address": {
-                                      "$ref": "#/$defs/address"
-                                    },
-                                    "name": {
-                                      "type": "string"
-                                    },
-                                    "employees": {
-                                      "items": {
-                                        "$ref": "#/$defs/person2"
-                                      },
-                                      "type": "array"
-                                    },
-                                    "employeeRegistry": {
-                                      "properties": {
-                                        "value": {
-                                          "$ref": "#/$defs/company/employess/items"
+                                    "properties": {
+                                        "number": {
+                                            "type": "integer"
                                         },
-                                        "key": {
-                                          "type": "integer"
+                                        "street": {
+                                            "description": "A street object to represent complex streets",
+                                            "properties": {
+                                                "streetName": {
+                                                    "type": "string"
+                                                },
+                                                "roadType": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "streetName"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "postcode": {
+                                            "type": "string"
                                         }
-                                      },
-                                      "required": [],
-                                      "type": "object"
-                                    }
-                                  },
-                                  "required": [
-                                    "name",
-                                    "address",
-                                    "employees",
-                                    "employeeRegistry"
-                                  ],
-                                  "type": "object"
-                                },
-                                "fullname": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "fullname",
-                                "address",
-                                "company"
-                              ],
-                              "type": "object"
-                            },
-                            "address": {
-                              "properties": {
-                                "number": {
-                                  "type": "integer"
-                                },
-                                "street": {
-                                  "properties": {
-                                    "streetName": {
-                                      "type": "string"
                                     },
-                                    "roadType": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "streetName"
-                                  ],
-                                  "type": "object"
+                                    "required": [
+                                        "number",
+                                        "street",
+                                        "postcode"
+                                    ],
+                                    "type": "object"
                                 },
-                                "postcode": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "number",
-                                "street",
-                                "postcode"
-                              ],
-                              "type": "object"
-                            }
-                          },
-                          "properties": {
-                            "sce": {
-                              "properties": {
                                 "person": {
-                                  "properties": {
-                                    "softwareid": {
-                                      "type": "integer"
+                                    "description": "A person object contains address, company objects",
+                                    "properties": {
+                                        "address": {
+                                            "$ref": "#/$defs/address"
+                                        },
+                                        "company": {
+                                            "properties": {
+                                                "address": {
+                                                    "$ref": "#/$defs/address"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "employees": {
+                                                    "description": "A list of employees (person object)",
+                                                    "items": {
+                                                        "$ref": "#/$defs/person"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "employeeRegistry": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "$ref": "#/$defs/person"
+                                                        },
+                                                        "key": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [],
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "required": [
+                                                "name",
+                                                "address",
+                                                "employees",
+                                                "employeeRegistry"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "fullname": {
+                                            "type": "string"
+                                        }
                                     },
-                                    "person": {
-                                      "$ref": "#/$defs/person2"
-                                    }
-                                  },
-                                  "required": [
-                                    "person",
-                                    "softwareid"
-                                  ],
-                                  "type": "object"
-                                },
-                                "companyName": {
-                                  "type": "string"
+                                    "required": [
+                                        "fullname",
+                                        "address",
+                                        "company"
+                                    ],
+                                    "type": "object"
                                 }
-                              },
-                              "required": [
-                                "person",
-                                "companyName"
-                              ],
-                              "type": "object"
                             },
-                            "cce": {
-                              "properties": {
-                                "person": {
-                                  "properties": {
-                                    "person": {
-                                      "$ref": "#/$defs/person2"
+                            "properties": {
+                                "sce": {
+                                    "properties": {
+                                        "person": {
+                                            "properties": {
+                                                "softwareid": {
+                                                    "type": "integer"
+                                                },
+                                                "person": {
+                                                    "$ref": "#/$defs/person"
+                                                }
+                                            },
+                                            "required": [
+                                                "person",
+                                                "softwareid"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "companyName": {
+                                            "type": "string"
+                                        }
                                     },
-                                    "constructionid": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "person",
-                                    "constructionid"
-                                  ],
-                                  "type": "object"
+                                    "required": [
+                                        "person",
+                                        "companyName"
+                                    ],
+                                    "type": "object"
                                 },
-                                "companyName": {
-                                  "type": "string"
+                                "cce": {
+                                    "properties": {
+                                        "person": {
+                                            "properties": {
+                                                "person": {
+                                                    "$ref": "#/$defs/person"
+                                                },
+                                                "constructionid": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "person",
+                                                "constructionid"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "companyName": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "person",
+                                        "companyName"
+                                    ],
+                                    "type": "object"
                                 }
-                              },
-                              "required": [
-                                "person",
-                                "companyName"
-                              ],
-                              "type": "object"
-                            }
-                          },
-                          "required": [
-                            "sce",
-                            "cce"
-                          ],
-                          "type": "object"
+                            },
+                            "required": [
+                                "sce",
+                                "cce"
+                            ],
+                            "type": "object"
                         }
+                            """;
+        JSONAssert.assertEquals(expectedResponseString, response, JSONCompareMode.NON_EXTENSIBLE);
+    }
+
+    @Test
+    public void testPersonAddtoListToolInputSchema() throws NoSuchMethodException, SecurityException {
+        ToolMetadata toolMetadata = findTool("addPersonToList");
+        String response = SchemaRegistry.getToolInputSchema(toolMetadata);
+        String expectedResponseString = """
+                                                {
+                                                "$defs": {
+                                                    "address": {
+                                                        "properties": {
+                                                            "number": {
+                                                                "type": "integer"
+                                                            },
+                                                            "street": {
+                                                                "description": "A street object to represent complex streets",
+                                                                "properties": {
+                                                                    "streetName": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "roadType": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "streetName"
+                                                                ],
+                                                                "type": "object"
+                                                            },
+                                                            "postcode": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "number",
+                                                            "street",
+                                                            "postcode"
+                                                        ],
+                                                        "type": "object"
+                                                    },
+                                                    "person": {
+                                                        "description": "A person object contains address, company objects",
+                                                        "properties": {
+                                                            "address": {
+                                                                "$ref": "#/$defs/address"
+                                                            },
+                                                            "company": {
+                                                                "properties": {
+                                                                    "address": {
+                                                                        "$ref": "#/$defs/address"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "employees": {
+                                                                        "description": "A list of employees (person object)",
+                                                                        "items": {
+                                                                            "$ref": "#/$defs/person"
+                                                                        },
+                                                                        "type": "array"
+                                                                    },
+                                                                    "employeeRegistry": {
+                                                                        "properties": {
+                                                                            "value": {
+                                                                                "$ref": "#/$defs/person"
+                                                                            },
+                                                                            "key": {
+                                                                                "type": "integer"
+                                                                            }
+                                                                        },
+                                                                        "required": [],
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "name",
+                                                                    "address",
+                                                                    "employees",
+                                                                    "employeeRegistry"
+                                                                ],
+                                                                "type": "object"
+                                                            },
+                                                            "fullname": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "fullname",
+                                                            "address",
+                                                            "company"
+                                                        ],
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "properties": {
+                                                    "employeeList": {
+                                                        "description": "List of people",
+                                                        "items": {
+                                                            "$ref": "#/$defs/person"
+                                                        },
+                                                        "type": "array"
+                                                    },
+                                                    "person": {
+                                                        "$ref": "#/$defs/person",
+                                                        "description": "Person object"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "employeeList",
+                                                    "person"
+                                                ],
+                                                "type": "object"
+                                            }
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
     @Test
-    public void testPersonAddtoListToolSchema() throws NoSuchMethodException, SecurityException {
-        String response = SchemaRegistry.generateSchema(this.getClass().getDeclaredMethod("addPersonToList", List.class, person.class));
+    public void testPersonAddtoListToolOutputSchema() throws NoSuchMethodException, SecurityException {
+        ToolMetadata toolMetadata = findTool("addPersonToList");
+        String response = SchemaRegistry.getToolOuputSchema(toolMetadata);
         String expectedResponseString = """
-                        {
-                          "$defs": {
-                            "address": {
-                              "properties": {
-                                "number": {
-                                  "type": "integer"
-                                },
-                                "street": {
-                                  "properties": {
-                                    "streetName": {
-                                      "type": "string"
-                                    },
-                                    "roadType": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "streetName"
-                                  ],
-                                  "type": "object"
-                                },
-                                "postcode": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "number",
-                                "street",
-                                "postcode"
-                              ],
-                              "type": "object"
-                            },
-                            "person": {
-                              "description": "Person object",
-                              "properties": {
+                            {
+                            "$defs": {
                                 "address": {
-                                  "$ref": "#/$defs/address"
-                                },
-                                "company": {
-                                  "properties": {
-                                    "address": {
-                                      "$ref": "#/$defs/address"
-                                    },
-                                    "name": {
-                                      "type": "string"
-                                    },
-                                    "employees": {
-                                      "items": {
-                                        "$ref": "#/$defs/person"
-                                      },
-                                      "type": "array"
-                                    },
-                                    "employeeRegistry": {
-                                      "properties": {
-                                        "value": {
-                                          "$ref": "#/$defs/company/employess/items"
+                                    "properties": {
+                                        "number": {
+                                            "type": "integer"
                                         },
-                                        "key": {
-                                          "type": "integer"
+                                        "street": {
+                                            "description": "A street object to represent complex streets",
+                                            "properties": {
+                                                "streetName": {
+                                                    "type": "string"
+                                                },
+                                                "roadType": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "streetName"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "postcode": {
+                                            "type": "string"
                                         }
-                                      },
-                                      "required": [],
-                                      "type": "object"
-                                    }
-                                  },
-                                  "required": [
-                                    "name",
-                                    "address",
-                                    "employees",
-                                    "employeeRegistry"
-                                  ],
-                                  "type": "object"
+                                    },
+                                    "required": [
+                                        "number",
+                                        "street",
+                                        "postcode"
+                                    ],
+                                    "type": "object"
                                 },
-                                "fullname": {
-                                  "type": "string"
+                                "person": {
+                                    "description": "A person object contains address, company objects",
+                                    "properties": {
+                                        "address": {
+                                            "$ref": "#/$defs/address"
+                                        },
+                                        "company": {
+                                            "properties": {
+                                                "address": {
+                                                    "$ref": "#/$defs/address"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "employees": {
+                                                    "description": "A list of employees (person object)",
+                                                    "items": {
+                                                        "$ref": "#/$defs/person"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "employeeRegistry": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "$ref": "#/$defs/person"
+                                                        },
+                                                        "key": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [],
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "required": [
+                                                "name",
+                                                "address",
+                                                "employees",
+                                                "employeeRegistry"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "fullname": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "fullname",
+                                        "address",
+                                        "company"
+                                    ],
+                                    "type": "object"
                                 }
-                              },
-                              "required": [
-                                "fullname",
-                                "address",
-                                "company"
-                              ],
-                              "type": "object"
-                            }
-                          },
-                          "description": "adds person to employee list, returns nothing",
-                          "properties": {
-                            "employeeList": {
-                              "description": "List of people",
-                              "items": {
-                                "$ref": "#/$defs/person"
-                              },
-                              "type": "array"
                             },
-                            "person": {
-                              "$ref": "#/$defs/person"
-                            }
-                          },
-                          "required": [
-                            "employeeList",
-                            "person"
-                          ],
-                          "type": "object"
+                            "items": {
+                                "$ref": "#/$defs/person"
+                            },
+                            "description": "Returns list of person object",
+                            "type": "array"
                         }
-                                                """;
+                                                    """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
-    @Test
-    public void testPersonListAddToolListParamSchema() throws NoSuchMethodException, SecurityException {
-        String response = SchemaRegistry.generateSchema(this.getClass().getDeclaredMethod("addPersonToList", List.class, person.class).getParameters()[0]);
-        String expectedResponseString = """
-                        {
-                          "defs": {
-                            "address": {
-                              "properties": {
-                                "number": {
-                                  "type": "integer"
-                                },
-                                "street": {
-                                  "properties": {
-                                    "streetName": {
-                                      "type": "string"
-                                    },
-                                    "roadType": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "streetName"
-                                  ],
-                                  "type": "object"
-                                },
-                                "postcode": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "number",
-                                "street",
-                                "postcode"
-                              ],
-                              "type": "object"
-                            },
-                            "person": {
-                              "properties": {
-                                "address": {
-                                  "$ref": "#/$defs/address"
-                                },
-                                "company": {
-                                  "properties": {
-                                    "address": {
-                                      "$ref": "#/$defs/address"
-                                    },
-                                    "name": {
-                                      "type": "string"
-                                    },
-                                    "employees": {
-                                      "items": {
-                                        "$ref": "#/$defs/person"
-                                      },
-                                      "type": "array"
-                                    },
-                                    "employeeRegistry": {
-                                      "properties": {
-                                        "value": {
-                                          "$ref": "#/$defs/company/employess/items"
-                                        },
-                                        "key": {
-                                          "type": "integer"
-                                        }
-                                      },
-                                      "required": [],
-                                      "type": "object"
-                                    }
-                                  },
-                                  "required": [
-                                    "name",
-                                    "address",
-                                    "employees",
-                                    "employeeRegistry"
-                                  ],
-                                  "type": "object"
-                                },
-                                "fullname": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "fullname",
-                                "address",
-                                "company"
-                              ],
-                              "type": "object"
-                            }
-                          },
-                          "description": "List of people",
-                          "items": {
-                            "$ref": "#/$defs/person"
-                          },
-                          "type": "array"
-                        }
-                                                """;
+    public enum TestEnum {
+        VALUE1,
+        @JsonbProperty("altValue2")
+        VALUE2
+    }
 
+    public record EnumHolder(TestEnum testEnum) {}
+
+    @Test
+    public void testEnumObject() {
+        String schema = SchemaRegistry.getSchema(EnumHolder.class, SchemaDirection.INPUT);
+
+        String expectedSchema = """
+                        {
+                            "type": "object",
+                            "properties": {
+                                "testEnum": {
+                                    "type": "string",
+                                    "enum": [
+                                        "VALUE1",
+                                        "altValue2"
+                                    ]
+                                }
+                            },
+                            "required": ["testEnum"]
+                        }""";
+
+        JSONAssert.assertEquals(expectedSchema, schema, true);
+    }
+
+    public record EnumMapHolder(Map<TestEnum, String> map) {};
+
+    @Test
+    public void testEnumKeyedMap() {
+        String schema = SchemaRegistry.getSchema(EnumMapHolder.class, SchemaDirection.INPUT);
+
+        String expectedSchema = """
+                        {
+                            "type": "object",
+                            "properties": {
+                                "map": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    },
+                                    "propertyNames": {
+                                        "type": "string",
+                                        "enum": [
+                                            "VALUE1",
+                                            "altValue2"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": ["map"]
+                        }""";
+        JSONAssert.assertEquals(expectedSchema, schema, true);
+    }
+
+    @Test
+    public void testOptionalPartialPersonSchema() {
+        String response = SchemaRegistry.getSchema(partialPerson.class, SchemaDirection.INPUT);
+        String expectedResponseString = """
+                            {
+                            "$defs": {
+                                "address": {
+                                    "properties": {
+                                        "number": {
+                                            "type": "integer"
+                                        },
+                                        "street": {
+                                            "description": "A street object to represent complex streets",
+                                            "properties": {
+                                                "streetName": {
+                                                    "type": "string"
+                                                },
+                                                "roadType": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "streetName"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "postcode": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "number",
+                                        "street",
+                                        "postcode"
+                                    ],
+                                    "type": "object"
+                                },
+                                "partialPerson": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {"type": "string"},
+                                        "address": {"$ref": "#/$defs/address"},
+                                        "partialCompany": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {"type": "string"},
+                                                "address": {"$ref": "#/$defs/address"},
+                                                "employees": {
+                                                    "type": "array",
+                                                    "description": "A list of employees (person object)",
+                                                    "items": {"$ref": "#/$defs/partialPerson"}
+                                                },
+                                                "employeeRegistry": {
+                                                    "type": "object",
+                                                    "additionalProperties": {"$ref": "#/$defs/partialPerson"}
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "partialCompany"
+                                    ]
+                                }
+                            },
+                            "$ref": "#/$defs/partialPerson"
+                        }
+                            """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 

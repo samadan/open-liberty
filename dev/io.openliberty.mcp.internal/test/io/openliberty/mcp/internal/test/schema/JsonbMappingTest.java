@@ -12,12 +12,14 @@ package io.openliberty.mcp.internal.test.schema;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.openliberty.mcp.internal.schemas.SchemaCreationContextRegistry;
 import io.openliberty.mcp.internal.schemas.SchemaDirection;
-import io.openliberty.mcp.internal.schemas.SchemaRegistryTwo;
+import io.openliberty.mcp.internal.schemas.SchemaRegistry;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.annotation.JsonbProperty;
@@ -28,11 +30,15 @@ import jakarta.json.bind.annotation.JsonbProperty;
 public class JsonbMappingTest {
 
     private static Jsonb jsonb = JsonbBuilder.create();
-    private static SchemaRegistryTwo registry;
+    private static SchemaRegistry registry;
+    private static SchemaCreationContextRegistry sccRegistry;
 
+    @BeforeClass
     public static void setup() {
-        registry = new SchemaRegistryTwo();
-        SchemaRegistryTwo.set(registry);
+        registry = new SchemaRegistry();
+        sccRegistry = new SchemaCreationContextRegistry();
+        SchemaRegistry.set(registry);
+        SchemaCreationContextRegistry.set(sccRegistry);
     }
 
     // -------------------------------
