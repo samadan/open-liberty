@@ -47,7 +47,15 @@ public interface NotLike extends Constraint<String> {
     static NotLike pattern(String pattern,
                            char charWildcard,
                            char stringWildcard) {
-        return NotLike.pattern(pattern, charWildcard, stringWildcard, ESCAPE);
+        Messages.requireNonNull(pattern, "pattern");
+
+        StringLiteral expression = StringLiteral.of(translate(pattern,
+                                                              charWildcard,
+                                                              stringWildcard,
+                                                              ESCAPE,
+                                                              false));
+
+        return new NotLikeRecord(expression, ESCAPE);
     }
 
     static NotLike pattern(String pattern,
@@ -59,7 +67,8 @@ public interface NotLike extends Constraint<String> {
         StringLiteral expression = StringLiteral.of(translate(pattern,
                                                               charWildcard,
                                                               stringWildcard,
-                                                              escape));
+                                                              escape,
+                                                              true));
         return new NotLikeRecord(expression, escape);
     }
 
