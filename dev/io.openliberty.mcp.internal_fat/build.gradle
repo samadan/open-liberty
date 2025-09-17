@@ -24,3 +24,27 @@ dependencies {
 compileJava {
     options.compilerArgs << '-parameters'
 }
+
+sourceSets {
+	noParamNamesTest {
+		java {
+			srcDir 'src/noParamTest/java'
+		}
+		resources.srcDir 'src/noParamTest/resources'
+		
+		compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+		runtimeClasspath += output + compileClasspath
+	}
+}
+
+task noParamNamesTest(type: test) {
+	description = "Runs tests compiled without -parameters"
+	group = "verification"
+	
+	testClassesDirs = sourceSets.noParamNamesTest.output.classesDirs
+	classpath = sourceSets.noParamNamesTest.runtimeClasspath
+}
+
+tasks.named("compileNoParamNamesTestJava"){
+	options.compilerArgs.remove('-parameters')
+}
