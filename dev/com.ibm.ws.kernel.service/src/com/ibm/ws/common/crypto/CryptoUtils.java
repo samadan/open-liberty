@@ -443,7 +443,7 @@ public class CryptoUtils {
         return isRunningBetaMode() && isSemeruFips140_3Enabled();
     }
 
-    private static boolean isRunningBetaMode() {
+    public static boolean isRunningBetaMode() {
         if (!ProductInfo.getBetaEdition()) {
             return false;
         } else {
