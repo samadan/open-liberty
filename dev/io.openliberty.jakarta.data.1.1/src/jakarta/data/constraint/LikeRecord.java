@@ -17,7 +17,7 @@ import jakarta.data.expression.TextExpression;
 /**
  * Method signatures are copied from Jakarta Data.
  */
-record LikeRecord(TextExpression<?> pattern, Character escape)
+record LikeRecord(TextExpression<?> pattern, char escape)
                 implements Like {
 
     static final char CHAR_WILDCARD = '_';
@@ -47,8 +47,7 @@ record LikeRecord(TextExpression<?> pattern, Character escape)
 
     @Override
     public String toString() {
-        return "LIKE " + pattern +
-               (escape == null ? "" : " ESCAPE '" + escape + "'");
+        return "LIKE " + pattern + " ESCAPE '" + escape + "'";
     }
 
     static String translate(String pattern,
