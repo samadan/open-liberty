@@ -2508,8 +2508,10 @@ public class JakartaDataRecreateServlet extends FATServlet {
             throw e;
         }
 
-        assertEquals(1, showtimesToday.count());
-        assertEquals(t1.movie, showtimesToday.findFirst().orElseThrow().movie);
+        List<Showtime> showtimesTodayList = showtimesToday.collect(Collectors.toList());
+
+        assertEquals(1, showtimesTodayList.size());
+        assertEquals(t1.movie, showtimesTodayList.get(0).movie);
     }
 
     /**
