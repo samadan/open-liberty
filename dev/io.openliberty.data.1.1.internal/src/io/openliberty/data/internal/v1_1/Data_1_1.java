@@ -593,11 +593,7 @@ public class Data_1_1 implements DataVersionCompatibility {
         else if (constraintOrValue instanceof LessThan c)
             values = new Object[] { c.bound() };
         else if (constraintOrValue instanceof Like c)
-            values = new Object[] { c.pattern(),
-                                    c.escape() == null ? '\\' : c.escape() };
-        // TODO API change requested to avoid null (above). If we do not get it, then
-        // the escape character will need to be inserted into the value of c.escape()
-        // whenever switching from null to \
+            values = new Object[] { c.pattern(), c.escape() };
         else if (constraintOrValue instanceof NotBetween c)
             values = new Object[] { c.lowerBound(), c.upperBound() };
         else if (constraintOrValue instanceof NotEqualTo c)
@@ -605,11 +601,7 @@ public class Data_1_1 implements DataVersionCompatibility {
         else if (isList = constraintOrValue instanceof NotIn)
             values = ((NotIn) constraintOrValue).expressions().toArray();
         else if (constraintOrValue instanceof NotLike c)
-            values = new Object[] { c.pattern(),
-                                    c.escape() == null ? '\\' : c.escape() };
-        // TODO API change requested to avoid null (above). If we do not get it, then
-        // the escape character will need to be inserted into the value of c.escape()
-        // whenever switching from null to \
+            values = new Object[] { c.pattern(), c.escape() };
         else if (constraintOrValue instanceof NotNull ||
                  constraintOrValue instanceof Null)
             values = new Object[0];
