@@ -76,6 +76,8 @@ import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
                 JNDINoEEContextAppTests.class,
                 JTAAppTests20.class,
                 JTAAppTests20War.class,
+                ProgrammaticTransAppTests20.class,
+                ProgrammaticTransAppTests20War.class,
                 JPAHibernateAppTests20War.class,
                 JPALibertyAppTests20War.class,
                 JPAEclipseLinkAppTests20War.class,
