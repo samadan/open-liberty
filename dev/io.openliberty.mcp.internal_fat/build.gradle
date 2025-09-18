@@ -12,6 +12,10 @@
  *******************************************************************************/
 apply from: '../wlp-gradle/subprojects/repos.gradle'
 
+plugins {
+    id 'java'
+}
+
 configurations.requiredLibs {
   transitive = false
 }
@@ -26,11 +30,15 @@ compileJava {
 }
 
 sourceSets {
+	main {
+		java {
+			srcDirs = ['fat/src']
+		}
+	}
 	noParamNamesTest {
 		java {
-			srcDir 'src/noParamTest/java'
+			srcDir 'noParamTest'
 		}
-		resources.srcDir 'src/noParamTest/resources'
 		
 		compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
 		runtimeClasspath += output + compileClasspath
