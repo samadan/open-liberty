@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023, 2025 IBM Corporation and others.
+ * Copyright (c) 2023, 2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -64,7 +64,6 @@ public class ReactiveMessagingTCKLauncher {
     public void launchReactiveMessaging30Tck() throws Exception {
         TCKRunner.build(server, Type.MICROPROFILE, "Reactive Messaging")
                         .withDefaultSuiteFileName()
-                        .withPlatfromVersion("4.1") //Latest MicroProfile version
                         .runTCK();
     }
 

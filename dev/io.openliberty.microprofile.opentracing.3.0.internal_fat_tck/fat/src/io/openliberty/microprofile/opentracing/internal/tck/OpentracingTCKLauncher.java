@@ -23,6 +23,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
+import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs a whole Maven TCK as one test FAT test.
@@ -50,7 +51,7 @@ public class OpentracingTCKLauncher {
     @AllowedFFDC // The tested deployment exceptions cause FFDC so we have to allow for this.
     public void launchOpenTracing30Tck() throws Exception {
 
-        TCKRunner.build(server, Type.MICROPROFILE, "Open Tracing")
+        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.OPEN_TRACING)
                         .withDefaultSuiteFileName()
                         .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_50) //Latest MicroProfile version
                         .runTCK();

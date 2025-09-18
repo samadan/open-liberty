@@ -31,6 +31,7 @@ import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
 import componenttest.topology.utils.tck.TCKUtilities;
+import componenttest.topology.utils.tck.TCKResultsConstants;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
