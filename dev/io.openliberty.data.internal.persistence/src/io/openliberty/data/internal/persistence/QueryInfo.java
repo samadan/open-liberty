@@ -5277,18 +5277,28 @@ public class QueryInfo {
         DataVersionCompatibility compat = producer.provider().compat;
         Iterator<String> namedParams = jpqlParamNames.iterator();
         for (int i = 0, p = 0; i < jpqlParamCount; i++) {
-            Object arg = compat.toLiteralValue(args[i]);
-
-            if (namedParams.hasNext()) {
-                String paramName = namedParams.next();
-                if (trace && tc.isDebugEnabled())
-                    Tr.debug(this, tc, "set :" + paramName + ' ' + loggable(arg));
-                query.setParameter(paramName, arg);
-                p++;
-            } else { // positional parameter
-                if (trace && tc.isDebugEnabled())
-                    Tr.debug(this, tc, "set ?" + (p + 1) + ' ' + loggable(arg));
-                query.setParameter(++p, arg);
+            Object[] values = compat.toConstraintValues(args[i]);
+            if (values == null) {
+                // normal value, not a Constraint
+                if (namedParams.hasNext()) {
+                    String paramName = namedParams.next();
+                    if (trace && tc.isDebugEnabled())
+                        Tr.debug(this, tc, "set :" + paramName + ' ' + loggable(args[i]));
+                    query.setParameter(paramName, args[i]);
+                    p++;
+                } else { // positional parameter
+                    if (trace && tc.isDebugEnabled())
+                        Tr.debug(this, tc, "set ?" + (p + 1) + ' ' + loggable(args[i]));
+                    query.setParameter(++p, args[i]);
+                }
+            } else { // Constraint
+                // TODO 1.1 reject erroneous attempt to supply a Constraint to JPQL here?
+                for (Object value : values) {
+                    // always a positional parameter
+                    if (trace && tc.isDebugEnabled())
+                        Tr.debug(this, tc, "set ?" + (p + 1) + ' ' + loggable(value));
+                    query.setParameter(++p, value);
+                }
             }
         }
     }
