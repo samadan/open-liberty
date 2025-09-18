@@ -12,10 +12,6 @@
  *******************************************************************************/
 apply from: '../wlp-gradle/subprojects/repos.gradle'
 
-plugins {
-    id 'java'
-}
-
 configurations.requiredLibs {
   transitive = false
 }
@@ -37,15 +33,14 @@ sourceSets {
 	}
 	noParamNamesTest {
 		java {
-			srcDir 'noParamTest'
+			srcDirs = ['noParamTest']
 		}
-		
-		compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+		compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
 		runtimeClasspath += output + compileClasspath
 	}
 }
 
-task noParamNamesTest(type: test) {
+task noParamNamesTest(type: Test) {
 	description = "Runs tests compiled without -parameters"
 	group = "verification"
 	
@@ -55,4 +50,8 @@ task noParamNamesTest(type: test) {
 
 tasks.named("compileNoParamNamesTestJava"){
 	options.compilerArgs.remove('-parameters')
+}
+
+tasks.named("buildandrun"){
+	dependsOn tasks.named("noParamNamesTest")
 }
