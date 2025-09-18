@@ -57,7 +57,7 @@ public class Mpjwt21TCKLauncher_noaud_env {
         String suiteName = "tck_suite_noaud_env.xml";
         TCKRunner.build(server, Type.MICROPROFILE, "JWT Auth")
                         .withSuiteFileName(suiteName)
-                        .withPlatfromVersion("7.1") //Latest MicroProfile version
+                        .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_71) //Latest MicroProfile version
                         .runTCK();
     }
 }

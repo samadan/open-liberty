@@ -50,7 +50,7 @@ public class ConfigTCKLauncher {
     @Test
     @AllowedFFDC // The tested deployment exceptions cause FFDC so we have to allow for this.
     public void launchConfig11Tck() throws Exception {
-        TCKRunner.build(server, Type.MICROPROFILE, "Config")
+        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.CONFIG)
                         .withDefaultSuiteFileName()
                         .runTCK();
     }

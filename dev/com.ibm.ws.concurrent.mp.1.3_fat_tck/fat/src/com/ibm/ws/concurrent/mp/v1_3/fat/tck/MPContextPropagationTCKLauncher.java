@@ -55,9 +55,8 @@ public class MPContextPropagationTCKLauncher {
     })
     @Test
     public void launchMPContextPropagation_1_3_Tck() throws Exception {
-        TCKRunner.build(server, Type.MICROPROFILE, "Context Propagation")
+        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.CONTEXT_PROPAGATION)
                         .withDefaultSuiteFileName()
-                        .isStandalone()
                         .runTCK();
     }
 }

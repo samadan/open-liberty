@@ -27,6 +27,7 @@ import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
+import componenttest.topology.utils.tck.TCKResultsConstants;
 
 import com.ibm.websphere.simplicity.OperatingSystem;
 /**
@@ -67,9 +68,9 @@ public class Telemetry20MetricsConfigTCKLauncher {
             suiteName = "tck-suite-metrics-server-config-aix.xml";
         }
 
-        TCKRunner.build(server, Type.MICROPROFILE, "Telemetry")
+        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.TELEMETRY)
                         .withSuiteFileName(suiteName)
-                        .withPlatfromVersion("7.0") //Latest MicroProfile version
+                        .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_70) //Latest MicroProfile version
                         .runTCK();
     }
 }

@@ -60,7 +60,7 @@ public class MetricsTCKLauncher {
         additionalProps.put("test.user", "theUser");
         additionalProps.put("test.pwd", "thePassword");
 
-        TCKRunner.build(server, Type.MICROPROFILE, "Metrics")
+        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.METRICS)
                         .withDefaultSuiteFileName()
                         .withAdditionalMvnProps(additionalProps)
                         .runTCK();

@@ -69,10 +69,10 @@ public class MetricsTCKLauncher {
         additionalProps.put("test.user", "theUser");
         additionalProps.put("test.pwd", "thePassword");
 
-        TCKRunner.build(server, Type.MICROPROFILE, "Metrics")
+        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.METRICS)
                         .withDefaultSuiteFileName()
                         .withAdditionalMvnProps(additionalProps)
-                        .withPlatfromVersion("5.0") //Latest MicroProfile version
+                        .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_50) //Latest MicroProfile version
                         .runTCK();
     }
 

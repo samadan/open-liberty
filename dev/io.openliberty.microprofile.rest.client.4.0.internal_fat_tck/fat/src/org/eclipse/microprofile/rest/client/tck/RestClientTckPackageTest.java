@@ -112,9 +112,9 @@ public class RestClientTckPackageTest {
     public void testRestClient40Tck() throws Exception {
         // Skip running on the windows platform when not running locally.
         if (!(isWindows) || FATRunner.FAT_TEST_LOCALRUN) {
-            TCKRunner.build(server, Type.MICROPROFILE, "Rest Client")
+            TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.REST_CLIENT)
                             .withDefaultSuiteFileName()
-                            .withPlatfromVersion("7.1") //Latest MicroProfile version
+                            .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_71) //Latest MicroProfile version
                             .runTCK();
         }
     }
