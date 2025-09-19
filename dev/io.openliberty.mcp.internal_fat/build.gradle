@@ -36,13 +36,12 @@ sourceSets {
 			srcDirs = ['noParamTest']
 		}
 		compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-		runtimeClasspath += output + compileClasspath
+		runtimeClasspath += sourceSets.main.runtimeClasspath + output
 	}
 }
 
 task noParamNamesTest(type: Test) {
 	description = "Runs tests compiled without -parameters"
-	group = "verification"
 	
 	testClassesDirs = sourceSets.noParamNamesTest.output.classesDirs
 	classpath = sourceSets.noParamNamesTest.runtimeClasspath
