@@ -15,7 +15,7 @@ package componenttest.topology.utils.tck;
 /**
  * Holds a set of constants for the TCKResultsWriter which are shared by the TCK runners
  */
-public abstract class ResultCollectionConstants {
+public abstract class TCKResultsConstants {
 
     // MicroProfile versions
     public static final String MICROPROFILE_VERSION_40 = "4.0";

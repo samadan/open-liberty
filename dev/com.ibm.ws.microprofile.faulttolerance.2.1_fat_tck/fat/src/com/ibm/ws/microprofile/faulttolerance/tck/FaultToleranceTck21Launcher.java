@@ -29,6 +29,7 @@ import componenttest.topology.impl.JavaInfo.Vendor;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
+import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs the whole Fault Tolerance 2.1 TCK. The TCK results

@@ -23,6 +23,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
+import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs a whole Maven TCK as one test FAT test. *
@@ -51,7 +52,7 @@ public class Mpjwt21TCKLauncher_aud_env {
     @AllowedFFDC("org.jose4j.jwt.consumer.InvalidJwtSignatureException")
     public void launchMpjwt21TCK_aud_env() throws Exception {
         String suiteName = "tck_suite_aud_env.xml";
-        TCKRunner.build(server, Type.MICROPROFILE, "JWT Auth")
+        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.JWT_AUTH)
                         .withSuiteFileName(suiteName)
                         .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_71) //Latest MicroProfile version
                         .runTCK();
