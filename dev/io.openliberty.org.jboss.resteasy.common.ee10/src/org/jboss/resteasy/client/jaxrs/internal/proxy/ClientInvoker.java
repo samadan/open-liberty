@@ -126,10 +126,17 @@ public class ClientInvoker implements MethodInvoker {
         Object e = request.getEntity();
         Object o = null;
         if (e != null) {
-           //Liberty change: Converted e to GenericEntity
+            //Liberty change:Start- Converted e to GenericEntity
+            if (e instanceof GenericEntity) {
+                o = rxInvoker.method(getHttpMethod(),
+                    Entity.entity(e, 
+                    request.getHeaders().getMediaType(), request.getEntityAnnotations()), gt); 
+            } else {
             o = rxInvoker.method(getHttpMethod(),
                     Entity.entity(new GenericEntity<Object>(e, request.getEntityGenericType()), 
-                    request.getHeaders().getMediaType(), request.getEntityAnnotations()), gt);
+                    request.getHeaders().getMediaType(), request.getEntityAnnotations()), gt); 
+            }
+            //Liberty change:End
         } else {
             o = rxInvoker.method(getHttpMethod(), gt);
         }
