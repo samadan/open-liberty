@@ -5837,6 +5837,33 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
+     * Tests JPQL UPDATE with a subquery, such that there are two FROM clauses:
+     * one in the main query and one in the subquery.
+     */
+    @Test
+    public void testSubqueryInUpdate() {
+        receipts.removeIfTotalUnder(Float.MAX_VALUE);
+
+        receipts.insertAll(List.of(new Receipt(8001, "TSIU-1", 61.98f),
+                                   new Receipt(8002, "TSIU-2", 32.98f),
+                                   new Receipt(8003, "TSIU-3", 23.98f),
+                                   new Receipt(8004, "TSIU-4", 74.98f),
+                                   new Receipt(8005, "TSIU-5", 65.98f)));
+
+        assertEquals(3L,
+                     receipts.increaseIfAboveAverageTotal(1.08f));
+
+        Receipt r3 = receipts.findById(8003L).orElseThrow();
+        assertEquals(23.98f, r3.total(), 0.01f);
+
+        Receipt r4 = receipts.findById(8004L).orElseThrow();
+        assertEquals(80.98f, r4.total(), 0.01f);
+
+        assertEquals(5L,
+                     receipts.removeIfTotalUnder(Float.MAX_VALUE));
+    }
+
+    /**
      * Repository method that supplies pagination information and returns a list.
      */
     @Test

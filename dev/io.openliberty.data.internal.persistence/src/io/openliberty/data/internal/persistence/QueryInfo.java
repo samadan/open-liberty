@@ -3813,12 +3813,13 @@ public class QueryInfo {
                 entityInfo.recordClass != null)
                 jpql = replaceRecordName(ql, modifyAt);
         } else if (firstChar == 'U' || firstChar == 'u') { // UPDATE EntityName[ SET ... WHERE ...]
+            ArrayList<Integer> modifyAt = new ArrayList<>();
             if (startAt + 13 < length
                 && ql.regionMatches(true, startAt + 1, "PDATE", 0, 5)
                 && Character.isWhitespace(ql.charAt(startAt + 6))) {
                 type = QM_UPDATE;
                 jpql = ql;
-                startAt += 7; // start of EntityName
+                modifyAt.add(startAt += 7); // start of EntityName
                 for (; startAt < length && Character.isWhitespace(ql.charAt(startAt)); startAt++);
                 StringBuilder entityName = new StringBuilder();
                 for (char ch; startAt < length && Character.isJavaIdentifierPart(ch = ql.charAt(startAt)); startAt++)
@@ -3833,30 +3834,24 @@ public class QueryInfo {
                               repositoryInterface.getName(),
                               "UPDATE",
                               "UPDATE [entity_name] SET [update_items] WHERE [conditional_expression]");
-                if (startAt + 1 < length && entityInfo.name.length() > 0 && Character.isWhitespace(ql.charAt(startAt))) {
-                    for (startAt++; startAt < length && Character.isWhitespace(ql.charAt(startAt)); startAt++);
-                    if (startAt + 4 < length
-                        && ql.regionMatches(true, startAt, "SET", 0, 3)
-                        && !Character.isJavaIdentifierPart(ql.charAt(startAt + 3))) {
-                        entityVar = "this";
-                        entityVar_ = "";
 
-                        if (entityName.length() != entityInfo.name.length() || entityName.indexOf(entityInfo.name) != 0)
-                            jpql = new StringBuilder(ql.length() * 3 / 2) //
-                                            .append("UPDATE ").append(entityInfo.name).append(" SET") //
-                                            .append(jpql.substring(startAt + 3, ql.length())) //
-                                            .toString();
-                    }
-                }
+                entityVar = parseIdentificationVariable(startAt, length, ql);
+                entityVar_ = entityVar == "this" ? "" : (entityVar + '.');
             }
 
-            qlParamNames = parseQuery(ql, startAt, new ArrayList<>());
+            qlParamNames = parseQuery(ql, startAt, modifyAt);
 
             if (trace && tc.isDebugEnabled())
                 Tr.debug(tc, ql, "UPDATE query",
                          "  " + jpql,
                          "  entity [" + entityInfo.name + "] [" + entityVar + "]",
+                         "  modify " + modifyAt,
                          "  :named " + qlParamNames);
+
+            // TODO move this later into shared code with all paths
+            if (!modifyAt.isEmpty() &&
+                entityInfo.recordClass != null)
+                jpql = replaceRecordName(ql, modifyAt);
         } else { // SELECT ... or FROM ... or WHERE ... or ORDER BY ...
             int select0 = -1, selectLen = 0; // starts after SELECT
             int from0 = -1, fromLen = 0; // starts after FROM
