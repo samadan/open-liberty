@@ -28,6 +28,7 @@ import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
+import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs a whole Maven TCK as one test FAT test.
@@ -59,7 +60,7 @@ public class Config20TCKLauncher {
     public void launchConfig20Tck() throws Exception {
         TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.CONFIG)
                         .withDefaultSuiteFileName()
-                        .withPlatfromVersion("4.0") //Latest MicroProfile version
+                        .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_40) //Latest MicroProfile version
                         .runTCK();
     }
 }

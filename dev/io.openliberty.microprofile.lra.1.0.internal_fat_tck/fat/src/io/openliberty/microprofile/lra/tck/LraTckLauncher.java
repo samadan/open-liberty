@@ -34,6 +34,7 @@ import componenttest.custom.junit.runner.Mode.TestMode;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
+import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs the whole LRA TCK. The TCK results
@@ -123,10 +124,10 @@ public class LraTckLauncher {
         additionalProps.put("lra.tck.base.url", protocol + "://" + host + ":" + port);
         additionalProps.put("lraTestsToRun", "**/*Test*.java");
 
-        TCKRunner.build(server, Type.MICROPROFILE, "LRA")
+        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.LRA)
                         .withDefaultSuiteFileName()
                         .withAdditionalMvnProps(additionalProps)
-                        .withPlatfromVersion("4.1") //Latest MicroProfile version
+                        .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_41) //Latest MicroProfile version
                         .runTCK();
 
     }

@@ -18,8 +18,9 @@ package componenttest.topology.utils.tck;
 public abstract class ResultCollectionConstants {
 
     // MicroProfile versions
+    public static final String MICROPROFILE_VERSION_40 = "4.0";
     public static final String MICROPROFILE_VERSION_41 = "4.1";
-    public static final String MICROPROFILE_VERSION_41 = "5.0";
+    public static final String MICROPROFILE_VERSION_50 = "5.0";
     public static final String MICROPROFILE_VERSION_60 = "6.0";
     public static final String MICROPROFILE_VERSION_61 = "6.1";
     public static final String MICROPROFILE_VERSION_70 = "7.0";
