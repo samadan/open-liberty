@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2023 IBM Corporation and others.
+ * Copyright (c) 2018, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -319,13 +319,8 @@ public class AsyncInvokerTestServlet extends HttpServlet {
     public void testAsyncInvoker_getConnectionTimeout(Map<String, String> param, StringBuilder ret) {
         String target = null;
 
-        if (isZOS()) {
-            // https://stackoverflow.com/a/904609/6575578
-            target = "http://example.com:81";
-        } else {
-            //Connect to telnet port - which should be disabled on all non-Z test machines - so we should expect a timeout
-            target = "http://localhost:23/blah";
-        }
+        // https://stackoverflow.com/a/904609/6575578
+        target = "http://10.255.255.1/blah";
 
         ClientBuilder cb = ClientBuilder.newBuilder();
         cb.property("com.ibm.ws.jaxrs.client.connection.timeout", TIMEOUT);
@@ -410,13 +405,8 @@ public class AsyncInvokerTestServlet extends HttpServlet {
     public void testAsyncInvoker_postConnectionTimeout(Map<String, String> param, StringBuilder ret) {
         String target = null;
 
-        if (isZOS()) {
-            // https://stackoverflow.com/a/904609/6575578
-            target = "http://example.com:81";
-        } else {
-            //Connect to telnet port - which should be disabled on all non-Z test machines - so we should expect a timeout
-            target = "http://localhost:23/blah";
-        }
+        // https://stackoverflow.com/a/904609/6575578
+        target = "http://10.255.255.1/blah";
 
         ClientBuilder cb = ClientBuilder.newBuilder();
         cb.property("com.ibm.ws.jaxrs.client.connection.timeout", TIMEOUT);
@@ -497,13 +487,8 @@ public class AsyncInvokerTestServlet extends HttpServlet {
     public void testAsyncInvoker_getConnectionTimeoutwithInvocationCallback(Map<String, String> param, StringBuilder ret) {
         String target = null;
 
-        if (isZOS()) {
-            // https://stackoverflow.com/a/904609/6575578
-            target = "http://example.com:81";
-        } else {
-            //Connect to telnet port - which should be disabled on all non-Z test machines - so we should expect a timeout
-            target = "http://localhost:23/blah";
-        }
+        // https://stackoverflow.com/a/904609/6575578
+        target = "http://10.255.255.1/blah";
 
         ClientBuilder cb = ClientBuilder.newBuilder();
         cb.property("com.ibm.ws.jaxrs.client.connection.timeout", TIMEOUT);
@@ -586,13 +571,8 @@ public class AsyncInvokerTestServlet extends HttpServlet {
     public void testAsyncInvoker_postConnectionTimeoutwithInvocationCallback(Map<String, String> param, StringBuilder ret) {
         String target = null;
 
-        if (isZOS()) {
-            // https://stackoverflow.com/a/904609/6575578
-            target = "http://example.com:81";
-        } else {
-            //Connect to telnet port - which should be disabled on all non-Z test machines - so we should expect a timeout
-            target = "http://localhost:23/blah";
-        }
+        // https://stackoverflow.com/a/904609/6575578
+        target = "http://10.255.255.1/blah";
 
         ClientBuilder cb = ClientBuilder.newBuilder();
         cb.property("com.ibm.ws.jaxrs.client.connection.timeout", TIMEOUT);
