@@ -2298,58 +2298,6 @@ public class QueryInfo {
     }
 
     /**
-     * Locate the names of named parameters after the specified point in the query
-     * and populate them into the paramNames list.
-     *
-     * @param ql      query language
-     * @param startAt starting position in the query language
-     */
-    @Trivial
-    private LinkedHashSet<String> findNamedParameters(String ql, int startAt) {
-        LinkedHashSet<String> qlParamNames = new LinkedHashSet<>();
-
-        int length = ql.length();
-        boolean isLiteral = false;
-        StringBuilder paramName = null;
-        for (; startAt < length; startAt++) {
-            char ch = ql.charAt(startAt);
-            if (!isLiteral && ch == ':') {
-                paramName = new StringBuilder(30);
-            } else if (ch == '\'') {
-                if (isLiteral) {
-                    if (startAt + 1 < length && ql.charAt(startAt + 1) == '\'')
-                        startAt++; // escaped ' within a literal
-                    else
-                        isLiteral = false;
-                } else {
-                    isLiteral = true;
-                    if (paramName != null) {
-                        qlParamNames.add(paramName.toString());
-                        paramName = null;
-                    }
-                }
-            } else if (Character.isJavaIdentifierStart(ch)) {
-                if (paramName != null) {
-                    paramName.append(ch);
-                    while (length > startAt + 1 && Character //
-                                    .isJavaIdentifierPart(ch = ql.charAt(startAt + 1))) {
-                        paramName.append(ch);
-                        startAt++;
-                    }
-                }
-            } else if (paramName != null) {
-                qlParamNames.add(paramName.toString());
-                paramName = null;
-            }
-        }
-
-        if (paramName != null)
-            qlParamNames.add(paramName.toString());
-
-        return qlParamNames;
-    }
-
-    /**
      * Generates JPQL for a *By constraint such as MyColumn[IgnoreCase][Not]Like
      *
      * @param methodName name of the repository method.
@@ -3819,6 +3767,7 @@ public class QueryInfo {
         for (; startAt < length && Character.isWhitespace(firstChar = ql.charAt(startAt)); startAt++);
 
         if (firstChar == 'D' || firstChar == 'd') { // DELETE FROM EntityName[ WHERE ...]
+            ArrayList<Integer> modifyAt = new ArrayList<>();
             if (startAt + 12 < length
                 && ql.regionMatches(true, startAt + 1, "ELETE", 0, 5)
                 && Character.isWhitespace(ql.charAt(startAt + 6))) {
@@ -3829,7 +3778,7 @@ public class QueryInfo {
                 if (startAt + 6 < length
                     && ql.regionMatches(true, startAt, "FROM", 0, 4)
                     && Character.isWhitespace(ql.charAt(startAt + 4))) {
-                    startAt += 5; // start of EntityName
+                    modifyAt.add(startAt += 5); // start of EntityName
                     for (; startAt < length && Character.isWhitespace(ql.charAt(startAt)); startAt++);
                     StringBuilder entityName = new StringBuilder();
                     for (char ch; startAt < length && Character.isJavaIdentifierPart(ch = ql.charAt(startAt)); startAt++)
@@ -3845,45 +3794,24 @@ public class QueryInfo {
                                   "DELETE",
                                   "DELETE FROM [entity_name] WHERE [conditional_expression]");
 
-                    // skip whitespace
-                    for (; startAt < length && Character.isWhitespace(ql.charAt(startAt)); startAt++);
-                    if (startAt >= length) {
-                        // Entity identifier variable is not present.
-                        entityVar = "this";
-                        entityVar_ = "";
-                        if (entityInfo.recordClass != null)
-                            // Switch from record name to entity name
-                            jpql = new StringBuilder(entityInfo.name.length() + 18) //
-                                            .append("DELETE FROM ") //
-                                            .append(entityInfo.name) //
-                                            .toString();
-                    } else if (startAt + 6 < length
-                               && ql.regionMatches(true, startAt, "WHERE", 0, 5)
-                               && !Character.isJavaIdentifierPart(ql.charAt(startAt + 5))) {
-                        // Entity identifier variable is not present.
-                        hasWhere = true;
-                        entityVar = "this";
-                        entityVar_ = "";
-
-                        if (entityInfo.recordClass != null)
-                            // Switch from record name to entity name
-                            jpql = new StringBuilder(ql.length() + 6) //
-                                            .append("DELETE FROM ") //
-                                            .append(entityInfo.name) //
-                                            .append(" WHERE") //
-                                            .append(ql.substring(startAt + 5, ql.length())) //
-                                            .toString();
-                    }
+                    entityVar = parseIdentificationVariable(startAt, length, ql);
+                    entityVar_ = entityVar == "this" ? "" : (entityVar + '.');
                 }
             }
 
-            qlParamNames = findNamedParameters(ql, startAt);
+            qlParamNames = parseQuery(ql, startAt, modifyAt);
 
             if (trace && tc.isDebugEnabled())
                 Tr.debug(tc, ql, "DELETE query",
                          "  " + jpql,
                          "  entity [" + entityInfo.name + "] [" + entityVar + "]",
+                         "  modify " + modifyAt,
                          "  :named " + qlParamNames);
+
+            // TODO move this later into shared code with all paths
+            if (!modifyAt.isEmpty() &&
+                entityInfo.recordClass != null)
+                jpql = replaceRecordName(ql, modifyAt);
         } else if (firstChar == 'U' || firstChar == 'u') { // UPDATE EntityName[ SET ... WHERE ...]
             if (startAt + 13 < length
                 && ql.regionMatches(true, startAt + 1, "PDATE", 0, 5)
@@ -3922,7 +3850,7 @@ public class QueryInfo {
                 }
             }
 
-            qlParamNames = findNamedParameters(ql, startAt);
+            qlParamNames = parseQuery(ql, startAt, new ArrayList<>());
 
             if (trace && tc.isDebugEnabled())
                 Tr.debug(tc, ql, "UPDATE query",
@@ -4929,6 +4857,48 @@ public class QueryInfo {
     }
 
     /**
+     * Finds the identification variable if any that follows
+     * FROM EntityName
+     *
+     * @param startAt   position at which to start.
+     * @param endBefore position before which to end.
+     * @param ql        query language string.
+     * @return identification variable name, if any. Otherwise this.
+     */
+    private String parseIdentificationVariable(int startAt,
+                                               int endBefore,
+                                               String ql) {
+        String entityVar = "this";
+        for (; startAt < endBefore &&
+               Character.isWhitespace(ql.charAt(startAt)); startAt++);
+        if (startAt < endBefore) {
+            int idVar0 = startAt, idVarLen = 0; // starts at the entity identifier variable
+            for (; startAt < endBefore &&
+                   Character.isJavaIdentifierPart(ql.charAt(startAt)); startAt++);
+            if ((idVarLen = startAt - idVar0) > 0) {
+                if (idVarLen == 2
+                    && (ql.charAt(idVar0) == 'A' || ql.charAt(idVar0) == 'a')
+                    && (ql.charAt(idVar0 + 1) == 'S' || ql.charAt(idVar0 + 1) == 's')) {
+                    // skip over the AS keyword
+                    for (; startAt < endBefore &&
+                           Character.isWhitespace(ql.charAt(startAt)); startAt++);
+                    idVar0 = startAt;
+                    for (; startAt < endBefore &&
+                           Character.isJavaIdentifierPart(ql.charAt(startAt)); startAt++);
+                }
+
+                if (startAt > idVar0) {
+                    String s = ql.substring(idVar0, startAt);
+                    if (!Util.QL_KEYWORDS_AFTER_ENTITY_NAME.contains(s.toUpperCase()))
+                        entityVar = s;
+                }
+            }
+        }
+
+        return entityVar;
+    }
+
+    /**
      * Identifies the statically specified sort criteria for a repository findBy method such as
      * findByLastNameLikeOrderByLastNameAscFirstNameDesc
      */
@@ -4981,6 +4951,107 @@ public class QueryInfo {
             sortPositions = NONE_STATIC_SORT_ONLY;
             generateOrderBy(q);
         }
+    }
+
+    /**
+     * Locate the starting index of FROM keywords past the specified point.
+     * There can be multiple due to subqueries and UNION/INTERSECT.
+     * Locate the names of named parameters after the specified point in the query
+     * and populate them into the paramNames list.
+     *
+     * @param ql       query language
+     * @param startAt  starting position in the query language
+     * @param modifyAt list into which to add the possible starting indices of
+     *                     entity names of FROM clauses.
+     * @return the names of named parameter.
+     */
+    @Trivial
+    private LinkedHashSet<String> parseQuery(String ql,
+                                             int startAt,
+                                             List<Integer> modifyAt) {
+        LinkedHashSet<String> qlParamNames = new LinkedHashSet<>();
+
+        int length = ql.length();
+        boolean isLiteral = false;
+        StringBuilder paramName = null;
+        for (; startAt < length; startAt++) {
+            char ch = ql.charAt(startAt);
+            if (!isLiteral && ch == ':') {
+                paramName = new StringBuilder(30);
+            } else if (ch == '\'') {
+                if (isLiteral) {
+                    if (startAt + 1 < length && ql.charAt(startAt + 1) == '\'')
+                        startAt++; // escaped ' within a literal
+                    else
+                        isLiteral = false;
+                } else {
+                    isLiteral = true;
+                    if (paramName != null) {
+                        qlParamNames.add(paramName.toString());
+                        paramName = null;
+                    }
+                }
+            } else if (Character.isJavaIdentifierStart(ch)) {
+                if (paramName == null) {
+                    if (startAt + 4 < length &&
+                        !Character.isJavaIdentifierPart(ql.charAt(startAt + 4)) &&
+                        ql.regionMatches(true, startAt, "FROM", 0, 4)) {
+                        startAt += 5;
+                        modifyAt.add(startAt);
+                    }
+                } else {
+                    paramName.append(ch);
+                    while (length > startAt + 1 && Character //
+                                    .isJavaIdentifierPart(ch = ql.charAt(startAt + 1))) {
+                        paramName.append(ch);
+                        startAt++;
+                    }
+                }
+            } else if (paramName != null) {
+                qlParamNames.add(paramName.toString());
+                paramName = null;
+            }
+        }
+
+        if (paramName != null)
+            qlParamNames.add(paramName.toString());
+
+        return qlParamNames;
+    }
+
+    /**
+     * Identify occurrences of the record entity name in FROM clauses and
+     * replace them with the generated entity name.
+     *
+     * @param ql       the query.
+     * @param modifyAt indices of the possible start of entity names of FROM clauses.
+     * @return a query in which the record entity names are replaced.
+     */
+    private String replaceRecordName(String ql, List<Integer> modifyAt) {
+        final String recordName = entityInfo.recordClass.getSimpleName();
+        final int rLen = recordName.length();
+        final int eLen = entityInfo.name.length();
+        final int qlLen = ql.length();
+        StringBuilder q = new StringBuilder((eLen - rLen) * modifyAt.size() + qlLen);
+        int startAt = 0;
+        for (Integer m : modifyAt) {
+            q.append(ql.substring(startAt, startAt = m));
+            for (char ch; startAt < qlLen &&
+                          !Character.isJavaIdentifierPart(ch = ql.charAt(startAt)); //
+                            startAt++)
+                q.append(ch);
+
+            if ((startAt + rLen == qlLen // exactly long enough to have RecordName
+                 || startAt + rLen < qlLen // more than long enough and next char must delimit
+                    && !Character.isJavaIdentifierPart(ql.charAt(startAt + rLen)))
+                && ql.regionMatches(false, startAt, recordName, 0, rLen)) {
+                q.append(entityInfo.name);
+                startAt += rLen;
+            }
+        }
+        if (startAt < qlLen)
+            q.append(ql.substring(startAt));
+        return q.toString();
     }
 
     /**
