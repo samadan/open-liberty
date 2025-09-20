@@ -13,7 +13,9 @@ package com.ibm.ws.springboot.support.fat;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
@@ -23,37 +25,31 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.utils.HttpUtils;
 
 @RunWith(FATRunner.class)
-public class JTAAppTests20 extends JTAAppAbstractTests {
+public class ProgrammaticTransAppTests20War extends ProgrammaticTransAppAbstractTests {
 
     @Test
-    public void testTransactionsAppRunner() throws Exception {
+    public void testTransactionsAppRunnerWar() throws Exception {
         assertNotNull("Did not find TESTS PASSED messages", server.waitForStringInLog("AppRunner: TRANSACTION TESTS PASSED"));
     }
 
     @Test
-    public void testJNDIAppRunner() throws Exception {
-        assertNotNull("Did not find TESTS PASSED messages", server.waitForStringInLog("AppRunner: JNDI TESTS PASSED"));
-    }
-
-    @Test
-    public void testTransactionsWebContext() throws Exception {
-        HttpUtils.findStringInUrl(server, "testTransactions", "TESTED TRANSACTIONS");
+    public void testTransactionsWebContextWar() throws Exception {
+        HttpUtils.findStringInUrl(server, "testName/testTransactions", "TESTED TRANSACTIONS");
         assertNotNull("Did not find TESTS PASSED messages", server.waitForStringInLog("WebContext: TRANSACTION TESTS PASSED"));
-    }
-
-    @Test
-    public void testJNDIWebContext() throws Exception {
-        HttpUtils.findStringInUrl(server, "testJNDI", "TESTED JNDI");
-        assertNotNull("Did not find TESTS PASSED messages", server.waitForStringInLog("WebContext: JNDI TESTS PASSED"));
     }
 
     @Override
     public Set<String> getFeatures() {
-        return new HashSet<>(Arrays.asList("springBoot-2.0", "servlet-4.0", "jca-1.7", "jdbc-4.2", "jndi-1.0", "componenttest-1.0", "cdi-2.0", "ejbLite-3.2"));
+        return new HashSet<>(Arrays.asList("servlet-4.0", "jca-1.7", "jdbc-4.2", "jndi-1.0"));
     }
 
     @Override
     public AppConfigType getApplicationConfigType() {
-        return AppConfigType.SPRING_BOOT_APP_TAG;
+        return AppConfigType.WEB_APP_TAG;
+    }
+
+    @Override
+    public Map<String, String> getBootStrapProperties() {
+        return Collections.singletonMap("configure.DataSourceTransactionManager", "true");
     }
 }

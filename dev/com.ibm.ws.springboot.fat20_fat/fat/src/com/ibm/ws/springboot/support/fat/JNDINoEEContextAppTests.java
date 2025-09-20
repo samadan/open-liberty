@@ -19,30 +19,27 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.ibm.websphere.simplicity.config.SpringBootApplication;
+
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.utils.HttpUtils;
 
 @RunWith(FATRunner.class)
-public class JTAAppTests20 extends JTAAppAbstractTests {
+public class JNDINoEEContextAppTests extends JTAAppAbstractTests {
 
-    @Test
-    public void testTransactionsAppRunner() throws Exception {
-        assertNotNull("Did not find TESTS PASSED messages", server.waitForStringInLog("AppRunner: TRANSACTION TESTS PASSED"));
+    @Override
+    public void modifyAppConfiguration(SpringBootApplication appConfig) {
+        appConfig.setEEContextOnStartup(false);
+        super.modifyAppConfiguration(appConfig);
     }
 
     @Test
-    public void testJNDIAppRunner() throws Exception {
-        assertNotNull("Did not find TESTS PASSED messages", server.waitForStringInLog("AppRunner: JNDI TESTS PASSED"));
+    public void testNoStartupContextJNDIAppRunner() throws Exception {
+        assertNotNull("Did not find TESTS FAILED messages", server.waitForStringInLog("AppRunner: JNDI TESTS FAILED"));
     }
 
     @Test
-    public void testTransactionsWebContext() throws Exception {
-        HttpUtils.findStringInUrl(server, "testTransactions", "TESTED TRANSACTIONS");
-        assertNotNull("Did not find TESTS PASSED messages", server.waitForStringInLog("WebContext: TRANSACTION TESTS PASSED"));
-    }
-
-    @Test
-    public void testJNDIWebContext() throws Exception {
+    public void testNoStartupJNDIWebContext() throws Exception {
         HttpUtils.findStringInUrl(server, "testJNDI", "TESTED JNDI");
         assertNotNull("Did not find TESTS PASSED messages", server.waitForStringInLog("WebContext: JNDI TESTS PASSED"));
     }
