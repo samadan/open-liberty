@@ -105,7 +105,7 @@ public class Util {
                            double.class, float.class);
 
     /**
-     * Query language keywords that can appear immediately the entity name when
+     * Query language keywords that can appear immediately after the entity name when
      * there is no entity identifier variable specified.
      *
      * DELETE FROM MyEntity WHERE ...
