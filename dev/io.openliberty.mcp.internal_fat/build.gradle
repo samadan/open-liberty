@@ -35,22 +35,16 @@ sourceSets {
 		java {
 			srcDirs = ['noParamTest']
 		}
-		compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-		runtimeClasspath += sourceSets.main.runtimeClasspath + output
+		compileClasspath += sourceSets.main.compileClasspath
 	}
 }
 
 task noParamNamesTest(type: Test) {
-	description = "Runs tests compiled without -parameters"
+	description = "Compiles without -parameters"
 	
 	testClassesDirs = sourceSets.noParamNamesTest.output.classesDirs
-	classpath = sourceSets.noParamNamesTest.runtimeClasspath
 }
 
 tasks.named("compileNoParamNamesTestJava"){
 	options.compilerArgs.remove('-parameters')
-}
-
-tasks.named("buildandrun"){
-	dependsOn tasks.named("noParamNamesTest")
 }

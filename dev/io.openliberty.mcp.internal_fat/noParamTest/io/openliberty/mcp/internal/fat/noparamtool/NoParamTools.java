@@ -7,27 +7,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat.noparamtool.basicToolApp;
-
-import java.util.List;
+package io.openliberty.mcp.internal.fat.noparamtool;
 
 import io.openliberty.mcp.annotations.Tool;
-import io.openliberty.mcp.annotations.Tool.Annotations;
 import io.openliberty.mcp.annotations.ToolArg;
-import io.openliberty.mcp.content.AudioContent;
-import io.openliberty.mcp.content.Content;
-import io.openliberty.mcp.content.ImageContent;
-import io.openliberty.mcp.content.TextContent;
-import io.openliberty.mcp.tools.ToolResponse;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.Dependent;
 
-/**
- *
- */
 @ApplicationScoped
-public class BasicTools {
-    
+public class NoParamTools {
+
     @Tool(name = "illegalToolArgNameTool", title = "illegal ToolArgName Tool", description = "thows illegalArgumentExeption because of the ToolArgName")
     public String illegalToolArgNameTool(@ToolArg(name = Tool.ELEMENT_NAME, description = "input to echo") String input) {
         return input;
