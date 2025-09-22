@@ -15,36 +15,38 @@ apply from: '../wlp-gradle/subprojects/repos.gradle'
 configurations.requiredLibs {
   transitive = false
 }
+
+sourceSets {
+  // Source set where we don't include parameter names
+  noParamNamesTest {
+    java {
+      srcDirs = ['noParamTest']
+    }
+  }
+}
+
 dependencies {
   requiredLibs 'org.json:json:20080701',
                'org.skyscreamer:jsonassert:2.0-rc1'
+  noParamNamesTestCompileOnly project(':io.openliberty.mcp'),
+                              project(path: ':io.openliberty.jakarta', configuration: 'cdi40')
+  implementation sourceSets.noParamNamesTest.output
 }
+
 /* Added to allow method parmaters to be available for MCP Tool Server*/ 
 // Allow us to test getting the name of a tool argument directly from the Java 
 compileJava {
-    options.compilerArgs << '-parameters'
+  options.compilerArgs << '-parameters'
 }
 
-sourceSets {
-	main {
-		java {
-			srcDirs = ['fat/src']
-		}
-	}
-	noParamNamesTest {
-		java {
-			srcDirs = ['noParamTest']
-		}
-		compileClasspath += sourceSets.main.compileClasspath
-	}
+// Build the noParamNamesTest code into a jar
+tasks.register('noParamNamesTestJar', Jar) {
+  dependsOn noParamNamesTestClasses
+  from sourceSets.noParamNamesTest.output
+  archiveFileName = 'noParamNamesTest.jar'
 }
 
-task noParamNamesTest(type: Test) {
-	description = "Compiles without -parameters"
-	
-	testClassesDirs = sourceSets.noParamNamesTest.output.classesDirs
-}
-
-tasks.named("compileNoParamNamesTestJava"){
-	options.compilerArgs.remove('-parameters')
+// Build the noParamNamesTest jar before the autoFVT zip so that it gets included in the zip
+tasks.named('autoFVT') {
+  dependsOn noParamNamesTestJar
 }
