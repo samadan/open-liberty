@@ -36,6 +36,7 @@ sourceSets {
 			srcDirs = ['noParamTest']
 		}
 		compileClasspath += sourceSets.main.compileClasspath
+		runtimeClasspath += sourceSets.main.runtimeClasspath + output
 	}
 }
 
