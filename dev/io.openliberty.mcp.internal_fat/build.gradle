@@ -18,9 +18,9 @@ configurations.requiredLibs {
 
 sourceSets {
   // Source set where we don't include parameter names
-  noParamNamesTest {
+  noParamNames {
     java {
-      srcDirs = ['noParamTest']
+      srcDirs = ['noParamNames']
     }
   }
 }
@@ -28,9 +28,9 @@ sourceSets {
 dependencies {
   requiredLibs 'org.json:json:20080701',
                'org.skyscreamer:jsonassert:2.0-rc1'
-  noParamNamesTestCompileOnly project(':io.openliberty.mcp'),
+  noParamNamesCompileOnly project(':io.openliberty.mcp'),
                               project(path: ':io.openliberty.jakarta', configuration: 'cdi40')
-  implementation sourceSets.noParamNamesTest.output
+  implementation sourceSets.noParamNames.output
 }
 
 /* Added to allow method parmaters to be available for MCP Tool Server*/ 
@@ -39,14 +39,14 @@ compileJava {
   options.compilerArgs << '-parameters'
 }
 
-// Build the noParamNamesTest code into a jar
-tasks.register('noParamNamesTestJar', Jar) {
-  dependsOn noParamNamesTestClasses
-  from sourceSets.noParamNamesTest.output
-  archiveFileName = 'noParamNamesTest.jar'
+// Build the noParamNames code into a jar
+tasks.register('noParamNamesJar', Jar) {
+  dependsOn noParamNamesClasses
+  from sourceSets.noParamNames.output
+  archiveFileName = 'noParamNames.jar'
 }
 
-// Build the noParamNamesTest jar before the autoFVT zip so that it gets included in the zip
+// Build the noParamNames jar before the autoFVT zip so that it gets included in the zip
 tasks.named('autoFVT') {
-  dependsOn noParamNamesTestJar
+  dependsOn noParamNamesJar
 }

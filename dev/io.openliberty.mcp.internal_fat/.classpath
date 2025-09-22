@@ -5,7 +5,7 @@
 			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="src" path="noParamTest">
+	<classpathentry kind="src" path="noParamNames">
 		<attributes>
 			<attribute name="test" value="true"/>
 		</attributes>

@@ -16,8 +16,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class NoParamTools {
 
-    @Tool(name = "illegalToolArgNameTool", title = "illegal ToolArgName Tool", description = "thows illegalArgumentExeption because of the ToolArgName")
-    public String illegalToolArgNameTool(@ToolArg(name = Tool.ELEMENT_NAME, description = "input to echo") String input) {
+    @Tool(name = "missingToolArgNameTool", title = "missing ToolArgName Tool", description = "ToolArgName is missing so app wont start")
+    public String missingToolArgNameTool(@ToolArg(description = "input to echo") String input) {
         return input;
     }
 }

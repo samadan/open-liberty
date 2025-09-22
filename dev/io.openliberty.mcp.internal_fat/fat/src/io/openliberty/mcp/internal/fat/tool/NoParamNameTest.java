@@ -9,25 +9,18 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat.tool;
 
-import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
+import java.util.List;
 
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.skyscreamer.jsonassert.JSONAssert;
-
-import com.ibm.websphere.simplicity.ShrinkHelper;
 
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import io.openliberty.mcp.internal.fat.noparamtool.NoParamTools;
-import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
 
 @RunWith(FATRunner.class)
 public class NoParamNameTest extends FATServletClient {
@@ -36,40 +29,18 @@ public class NoParamNameTest extends FATServletClient {
 
     @BeforeClass
     public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "toolTest.war").addPackage(NoParamTools.class.getPackage());
-
-        ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
-
-        server.startServer();
+        ExpectedAppFailureValidator.deployAppToAssertFailure(server, "ExpectedNoParamNameFailureTest", NoParamTools.class.getPackage());
     }
 
     @AfterClass
     public static void teardown() throws Exception {
-        server.stopServer();
+        server.stopServer(ExpectedAppFailureValidator.APP_START_FAILED_CODE);
     }
 
     @Test
-    public void testIllegalToolArgNameTool() throws Exception {
-        String request = """
-                          {
-                          "jsonrpc": "2.0",
-                          "id": "2",
-                          "method": "tools/call",
-                          "params": {
-                            "name": "illegalToolArgNameTool",
-                            "arguments": {
-                              "input": "Hello"
-                            }
-                          }
-                        }
-                        """;
-
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
-        JSONObject jsonResponse = new JSONObject(response);
-
-        String expectedResponseString = """
-                        Exception thrown
-                        """;
-        JSONAssert.assertEquals(expectedResponseString, response, true);
+    public void testNoParamNameToolArg() throws Exception {
+        String expectedErrorHeader = "Missing arguments found in MCP Tool:";
+        List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.noparamtool.NoParamTools.missingToolArgNameTool");
+        ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Missing arguments found in MCP Tool: ", expectedErrorHeader, expectedErrorList, server);
     }
 }

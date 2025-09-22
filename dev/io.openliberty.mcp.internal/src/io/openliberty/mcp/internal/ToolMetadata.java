@@ -29,6 +29,8 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                            String name, String title, String description,
                            List<Class<? extends Throwable>> businessExceptions) {
 
+    public static final String MISSING_TOOL_ARG_NAME = "<<<MISSING TOOL_ARG NAME>>>";
+
     public record ArgumentMetadata(Type type, int index, String description, boolean required, boolean isDuplicate) {}
 
     public record SpecialArgumentMetadata(SpecialArgumentType.Resolution typeResolution, int index) {}
@@ -84,7 +86,7 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
             return param.getJavaParameter().getName();
         }
 
-        throw new IllegalStateException("Parameter name not set. Ensure that javac -parameter flag is enabled");
+        return MISSING_TOOL_ARG_NAME;
     }
 
     private static List<SpecialArgumentMetadata> getSpecialArgumentList(AnnotatedMethod<?> method) {
