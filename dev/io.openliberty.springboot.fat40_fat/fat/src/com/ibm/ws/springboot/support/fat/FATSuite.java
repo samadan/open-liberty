@@ -67,7 +67,8 @@ import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
                 MBeanAppTests40.class,
                 MBeanAppTests40War.class,
                 JmsSpringBootAppTests40.class,
-                JmsWebAppTests40.class
+                JmsWebAppTests40.class,
+                JTAAppTests40.class
 
 })
 
