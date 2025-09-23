@@ -743,16 +743,7 @@
 			</bean>
 		</property>
 	</bean>
-	
-<<<<<<< HEAD:dev/com.ibm.ws.security.saml.sso_fat.common/shibboleth-idp/4.1.0/conf/relying-partyoriginal
-	<bean
-		id="encryption128ecdh"
-		class="net.shibboleth.idp.profile.config.SecurityConfiguration"
-	    >
-		<property name="signatureSigningConfiguration">
-			<!-- <ref bean="shibboleth.SigningConfiguration.SHA256" /> -->
-			<bean parent="shibboleth.SigningConfiguration.SHA256" p:signingCredentials-ref="shibboleth.DefaultSigningCredentialECDSA" />
-=======
+
 	<bean id="shibboleth.KeyAgreement.Configuration" abstract="true" class="org.opensaml.saml.security.SAMLMetadataKeyAgreementEncryptionConfiguration" />
 
     <bean id="shibboleth.KeyAgreement.ConcatKDF" abstract="true" class="org.opensaml.xmlsec.derivation.impl.ConcatKDF" />
