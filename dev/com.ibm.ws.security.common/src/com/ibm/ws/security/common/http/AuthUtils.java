@@ -58,6 +58,12 @@ public class AuthUtils {
                 if (rawHeaderValue.toLowerCase().startsWith("bearer ")) {
                     return rawHeaderValue.substring("bearer ".length()).trim();
                 }
+                // Netty trims whitespace which causes the authentication to pass. Check if rawHeaderValue starts
+                // with any case variation of "Bearer" without the trailing white space after veryfing "Bearer "
+                // with the trailing white space
+                if (rawHeaderValue.toLowerCase().startsWith("bearer")) {
+                    return rawHeaderValue.substring("bearer".length()).trim();
+                }
             }
             // Original case-sensitive check for other schemes
             else if (rawHeaderValue.startsWith(scheme)) {
