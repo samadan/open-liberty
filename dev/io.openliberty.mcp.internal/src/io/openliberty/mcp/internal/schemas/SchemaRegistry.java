@@ -11,70 +11,60 @@ package io.openliberty.mcp.internal.schemas;
 
 import java.util.HashMap;
 
-import io.openliberty.mcp.internal.McpCdiExtension;
 import io.openliberty.mcp.internal.ToolMetadata;
-import jakarta.enterprise.inject.spi.CDI;
-import jakarta.json.bind.Jsonb;
-import jakarta.json.bind.JsonbBuilder;
+import jakarta.json.JsonObject;
 
 /**
  *
  */
 public class SchemaRegistry {
 
-    private static HashMap<SchemaKey, String> cacheString = new HashMap<>();
+    private HashMap<SchemaKey, JsonObject> schemaCache = new HashMap<>();
 
-    private static SchemaRegistry staticInstance = null;
-
-    private static Jsonb jsonb = JsonbBuilder.create();
-
-    public static SchemaRegistry getSchemaRegistry() {
-        if (staticInstance != null) {
-            return staticInstance;
-        }
-        return CDI.current().select(McpCdiExtension.class).get().getSchemaRegistry();
-    }
+    private SchemaCreationBlueprintRegistry blueprintRegistry = new SchemaCreationBlueprintRegistry();
 
     /**
-     * For unit testing only
-     *
-     * @param schemRegistry
-     */
-    public static void set(SchemaRegistry schemaRegistry) {
-
-        staticInstance = schemaRegistry;
-    }
-
-    /**
-     * Retrieves JSON schema from cache or by regenerating
+     * Gets the JSON schema for a class
      *
      * @param cls .class to generate schema for
-     * @param direction Enum used to control if input or output schema is returned
-     * @return String of json schema
+     * @param direction whether to get an input or output schema
+     * @return the json schema
      */
-    public static String getSchema(Class<?> cls, SchemaDirection direction) {
+    public JsonObject getSchema(Class<?> cls, SchemaDirection direction) {
         ClassKey ck = new ClassKey(cls, direction);
-        String schema;
-        if (!cacheString.containsKey(ck)) {
-            schema = SchemaGenerator.generateSchema(cls, direction);
-            cacheString.put(ck, schema);
+        JsonObject schema;
+        if (!schemaCache.containsKey(ck)) {
+            schema = SchemaGenerator.generateSchema(cls, direction, blueprintRegistry);
+            schemaCache.put(ck, schema);
 
         } else {
-            schema = cacheString.get(ck);
+            schema = schemaCache.get(ck);
 
         }
         return schema;
 
     }
 
-    public static String getToolInputSchema(ToolMetadata toolMetadata) {
+    /**
+     * Gets the input JSON schema for a tool
+     *
+     * @param toolMetadata the tool to get the schema for
+     * @return the json schema
+     */
+    public JsonObject getToolInputSchema(ToolMetadata toolMetadata) {
         ToolKey key = new ToolKey(toolMetadata, SchemaDirection.INPUT);
-        return cacheString.computeIfAbsent(key, k -> SchemaGenerator.generateToolInputSchema(toolMetadata));
+        return schemaCache.computeIfAbsent(key, k -> SchemaGenerator.generateToolInputSchema(toolMetadata, blueprintRegistry));
     }
 
-    public static String getToolOuputSchema(ToolMetadata toolMetadata) {
+    /**
+     * Gets the output JSON schema for a tool
+     *
+     * @param toolMetadata the tool to get the schema for
+     * @return the json schema
+     */
+    public JsonObject getToolOuputSchema(ToolMetadata toolMetadata) {
         ToolKey key = new ToolKey(toolMetadata, SchemaDirection.OUTPUT);
-        return cacheString.computeIfAbsent(key, k -> SchemaGenerator.generateToolOutputSchema(toolMetadata));
+        return schemaCache.computeIfAbsent(key, k -> SchemaGenerator.generateToolOutputSchema(toolMetadata, blueprintRegistry));
     }
 
     /**

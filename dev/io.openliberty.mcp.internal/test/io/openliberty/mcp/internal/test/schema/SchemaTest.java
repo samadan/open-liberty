@@ -24,7 +24,6 @@ import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
 import io.openliberty.mcp.internal.ToolMetadata;
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextRegistry;
 import io.openliberty.mcp.internal.schemas.SchemaDirection;
 import io.openliberty.mcp.internal.schemas.SchemaRegistry;
 import jakarta.json.bind.annotation.JsonbProperty;
@@ -34,8 +33,7 @@ import jakarta.json.bind.annotation.JsonbTransient;
  *
  */
 public class SchemaTest {
-    static SchemaRegistry registry;
-    static SchemaCreationContextRegistry sccRegistry;
+    private static SchemaRegistry registry;
 
     @Schema(description = "A person object contains address, company objects")
     public static record person(@JsonbProperty("fullname") String name, address address, company company) {};
@@ -184,14 +182,11 @@ public class SchemaTest {
     @BeforeClass
     public static void setup() {
         registry = new SchemaRegistry();
-        sccRegistry = new SchemaCreationContextRegistry();
-        SchemaRegistry.set(registry);
-        SchemaCreationContextRegistry.set(sccRegistry);
     }
 
     @Test
     public void testPersonSchema() {
-        String response = SchemaRegistry.getSchema(person.class, SchemaDirection.INPUT);
+        String response = registry.getSchema(person.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
@@ -298,13 +293,13 @@ public class SchemaTest {
     public void testToolInputSchema() throws NoSuchMethodException, SecurityException {
         ToolMetadata toolMetadata = findTool("updateWidget");
 
-        String toolInputSchema = SchemaRegistry.getToolInputSchema(toolMetadata);
+        String toolInputSchema = registry.getToolInputSchema(toolMetadata).toString();
         String expectedSchema = """
                         {
                         "type" : "object",
                         "properties" : {
                             "id" : {
-                                "type": "number",
+                                "type": "integer",
                                 "description": "The ID of the widget to update"
                             },
                             "widget" : {
@@ -337,7 +332,7 @@ public class SchemaTest {
     public void testToolOutputSchema() throws NoSuchMethodException, SecurityException {
         ToolMetadata toolMetadata = findTool("updateWidget");
 
-        String toolInputSchema = SchemaRegistry.getToolOuputSchema(toolMetadata);
+        String toolInputSchema = registry.getToolOuputSchema(toolMetadata).toString();
         String expectedSchema = """
                         {
                             "type": "object",
@@ -388,7 +383,7 @@ public class SchemaTest {
     @Test
     public void testToolInputRecursive() {
         ToolMetadata toolMetadata = findTool("combineWidgets");
-        String toolInputSchema = SchemaRegistry.getToolInputSchema(toolMetadata);
+        String toolInputSchema = registry.getToolInputSchema(toolMetadata).toString();
 
         String expectedSchema = """
                         {
@@ -439,7 +434,7 @@ public class SchemaTest {
     @Test
     public void testToolOutputRecursive() {
         ToolMetadata toolMetadata = findTool("combineWidgets");
-        String toolInputSchema = SchemaRegistry.getToolOuputSchema(toolMetadata);
+        String toolInputSchema = registry.getToolOuputSchema(toolMetadata).toString();
         String expectedSchema = """
                         {
                             "$defs": {
@@ -476,7 +471,7 @@ public class SchemaTest {
     @Test
     public void testPersonCheckToolSchema() throws NoSuchMethodException, SecurityException {
         ToolMetadata toolMetadata = findTool("checkPerson");
-        String response = SchemaRegistry.getToolInputSchema(toolMetadata);
+        String response = registry.getToolInputSchema(toolMetadata).toString();
         String expectedResponseString = """
                         {
                             "$defs": {
@@ -590,7 +585,7 @@ public class SchemaTest {
 
     @Test
     public void testAddressSchema() {
-        String response = SchemaRegistry.getSchema(address.class, SchemaDirection.INPUT);
+        String response = registry.getSchema(address.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                            {
                             "properties": {
@@ -629,7 +624,7 @@ public class SchemaTest {
 
     @Test
     public void testStreetSchema() {
-        String response = SchemaRegistry.getSchema(street.class, SchemaDirection.INPUT);
+        String response = registry.getSchema(street.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                         {
                           "properties": {
@@ -651,7 +646,7 @@ public class SchemaTest {
 
     @Test
     public void testCompanySchema() {
-        String response = SchemaRegistry.getSchema(company.class, SchemaDirection.INPUT);
+        String response = registry.getSchema(company.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
@@ -751,7 +746,7 @@ public class SchemaTest {
 
     @Test
     public void testPortfolioEntryDuplicateNameSchema() {
-        String response = SchemaRegistry.getSchema(PortfolioEntry.class, SchemaDirection.INPUT);
+        String response = registry.getSchema(PortfolioEntry.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
@@ -909,7 +904,7 @@ public class SchemaTest {
     @Test
     public void testPersonAddtoListToolInputSchema() throws NoSuchMethodException, SecurityException {
         ToolMetadata toolMetadata = findTool("addPersonToList");
-        String response = SchemaRegistry.getToolInputSchema(toolMetadata);
+        String response = registry.getToolInputSchema(toolMetadata).toString();
         String expectedResponseString = """
                                                 {
                                                 "$defs": {
@@ -1024,7 +1019,7 @@ public class SchemaTest {
     @Test
     public void testPersonAddtoListToolOutputSchema() throws NoSuchMethodException, SecurityException {
         ToolMetadata toolMetadata = findTool("addPersonToList");
-        String response = SchemaRegistry.getToolOuputSchema(toolMetadata);
+        String response = registry.getToolOuputSchema(toolMetadata).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
@@ -1116,7 +1111,6 @@ public class SchemaTest {
                             "items": {
                                 "$ref": "#/$defs/person"
                             },
-                            "description": "Returns list of person object",
                             "type": "array"
                         }
                                                     """;
@@ -1133,7 +1127,7 @@ public class SchemaTest {
 
     @Test
     public void testEnumObject() {
-        String schema = SchemaRegistry.getSchema(EnumHolder.class, SchemaDirection.INPUT);
+        String schema = registry.getSchema(EnumHolder.class, SchemaDirection.INPUT).toString();
 
         String expectedSchema = """
                         {
@@ -1157,7 +1151,7 @@ public class SchemaTest {
 
     @Test
     public void testEnumKeyedMap() {
-        String schema = SchemaRegistry.getSchema(EnumMapHolder.class, SchemaDirection.INPUT);
+        String schema = registry.getSchema(EnumMapHolder.class, SchemaDirection.INPUT).toString();
 
         String expectedSchema = """
                         {
@@ -1184,7 +1178,7 @@ public class SchemaTest {
 
     @Test
     public void testOptionalPartialPersonSchema() {
-        String response = SchemaRegistry.getSchema(partialPerson.class, SchemaDirection.INPUT);
+        String response = registry.getSchema(partialPerson.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
@@ -1251,6 +1245,453 @@ public class SchemaTest {
                             "$ref": "#/$defs/partialPerson"
                         }
                             """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    public static class BoxMap<K, V, T> {
+        K key;
+        V value;
+        T type;
+
+        /**
+         * @return the key
+         */
+        public K getKey() {
+            return key;
+        }
+
+        /**
+         * @param key the key to set
+         */
+        public void setKey(K key) {
+            this.key = key;
+        }
+
+        /**
+         * @return the value
+         */
+        public V getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(V value) {
+            this.value = value;
+        }
+
+        /**
+         * @return the type
+         */
+        public T getType() {
+            return type;
+        }
+
+        /**
+         * @param type the type to set
+         */
+        public void setType(T type) {
+            this.type = type;
+        }
+
+    }
+
+    public static class Container {
+        BoxMap<String, String, Integer> bm;
+
+        /**
+         * @return the bm
+         */
+        public BoxMap<String, String, Integer> getBm() {
+            return bm;
+        }
+
+        /**
+         * @param bm the bm to set
+         */
+        public void setBm(BoxMap<String, String, Integer> bm) {
+            this.bm = bm;
+        }
+
+    }
+
+    @Test
+    public void testConcreteParamterizedGenericClass() {
+        String response = registry.getSchema(Container.class, SchemaDirection.INPUT).toString();
+        String expectedResponseString = """
+                            {
+                            "type": "object",
+                            "properties": {
+                                "bm": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "integer"
+                                        },
+                                        "value": {
+                                            "type": "string"
+                                        },
+                                        "key": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "type",
+                                        "value",
+                                        "key"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "bm"
+                            ]
+                        }
+                            """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Tool(name = "addGenericToList", title = "adds generic to generic list", description = "adds person to employee list, returns nothing")
+    public @Schema(description = "Returns list of person object") <T> List<T> addGenericToList(@ToolArg(name = "generic list",
+                                                                                                        description = "List of generics") List<T> list,
+                                                                                               @ToolArg(name = "generic", description = "Generic object") T item) {
+        list.add(item);
+        return list;
+        //comment
+    }
+
+    @Test
+    public void testGenericToolArg() {
+        ToolMetadata toolMetadata = findTool("addGenericToList");
+        String response = registry.getToolInputSchema(toolMetadata).toString();
+        String expectedResponseString = """
+                            {
+                            "type": "object",
+                            "properties": {
+                                "generic list": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/$defs/T"
+                                    },
+                                    "description": "List of generics"
+                                },
+                                "generic": {
+                                    "$ref": "#/$defs/T",
+                                    "description": "Generic object"
+                                }
+                            },
+                            "required": [
+                                "generic list",
+                                "generic"
+                            ],
+                            "$defs": {
+                                "T": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                            """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Tool(name = "addGenericSingleBoundToList", title = "adds generic to generic list", description = "adds person to employee list, returns nothing")
+    public @Schema(description = "Returns list of person object") <T extends Number> List<T> addGenericSingleBoundToList(@ToolArg(name = "generic list",
+                                                                                                                                  description = "List of generics") List<T> list,
+                                                                                                                         @ToolArg(name = "generic",
+                                                                                                                                  description = "Generic object") T item) {
+        list.add(item);
+        return list;
+        //comment
+    }
+
+    @Test
+    public void testGenericSingleBoundToolArg() {
+        ToolMetadata toolMetadata = findTool("addGenericSingleBoundToList");
+        String response = registry.getToolInputSchema(toolMetadata).toString();
+        String expectedResponseString = """
+                            {
+                            "type": "object",
+                            "properties": {
+                                "generic list": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/$defs/T"
+                                    },
+                                    "description": "List of generics"
+                                },
+                                "generic": {
+                                    "$ref": "#/$defs/T",
+                                    "description": "Generic object"
+                                }
+                            },
+                            "required": [
+                                "generic list",
+                                "generic"
+                            ],
+                            "$defs": {
+                                "T": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+                            """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    public static interface NumberRestrictor {
+        public Number getMax();
+
+        public Number getMin();
+
+        public void setMax(Number number);
+
+        public void setMin(Number number);
+    }
+
+    @Tool(name = "addGenericMultipleBoundsToList", title = "adds generic to generic list", description = "adds person to employee list, returns nothing")
+    public @Schema(description = "Returns list of person object") <T extends Number & NumberRestrictor> List<T> addGenericMultipleBoundsToList(@ToolArg(name = "generic list",
+                                                                                                                                                        description = "List of generics") List<T> list,
+                                                                                                                                               @ToolArg(name = "generic",
+                                                                                                                                                        description = "Generic object") T item) {
+        list.add(item);
+        return list;
+        //comment
+    }
+
+    @Test
+    public void testGenericMultipleBoundsToolArg() {
+        ToolMetadata toolMetadata = findTool("addGenericMultipleBoundsToList");
+        String response = registry.getToolInputSchema(toolMetadata).toString();
+        String expectedResponseString = """
+                            {
+                            "type": "object",
+                            "properties": {
+                                "generic list": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/$defs/T"
+                                    },
+                                    "description": "List of generics"
+                                },
+                                "generic": {
+                                    "$ref": "#/$defs/T",
+                                    "description": "Generic object"
+                                }
+                            },
+                            "required": [
+                                "generic list",
+                                "generic"
+                            ],
+                            "$defs": {
+                                "T": {
+                                    "allOf": [
+                                        {
+                                            "type": "number"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "min": {
+                                                    "type": "number"
+                                                },
+                                                "max": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "min",
+                                                "max"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                            """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Tool(name = "addWildcardToList", title = "adds wildcard to wildcard list", description = "adds person to employee list, returns nothing")
+    public @Schema(description = "Returns list of person object") List<?> addWildcardToList(@ToolArg(name = "wildcard list",
+                                                                                                     description = "List of wildcard") List<?> list,
+                                                                                            @ToolArg(name = "number", description = "number") Number number) {
+        list.add(item);
+        return list;
+        //comment
+    }
+
+    @Test
+    public void testWildcardToolArg() {
+        ToolMetadata toolMetadata = findTool("addWildcardToList");
+        String response = registry.getToolInputSchema(toolMetadata).toString();
+        String expectedResponseString = """
+                        {
+                            "type": "object",
+                            "properties": {
+                                "number": {
+                                    "type": "number",
+                                    "description": "number"
+                                },
+                                "wildcard list": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    },
+                                    "description": "List of wildcard"
+                                }
+                            },
+                            "required": [
+                                "number",
+                                "wildcard list"
+                            ]
+                        }
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Tool(name = "addWildcardExtendBoundToList", title = "adds wildcard to wildcard list", description = "adds person to employee list, returns nothing")
+    public @Schema(description = "Returns list of person object") List<? extends Number> addWildcardExtendBoundToList(@ToolArg(name = "wildcard list",
+                                                                                                                               description = "List of wildcard") List<? extends NumberRestrictor> list,
+                                                                                                                      @ToolArg(name = "number",
+                                                                                                                               description = "number") Number number) {
+        list.add(number);
+        return list;
+        //comment
+    }
+
+    @Test
+    public void testGenericExtendBoundToolArg() {
+        ToolMetadata toolMetadata = findTool("addWildcardExtendBoundToList");
+        String response = registry.getToolInputSchema(toolMetadata).toString();
+        String expectedResponseString = """
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "number": {
+                                                "type": "number",
+                                                "description": "number"
+                                            },
+                                            "wildcard list": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "min": {
+                                                            "type": "number"
+                                                        },
+                                                        "max": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "min",
+                                                        "max"
+                                                    ]
+                                                },
+                                                "description": "List of wildcard"
+                                            }
+                                        },
+                                        "required": [
+                                            "number",
+                                            "wildcard list"
+                                        ]
+                                    }
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Tool(name = "addWildcardSuperBoundsToList", title = "adds wildcard to wildcard list", description = "adds person to employee list, returns nothing")
+    public @Schema(description = "Returns list of person object") List<? super Integer> addWildcardSuperBoundsToList(@ToolArg(name = "wildcard list",
+                                                                                                                              description = "List of wildcard") List<? super NumberRestrictor> list,
+                                                                                                                     @ToolArg(name = "number",
+                                                                                                                              description = "number") Number number) {
+        list.add(number);
+        return list;
+        //comment
+    }
+
+    @Test
+    public void testWildcardSuperBoundsToolArg() {
+        ToolMetadata toolMetadata = findTool("addWildcardSuperBoundsToList");
+        String response = registry.getToolInputSchema(toolMetadata).toString();
+        String expectedResponseString = """
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "number": {
+                                                "type": "number",
+                                                "description": "number"
+                                            },
+                                            "wildcard list": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object"
+                                                },
+                                                "description": "List of wildcard"
+                                            }
+                                        },
+                                        "required": [
+                                            "number",
+                                            "wildcard list"
+                                        ]
+                                    }
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Tool(name = "addGenericToGenericArray", title = "adds generic to generic Array", description = "adds person to Generic Array, returns nothing")
+    public @Schema(description = "Returns list of person object") <T> List<T> addGenericToGenericArray(@ToolArg(name = "generic list 1",
+                                                                                                                description = "List of generics 1") T[] list1,
+                                                                                                       @ToolArg(name = "generic list 2",
+                                                                                                                description = "List of generics 1 ") List<T>[] list2,
+                                                                                                       @ToolArg(name = "generic", description = "Generic object") T item) {
+        list.add(item);
+        return list;
+        //comment
+    }
+
+    @Test
+    public void testGenericArrayToolArg() {
+        ToolMetadata toolMetadata = findTool("addGenericToGenericArray");
+        String response = registry.getToolInputSchema(toolMetadata).toString();
+        String expectedResponseString = """
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "generic list 2": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/$defs/T"
+                                                    }
+                                                },
+                                                "description": "List of generics 1 "
+                                            },
+                                            "generic": {
+                                                "$ref": "#/$defs/T",
+                                                "description": "Generic object"
+                                            },
+                                            "generic list 1": {
+                                                "type": "array",
+                                                "items": {
+                                                    "$ref": "#/$defs/T"
+                                                },
+                                                "description": "List of generics 1"
+                                            }
+                                        },
+                                        "required": [
+                                            "generic list 2",
+                                            "generic",
+                                            "generic list 1"
+                                        ],
+                                        "$defs": {
+                                            "T": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                        """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 

@@ -17,7 +17,6 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextRegistry;
 import io.openliberty.mcp.internal.schemas.SchemaDirection;
 import io.openliberty.mcp.internal.schemas.SchemaRegistry;
 import jakarta.json.bind.Jsonb;
@@ -31,14 +30,10 @@ public class JsonbMappingTest {
 
     private static Jsonb jsonb = JsonbBuilder.create();
     private static SchemaRegistry registry;
-    private static SchemaCreationContextRegistry sccRegistry;
 
     @BeforeClass
     public static void setup() {
         registry = new SchemaRegistry();
-        sccRegistry = new SchemaCreationContextRegistry();
-        SchemaRegistry.set(registry);
-        SchemaCreationContextRegistry.set(sccRegistry);
     }
 
     // -------------------------------
@@ -99,11 +94,11 @@ public class JsonbMappingTest {
                         }
                         """;
         JSONAssert.assertEquals(expectedSchema,
-                                registry.getSchema(FieldBean.class, SchemaDirection.INPUT),
+                                registry.getSchema(FieldBean.class, SchemaDirection.INPUT).toString(),
                                 true);
 
         JSONAssert.assertEquals(expectedSchema,
-                                registry.getSchema(FieldBean.class, SchemaDirection.OUTPUT),
+                                registry.getSchema(FieldBean.class, SchemaDirection.OUTPUT).toString(),
                                 true);
     }
 
@@ -158,10 +153,10 @@ public class JsonbMappingTest {
                             ]
                         }""";
         JSONAssert.assertEquals(expectedSchema,
-                                registry.getSchema(SubTypeFieldBean.class, SchemaDirection.INPUT),
+                                registry.getSchema(SubTypeFieldBean.class, SchemaDirection.INPUT).toString(),
                                 true);
         JSONAssert.assertEquals(expectedSchema,
-                                registry.getSchema(SubTypeFieldBean.class, SchemaDirection.OUTPUT),
+                                registry.getSchema(SubTypeFieldBean.class, SchemaDirection.OUTPUT).toString(),
                                 true);
     }
 
@@ -206,7 +201,7 @@ public class JsonbMappingTest {
                         }
                         """;
         JSONAssert.assertEquals(expectedOutputSchema,
-                                registry.getSchema(MethodHidesBean.class, SchemaDirection.OUTPUT),
+                                registry.getSchema(MethodHidesBean.class, SchemaDirection.OUTPUT).toString(),
                                 true);
 
         String expectedInputSchema = """
@@ -223,7 +218,7 @@ public class JsonbMappingTest {
                         }
                         """;
         JSONAssert.assertEquals(expectedInputSchema,
-                                registry.getSchema(MethodHidesBean.class, SchemaDirection.INPUT),
+                                registry.getSchema(MethodHidesBean.class, SchemaDirection.INPUT).toString(),
                                 true);
     }
 
@@ -289,10 +284,10 @@ public class JsonbMappingTest {
                         }
                         """;
         JSONAssert.assertEquals(expectedSchema,
-                                registry.getSchema(FieldRenamedBean.class, SchemaDirection.OUTPUT),
+                                registry.getSchema(FieldRenamedBean.class, SchemaDirection.OUTPUT).toString(),
                                 true);
         JSONAssert.assertEquals(expectedSchema,
-                                registry.getSchema(FieldRenamedBean.class, SchemaDirection.INPUT),
+                                registry.getSchema(FieldRenamedBean.class, SchemaDirection.INPUT).toString(),
                                 true);
     }
 
@@ -405,10 +400,10 @@ public class JsonbMappingTest {
                         }
                         """;
         JSONAssert.assertEquals(expectedSchema,
-                                registry.getSchema(IsGetterBean.class, SchemaDirection.OUTPUT),
+                                registry.getSchema(IsGetterBean.class, SchemaDirection.OUTPUT).toString(),
                                 JSONCompareMode.NON_EXTENSIBLE);
         JSONAssert.assertEquals(expectedSchema,
-                                registry.getSchema(IsGetterBean.class, SchemaDirection.INPUT),
+                                registry.getSchema(IsGetterBean.class, SchemaDirection.INPUT).toString(),
                                 JSONCompareMode.NON_EXTENSIBLE);
     }
 
@@ -496,7 +491,7 @@ public class JsonbMappingTest {
                         }
                         """;
         JSONAssert.assertEquals(expectedOutputSchema,
-                                registry.getSchema(DefaultImplementation.class, SchemaDirection.OUTPUT),
+                                registry.getSchema(DefaultImplementation.class, SchemaDirection.OUTPUT).toString(),
                                 JSONCompareMode.NON_EXTENSIBLE);
 
         String expectedInputSchema = """
@@ -509,7 +504,7 @@ public class JsonbMappingTest {
                         }
                         """;
         JSONAssert.assertEquals(expectedInputSchema,
-                                registry.getSchema(DefaultImplementation.class, SchemaDirection.INPUT),
+                                registry.getSchema(DefaultImplementation.class, SchemaDirection.INPUT).toString(),
                                 JSONCompareMode.NON_EXTENSIBLE);
 
     }

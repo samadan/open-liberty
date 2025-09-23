@@ -24,6 +24,12 @@ import java.util.Optional;
  */
 public class TypeUtility {
 
+    /**
+     * The key and value type of a {@code Map}
+     *
+     * @param key the key type
+     * @param value the value type
+     */
     public record MapTypes(Type key, Type value) {};
 
     /**
@@ -39,8 +45,6 @@ public class TypeUtility {
         Type[] resolvedParameters = resolveTypeArguments(route);
         return new MapTypes(resolvedParameters[0], resolvedParameters[1]);
     }
-
-    public record ListTypes(Type element) {};
 
     /**
      * Given a type which extends {@code Collection<T>}, find the parameter type {@code T}.
@@ -108,6 +112,18 @@ public class TypeUtility {
         return currentTypes;
     }
 
+    /**
+     * Finds a list of types from {@code target} to {@code start} where each element is a direct subtype of the element before it.
+     * <p>
+     * Generic types are retained in the list.
+     * <p>
+     * {@code getRouteToType(ArrayList<String>, Collection.class)} would return {@code [Collection<E>, List<E>, ArrayList<String>]}
+     *
+     * @param start the type to start searching from
+     * @param target the type being searched for, must be a supertype of {@code start}
+     * @return a subtype chain from {@code target} to {@code start}
+     * @throws IllegalArgumentException if {@code target} is not a supertype of {@code start}
+     */
     public static List<Type> getRouteToType(Type start, Class<?> target) {
         Deque<Type> route = new ArrayDeque<>();
         boolean successful = buildRouteToType(start, target, route);

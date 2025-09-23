@@ -120,12 +120,14 @@ public interface JsonProperty {
         } else {
             return ClassProperty.extractFromClass(cls);
         }
+
     }
 
     /**
      * Returns whether a given annotated element is marked transient
      *
      * @param element the element
+     * @return {@code true} if the element is transient, otherwise {@code false}
      */
     public static boolean isTransient(AnnotatedElement element) {
         return element.getAnnotation(JsonbTransient.class) != null;

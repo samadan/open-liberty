@@ -9,122 +9,101 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.schemas;
 
-import java.lang.annotation.Annotation;
+import static io.openliberty.mcp.internal.schemas.JsonConstants.DEFS;
+import static io.openliberty.mcp.internal.schemas.JsonConstants.DESCRIPTION;
+import static io.openliberty.mcp.internal.schemas.JsonConstants.PROPERTIES;
+import static io.openliberty.mcp.internal.schemas.JsonConstants.REF;
+import static io.openliberty.mcp.internal.schemas.JsonConstants.REQUIRED;
+import static io.openliberty.mcp.internal.schemas.JsonConstants.TYPE;
+import static io.openliberty.mcp.internal.schemas.JsonConstants.TYPE_OBJECT;
+import static io.openliberty.mcp.internal.schemas.SchemaDirection.INPUT;
+import static io.openliberty.mcp.internal.schemas.SchemaDirection.OUTPUT;
+
 import java.lang.reflect.Parameter;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.ToolMetadata.ArgumentMetadata;
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.ClassSchemaCreationContext;
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.FieldInfo;
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.ListSchemaCreationContext;
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.MapSchemaCreationContext;
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.OptionalSchemaCreationContext;
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.SchemaCreationContext;
-import io.openliberty.mcp.internal.schemas.SchemaCreationContextGenerator.SchemaInfo;
+import io.openliberty.mcp.internal.schemas.SchemaCreationBlueprintGenerator.FieldInfo;
+import io.openliberty.mcp.internal.schemas.blueprints.ClassSchemaCreationBlueprint;
+import io.openliberty.mcp.internal.schemas.blueprints.ListSchemaCreationBlueprint;
+import io.openliberty.mcp.internal.schemas.blueprints.MapSchemaCreationBlueprint;
+import io.openliberty.mcp.internal.schemas.blueprints.OptionalSchemaCreationBlueprint;
+import io.openliberty.mcp.internal.schemas.blueprints.SchemaCreationBlueprint;
+import io.openliberty.mcp.internal.schemas.blueprints.TypeVariableSchemaCreationBlueprint;
+import io.openliberty.mcp.internal.schemas.blueprints.WildcardSchemaCreationBlueprint;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
-import jakarta.json.bind.Jsonb;
-import jakarta.json.bind.JsonbBuilder;
-import jakarta.json.bind.JsonbException;
 
 /**
  *
  */
 public class SchemaGenerator {
 
-    private static Jsonb jsonb = JsonbBuilder.create();
-
     /**
-     * <p>If Schema annotation is present then that will be returned if not then a psuedoschema will be generated for all properties that jsonb would serialise for both
-     * directions..
-     * After the `pseudoschema` is generated the method will check if any classes are duplicated.
-     * Using all the context info a JSON schema be generated from psuedoschema.</p>
+     * <p>If Schema annotation is present then that will be returned if not then a blueprint will be generated for all properties that jsonb would serialise for both
+     * directions.
+     * After the `blueprint` is generated the method will check if any classes are duplicated.
+     * Using all the context info a JSON schema be generated from blueprint.</p>
      *
-     * @param cls
-     * @param direction
-     * @return
+     * @param cls the class to generate a schema for
+     * @param direction whether to generate an input or output schema
+     * @param blueprintRegistry the blueprintRegistry to use for getting schema information for types
+     * @return the schema as a JSON object
      */
-    public static String generateSchema(Class<?> cls, SchemaDirection direction) {
-        Map<Type, SchemaCreationContext> cache = SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache();
-        Schema schema = cls.getAnnotation(Schema.class);
-        if (schema != null && !schema.value().equals(Schema.UNSET)) {
-            try {
-                JsonObject resultObj = jsonb.fromJson(schema.value(), JsonObject.class);
-                return schema.value();
-            } catch (JsonbException e) {
-                throw new RuntimeException("Schema annotation not valid: " + cls.getName(), e);
-            }
-
+    public static JsonObject generateSchema(Class<?> cls, SchemaDirection direction, SchemaCreationBlueprintRegistry blueprintRegistry) {
+        SchemaAnnotation annotationInfo = SchemaAnnotation.read(cls);
+        Optional<JsonObjectBuilder> annotationSchema = annotationInfo.asJsonSchema();
+        if (annotationSchema.isPresent()) {
+            return annotationSchema.get().build();
         } else {
-            String description = null;
-            if (schema != null && !schema.description().equals(Schema.UNSET)) {
-                description = schema.description();
-            }
-            ClassSchemaCreationContext classPs = SchemaCreationContextGenerator.generateClassPsuedoSchema(cls);
-            cache.put(cls, SchemaCreationContextGenerator.generateClassPsuedoSchema(cls));
-
-            for (FieldInfo fi : classPs.inputFields()) {
-                generateSchemaCreationContext(fi.type());
-            }
-            for (FieldInfo fi : classPs.outputFields()) {
-                generateSchemaCreationContext(fi.type());
-            }
-
-            SchemaGenerationContext ctx = new SchemaGenerationContext();
+            SchemaGenerationContext ctx = new SchemaGenerationContext(blueprintRegistry, direction);
             calculateClassFrequency(cls, direction, ctx);
 
-            JsonObject result = Json.createObjectBuilder().build();
-
-            result = classPs.toJsonSchemaObject(direction, ctx, true, description).build();
-            return jsonb.toJson(result);
+            JsonObjectBuilder result = generateSubSchema(cls, ctx, annotationInfo);
+            addDefs(result, ctx);
+            return result.build();
         }
-
     }
 
-    public static String generateToolInputSchema(ToolMetadata tool) {
-        Map<Type, SchemaCreationContext> cache = SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache();
+    /**
+     * Generate the input schema for a tool
+     *
+     * @param tool the tool to generate the schema for
+     * @param blueprintRegistry the blueprint registry to use
+     * @return the schema as a json object
+     */
+    public static JsonObject generateToolInputSchema(ToolMetadata tool, SchemaCreationBlueprintRegistry blueprintRegistry) {
         // create base schema components
         JsonObjectBuilder properties = Json.createObjectBuilder();
         JsonArrayBuilder required = Json.createArrayBuilder();
         Parameter[] parameters = tool.method().getJavaMember().getParameters();
-        SchemaGenerationContext ctx = new SchemaGenerationContext();
+        SchemaGenerationContext ctx = new SchemaGenerationContext(blueprintRegistry, INPUT);
 
         // for each parameter
         for (ArgumentMetadata argument : tool.arguments().values()) {
-            // - create a pseudo schema
-            Parameter type = parameters[argument.index()];
-            generateSchemaCreationContext(type.getParameterizedType());
-        }
-
-        for (ArgumentMetadata argument : tool.arguments().values()) {
-            // - create a pseudo schema
             Parameter parameter = parameters[argument.index()];
-
             calculateClassFrequency(parameter.getParameterizedType(), SchemaDirection.INPUT, ctx);
         }
 
         for (var entry : tool.arguments().entrySet()) {
             String argumentName = entry.getKey();
             ArgumentMetadata argument = entry.getValue();
-            Parameter type = parameters[argument.index()];
+            Parameter parameter = parameters[argument.index()];
+            SchemaAnnotation annotation = SchemaAnnotation.read(parameter);
 
-            SchemaCreationContext ps = cache.get(type.getParameterizedType());
+            JsonObjectBuilder parameterSchemaBuilder = generateSubSchema(parameter.getParameterizedType(), ctx, annotation);
 
-            JsonObjectBuilder parameterSchemaBuilder = ps.toJsonSchemaObject(SchemaDirection.INPUT, ctx, false, null);
             if (argument.description() != null) {
-                parameterSchemaBuilder.add("description", argument.description());
+                parameterSchemaBuilder.add(DESCRIPTION, argument.description());
             }
             // - add it as a property
             properties.add(argumentName, parameterSchemaBuilder.build());
@@ -135,94 +114,30 @@ public class SchemaGenerator {
         }
 
         JsonObjectBuilder schemaBuilder = Json.createObjectBuilder()
-                                              .add("type", "object")
-                                              .add("properties", properties.build())
-                                              .add("required", required.build());
-
-        if (!ctx.getDefsBuilder().isEmpty()) {
-            HashMap<String, JsonObject> defs = new HashMap<>();
-            ctx.getDefsBuilder().forEach((k, v) -> defs.put(ctx.getName(k), v));
-            schemaBuilder.add("$defs", SchemaCreationContextGenerator.defsToJsonObject(defs));
-        }
-        return jsonb.toJson(schemaBuilder.build());
-    }
-
-    public static String generateToolOutputSchema(ToolMetadata tool) {
-        Map<Type, SchemaCreationContext> cache = SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache();
-        SchemaGenerationContext ctx = new SchemaGenerationContext();
-
-        Type returnType = tool.method().getJavaMember().getGenericReturnType();
-        Annotation[] annotations = tool.method().getJavaMember().getAnnotatedReturnType().getAnnotations();
-        SchemaInfo returnSchemaAnn = SchemaInfo.read(annotations);
-        String description = returnSchemaAnn.description().orElse(null);
-        generateSchemaCreationContext(returnType);
-        calculateClassFrequency(returnType, SchemaDirection.OUTPUT, ctx);
-
-        SchemaCreationContext ps = cache.get(returnType);
-        JsonObjectBuilder outputSchema = ps.toJsonSchemaObject(SchemaDirection.OUTPUT, ctx, true, null);
-        if (description != null) {
-            outputSchema.add("description", description);
-        }
-        return jsonb.toJson(outputSchema.build());
+                                              .add(TYPE, TYPE_OBJECT)
+                                              .add(PROPERTIES, properties.build())
+                                              .add(REQUIRED, required.build());
+        addDefs(schemaBuilder, ctx);
+        return schemaBuilder.build();
     }
 
     /**
-     * generates pseudo schema and then adds it to {@code cache}
+     * Generate the output schema for a tool
      *
-     * @param type
+     * @param tool the tool to generate the schema for
+     * @param blueprintRegistry the blueprint registry to use
+     * @return the schema as a json object
      */
-    public static SchemaCreationContext generateSchemaCreationContext(Type type) {
-        if (!isPrimitive(type)) {
-            if (type instanceof Class<?> cls) {
-                if (cls.isEnum()) {
-                    return SchemaCreationContextGenerator.generateEnumPsuedoSchema(type);
+    public static JsonObject generateToolOutputSchema(ToolMetadata tool, SchemaCreationBlueprintRegistry blueprintRegistry) {
 
-                } else if (cls.isArray()) {
-                    return SchemaCreationContextGenerator.generateArrayPsuedoSchema(type);
+        Type returnType = tool.method().getJavaMember().getGenericReturnType();
+        SchemaGenerationContext ctx = new SchemaGenerationContext(blueprintRegistry, OUTPUT);
+        calculateClassFrequency(returnType, SchemaDirection.OUTPUT, ctx);
 
-                } else if (Optional.class.isAssignableFrom(cls)) {
-                    return SchemaCreationContextGenerator.generateRawOptionalPsuedoSchema(type);
+        JsonObjectBuilder outputSchema = generateSubSchema(returnType, ctx, SchemaAnnotation.EMPTY);
+        addDefs(outputSchema, ctx);
 
-                } else if (Map.class.isAssignableFrom(cls)) {
-                    return SchemaCreationContextGenerator.generateRawMapPsuedoSchema(type);
-
-                } else if (Collection.class.isAssignableFrom(cls)) {
-                    return SchemaCreationContextGenerator.generateRawCollectionPsuedoSchema(type);
-
-                } else {
-                    ClassSchemaCreationContext schemaCreationContext = SchemaCreationContextGenerator.generateClassPsuedoSchema(type);
-
-//                    for (FieldInfo fi : schemaCreationContext.inputFields()) {
-//                        generateSchemaCreationContext(fi.type());
-//                    }
-//                    for (FieldInfo fi : schemaCreationContext.outputFields()) {
-//                        generateSchemaCreationContext(fi.type());
-//                    }
-                    return schemaCreationContext;
-                }
-
-            } else if (type instanceof ParameterizedType pt) {
-                if (Optional.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                    return SchemaCreationContextGenerator.generateParameterizedOptionalPsuedoSchema(type);
-
-                } else if (Map.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                    return SchemaCreationContextGenerator.generateParameterizedMapPsuedoSchema(type);
-
-                } else if (Collection.class.isAssignableFrom((Class<?>) pt.getRawType())) {
-                    return SchemaCreationContextGenerator.generateParameterizedCollectionPsuedoSchema(type);
-                } else {
-                    return null;
-                }
-
-            } else {
-                return null;
-                //TODO: WildcardType, GenericArrayType, TypeVariable
-                //TODO: Log message and produce simple schema
-            }
-
-        } else {
-            return SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache().get(type);
-        }
+        return outputSchema.build();
     }
 
     public static class SchemaGenerationContext {
@@ -234,6 +149,17 @@ public class SchemaGenerator {
         private Set<String> namesInUse = new HashSet<>();
         /** Map of types and their corresponding JSON schemas which should be added to defs */
         private HashMap<Type, JsonObject> defsBuilder = new HashMap<>();
+        /** The blueprint registry to be used when generating schemas */
+        private SchemaCreationBlueprintRegistry blueprintRegistry;
+        /** Whether we're generating input or output schemas */
+        private SchemaDirection direction;
+
+        public SchemaGenerationContext(SchemaCreationBlueprintRegistry blueprintRegistry, SchemaDirection direction) {
+            Objects.requireNonNull(blueprintRegistry, "blueprintRegistry");
+            Objects.requireNonNull(direction, "direction");
+            this.blueprintRegistry = blueprintRegistry;
+            this.direction = direction;
+        }
 
         /**
          * Registers a type as having been seen
@@ -289,72 +215,117 @@ public class SchemaGenerator {
             return nameMap.get(type);
         }
 
-        /**
-         * @return the typeFrequency
-         */
-        public HashMap<Type, Boolean> getTypeFrequency() {
-            return typeMultiUse;
-        }
-
-        /**
-         * @return the nameMap
-         */
-        public HashMap<Type, String> getNameMap() {
-            return nameMap;
+        public SchemaDirection getDirection() {
+            return direction;
         }
 
         public HashMap<Type, JsonObject> getDefsBuilder() {
             return defsBuilder;
         }
+
+        public SchemaCreationBlueprintRegistry getBlueprintRegistry() {
+            return blueprintRegistry;
+        }
     }
 
     public static void calculateClassFrequency(Type type, SchemaDirection direction, SchemaGenerationContext ctx) {
-        Map<Type, SchemaCreationContext> cache = SchemaCreationContextRegistry.getSchemaCreationContextRegistry().getCache();
-        SchemaCreationContext scc = cache.computeIfAbsent(type, k -> generateSchemaCreationContext(k));
+        SchemaCreationBlueprint scc = ctx.getBlueprintRegistry().getSchemaCreationBlueprint(type);
         boolean previouslySeen = false;
-        if (scc.defsName().isPresent()) {
+        if (scc.getDefsName().isPresent()) {
             // We might add this type to defs, so we need to add it to the typeFrequency map
             // If this is the first time we've seen this type, set it to false, if it's not the first time, set it to true
             previouslySeen = ctx.registerSeen(type);
 
             if (previouslySeen) {
-                ctx.reserveName(type, scc.defsName().get());
+                ctx.reserveName(type, scc.getDefsName().get());
             }
         }
 
         if (!previouslySeen) {
             // Process children
-            if (scc instanceof ListSchemaCreationContext listPs) {
-                calculateClassFrequency(listPs.itemType(), direction, ctx);
-            } else if (scc instanceof ClassSchemaCreationContext classPs) {
-                List<FieldInfo> fields = direction == SchemaDirection.INPUT ? classPs.inputFields() : classPs.outputFields();
+            if (scc instanceof ListSchemaCreationBlueprint listScb) {
+                calculateClassFrequency(listScb.itemType(), direction, ctx);
+            } else if (scc instanceof ClassSchemaCreationBlueprint classScb) {
+                List<FieldInfo> fields = direction == SchemaDirection.INPUT ? classScb.inputFields() : classScb.outputFields();
                 for (FieldInfo fi : fields) {
                     calculateClassFrequency(fi.type(), direction, ctx);
                 }
-            } else if (scc instanceof MapSchemaCreationContext mapPs) {
-                calculateClassFrequency(mapPs.valueType(), direction, ctx);
-                calculateClassFrequency(mapPs.keyType(), direction, ctx);
-            } else if (scc instanceof OptionalSchemaCreationContext optionalPs) {
-                calculateClassFrequency(optionalPs.optionalType(), direction, ctx);
+            } else if (scc instanceof MapSchemaCreationBlueprint mapScb) {
+                calculateClassFrequency(mapScb.valueType(), direction, ctx);
+                calculateClassFrequency(mapScb.keyType(), direction, ctx);
+            } else if (scc instanceof OptionalSchemaCreationBlueprint optionalScb) {
+                calculateClassFrequency(optionalScb.optionalType(), direction, ctx);
+            } else if (scc instanceof TypeVariableSchemaCreationBlueprint tvScb) {
+                for (Type bound : tvScb.tv().getBounds()) {
+                    calculateClassFrequency(bound, direction, ctx);
+                }
+            } else if (scc instanceof WildcardSchemaCreationBlueprint wtScb) {
+                for (Type bound : wtScb.upperBounds()) {
+                    calculateClassFrequency(bound, direction, ctx);
+                }
+                for (Type bound : wtScb.lowerBounds()) {
+                    calculateClassFrequency(bound, direction, ctx);
+                }
             }
         }
     }
 
-    public static boolean isPrimitive(Type type) {
-        boolean isJsonNumber = type.equals(long.class) || type.equals(double.class) || type.equals(byte.class) || type.equals(float.class) || type.equals(short.class)
-                               || type.equals(Long.class) || type.equals(Double.class) || type.equals(Byte.class) || type.equals(Float.class) || type.equals(Short.class);
+    private static final JsonObject GENERATION_IN_PROGRESS = Json.createObjectBuilder().build();
 
-        if (isJsonNumber)
-            return true;
-        else if (type.equals(String.class) || type.equals(Character.class) || type.equals(char.class))
-            return true;
-        else if (type.equals(int.class) || type.equals(Integer.class))
-            return true;
-        else if (type.equals(boolean.class) || type.equals(Boolean.class))
-            return true;
-        else
-            return false;
+    public static JsonObjectBuilder generateSubSchema(Type type, SchemaGenerationContext ctx, SchemaAnnotation annotation) {
 
+        // Allow a schema to be overridden from the point that it's used
+        var schemaFromAnnotation = annotation.asJsonSchema();
+        if (schemaFromAnnotation.isPresent()) {
+            return schemaFromAnnotation.get();
+        }
+
+        SchemaCreationBlueprint blueprint = ctx.getBlueprintRegistry().getSchemaCreationBlueprint(type);
+        String description = annotation.description().orElse(null);
+        JsonObject defsSchema = ctx.getDefsBuilder().get(type);
+        if (defsSchema != null) {
+            // Schema is already in defs, just return a reference
+            return createReference(ctx.getName(type), description, defsSchema);
+        } else if (blueprint.getDefsName().isPresent() && ctx.isMultiUse(type)) {
+            // Put a placeholder in the defs map, so that we will make references to the current object
+            // rather than trying to generate it again (and getting stuck in a loop)
+            ctx.getDefsBuilder().put(type, GENERATION_IN_PROGRESS);
+            // Generate the real schema object and add it to defs
+            JsonObject result = blueprint.toJsonSchemaObject(ctx, null).build();
+            ctx.getDefsBuilder().put(type, result);
+            // Now return a reference to it
+            return createReference(ctx.getName(type), description, result);
+        } else {
+            // Schema should not be added to defs, just generate it and return
+            return blueprint.toJsonSchemaObject(ctx, description);
+        }
+    }
+
+    private static JsonObjectBuilder createReference(String name, String referenceDescription, JsonObject referencedSchema) {
+        String schemaDescription = referencedSchema.getString(DESCRIPTION, null);
+
+        JsonObjectBuilder ref = Json.createObjectBuilder().add(REF, "#/$defs/" + name);
+        if (referenceDescription != null && !referenceDescription.equals(schemaDescription)) {
+            ref.add(DESCRIPTION, referenceDescription);
+        }
+        return ref;
+    }
+
+    /**
+     * @param result
+     * @param ctx
+     */
+    private static void addDefs(JsonObjectBuilder result, SchemaGenerationContext ctx) {
+        if (ctx.getDefsBuilder().isEmpty()) {
+            return;
+        }
+
+        JsonObjectBuilder defs = Json.createObjectBuilder();
+        ctx.getDefsBuilder().forEach((type, schema) -> {
+            defs.add(ctx.getName(type), schema);
+        });
+
+        result.add(DEFS, defs);
     }
 
 }

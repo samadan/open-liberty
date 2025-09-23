@@ -8,11 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 /**
- * Classes for generating schemas for tools and classes.
- * <p>
- * Attempts to generate schemas to match the way that JSON-B will (de-)serialize objects.
- * <p>
- * Main entry point is {@link io.openliberty.mcp.internal.schemas.SchemaRegistry}.
+ * Classes related to SchemaCreationBlueprints
  */
 @com.ibm.websphere.ras.annotation.TraceOptions(traceGroup = "MCP")
-package io.openliberty.mcp.internal.schemas;
+package io.openliberty.mcp.internal.schemas.blueprints;
