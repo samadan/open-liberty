@@ -3761,13 +3761,15 @@ public class QueryInfo {
         // for collecting names of named parameters:
         LinkedHashSet<String> qlParamNames = new LinkedHashSet<>();
 
+        // indices at which the query needs to be modified
+        ArrayList<Integer> modifyAt = new ArrayList<>();
+
         int length = ql.length();
         int startAt = 0;
         char firstChar = ' ';
         for (; startAt < length && Character.isWhitespace(firstChar = ql.charAt(startAt)); startAt++);
 
         if (firstChar == 'D' || firstChar == 'd') { // DELETE FROM EntityName[ WHERE ...]
-            ArrayList<Integer> modifyAt = new ArrayList<>();
             if (startAt + 12 < length
                 && ql.regionMatches(true, startAt + 1, "ELETE", 0, 5)
                 && Character.isWhitespace(ql.charAt(startAt + 6))) {
@@ -3813,7 +3815,6 @@ public class QueryInfo {
                 entityInfo.recordClass != null)
                 jpql = replaceRecordName(ql, modifyAt);
         } else if (firstChar == 'U' || firstChar == 'u') { // UPDATE EntityName[ SET ... WHERE ...]
-            ArrayList<Integer> modifyAt = new ArrayList<>();
             if (startAt + 13 < length
                 && ql.regionMatches(true, startAt + 1, "PDATE", 0, 5)
                 && Character.isWhitespace(ql.charAt(startAt + 6))) {
@@ -3866,17 +3867,19 @@ public class QueryInfo {
                 // The end of the SELECT clause is a FROM, WHERE, GROUP BY, HAVING, or ORDER BY clause, or the end of the query
             }
 
+            qlParamNames = parseQuery(ql, startAt, modifyAt);
+
             // track depth of parenthesis to ignore FROM within expressions, such as in
             // SELECT EXTRACT(YEAR FROM colName) FROM EntityName
             int depth = 0;
             boolean isEmbedded = false;
             boolean isLiteral = false;
-            StringBuilder paramName = null;
+            boolean isParamName = false;
             for (; startAt < length; startAt++) {
                 char ch = ql.charAt(startAt);
                 if (!isLiteral && (ch == ':' || ch == '.' || ch == '(' || ch == ')')) {
                     switch (ch) {
-                        case ':' -> paramName = new StringBuilder(30);
+                        case ':' -> isParamName = true;
                         case '.' -> isEmbedded = true;
                         case '(' -> depth++;
                         case ')' -> depth = depth > 0 ? depth - 1 : 0;
@@ -3889,22 +3892,13 @@ public class QueryInfo {
                             isLiteral = false;
                     } else {
                         isLiteral = true;
-                        if (isEmbedded) {
+                        if (isEmbedded)
                             isEmbedded = false;
-                        } else if (paramName != null) {
-                            qlParamNames.add(paramName.toString());
-                            paramName = null;
-                        }
+                        else if (isParamName)
+                            isParamName = false;
                     }
                 } else if (Character.isJavaIdentifierStart(ch)) {
-                    if (paramName != null) {
-                        paramName.append(ch);
-                        while (length > startAt + 1 && Character //
-                                        .isJavaIdentifierPart(ch = ql.charAt(startAt + 1))) {
-                            paramName.append(ch);
-                            startAt++;
-                        }
-                    } else if (!isEmbedded && !isLiteral && depth == 0) {
+                    if (!isParamName && !isEmbedded && !isLiteral && depth == 0) {
                         int by;
                         if (from0 < 0 && where0 < 0 && length > startAt + 4
                             && ql.regionMatches(true, startAt, "FROM", 0, 4)
@@ -3959,21 +3953,12 @@ public class QueryInfo {
                                 startAt++;
                         }
                     }
-                } else if (Character.isDigit(ch)) {
-                    if (paramName != null)
-                        paramName.append(ch);
-                } else if (!isLiteral) {
-                    if (isEmbedded) {
+                } else if (!Character.isDigit(ch) && !isLiteral) {
+                    if (isEmbedded)
                         isEmbedded = false;
-                    } else if (paramName != null) {
-                        qlParamNames.add(paramName.toString());
-                        paramName = null;
-                    }
+                    else if (isParamName)
+                        isParamName = false;
                 }
-            }
-            if (paramName != null) {
-                qlParamNames.add(paramName.toString());
-                paramName = null;
             }
 
             if (select0 >= 0 && selectLen == 0)
@@ -4036,6 +4021,7 @@ public class QueryInfo {
                          "   WHERE [" + (whereLen > 0 ? ql.substring(where0, where0 + whereLen) : "") + "]",
                          "  [" + (orderLen > 0 ? ql.substring(order0, order0 + orderLen) : "") + "]",
                          "  entity [" + entityName + "] [" + entityVar + "]",
+                         "  modify " + modifyAt,
                          "  :named " + qlParamNames);
             }
 
@@ -4125,18 +4111,24 @@ public class QueryInfo {
             // remove the else block entirely. The following is just enough to
             // get a couple of test cases working
             if (fromLen > 0 && // TODO insert FROM clause if not present
-                (entityInfo.recordClass == null ||
-                 !ql.contains(entityInfo.recordClass.getSimpleName()))
-                && // TODO replace record types with generated class type
                 !insertConstructor && // temporary
                 !insertEntityVar) { // temporary
+                String q;
+                if (!modifyAt.isEmpty() &&
+                    entityInfo.recordClass != null)
+                    q = replaceRecordName(ql, modifyAt);
+                else
+                    q = ql;
+
                 if (selectLen > 0) {
-                    jpql = ql;
+                    jpql = q;
                 } else {
                     // TODO only add a SELECT clause if needed for something other
                     // than selecting the entity, such as individual attributes or
                     // Java records with multiple.
-                    jpql = generateSelectClause().append(' ').append(ql).toString();
+                    // TODO also cover this under modifyAt and the replaceRecordName
+                    // method, which will need a more general name
+                    jpql = generateSelectClause().append(' ').append(q).toString();
                 }
             } else {
                 StringBuilder q;
