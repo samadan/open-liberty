@@ -5,7 +5,7 @@ Before running this project it is recommended to read the documentation located 
 
 ## Overview
 
-In order to aid in the development of the `data-1.0` feature, this project is configured specifically to allow
+In order to aid in the development of the `data-1.1` feature, this project is configured specifically to allow
 the feature developers to run the TCK against a development image of Open Liberty.
 
 ## Choose a test strategy
@@ -15,14 +15,14 @@ This project has been constructed to support two different test strategies.
 1. Running the TCK for Verification
    1. This strategy is for those who want to run the TCK to verify compatibility, but do not need to run against a development environment.
 2. Running the TCK for Developers
-   1. This strategy is for those who are familiar with the Open Liberty project and are helping to develop the `data-1.0` feature.
+   1. This strategy is for those who are familiar with the Open Liberty project and are helping to develop the `data-1.1` feature.
 
 Many of the assets in this project are used in different ways based on the strategy being used. 
 Therefore, each strategy below has a `Background` section to explain how the different assets interact and end up depending on the strategy.
 
 ## Requirements
 
-- JDK 17 or higher
+- JDK 21 or higher
 - [Maven 3.8.0 or higher](https://maven.apache.org/download.cgi)
 
 ## Getting started
@@ -37,7 +37,7 @@ cd data
 mvn clean install
 ```
 
-The API and TCK libraries will be tagged with the `1.0.0-SNAPSHOT` version. Keep this in mind if you plan to follow the [Running the TCK for Verification](#Running-the-TCK-for-Verification) section. 
+The API and TCK libraries will be tagged with the `1.1.0-SNAPSHOT` version. Keep this in mind if you plan to follow the [Running the TCK for Verification](#Running-the-TCK-for-Verification) section. 
 
 ### Getting Open Liberty
 
@@ -58,7 +58,7 @@ cd open-liberty/dev
    3. There are additional tasks that will copy dependencies, configurations, and create a server.
 2. `publish/servers`
    1. This is where the server configuration files are located.
-   2. These files will be copied to `wlp/usr/servers/io.openliberty.data.1.0.core` at build time.
+   2. These files will be copied to `wlp/usr/servers/io.openliberty.data.1.1.core` at build time.
    3. A special `logging.properties` file is also here to ensure that the TCK logs are formatted and saved to a specific location.
 3. `publish/tckRunner`
    1. This is a maven project that will actually run the TCK. 
@@ -86,7 +86,7 @@ Provide a WebSphere Liberty Profile (WLP) dependency that corresponds to the rel
 Then, run the `buildWLP` task
 
 ```sh
-./gradlew io.openliberty.jakarta.data.1.0_fat_tck:buildWLP -Djakarta.tck.platform=core
+./gradlew io.openliberty.jakarta.data.1.1_fat_tck:buildWLP -Djakarta.tck.platform=core
 ```
 
 To run in `web` or `full` mode use `-Djakarta.tck.platform=web` or `-Djakarta.tck.platform=full` respectively
@@ -95,9 +95,9 @@ This will create a `wlp` directory within this project.
 Navigate to this directory and start your server:
 
 ```sh
-cd io.openliberty.jakarta.data.1.0_fat_tck/wlp
+cd io.openliberty.jakarta.data.1.1_fat_tck/wlp
 
-./bin/server start io.openliberty.jakarta.data.1.0 \
+./bin/server start io.openliberty.jakarta.data.1.1 \
 -Denv.tck_port=9080 \
 -Denv.tck_port_secure=9443 \
 -Djimage.dir=$PWD/usr/shared/jimage/output
@@ -115,7 +115,7 @@ Now you can run the TCK:
 ```sh
 mvn clean test -B \
 -Dwlp=$PWD \
--Dtck_server=io.openliberty.jakarta.data.1.0 \
+-Dtck_server=io.openliberty.jakarta.data.1.1 \
 -Dtck_failSafeUndeployment=true \
 -Dtck_appDeployTimeout=180 \
 -Dtck_appUndeployTimeout=60 \
@@ -130,16 +130,16 @@ mvn clean test -B \
 To run in `web` or `full` mode use `-Dtck_protocol=servlet -Djakarta.tck.platform=web` or `-Dtck_protocol=servlet -Djakarta.tck.platform=full` respectively
 
 By default the TCK will run against a staged version of Jakarta API and TCK.
-If you want to test against a local `1.0.0-SNAPSHOT` then set these properties on the command above: 
+If you want to test against a local `1.1.0-SNAPSHOT` then set these properties on the command above: 
 
 ```txt
--Djakarta.data.tck.version=1.0.0-SNAPSHOT
+-Djakarta.data.tck.version=1.1.0-SNAPSHOT
 ```
 
 Finally, remember to stop the running server
 
 ```sh
-./bin/server stop io.openliberty.jakarta.data.1.0
+./bin/server stop io.openliberty.jakarta.data.1.1
 ```
 
 ### View the results
@@ -205,7 +205,7 @@ For more detailed instructions on building Open Liberty please see the [Building
 Finally, you can run the TCK using the `buildandrun` gradle task
 
 ```sh
-./gradlew io.openliberty.jakarta.data.1.0_fat_tck:buildandrun
+./gradlew io.openliberty.jakarta.data.1.1_fat_tck:buildandrun
 ```
 
 NOTE: Running the TCK using this method will use a published TCK version, and not the `SNAPSHOT` version from a local build. 

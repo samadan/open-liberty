@@ -34,10 +34,10 @@ import componenttest.topology.utils.tck.TCKRunner;
 @MinimumJavaLevel(javaLevel = 17)
 public class DataCoreTckLauncher {
 
-    @Server("io.openliberty.jakarta.data.1.0.core")
+    @Server("io.openliberty.jakarta.data.1.1.core")
     public static LibertyServer persistenceServer;
 
-    @Server("io.openliberty.jakarta.data.1.0.core.nosql")
+    @Server("io.openliberty.jakarta.data.1.1.core.nosql")
     public static LibertyServer noSQLServer;
 
     @After
@@ -84,8 +84,8 @@ public class DataCoreTckLauncher {
         additionalProps.put("excluded.tests", FATSuite.getExcludedTestByDatabase(DatabaseContainerType.valueOf(FATSuite.relationalDatabase)));
 
         //Comment out to use SNAPSHOT
-        additionalProps.put("jakarta.data.groupid", "jakarta.data");
-        additionalProps.put("jakarta.data.tck.version", "1.0.1");
+//        additionalProps.put("jakarta.data.groupid", "jakarta.data");
+//        additionalProps.put("jakarta.data.tck.version", "1.1.0");
 
         TCKRunner.build(persistenceServer, Type.JAKARTA, "Data")
                         .withPlatfromVersion("11")
@@ -124,8 +124,8 @@ public class DataCoreTckLauncher {
         }
 
         //Comment out to use SNAPSHOT
-        additionalProps.put("jakarta.data.groupid", "jakarta.data");
-        additionalProps.put("jakarta.data.tck.version", "1.0.1");
+//        additionalProps.put("jakarta.data.groupid", "jakarta.data");
+//        additionalProps.put("jakarta.data.tck.version", "1.1.0");
 
         TCKRunner.build(noSQLServer, Type.JAKARTA, "Data")
                         .withPlatfromVersion("11")

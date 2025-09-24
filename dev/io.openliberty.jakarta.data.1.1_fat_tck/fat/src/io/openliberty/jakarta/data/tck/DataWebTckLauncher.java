@@ -35,7 +35,7 @@ import componenttest.topology.utils.tck.TCKRunner;
 @MinimumJavaLevel(javaLevel = 17)
 public class DataWebTckLauncher {
 
-    @Server("io.openliberty.jakarta.data.1.0.web")
+    @Server("io.openliberty.jakarta.data.1.1.web")
     public static LibertyServer server;
 
     @BeforeClass
@@ -76,8 +76,8 @@ public class DataWebTckLauncher {
         additionalProps.put("excluded.tests", FATSuite.getExcludedTestByDatabase(DatabaseContainerType.valueOf(FATSuite.relationalDatabase)));
 
         //Comment out to use SNAPSHOT
-        additionalProps.put("jakarta.data.groupid", "jakarta.data");
-        additionalProps.put("jakarta.data.tck.version", "1.0.1");
+//        additionalProps.put("jakarta.data.groupid", "jakarta.data");
+//        additionalProps.put("jakarta.data.tck.version", "1.1.0");
 
         TCKRunner.build(server, Type.JAKARTA, "Data")
                         .withPlatfromVersion("11")

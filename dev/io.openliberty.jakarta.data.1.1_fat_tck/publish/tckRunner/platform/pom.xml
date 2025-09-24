@@ -40,7 +40,7 @@
 			<groupId>${jakarta.data.groupid}</groupId>
 			<artifactId>jakarta.data-api</artifactId>
 			<version>${jakarta.data.version}</version>
-			<systemPath>${io.openliberty.jakarta.data.1.0}</systemPath>
+			<systemPath>${io.openliberty.jakarta.data.1.1}</systemPath>
 			<scope>system</scope>
 		</dependency>
 		<!-- impl - data - internal bundle -->

@@ -78,8 +78,8 @@ public class DataFullTckLauncher {
         additionalProps.put("excluded.tests", FATSuite.getExcludedTestByDatabase(DatabaseContainerType.valueOf(FATSuite.relationalDatabase)));
 
         //Comment out to use SNAPSHOT
-        additionalProps.put("jakarta.data.groupid", "jakarta.data");
-        additionalProps.put("jakarta.data.tck.version", "1.0.1");
+//        additionalProps.put("jakarta.data.groupid", "jakarta.data");
+//        additionalProps.put("jakarta.data.tck.version", "1.1.0");
 
         TCKRunner.build(server, Type.JAKARTA, "Data")
                         .withPlatfromVersion("11")

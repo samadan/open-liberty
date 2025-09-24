@@ -32,8 +32,8 @@
 
         <!-- Jakarta EE API -->
         <jakarta.data.groupid>jakarta.data</jakarta.data.groupid>
-        <jakarta.data.version>1.0.1-SNAPSHOT</jakarta.data.version>
-        <jakarta.data.tck.version>1.0.1-SNAPSHOT</jakarta.data.tck.version>
+        <jakarta.data.version>1.1.0-SNAPSHOT</jakarta.data.version>
+        <jakarta.data.tck.version>1.1.0-SNAPSHOT</jakarta.data.tck.version>
         <jakarta.cdi.version>4.0.1</jakarta.cdi.version>
         
         <!-- JNoSQL Implementation -->

@@ -26,6 +26,7 @@
 		<targetDirectory>${project.basedir}/target</targetDirectory>
 	</properties>
 
+    <!-- TODO update all APIs to EE 12 -->
 	<dependencies>
 		<!-- tck - data - external TCK -->
 		<dependency>
