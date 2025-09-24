@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.ExecutionRequestId;
-import io.openliberty.mcp.internal.requests.McpRequestId;
 import io.openliberty.mcp.messaging.Cancellation;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -27,28 +26,28 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class McpConnectionTracker {
 
-    private final ConcurrentMap<McpRequestId, Cancellation> ongoingRequests;
+    private final ConcurrentMap<String, Cancellation> ongoingRequests;
 
     public McpConnectionTracker() {
         this.ongoingRequests = new ConcurrentHashMap<>();
     }
 
     public void deregisterOngoingRequest(ExecutionRequestId id) {
-        ongoingRequests.remove(id.id());
+        ongoingRequests.remove(id.toString());
     }
 
     public void registerOngoingRequest(ExecutionRequestId id, Cancellation cancellation) {
-        Cancellation previous = ongoingRequests.putIfAbsent(id.id(), cancellation);
+        Cancellation previous = ongoingRequests.putIfAbsent(id.toString(), cancellation);
         if (previous != null) {
-            throw new JSONRPCException(INVALID_PARAMS, "A request with id " + id.id() + " is already in progress");
+            throw new JSONRPCException(INVALID_PARAMS, "A request with id " + id.toString() + " is already in progress");
         }
     }
 
     public boolean isOngoingRequest(ExecutionRequestId id) {
-        return ongoingRequests.containsKey(id.id());
+        return ongoingRequests.containsKey(id.toString());
     }
 
     public Cancellation getOngoingRequestCancellation(ExecutionRequestId id) {
-        return ongoingRequests.get(id.id());
+        return ongoingRequests.get(id.toString());
     }
 }
