@@ -417,10 +417,11 @@ public class SipUdpConnLink implements UdpSender, ChannelFutureListener {
 
 	public void close(Throwable e) {
 		// avoid double close
-		if(!closeAlreadyCalled){ 
-			closeAlreadyCalled = true;
+		if(closeAlreadyCalled){ 
 			return;
 		}
+		closeAlreadyCalled = true;
+
 		// remove this conn link from the global table
 		s_instances.remove(m_channel.getListeningPoint());
 
