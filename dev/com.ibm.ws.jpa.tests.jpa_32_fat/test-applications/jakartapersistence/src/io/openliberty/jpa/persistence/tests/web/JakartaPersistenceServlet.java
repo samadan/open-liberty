@@ -1156,6 +1156,41 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
     
     @Test
+    public void testExtractYearFromLocalDataWithJPQL() throws Exception {
+        deleteAllEntities(DateTimeEntity.class);
+        DateTimeEntity q1 = new DateTimeEntity(1, "q1", LocalDate.of(2023, 4, 18), LocalTime.of(10, 45), LocalDateTime.of(2023, 4, 18, 10, 45));
+        DateTimeEntity q2 = new DateTimeEntity(2, "q2", LocalDate.of(2022, 6, 25), LocalTime.of(16, 20), LocalDateTime.of(2022, 6, 25, 16, 20));
+        DateTimeEntity q3 = new DateTimeEntity(3, "q3", LocalDate.of(2023, 8, 30), LocalTime.of(8, 45), LocalDateTime.of(2023, 8, 30, 8, 50));
+
+        tx.begin();
+        em.persist(q1);
+        em.persist(q2);
+        em.persist(q3);
+        tx.commit();
+
+        Stream<DateTimeEntity> resultDate;
+        try {
+            resultDate = em.createQuery(
+                "SELECT NEW io.openliberty.jpa.persistence.tests.models.DateTimeEntity(id, name, localDateData, localTimeData, localDateTimeData) " +
+                "FROM DateTimeEntity " +
+                "WHERE EXTRACT(YEAR FROM localDateTimeData) = ?1 " +
+                "ORDER BY name DESC")
+                .setParameter(1, 2023)
+                .getResultStream();
+        } catch (Exception e) {
+            throw e;
+        }
+        
+        List<DateTimeEntity> results = resultDate.collect(Collectors.toList());
+        assertEquals(2, results.size());
+        
+        assertEquals("q3", results.get(0).getName());
+        assertEquals(LocalDate.of(2023, 8, 30), results.get(0).getLocalDateData());
+        assertEquals(LocalTime.of(10, 45), results.get(1).getLocalTimeData());
+        assertEquals(LocalDateTime.of(2023, 4, 18, 10, 45), results.get(1).getLocalDateTimeData());
+    }
+    
+    @Test
     public void testExtractDayFromLocalData() throws Exception {
         deleteAllEntities(DateTimeEntity.class);
         DateTimeEntity q1 = new DateTimeEntity(1, "q1", LocalDate.of(2023, 3, 25), LocalTime.of(9, 30), LocalDateTime.of(2023, 3, 25, 9, 30));
