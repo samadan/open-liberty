@@ -14,8 +14,14 @@
     <!-- TODO update all features to EE 12 -->
     <featureManager>
         <!-- Features being tested -->
-        <feature>webProfile-11.0</feature>
+        <!-- <feature>webProfile-11.0</feature> -->
         <feature>data-1.1</feature>
+        <feature>persistence-3.2</feature>
+        
+        <!-- TODO replace with webProfile-12.0 once available -->
+        <feature>cdi-4.1</feature>
+        <feature>servlet-6.1</feature>
+        <feature>validation-3.1</feature>
         <feature>persistence-3.2</feature>
         
         <!-- Features needed for arquillan support -->
