@@ -300,17 +300,17 @@ public class SipUdpConnLink implements UdpSender, ChannelFutureListener {
 		return current;
 	}
 
-	/**
-	 * establishes the outbound virtual connection
-	 */
-	private void connect(MessageContext messageContext) throws IOException {
-		String outboundChainName = m_channel.getOutboundChainName();
-		if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-			Tr.debug(this, tc, "<connect>", "outboundChainName = " + outboundChainName);
-		}
-		
-		// NO-OP.  No connection needed as each DatagramPacket is associated with an address
-	}
+    /**
+     * No Op -- Should already be connected and active. 
+     */
+    private void connect(MessageContext messageContext) throws IOException {
+        String outboundChainName = m_channel.getOutboundChainName();
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Boolean isActive =  ((SipUdpConnection)messageContext.getSipConnection()).getChannel().isActive();
+            Tr.debug(this, tc, "<connect>", "outboundChainName = " + outboundChainName + " isActive = " + isActive);
+        }
+    }
+
 
 	/**
 	 * send queued outbound message
