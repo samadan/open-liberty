@@ -38,10 +38,13 @@ import componenttest.topology.impl.JavaInfo;
 @RunWith(Suite.class)
 @SuiteClasses({
                 AlwaysPassesTest.class, //Need to have a passing test for Java 8, 11, 17
-                DataCoreTckLauncher.class,
-                DataWebTckLauncher.class,
-                DataFullTckLauncher.class, //full mode
-                DataStandaloneTckLauncher.class
+// TODO enable tests once there is a SNAPSHOT or milestone release
+//      and when the data-1.1 feature can reasonably pass the TCK.
+//      For now this bucket is only useful for locally testing changes to the TCK against Liberty.
+//                DataCoreTckLauncher.class,
+//                DataWebTckLauncher.class,
+//                DataFullTckLauncher.class, //full mode
+//                DataStandaloneTckLauncher.class
 })
 public class FATSuite extends TestContainerSuite {
 
