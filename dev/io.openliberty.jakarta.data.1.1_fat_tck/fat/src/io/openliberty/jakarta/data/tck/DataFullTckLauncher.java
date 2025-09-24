@@ -37,7 +37,7 @@ import componenttest.topology.utils.tck.TCKRunner;
 @MinimumJavaLevel(javaLevel = 21)
 public class DataFullTckLauncher {
 
-    @Server("io.openliberty.jakarta.data.1.0.full")
+    @Server("io.openliberty.jakarta.data.1.1.full")
     public static LibertyServer server;
 
     @BeforeClass

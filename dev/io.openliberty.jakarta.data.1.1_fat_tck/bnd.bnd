@@ -4,7 +4,7 @@
 # are made available under the terms of the Eclipse Public License 2.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-2.0/
-# 
+#
 # SPDX-License-Identifier: EPL-2.0
 #
 # Contributors:
@@ -18,8 +18,8 @@ javac.target: 21
 
 fat.minimum.java.level: 21
 
-src: \
-	fat/src
+src:\
+    fat/src
 
 fat.project: true
 
@@ -30,13 +30,16 @@ fat.project: true
 
 # Uncomment to test against alternative databases
 # This allows you to locally tell gradle what database you want to test against.
-# This is the same way the database rotation build sets the database. 
+# This is the same way the database rotation build sets the database.
 # Options: Derby, Postgre, DB2, Oracle, SQLServer
 #fat.bucket.db.type: Postgre
 
 fat.test.container.images: public.ecr.aws/docker/library/mongo:6.0.6
 
-tested.features: databaseRotation, data-1.1
+tested.features:\
+    data-1.1,\
+    databaseRotation
 
--buildpath: \
-	io.openliberty.org.testcontainers;version=latest
+-buildpath:\
+    io.openliberty.org.testcontainers;version=latest
+
