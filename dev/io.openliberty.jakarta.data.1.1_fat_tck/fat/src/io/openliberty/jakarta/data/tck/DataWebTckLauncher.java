@@ -32,7 +32,7 @@ import componenttest.topology.utils.tck.TCKRunner;
 
 //@Mode(TestMode.FULL) TODO switch to full mode after feature is beta
 @RunWith(FATRunner.class)
-@MinimumJavaLevel(javaLevel = 17)
+@MinimumJavaLevel(javaLevel = 21)
 public class DataWebTckLauncher {
 
     @Server("io.openliberty.jakarta.data.1.1.web")

@@ -34,7 +34,7 @@ import componenttest.topology.utils.tck.TCKRunner;
 
 @Mode(TestMode.FULL)
 @RunWith(FATRunner.class)
-@MinimumJavaLevel(javaLevel = 17)
+@MinimumJavaLevel(javaLevel = 21)
 public class DataFullTckLauncher {
 
     @Server("io.openliberty.jakarta.data.1.0.full")

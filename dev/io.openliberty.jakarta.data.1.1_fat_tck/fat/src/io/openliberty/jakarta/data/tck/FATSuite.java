@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2024 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -37,7 +37,7 @@ import componenttest.topology.impl.JavaInfo;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-                AlwaysPassesTest.class, //Need to have a passing test for Java 8, 11
+                AlwaysPassesTest.class, //Need to have a passing test for Java 8, 11, 17
                 DataCoreTckLauncher.class,
                 DataWebTckLauncher.class,
                 DataFullTckLauncher.class, //full mode
@@ -69,7 +69,7 @@ public class FATSuite extends TestContainerSuite {
                 return result = false;
             }
 
-            if (JavaInfo.JAVA_VERSION != 17 && JavaInfo.JAVA_VERSION != 21) {
+            if (JavaInfo.JAVA_VERSION != 21 && JavaInfo.JAVA_VERSION != 25) {
                 reason = "signature test not supported on non-LTS java versions: " + JavaInfo.JAVA_VERSION;
                 return result = false;
             }

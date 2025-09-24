@@ -34,7 +34,7 @@ import componenttest.topology.utils.tck.TCKRunner;
  * Keep it around until the TCK is finished being written.
  */
 @RunWith(FATRunner.class)
-@MinimumJavaLevel(javaLevel = 17)
+@MinimumJavaLevel(javaLevel = 21)
 public class DataStandaloneTckLauncher {
 
     @Server
