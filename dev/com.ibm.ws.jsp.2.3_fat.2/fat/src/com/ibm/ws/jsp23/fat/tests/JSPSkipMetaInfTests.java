@@ -40,7 +40,7 @@ import componenttest.topology.impl.LibertyServer;
 @SkipForRepeat("CDI-2.0")
 @RunWith(FATRunner.class)
 public class JSPSkipMetaInfTests {
-    private static final Logger LOG = Logger.getLogger(JSPTests.class.getName());
+    private static final Logger LOG = Logger.getLogger(JSPSkipMetaInfTests.class.getName());
     private static final String TestEDR_APP_NAME = "TestEDR";
 
     @Server("jspSkipMetaInfServer")
