@@ -20,6 +20,7 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.wsspi.http.VirtualHost;
 
+import jakarta.servlet.FilterRegistration;
 import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -42,6 +43,10 @@ public class McpServletInitializer implements ServletContainerInitializer {
         if (ToolRegistry.get().hasTools()) {
             Dynamic reg = context.addServlet("io.openliberty.mcp.servlet", McpServlet.class);
             reg.addMapping(mcpEndpoint);
+
+            FilterRegistration.Dynamic filterReg = context.addFilter("io.openliberty.mcp.servlet.filter", McpForwardFilter.class);
+            filterReg.addMappingForUrlPatterns(null, false, "/mcp/");
+            
             String fullMcpUrl = virtualHost.getUrlString(context.getContextPath() + mcpEndpoint, false);
             Tr.info(tc, "MCP server endpoint: " + fullMcpUrl);
         }

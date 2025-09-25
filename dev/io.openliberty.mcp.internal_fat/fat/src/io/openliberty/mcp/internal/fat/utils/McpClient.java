@@ -145,6 +145,20 @@ public class McpClient extends ExternalResource {
     }
 
     /**
+     * Call MCP server with a custom endpoint, and an expected response code
+     */
+    public String callMCPCustomized(String jsonRequestBody, String appendPath, int expectedCode) throws Exception {
+        return new HttpRequest(server, path + appendPath)
+                                                         .requestProp("Accept", ACCEPT_HEADER)
+                                                         .requestProp(MCP_PROTOCOL_HEADER, MCP_PROTOCOL_VERSION)
+                                                         .requestProp("Mcp-Session-Id", sessionId)
+                                                         .jsonBody(jsonRequestBody)
+                                                         .method("POST")
+                                                         .expectCode(expectedCode)
+                                                         .run(String.class);
+    }
+
+    /**
      * Call MCP server notification endpoint, and provide a 202 expected response code. No response body is returned
      * If a response body is returned, or a response code that is not 202, and exception is thrown
      */
