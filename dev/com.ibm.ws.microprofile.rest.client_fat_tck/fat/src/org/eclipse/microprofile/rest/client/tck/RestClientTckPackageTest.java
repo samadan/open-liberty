@@ -25,6 +25,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
+import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs a whole Maven TCK as one test FAT test.
