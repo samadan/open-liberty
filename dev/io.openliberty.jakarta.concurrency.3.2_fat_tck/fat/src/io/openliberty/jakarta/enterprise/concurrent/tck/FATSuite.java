@@ -26,8 +26,11 @@ import componenttest.topology.impl.JavaInfo;
 @RunWith(Suite.class)
 @SuiteClasses({
                 AlwaysPassesTest.class, //Need to have a passing test for Java 8, 11, and 17
-                ConcurrentTckLauncherFull.class, //FULL MODE
-                ConcurrentTckLauncherWeb.class //LITE MODE
+// TODO enable tests once there is a SNAPSHOT or milestone release
+//      and when the concurrent-3.2 feature can reasonably pass the TCK.
+//      For now this bucket is only useful for locally testing changes to the TCK against Liberty.
+//                ConcurrentTckLauncherFull.class, //FULL MODE
+//                ConcurrentTckLauncherWeb.class //LITE MODE
 })
 public class FATSuite {
 
