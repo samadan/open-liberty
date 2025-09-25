@@ -468,6 +468,9 @@ public interface Primes {
     @Query("SELECT hex WHERE numberId=:id")
     Optional<Character> singleHexDigit(long id);
 
+    @Query("WHERE numberId = (SELECT MIN(p.numberId) FROM Prime p)")
+    Prime smallest();
+
     @Query("SELECT hex WHERE numberId=?1")
     Optional<String> toHexadecimal(long num);
 

@@ -5887,6 +5887,17 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
+     * Tests a JPQL find operation with a subquery within the WHERE clause
+     * but lacking a main FROM clause, such that the only FROM clause is
+     * found within the WHERE clause.
+     */
+    @Test
+    public void testSubqueryInWhere() {
+        assertEquals(2L,
+                     primes.smallest().numberId);
+    }
+
+    /**
      * Repository method that supplies pagination information and returns a list.
      */
     @Test
