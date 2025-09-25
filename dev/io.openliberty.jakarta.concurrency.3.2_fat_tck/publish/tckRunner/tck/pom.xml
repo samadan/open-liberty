@@ -100,9 +100,9 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.0.0</version>
+            <version>6.1.0</version>
             <scope>system</scope>
-            <systemPath>${io.openliberty.jakarta.servlet.6.0}</systemPath>
+            <systemPath>${io.openliberty.jakarta.servlet.6.1}</systemPath>
         </dependency>
         <dependency>
             <groupId>jakarta.ejb</groupId>
