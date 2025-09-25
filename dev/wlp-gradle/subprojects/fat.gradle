@@ -193,9 +193,9 @@ if (!bnd.get('-sub', '').empty) {
 }
 
 // If there are subbundles, but they don't have the suite.name property, or there are no subbundles
-if (!hasMultipleSuites) {
-  publishedArtifacts.add(project.name)
-}
+// Even if there are subbundles we also want to have a zip with the project name to be a dependency
+// to the suite sub bundles
+publishedArtifacts.add(project.name)
 
 task autoFVT {
   shouldRunAfter cleanFat
@@ -496,28 +496,49 @@ if (!hasMultipleSuites) {
     archiveFileName = 'autoFVT.zip'
   }
 } else {
+  // Create an autoFVT zip file that has all of the files except for the suite jar files
+  // and the fat-metadata.json file
+  tasks.create('autoFvtZip', Zip) {
+    dependsOn customizeAutoFVT
+    from (autoFvtDir) {
+      exclude { fileTreeElement ->
+        def fileName = fileTreeElement.file.name
+
+         // Exclude the subbundle jars
+        if (suiteJarNames.contains(fileName)) {
+          return true
+        }
+
+        // Exclude the fat-metadata.json files
+        if (fileName.endsWith('fat-metadata.json')) {
+          return true
+        }
+        return false
+      }
+    }
+    into 'autoFVT'
+    archiveFileName = 'autoFVT.zip'
+  }
+
+  // Create autoFVT zip files that contain just the suite jar file 
+  // and the fat-metadata.json file that goes with the suite
   fatProperties.each { suiteName, suiteProps ->
     def suiteJarName = suiteProps.get('suite.jarName')
 
     tasks.create("autoFvtZip-${suiteName}", Zip) {
       dependsOn customizeAutoFVT
       from (autoFvtDir) {
-        exclude { fileTreeElement ->
+        include "build/lib/${suiteJarName}"
+        include "configuration.properties"
+        include { fileTreeElement ->
           def fileName = fileTreeElement.file.name
-          if (suiteJarName.equals(fileName)) {
-            return false
-          }
-          // Exclude the subbundle jars for the other suite
-          if (suiteJarNames.contains(fileName)) {
-            return true
-          }
 
           // Exclude the fat-metatdata.json files that don't belong to this suite name
           if (fileName.endsWith('fat-metadata.json')) {
             def suiteFatMetadata = new File(autoFvtDir, "${suiteName}-fat-metadata.json")
             // If tested.features was not configured in the subbundle bnd file, then use the fat-metadata.json from the tested.features
             // from the main bnd.bnd file.
-            return !fileName.equals(suiteFatMetadata.exists() ? (suiteName + '-fat-metadata.json') : 'fat-metadata.json')
+            return fileName.equals(suiteFatMetadata.exists() ? (suiteName + '-fat-metadata.json') : 'fat-metadata.json')
           }
           return false
         }
@@ -552,17 +573,33 @@ task zipProjectFVT {
       def bucketName = project.name
       def autoFVTFileName = it.name
       def suiteSeparator = autoFVTFileName.indexOf('__')
-      String suffix = ''
       if (suiteSeparator != -1) {
-        suffix = autoFVTFileName.substring(suiteSeparator, autoFVTFileName.lastIndexOf('.zip'))
+        String suffix = autoFVTFileName.substring(suiteSeparator, autoFVTFileName.lastIndexOf('.zip'))
         bucketName = bucketName + suffix
       }
-      ant.zip(destfile: "${distsDirectory}/${bucketName}.zip") {
-        mappedresources {
-          fileset(dir: "${distsDirectory}", includes: "${autoFVTFileName}")
-          globmapper(from: 'autoFVT*.zip', to: "${bucketName}/build/lib/autoFVT.zip")
+
+      // If we are zipping up a project that doesn't have multiple suites or we are zipping up
+      // a suite only autoFVT.zip file, then include the build-test.xml.  Otherwise do not include
+      // it because the autoFVT.zip doesn't have any FATSuites in it and needs to be known as a non
+      // FAT zip file
+      if (!hasMultipleSuites || suiteSeparator != -1) {
+        ant.zip(destfile: "${distsDirectory}/${bucketName}.zip") {
+          mappedresources {
+            fileset(dir: "${distsDirectory}", includes: "${autoFVTFileName}")
+            globmapper(from: 'autoFVT*.zip', to: "${bucketName}/build/lib/autoFVT.zip")
+          }
+          zipfileset(dir: '.', prefix: "${bucketName}/", includes: 'build-test.xml')
         }
-        zipfileset(dir: '.', fullpath: "${bucketName}", includes: 'build-test.xml')
+      } else {
+        new File("${distsDirectory}/hasSubBuckets.txt").createNewFile()
+        ant.zip(destfile: "${distsDirectory}/${bucketName}.zip") {
+          mappedresources {
+            fileset(dir: "${distsDirectory}", includes: "${autoFVTFileName}")
+            globmapper(from: 'autoFVT*.zip', to: "${bucketName}/build/lib/autoFVT.zip")
+          }
+          zipfileset(dir: "${distsDirectory}", prefix: "${bucketName}/", includes: 'hasSubBuckets.txt')
+        }
+        file("${distsDirectory}/hasSubBuckets.txt").delete()
       }
     }
   }
