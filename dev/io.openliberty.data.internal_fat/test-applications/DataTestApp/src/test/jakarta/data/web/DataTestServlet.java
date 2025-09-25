@@ -1604,6 +1604,25 @@ public class DataTestServlet extends FATServlet {
     }
 
     /**
+     * Verifies that an EXCEPT statement can be used within a query
+     * that combines two subqueries to include results from the first
+     * subquery that do not appear in the results of the second subquery.
+     */
+    @Test
+    public void testExcept() {
+
+        assertEquals(List.of("eleven",
+                             "five",
+                             "thirteen",
+                             "two"),
+                     primes.ofHexLengthNotNameLength(1, 5)
+                                     .stream()
+                                     .map(p -> p.name)
+                                     .sorted()
+                                     .collect(Collectors.toList()));
+    }
+
+    /**
      * Tests whether a user can write an empty repository class.
      * This is only useful when just starting out developing and you don't have methods yet.
      */
