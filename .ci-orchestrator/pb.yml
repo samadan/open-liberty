@@ -116,19 +116,19 @@ triggers:
 steps:
 - stepGroup: OL SHA
   includeProperties:
-    - file: gitSource/WL_personal.properties
+    - file: gitSource/OL_personal.properties
   includeSteps:
     - file: steps/getOLCommitSHA.yml
 
 - stepGroup: WL SHA
   includeProperties:
-    - file: gitSource/WL_personal.properties
+    - file: gitSource/OL_personal.properties
   includeSteps:
     - file: steps/getWLCommitSHA.yml
 
 - stepGroup: Launcher SHA
   includeProperties:
-    - file: gitSource/WL_personal.properties
+    - file: gitSource/OL_personal.properties
   includeSteps:
     - file: steps/getLauncherCommitSHA.yml
 
