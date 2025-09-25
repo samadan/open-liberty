@@ -5002,13 +5002,13 @@ public class QueryInfo {
                             addFromAt = -1;
                         i += 5;
                         modifyAt.put(i, QueryEdit.REPLACE_RECORD_ENTITY);
-                    } else if (addFromAt == null &&
+                    } else if (depth == 0 &&
+                               addFromAt == null &&
                                i + 5 < length &&
                                !Character.isJavaIdentifierPart(ql.charAt(i + 5)) &&
-                               ql.regionMatches(true, i, "WHERE", 0, 5) ||
-                               ql.regionMatches(true, i, "ORDER", 0, 5)) {
-                        if (addFromAt == null)
-                            addFromAt = i;
+                               (ql.regionMatches(true, i, "WHERE", 0, 5) ||
+                                ql.regionMatches(true, i, "ORDER", 0, 5))) {
+                        addFromAt = i;
                         i += 5;
                     }
                 } else {
@@ -5029,7 +5029,12 @@ public class QueryInfo {
             qlParamNames.add(paramName.toString());
 
         if (addFromAt == null)
-            addFromAt = findQueryStartsWithSelect == Boolean.TRUE ? length : 0;
+            if (findQueryStartsWithSelect == Boolean.TRUE)
+                addFromAt = length;
+            else if (startAt < length && ql.charAt(startAt) == '(')
+                addFromAt = -1; // not a JDQL query
+            else
+                addFromAt = 0;
 
         if (addFromAt != -1)
             modifyAt.put(addFromAt, QueryEdit.ADD_FROM);
