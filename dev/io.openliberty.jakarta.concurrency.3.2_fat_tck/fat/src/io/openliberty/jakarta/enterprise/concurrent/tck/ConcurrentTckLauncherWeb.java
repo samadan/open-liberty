@@ -37,7 +37,7 @@ import componenttest.topology.utils.tck.TCKRunner;
  * tests as if they were running as simplicity junit FAT tests in the standard location.
  */
 @RunWith(FATRunner.class)
-@MinimumJavaLevel(javaLevel = 17)
+@MinimumJavaLevel(javaLevel = 21)
 public class ConcurrentTckLauncherWeb {
 
     final static Map<String, String> additionalProps = new HashMap<>();

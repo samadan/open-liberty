@@ -22,7 +22,7 @@ Therefore, each strategy below has a `Background` section to explain how the dif
 
 ## Requirements
 
-- JDK 17 or higher
+- JDK 21 or higher
 - [Maven 3.8.0 or higher](https://maven.apache.org/download.cgi)
 
 ## Getting started

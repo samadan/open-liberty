@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2023, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -51,7 +51,7 @@ public class FATSuite {
                 return result = false;
             }
 
-            if (JavaInfo.JAVA_VERSION != 17 && JavaInfo.JAVA_VERSION != 21) {
+            if (JavaInfo.JAVA_VERSION != 21 && JavaInfo.JAVA_VERSION != 25) {
                 reason = "signature test not supported on non-LTS java versions: " + JavaInfo.JAVA_VERSION;
                 return result = false;
             }
