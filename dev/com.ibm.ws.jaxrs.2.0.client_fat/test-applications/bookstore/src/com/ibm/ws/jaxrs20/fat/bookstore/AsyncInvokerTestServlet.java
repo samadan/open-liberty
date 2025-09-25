@@ -50,14 +50,6 @@ public class AsyncInvokerTestServlet extends HttpServlet {
     private static final long FUTURE_TIMEOUT = 10000;
     private static final long SLEEP = 20000;
 
-    private static final boolean isZOS() {
-        String osName = System.getProperty("os.name");
-        if (osName.contains("OS/390") || osName.contains("z/OS") || osName.contains("zOS")) {
-            return true;
-        }
-        return false;
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
