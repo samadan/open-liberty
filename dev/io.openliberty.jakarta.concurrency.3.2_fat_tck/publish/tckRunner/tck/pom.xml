@@ -96,7 +96,7 @@
             <systemPath>${io.openliberty.jakarta.concurrency.3.1}</systemPath>
         </dependency>
         <!-- Other API Dependencies -->
-        <!-- TODO update to Jakarta EE 11 bundles -->
+        <!-- TODO update to Jakarta EE 12 bundles -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
@@ -162,8 +162,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
             </plugin>
             <plugin>
