@@ -52,8 +52,8 @@ public class ConcurrentTckLauncherFull {
     @BeforeClass
     public static void setUp() throws Exception {
         //Comment out to use snapshot version
-        additionalProps.put("jakarta.concurrent.tck.groupid", "jakarta.enterprise.concurrent");
-        additionalProps.put("jakarta.concurrent.tck.version", "3.1.1");
+//        additionalProps.put("jakarta.concurrent.tck.groupid", "jakarta.enterprise.concurrent");
+//        additionalProps.put("jakarta.concurrent.tck.version", "3.2.0");
 
         //Jakarta TCK platform
         additionalProps.put("jakarta.tck.platform", "platform");

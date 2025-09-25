@@ -23,6 +23,7 @@ src:\
 
 fat.project: true
 
+# TODO update to 3.2
 tested.features:\
     appsecurity-6.0,\
     cdi-4.1,\
