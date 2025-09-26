@@ -114,6 +114,13 @@ public interface Receipts extends CrudRepository<Receipt, Long> {
     @Query("SELECT total ORDER BY total DESC")
     Page<Float> totalsDecreasing(PageRequest req);
 
+    @Query("""
+                    FROM Receipt
+                    WHERE total < (SELECT SUM(s.total) FROM Receipt s) /
+                                  (SELECT COUNT(c) FROM Receipt c)
+                    ORDER BY total ASC""")
+    Stream<Receipt> withBelowAverageTotal();
+
     @Find
     Receipt withPurchaseNum(long purchaseId);
 }

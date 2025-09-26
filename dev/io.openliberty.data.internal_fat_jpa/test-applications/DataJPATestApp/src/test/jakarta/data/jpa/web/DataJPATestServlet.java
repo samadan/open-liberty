@@ -4728,6 +4728,69 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
+     * Tests a JPQL find operation with a subquery within the ORDER BY clause
+     * but lacking all other clauses, such that the only FROM clause is found
+     * within the ORDER BY clause. The Jakarta Data implementation should
+     * insert a FROM clause prior to the ORDER BY clause to form a valid
+     * query.
+     */
+    @Test
+    public void testSubqueryInOrderBy() {
+        List<DemographicInfo> all = demographics.all();
+
+        assertEquals(List.of(2002,
+                             2003,
+                             2004,
+                             2005,
+                             2006,
+                             2007,
+                             2008,
+                             2009,
+                             2010,
+                             2011,
+                             2012,
+                             2013,
+                             2014,
+                             2015,
+                             2016,
+                             2017,
+                             2018,
+                             2019,
+                             2020,
+                             2021),
+                     all.stream()
+                                     .map(d -> d.collectedOn
+                                                     .atZone(DemographicInfo.TIMEZONE)
+                                                     .getYear())
+                                     .limit(20)
+                                     .collect(Collectors.toList()));
+    }
+
+    /**
+     * Tests a JPQL find operation with a subquery within the ORDER BY clause
+     * but lacking all other clauses, such that the only FROM clause is found
+     * within the ORDER BY clause. The Jakarta Data implementation should
+     * insert a FROM clause prior to the ORDER BY clause to form a valid
+     * query.
+     */
+    @Test
+    public void testSubqueryInSelect() {
+
+        assertEquals(List.of(2002,
+                             2003,
+                             2004,
+                             2005,
+                             2006,
+                             2007,
+                             2008,
+                             2009,
+                             2010),
+                     demographics.yearsUpTo(2010)
+                                     .sorted()
+                                     .collect(Collectors.toList()));
+    }
+
+    /**
      * Use an Entity which has a version attribute of type LocalDateTime.
      */
     @Test
