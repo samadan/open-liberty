@@ -11,10 +11,12 @@ package io.openliberty.mcp.internal;
 
 import static io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode.INVALID_PARAMS;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
+import io.openliberty.mcp.internal.requests.CancellationImpl;
 import io.openliberty.mcp.internal.requests.ExecutionRequestId;
 import io.openliberty.mcp.messaging.Cancellation;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -50,4 +52,19 @@ public class McpConnectionTracker {
     public Cancellation getOngoingRequestCancellation(ExecutionRequestId id) {
         return ongoingRequests.get(id.toString());
     }
+
+    /**
+     * Cancels all ongoing requests associated with the given session.
+     * <p>
+     * request is cancelled with a fixed reason: {@code "Session cancelled"}
+     */
+    public void cancelSessionRequests(McpSession session) {
+        for (ExecutionRequestId id : session.getActiveRequests()) {
+            Cancellation cancellation = ongoingRequests.remove(id.toString());
+            if (cancellation instanceof CancellationImpl) {
+                ((CancellationImpl) cancellation).cancel(Optional.of("Session cancelled"));
+            }
+        }
+    }
+
 }

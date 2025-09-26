@@ -18,6 +18,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -29,6 +30,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
+import io.openliberty.mcp.internal.fat.utils.McpClient;
 
 /**
  *
@@ -36,6 +38,9 @@ import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
 @RunWith(FATRunner.class)
 public class ProtocolVersionTest {
     private static final String ACCEPT_HEADER = "application/json, text/event-stream";
+
+    @Rule
+    public McpClient client = new McpClient(server, "/protocolVersionTest");
 
     @Server("mcp-server")
     public static LibertyServer server;
@@ -71,6 +76,7 @@ public class ProtocolVersionTest {
                         """;
 
         String response = new HttpRequest(server, "/protocolVersionTest/mcp").requestProp("Accept", ACCEPT_HEADER)
+                                                                             .requestProp("Mcp-Session-Id", client.getSessionId())
                                                                              .jsonBody(request)
                                                                              .method("POST")
                                                                              .expectCode(200)
@@ -141,6 +147,7 @@ public class ProtocolVersionTest {
 
         String response = new HttpRequest(server, "/protocolVersionTest/mcp").requestProp("Accept", ACCEPT_HEADER)
                                                                              .requestProp("MCP-Protocol-Version", "2022-02-02")
+                                                                             .requestProp("Mcp-Session-Id", client.getSessionId())
                                                                              .jsonBody(request)
                                                                              .method("POST")
                                                                              .expectCode(400)

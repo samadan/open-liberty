@@ -17,6 +17,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -29,7 +30,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
-import io.openliberty.mcp.internal.fat.utils.HttpTestUtils;
+import io.openliberty.mcp.internal.fat.utils.McpClient;
 
 /**
  *
@@ -39,6 +40,9 @@ public class ToolTest extends FATServletClient {
 
     @Server("mcp-server")
     public static LibertyServer server;
+
+    @Rule
+    public McpClient client = new McpClient(server, "/toolTest");
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -69,7 +73,7 @@ public class ToolTest extends FATServletClient {
                             }
                           }
                         """;
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
 
         JSONObject jsonResponse = new JSONObject(response);
         // Lenient mode tests
@@ -99,7 +103,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
         // Lenient mode tests
         JSONAssert.assertEquals("{ \"jsonrpc\": \"2.0\", \"id\": 2}", response, false);
@@ -128,7 +132,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -151,7 +155,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"error":{"code":-32600,
                         "data":[
@@ -176,7 +180,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"error":{"code":-32700,
                         "message":"Parse error",
@@ -200,7 +204,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
@@ -229,7 +233,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
@@ -259,7 +263,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"error":{"code":-32601,
                         "data":[
@@ -287,7 +291,7 @@ public class ToolTest extends FATServletClient {
                           }
                         }
                         """;
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
 
         String expectedResponseString = """
                         {
@@ -321,7 +325,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
 
         String expectedResponseString = """
                         {
@@ -358,7 +362,7 @@ public class ToolTest extends FATServletClient {
                           }
                         }
                         """;
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
 
         String expectedResponseString = """
                                                 {
@@ -395,7 +399,7 @@ public class ToolTest extends FATServletClient {
                           }
                         }
                         """;
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
 
         String expectedResponseString = """
                         {
@@ -430,7 +434,7 @@ public class ToolTest extends FATServletClient {
                           }
                         }
                         """;
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {
                           "id": 1,
@@ -462,7 +466,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         String expectedString = """
@@ -1244,7 +1248,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
 
         String expectedResponseString = """
                         {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Internal server error"}], "isError": true}}
@@ -1269,7 +1273,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         String expectedResponseString = """
@@ -1301,7 +1305,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {
                             "id": 2,
@@ -1335,7 +1339,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -1364,7 +1368,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
 
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text": "false"}], "isError": false}}
@@ -1388,7 +1392,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"c"}], "isError": false}}
                         """;
@@ -1411,7 +1415,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"c"}], "isError": false}}
                         """;
@@ -1434,7 +1438,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}],"isError":false}}
                         """;
@@ -1457,7 +1461,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.2"}], "isError": false}}
                         """;
@@ -1480,7 +1484,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
@@ -1503,7 +1507,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
                         """;
@@ -1526,7 +1530,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
@@ -1549,7 +1553,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
@@ -1572,7 +1576,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
                         """;
@@ -1595,7 +1599,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
@@ -1618,7 +1622,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2.5"}], "isError": false}}
                         """;
@@ -1641,7 +1645,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
@@ -1664,7 +1668,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"2"}], "isError": false}}
                         """;
@@ -1687,7 +1691,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"true"}], "isError": false}}
                         """;
@@ -1710,7 +1714,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         // the object within the text field is expected to have the fields in lexicographical order after converting the object to JSON
         // 3 backslashes, as it should look like \" in the response. So we need extra backslashes to escape the \ and to escape the "
         String expectedResponseString = """
@@ -1751,7 +1755,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {
                           "id":"2",
@@ -1785,7 +1789,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         // 3 backslashes, as it should look like \" in the response. So we need extra backslashes to escape the \ and to escape the "
         String expectedResponseString = """
                         {
@@ -1820,7 +1824,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         // the object within the text field is expected to have the fields in lexicographical order after converting the object to JSON
         String expectedResponseString = """
                         {
@@ -1868,7 +1872,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Hello World"}], "isError": false}}
                         """;
@@ -1891,7 +1895,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
 
         String expectedResponseString = """
                                                   {
@@ -1927,7 +1931,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -1957,7 +1961,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -1987,7 +1991,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -2016,7 +2020,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -2046,7 +2050,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
@@ -2076,7 +2080,7 @@ public class ToolTest extends FATServletClient {
                         }
                         """;
 
-        String response = HttpTestUtils.callMCP(server, "/toolTest", request);
+        String response = client.callMCP(request);
         JSONObject jsonResponse = new JSONObject(response);
 
         // Lenient mode tests
