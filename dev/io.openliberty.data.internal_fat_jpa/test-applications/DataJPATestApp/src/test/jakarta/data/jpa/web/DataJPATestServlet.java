@@ -12,6 +12,7 @@
  *******************************************************************************/
 package test.jakarta.data.jpa.web;
 
+import static componenttest.annotation.SkipIfSysProp.DB_DB2;
 import static componenttest.annotation.SkipIfSysProp.DB_Not_Default;
 import static componenttest.annotation.SkipIfSysProp.DB_Postgres;
 import static componenttest.annotation.SkipIfSysProp.DB_SQLServer;
@@ -2004,6 +2005,140 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
+     * Use an EntityManager to access an entity that has embeddable attributes
+     * that are Java records.
+     */
+    @Test
+    public void testEntityManagerAndEmbeddableRecord() throws Exception {
+        Segment s1 = new Segment();
+        s1.pointA = new Point(0, 0);
+        s1.pointB = new Point(40, 399); // length 401
+
+        Segment s2 = new Segment();
+        s2.pointA = new Point(-36, 0);
+        s2.pointB = new Point(40, 357); // length 365
+
+        Segment s3 = new Segment();
+        s3.pointA = new Point(84, 7);
+        s3.pointB = new Point(220, 280); // length 305
+
+        Segment s4 = new Segment();
+        s4.pointA = new Point(60, 49);
+        s4.pointB = new Point(220, 280); // length 281
+
+        Segment s5 = new Segment();
+        s5.pointA = new Point(12, 5);
+        s5.pointB = new Point(220, 110); // length 233
+
+        Segment s6 = new Segment();
+        s6.pointA = new Point(0, 89);
+        s6.pointB = new Point(220, 110); // length 221
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            s1 = em.merge(s1);
+            em.flush();
+        } finally {
+            tran.commit();
+        }
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            s2 = em.merge(s2);
+            em.flush();
+        } finally {
+            tran.commit();
+        }
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            s3 = em.merge(s3);
+            em.flush();
+        } finally {
+            tran.commit();
+        }
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            s4 = em.merge(s4);
+            em.flush();
+        } finally {
+            tran.commit();
+        }
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            s5 = em.merge(s5);
+            em.flush();
+        } finally {
+            tran.commit();
+        }
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            s6 = em.merge(s6);
+            em.flush();
+        } finally {
+            tran.commit();
+        }
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            jakarta.persistence.Query count = em
+                            .createQuery("SELECT COUNT(o)" +
+                                         " FROM Segment o" +
+                                         " WHERE (o.pointA.x<?1)");
+            count.setParameter(1, 1);
+
+            @SuppressWarnings("unchecked")
+            List<Long> countResult = count.getResultList();
+            assertEquals(1, countResult.size());
+            assertEquals(Long.valueOf(3L), countResult.get(0));
+        } finally {
+            if (tran.getStatus() == Status.STATUS_ACTIVE)
+                tran.commit();
+            else
+                tran.rollback();
+        }
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            jakarta.persistence.Query query = em
+                            .createQuery("FROM Segment" +
+                                         " WHERE this.pointB.y < :yExclusiveMax" +
+                                         " ORDER BY this.pointB.y ASC, this.id ASC");
+            query.setParameter("yExclusiveMax", 200);
+
+            // TODO enable once #29460 is fixed
+            //@SuppressWarnings("unchecked")
+            //Stream<Segment> results = query.getResultStream();
+
+            //assertEquals(List.of(s5.id, s6.id),
+            //             results
+            //                             .map(s -> s.id)
+            //                             .collect(Collectors.toList()));
+        } finally {
+            if (tran.getStatus() == Status.STATUS_ACTIVE)
+                tran.commit();
+            else
+                tran.rollback();
+        }
+
+        tran.begin();
+        try (EntityManager em = segments.manager()) {
+            jakarta.persistence.Query delete = em
+                            .createQuery("DELETE FROM Segment o");
+
+            assertEquals(6L, delete.executeUpdate());
+        } finally {
+            if (tran.getStatus() == Status.STATUS_ACTIVE)
+                tran.commit();
+            else
+                tran.rollback();
+        }
+    }
+
+    /**
      * Use a repository method that uses query language to perform an exists query
      * that returns a boolean true/false value.
      */
@@ -2017,6 +2152,7 @@ public class DataJPATestServlet extends FATServlet {
      * Verify that JPQL can be used to EXTRACT the DATE from a LocalDateTime.
      */
     @Test
+    @SkipIfSysProp({ DB_DB2, DB_SQLServer }) //TODO DB2 and SQLServer fail due to https://github.com/OpenLiberty/open-liberty/issues/32867
     public void testExtractDate() {
         rebates.reset();
 
