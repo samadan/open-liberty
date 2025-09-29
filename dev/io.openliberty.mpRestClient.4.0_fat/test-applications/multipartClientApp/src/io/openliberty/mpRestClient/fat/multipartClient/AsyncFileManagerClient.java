@@ -18,6 +18,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.EntityPart;
+import jakarta.ws.rs.core.GenericEntity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -30,4 +31,8 @@ public interface AsyncFileManagerClient extends AutoCloseable {
     @POST
     @Path("upload")
     CompletionStage<Response> uploadFile(List<EntityPart> entityParts) throws IOException;
+
+     @POST
+ @Path("upload")
+ CompletionStage<Response> uploadFile(GenericEntity<List<EntityPart>> entityParts) throws IOException; 
 }

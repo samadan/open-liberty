@@ -38,6 +38,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.EntityPart;
+import jakarta.ws.rs.core.GenericEntity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -127,6 +128,92 @@ public class AsyncMultipartClientTestServlet extends FATServlet {
                     .collect(Collectors.toList());
 
             CompletionStage<Response> futureResponse = client.uploadFile(files);
+            try (Response response = futureResponse.toCompletableFuture().get(30, TimeUnit.SECONDS)) {
+                assertEquals(201, response.getStatus());
+                final JsonArray jsonArray = response.readEntity(JsonArray.class);
+                assertNotNull(jsonArray);
+                assertEquals(2, jsonArray.size());
+                
+                // Don't assume the results are in a specific order
+                for (JsonValue value : jsonArray) {
+                    final JsonObject json = value.asJsonObject();
+                    if (json.getString("name").equals("test-file1.txt")) {
+                        assertEquals("test-file1.txt", json.getString("fileName"));
+                        assertEquals("This is a test file for file 1.", json.getString("content"));
+                    } else if (json.getString("name").equals("test-file2.txt")) {
+                        assertEquals("test-file2.txt", json.getString("fileName"));
+                        assertEquals("This is a test file for file 2.", json.getString("content"));
+                    } else {
+                        fail(String.format("Unexpected entry %s in JSON response: %n%s", json, jsonArray));
+                    }
+                }
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                fail("Failed to get response: " + e.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testAsyncUploadSingleFileAsGenericEntity(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        try (AsyncFileManagerClient client = builder.build(AsyncFileManagerClient.class)) {
+            final byte[] content;
+            try (InputStream in = AsyncMultipartClientTestServlet.class.getResourceAsStream("/multipart/test-file1.txt")) {
+                assertNotNull("Could not find /multipart/test-file1.txt", in);
+                content = in.readAllBytes();
+            }
+            
+            // Send in an InputStream to ensure it works with an InputStream
+            final List<EntityPart> files = List.of(EntityPart.withFileName("test-file1.txt")
+                    .content(new ByteArrayInputStream(content))
+                    .mediaType(MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                    .build());
+                    
+            CompletionStage<Response> futureResponse = client.uploadFile(
+                new GenericEntity<List<EntityPart>>(files) {});
+            try (Response response = futureResponse.toCompletableFuture().get(30, TimeUnit.SECONDS)) {
+                assertEquals(201, response.getStatus());
+                final JsonArray jsonArray = response.readEntity(JsonArray.class);
+                assertNotNull(jsonArray);
+                assertEquals(1, jsonArray.size());
+                final JsonObject json = jsonArray.getJsonObject(0);
+                assertEquals("test-file1.txt", json.getString("name"));
+                assertEquals("test-file1.txt", json.getString("fileName"));
+                assertEquals("This is a test file for file 1.", json.getString("content"));
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                fail("Failed to get response: " + e.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testAsyncUploadMultipleFilesAsGenericEntity(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        try (AsyncFileManagerClient client = builder.build(AsyncFileManagerClient.class)) {
+            final Map<String, byte[]> entityPartContent = new LinkedHashMap<>(2);
+            try (InputStream in = AsyncMultipartClientTestServlet.class.getResourceAsStream("/multipart/test-file1.txt")) {
+                assertNotNull("Could not find /multipart/test-file1.txt", in);
+                entityPartContent.put("test-file1.txt", in.readAllBytes());
+            }
+            try (InputStream in = AsyncMultipartClientTestServlet.class.getResourceAsStream("/multipart/test-file2.txt")) {
+                assertNotNull("Could not find /multipart/test-file2.txt", in);
+                entityPartContent.put("test-file2.txt", in.readAllBytes());
+            }
+            
+            final List<EntityPart> files = entityPartContent.entrySet()
+                    .stream()
+                    .map((entry) -> {
+                        try {
+                            return EntityPart.withName(entry.getKey())
+                                    .fileName(entry.getKey())
+                                    .content(entry.getValue())
+                                    .mediaType(MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                                    .build();
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            CompletionStage<Response> futureResponse = client.uploadFile(new GenericEntity<List<EntityPart>>(files) {});
             try (Response response = futureResponse.toCompletableFuture().get(30, TimeUnit.SECONDS)) {
                 assertEquals(201, response.getStatus());
                 final JsonArray jsonArray = response.readEntity(JsonArray.class);
