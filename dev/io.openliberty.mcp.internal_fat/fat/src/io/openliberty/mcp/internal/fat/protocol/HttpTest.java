@@ -31,6 +31,7 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
+import io.openliberty.mcp.internal.fat.utils.McpClient;
 
 /**
  *
@@ -41,6 +42,7 @@ public class HttpTest {
     private static final String ACCEPT_HEADER = "application/json, text/event-stream";
     private static final String MCP_PROTOCOL_HEADER = "MCP-Protocol-Version";
     private static final String MCP_PROTOCOL_VERSION = "2025-06-18";
+
     @Server("mcp-server")
     public static LibertyServer server;
 
@@ -172,14 +174,17 @@ public class HttpTest {
                         }
                         """;
 
-        String response = new HttpRequest(server, ENDPOINT)
-                                                           .requestProp("Accept", ACCEPT_HEADER)
-                                                           .requestProp(MCP_PROTOCOL_HEADER, MCP_PROTOCOL_VERSION)
-                                                           .jsonBody(request)
-                                                           .method("POST")
-                                                           .expectCode(200)
-                                                           .run(String.class);
+        HttpRequest httpRequest = new HttpRequest(server, ENDPOINT)
+                                                                   .requestProp("Accept", ACCEPT_HEADER)
+                                                                   .requestProp(MCP_PROTOCOL_HEADER, MCP_PROTOCOL_VERSION)
+                                                                   .jsonBody(request)
+                                                                   .method("POST")
+                                                                   .expectCode(200);
+        String response = httpRequest.run(String.class);
 
         assertTrue("Expected 'result' field in ping response", response.contains("\"result\""));
+
+        String contentType = httpRequest.getResponseHeader("Content-Type");
+        assertThat(contentType, containsString(McpClient.APPLICATION_JSON));
     }
 }
