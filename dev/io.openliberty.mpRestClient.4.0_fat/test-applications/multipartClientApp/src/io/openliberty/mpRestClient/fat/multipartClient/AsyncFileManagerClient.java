@@ -32,7 +32,7 @@ public interface AsyncFileManagerClient extends AutoCloseable {
     @Path("upload")
     CompletionStage<Response> uploadFile(List<EntityPart> entityParts) throws IOException;
 
-     @POST
- @Path("upload")
- CompletionStage<Response> uploadFile(GenericEntity<List<EntityPart>> entityParts) throws IOException; 
+    @POST
+    @Path("upload")
+    CompletionStage<Response> uploadFile(GenericEntity<List<EntityPart>> entityParts) throws IOException; 
 }
