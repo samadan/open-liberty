@@ -17,22 +17,22 @@ package io.openliberty.data.internal.persistence;
  */
 enum QueryEdit {
     /**
-     * Instruction to add a closing parenthesis ) for an added constructor after
-     * the specified index. This instruction is always paired with the
-     * ADD_CONSTRUCTOR_START instruction.
+     * Instruction to add NEW fully.qualified.ClassName( to the SELECT clause
+     * at the specified index. This instruction is always paired with the
+     * ADD_CONSTRUCTOR_END instruction.
      */
-    ADD_CONSTRUCTOR_END,
+    ADD_CONSTRUCTOR_BEGIN,
 
     // TODO 1.1 use Jakarta Persistence enhancement issue 420 instead of
     // editing the query to enclose the SELECT clause content in
     // NEW fully.qualified.ClassName(...)
 
     /**
-     * Instruction to add NEW fully.qualified.ClassName( to the SELECT clause
-     * at the specified index. This instruction is always paired with the
-     * ADD_CONSTRUCTOR_END instruction.
+     * Instruction to add a closing parenthesis ) for an added constructor after
+     * the specified index. This instruction is always paired with the
+     * ADD_CONSTRUCTOR_BEGIN instruction.
      */
-    ADD_CONSTRUCTOR_START,
+    ADD_CONSTRUCTOR_END,
 
     /**
      * Instruction to add a FROM clause to the query. The FROM clause is added
@@ -40,6 +40,20 @@ enum QueryEdit {
      * at the beginning of the query.
      */
     ADD_FROM,
+
+    /**
+     * Instruction to add ( to the WHERE clause at the specified index.
+     * This instruction is always paired with the ADD_PARENTHESIS_END
+     * instruction.
+     */
+    ADD_PARENTHESIS_BEGIN,
+
+    /**
+     * Instruction to add ) to the WHERE clause at the specified index.
+     * This instruction is always paired with the ADD_PARENTHESIS_BEGIN
+     * instruction.
+     */
+    ADD_PARENTHESIS_END,
 
     /**
      * Instruction to add a SELECT clause to the query if it is determined that

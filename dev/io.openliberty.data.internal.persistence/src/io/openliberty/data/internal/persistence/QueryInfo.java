@@ -1359,6 +1359,41 @@ public class QueryInfo {
     }
 
     /**
+     * Create a new UnsupportedOperationException for a conflicting Limit or
+     * PageRequest parameter.
+     *
+     * @param ql                the query.
+     * @param endOfWhereClause  position at which the WHERE clause ends.
+     * @param endsAtOrderClause indicates if this error is being raised because an
+     *                              ORDER BY clause was found in the query.
+     * @return UnsupportedOperationException
+     */
+    @Trivial
+    private UnsupportedOperationException //
+                    excCursorPaginationNotAllowed(String ql,
+                                                  int endOfWhereClause,
+                                                  boolean endsAtOrderClause) {
+
+        if (endsAtOrderClause)
+            throw exc(UnsupportedOperationException.class,
+                      "CWWKD1033.ql.orderby.disallowed",
+                      method.getName(),
+                      repositoryInterface.getName(),
+                      CursoredPage.class.getSimpleName(),
+                      OrderBy.class.getSimpleName(),
+                      ql);
+        else
+            throw exc(UnsupportedOperationException.class,
+                      "CWWKD1034.ql.req.end.in.where",
+                      method.getName(),
+                      repositoryInterface.getName(),
+                      CursoredPage.class.getSimpleName(),
+                      endOfWhereClause,
+                      ql.length(),
+                      ql);
+    }
+
+    /**
      * Create a new EmptyResultException.
      *
      * @return the EmptyResultException.
@@ -4073,45 +4108,32 @@ public class QueryInfo {
                     Tr.debug(tc, ql, "count query: " + jpqlCount);
             }
 
-            if (isCursoredPage) {
-                if (order0 >= 0)
-                    throw exc(UnsupportedOperationException.class,
-                              "CWWKD1033.ql.orderby.disallowed",
-                              method.getName(),
-                              repositoryInterface.getName(),
-                              CursoredPage.class.getSimpleName(),
-                              OrderBy.class.getSimpleName(),
-                              ql);
-
-                if (whereLen > 0) {
-                    if (where0 + whereLen != length)
-                        throw exc(UnsupportedOperationException.class,
-                                  "CWWKD1034.ql.where.required",
-                                  method.getName(),
-                                  repositoryInterface.getName(),
-                                  CursoredPage.class.getSimpleName(),
-                                  where0 + whereLen,
-                                  length,
-                                  ql);
-
-                    // Enclose the WHERE clause in parenthesis so that conditions can be appended.
-                    boolean addSpace = ql.charAt(where0) != ' ';
-                    ql = new StringBuilder(ql.length() + 2) //
-                                    .append(ql.substring(0, where0)) //
-                                    .append(" (") //
-                                    .append(ql.substring(where0 + (addSpace ? 0 : 1), where0 + whereLen)) //
-                                    .append(")") //
-                                    .toString();
-                    whereLen += 2 + (addSpace ? 1 : 0);
-                }
-            }
-
             // TODO Eventually send everything through the if block path and
             // remove the else block entirely. The following is just enough to
             // get a couple of test cases working
             if (!insertEntityVar) { // temporary
                 jpql = modifyAt.isEmpty() ? ql : replaceQuery(ql, modifyAt);
             } else {
+                if (isCursoredPage) {
+                    if (order0 >= 0 ||
+                        whereLen > 0 && where0 + whereLen != length)
+                        throw excCursorPaginationNotAllowed(ql,
+                                                            where0 + whereLen,
+                                                            order0 >= 0);
+
+                    if (whereLen > 0) {
+                        // Enclose the WHERE clause in parenthesis so that conditions can be appended.
+                        boolean addSpace = ql.charAt(where0) != ' ';
+                        ql = new StringBuilder(ql.length() + 2) //
+                                        .append(ql.substring(0, where0)) //
+                                        .append(" (") //
+                                        .append(ql.substring(where0 + (addSpace ? 0 : 1), where0 + whereLen)) //
+                                        .append(")") //
+                                        .toString();
+                        whereLen += 2 + (addSpace ? 1 : 0);
+                    }
+                }
+
                 StringBuilder q;
                 if (selectLen > 0) {
                     String selection = ql.substring(select0, select0 + selectLen);
@@ -4948,6 +4970,8 @@ public class QueryInfo {
         int length = ql.length();
         int i = startAt;
         boolean needsConstructorEnd = false;
+        boolean needsParenthesesEnd = false;
+        boolean isCursoredPage = CursoredPage.class.equals(multiType);
 
         if (findQueryStartsWithSelect == Boolean.TRUE) {
             if (producer.provider().compat.atLeast(1, 1) &&
@@ -4960,7 +4984,7 @@ public class QueryInfo {
                     // already has constructor syntax
                     i += 4;
                 } else {
-                    modifyAt.put(i, QueryEdit.ADD_CONSTRUCTOR_START);
+                    modifyAt.put(i, QueryEdit.ADD_CONSTRUCTOR_BEGIN);
                     needsConstructorEnd = true;
                 }
             }
@@ -5013,20 +5037,39 @@ public class QueryInfo {
                         }
                         i += 5;
                         modifyAt.put(i, QueryEdit.REPLACE_RECORD_ENTITY);
-                    } else if (depth == 0 &&
-                               i + 5 < length &&
-                               !Character.isJavaIdentifierPart(ql.charAt(i + 5)) &&
-                               (ql.regionMatches(true, i, "WHERE", 0, 5) ||
-                                ql.regionMatches(true, i, "ORDER", 0, 5))) {
-                        if (depth == 0 &&
-                            needsConstructorEnd) {
-                            needsConstructorEnd = false;
-                            modifyAt.put(i - 1, // avoid possible collision with ADD_FROM
-                                         QueryEdit.ADD_CONSTRUCTOR_END);
+                    } else if (depth == 0) {
+                        boolean isWhere = false, isOrder = false;
+                        if (i + 5 < length &&
+                            !Character.isJavaIdentifierPart(ql.charAt(i + 5)) &&
+                            ((isWhere = ql.regionMatches(true, i, "WHERE", 0, 5)) ||
+                             (isOrder = ql.regionMatches(true, i, "ORDER", 0, 5)) ||
+                             (/*     */ ql.regionMatches(true, i, "GROUP", 0, 5)))
+                            ||
+                            i + 6 < length &&
+                               !Character.isJavaIdentifierPart(ql.charAt(i + 6)) &&
+                               ql.regionMatches(true, i, "HAVING", 0, 6)) {
+                            if (needsConstructorEnd) {
+                                needsConstructorEnd = false;
+                                modifyAt.put(i - 1, // avoid possible collision with ADD_FROM
+                                             QueryEdit.ADD_CONSTRUCTOR_END);
+                            }
+                            if (needsParenthesesEnd) {
+                                needsParenthesesEnd = false;
+                                modifyAt.put(i, QueryEdit.ADD_PARENTHESIS_END);
+                                if (isCursoredPage)
+                                    throw excCursorPaginationNotAllowed(ql, i, isOrder);
+                            }
+                            if (addFromAt == null)
+                                addFromAt = i;
+                            i += 5;
+                            if (isWhere) {
+                                hasWhere = true;
+                                if (isCursoredPage) {
+                                    modifyAt.put(i, QueryEdit.ADD_PARENTHESIS_BEGIN);
+                                    needsParenthesesEnd = true;
+                                }
+                            }
                         }
-                        if (addFromAt == null) // can move to if block after above is removed
-                            addFromAt = i;
-                        i += 5;
                     }
                 } else {
                     paramName.append(ch);
@@ -5054,11 +5097,16 @@ public class QueryInfo {
                 addFromAt = 0;
 
         if (addFromAt != -1)
-            modifyAt.put(addFromAt, QueryEdit.ADD_FROM);
+            modifyAt.put(addFromAt,
+                         QueryEdit.ADD_FROM);
 
         if (needsConstructorEnd)
             modifyAt.put(length - 1, // avoid possible collision with ADD_FROM
                          QueryEdit.ADD_CONSTRUCTOR_END);
+
+        if (needsParenthesesEnd)
+            modifyAt.put(length,
+                         QueryEdit.ADD_PARENTHESIS_END);
 
         return qlParamNames;
     }
@@ -5091,7 +5139,7 @@ public class QueryInfo {
                     // generateSelectClause determines if a SELECT clause is needed
                     q.append(generateSelectClause()).append(' ');
                     break;
-                case ADD_CONSTRUCTOR_START:
+                case ADD_CONSTRUCTOR_BEGIN:
                     q.append(ql.substring(startAt, startAt = m));
                     if (!Character.isWhitespace(ql.charAt(m - 1)))
                         q.append(' ');
@@ -5115,6 +5163,22 @@ public class QueryInfo {
                         q.append(' ').append(entityVar);
                     if (m < qlLen && !Character.isWhitespace(ql.charAt(m)))
                         q.append(' ');
+                    break;
+                case ADD_PARENTHESIS_BEGIN:
+                    q.append(ql.substring(startAt, startAt = m));
+                    if (m < qlLen && ql.charAt(m) == ' ') {
+                        startAt = ++m;
+                        q.append(' ');
+                    }
+                    q.append('(');
+                    break;
+                case ADD_PARENTHESIS_END:
+                    q.append(ql.substring(startAt, (startAt = m) - 1));
+                    char last = ql.charAt(m - 1);
+                    if (Character.isWhitespace(last))
+                        q.append(')').append(last);
+                    else
+                        q.append(last).append(") ");
                     break;
                 case REPLACE_RECORD_ENTITY:
                     if (rLen > 0) { // has a record entity to replace
