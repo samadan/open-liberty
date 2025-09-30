@@ -51,14 +51,6 @@ public class CxfClientPropsTestServlet extends FATServlet {
     private final static String proxyHost = "127.0.0.1";
     private final static String myHost = "1.1.1.1";
     private static final long slowHardwareMargin = 61000;    
-    
-    private static final boolean isZOS() {
-        String osName = System.getProperty("os.name");
-        if (osName.contains("OS/390") || osName.contains("z/OS") || osName.contains("zOS")) {
-            return true;
-        }
-        return false;
-    }
  
     private static final boolean isWindows = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("win");
     private static final boolean isAIX = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("aix");
