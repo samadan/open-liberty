@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
+import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 import com.ibm.ws.http.channel.internal.HttpMessages;
 import com.ibm.ws.http.dispatcher.internal.HttpDispatcher;
 import com.ibm.ws.http.netty.NettyHttpConstants;
@@ -292,14 +293,11 @@ public class NettyTCPWriteRequestContext implements TCPWriteRequestContext {
                 }
             }
 
-            if (nettyChannel.pipeline().get(NettyServletUpgradeHandler.class) != null) {
-                // Check if the connection was closed by the peer here to do an error callback
-                if (nettyChannel.pipeline().get(NettyServletUpgradeHandler.class).peerClosedConnection()) {
-                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                        Tr.debug(this, tc, "Write sync called for connection that was closed by peer for channel: " + nettyChannel);
-                    }
-                    throw new IOException("Broken pipe!");
+            if (!nettyChannel.isActive()) {
+                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc, "Write sync called for connection that was closed channel: " + nettyChannel);
                 }
+                throw new IOException("Broken pipe!");
             }
 
             // Run all the channel operations in the event loop
