@@ -77,6 +77,8 @@ import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
                 JPAEclipseLinkAppTests40.class,
                 JPAEclipseLinkWeavingAppTests40.class,
                 JPAHibernateAppTests40.class,
+                ValidationTests40.class,
+                ValidationTests40War.class
 //JPALibertyAppTests40.class
 
 })
