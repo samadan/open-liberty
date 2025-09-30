@@ -107,13 +107,8 @@ public class CxfClientPropsTestServlet extends FATServlet {
                                      .property("client.ConnectionTimeout", CXF_TIMEOUT)
                                      .build();
         
-        if (isZOS()) {
-            // https://stackoverflow.com/a/904609/6575578
-               target = "http://example.com:81";
-           } else {
-             //Connect to telnet port - which should be disabled on all non-Z test machines - so we should expect a timeout
-               target = "http://localhost:23/blah";
-           }
+        // https://stackoverflow.com/a/904609/6575578
+        target = "http://10.255.255.1/blah";
         
         long startTime = System.currentTimeMillis();
         try {
@@ -176,13 +171,8 @@ public class CxfClientPropsTestServlet extends FATServlet {
                                      .property("client.ConnectionTimeout", CXF_TIMEOUT)
                                      .build();
         
-        if (isZOS()) {
-         // https://stackoverflow.com/a/904609/6575578
-            target = "http://example.com:81";
-        } else {
-          //Connect to telnet port - which should be disabled on all non-Z test machines - so we should expect a timeout
-            target = "http://localhost:23/blah";
-        }
+        // https://stackoverflow.com/a/904609/6575578
+        target = "http://10.255.255.1/blah";
         
         long startTime = System.currentTimeMillis();
         try {
