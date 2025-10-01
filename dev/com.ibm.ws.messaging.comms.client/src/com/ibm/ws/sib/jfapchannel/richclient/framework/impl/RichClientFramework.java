@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2023 IBM Corporation and others.
+ * Copyright (c) 2012, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -115,85 +115,27 @@ public class RichClientFramework extends Framework
     }
 
     /**
-     * This method will retrieve the property bag on the named chain so that it can be determined
-     * what properties have been set on it.
-     * 
-     * @param outboundTransportName The chain name.
-     * 
-     * @see com.ibm.ws.sib.jfapchannel.framework.Framework#getOutboundConnectionProperties(java.lang.String)
+     * NO OP -- Traditional WebSphere behaivor not ported to Liberty. See OLGH22692
      */
     @Override
     public Map getOutboundConnectionProperties(String outboundTransportName)
     {
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
-            SibTr.entry(this, tc, "getOutboundConnectionProperties",
-                        outboundTransportName);
+        if (tc.isDebugEnabled())
+            SibTr.warning(tc, "RichClientFramework.java#getOutboundConnectionProperties(String outboundTransportName) called - not supported");
         
-        // TODO: Check if this data path is even used https://github.com/OpenLiberty/open-liberty/issues/22692
-        CommsOutboundChain chain = CommsOutboundChain.getChainDetails(outboundTransportName);
-        if(chain != null && chain.useNetty())
-        {
-        	throw new SIErrorException(new NettyException("Chain " + outboundTransportName + "was set up to use Netty but code path has not been updated to allow Netty."));
-        }
-
-        ChainData chainData = framework.getChain(outboundTransportName);
-
-        // Obtain properties for outbound channel
-        ChannelData[] channelList = chainData.getChannelList();
-        Map properties = null;
-        if (channelList.length > 0)
-        {
-            properties = channelList[0].getPropertyBag();
-        }
-        else
-        {
-            throw new SIErrorException(
-                            nls.getFormattedMessage("OUTCONNTRACKER_INTERNAL_SICJ0064",
-                                                    null,
-                                                    "OUTCONNTRACKER_INTERNAL_SICJ0064"));
-        }
-
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
-            SibTr.exit(this, tc, "getOutboundConnectionProperties", properties);
-        return properties;
+        return null;
     }
 
     /**
-     * This method will retrieve the property bag on the outbound chain that will be used by the
-     * specified end point. This method is only valid for CFEndPoints.
-     * 
-     * @param ep The CFEndPoint
-     * 
-     * @see com.ibm.ws.sib.jfapchannel.framework.Framework#getOutboundConnectionProperties(java.lang.Object)
+     * NO OP -- Traditional WebSphere behaivor not ported to Liberty. See OLGH22692
      */
     @Override
     public Map getOutboundConnectionProperties(Object ep)
     {
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
-            SibTr.entry(this, tc, "getOutboundConnectionProperties", ep);
-        
-     // TODO: Check if this data path is even used see https://github.com/OpenLiberty/open-liberty/issues/22692
-
-        Map properties = null;
-        if (ep instanceof CFEndPoint)
-        {
-        	
-        	String chainName = ((CFEndPoint) ep).getName();
-        	CommsOutboundChain chain = CommsOutboundChain.getChainDetails(chainName);
-            if(chain != null && chain.useNetty())
-            {
-            	throw new SIErrorException(new NettyException("Chain " + chainName + "was set up to use Netty but code path has not been updated to allow Netty."));
-            }
-        	
-            OutboundChannelDefinition[] channelDefinitions = (OutboundChannelDefinition[]) ((CFEndPoint) ep).getOutboundChannelDefs().toArray();
-            if (channelDefinitions.length < 1)
-                throw new SIErrorException(nls.getFormattedMessage("OUTCONNTRACKER_INTERNAL_SICJ0064", null, "OUTCONNTRACKER_INTERNAL_SICJ0064"));
-            properties = channelDefinitions[0].getOutboundChannelProperties();
-        }
-
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled())
-            SibTr.exit(this, tc, "getOutboundConnectionProperties", properties);
-        return properties;
+        if (tc.isDebugEnabled())
+            SibTr.warning(tc, "RichClientFramework.java#getOutboundConnectionProperties(Object ep) called - not supported");
+            
+        return null;
     }
 
     /**
