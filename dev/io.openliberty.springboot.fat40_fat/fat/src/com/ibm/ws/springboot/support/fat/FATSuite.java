@@ -81,7 +81,9 @@ import com.ibm.ws.springboot.support.fat.utility.SpringBootUtilityThinTest;
                 ValidationTests40.class,
                 ValidationTests40War.class,
                 HTTPMetricsNoContextRootTest.class,
-                HTTPMetricsWithContextRootTest.class
+                HTTPMetricsWithContextRootTest.class,
+                AopSpringBootAppTests40.class,
+                AopWebAppTests40.class
 })
 
 public class FATSuite {
