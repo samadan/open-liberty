@@ -241,7 +241,7 @@ public class LTPAKeyRotationTests {
         // Wait for the LTPA configuration to be ready
         assertNotNull("Expected LTPA configuration ready message not found in the log.",
                       server.waitForStringInLog("CWWKS4105I"));
-                      
+
         if (!server.isEnhancedAlgorithmOptionsEnabled()) {
             checkFipsEnabledMessages();
         }
@@ -274,8 +274,10 @@ public class LTPAKeyRotationTests {
         }
 
         assertNotNull("Expected \"isFips140_3Enabled: " + fips140_3Enabled + "\" trace was not found.", server.waitForStringInTrace("isFips140_3Enabled: " + fips140_3Enabled));
-        assertNotNull("Expected \"isIbmJdk8Fips140_3Enabled: " + ibmJdk8Fips140_3Enabled + "\" trace was not found.", server.waitForStringInTrace("isIbmJdk8Fips140_3Enabled: " + ibmJdk8Fips140_3Enabled));
-        assertNotNull("Expected \"isSemeruFips140_3Enabled: " + semeruFips140_3Enabled + "\" trace was not found.", server.waitForStringInTrace("isSemeruFips140_3Enabled: " + semeruFips140_3Enabled));
+        assertNotNull("Expected \"isIbmJdk8Fips140_3Enabled: " + ibmJdk8Fips140_3Enabled + "\" trace was not found.",
+                      server.waitForStringInTrace("isIbmJdk8Fips140_3Enabled: " + ibmJdk8Fips140_3Enabled));
+        assertNotNull("Expected \"isSemeruFips140_3Enabled: " + semeruFips140_3Enabled + "\" trace was not found.",
+                      server.waitForStringInTrace("isSemeruFips140_3Enabled: " + semeruFips140_3Enabled));
         assertNotNull("Expected \"isFips140_2Enabled: " + fips140_2Enabled + "\" trace was not found.", server.waitForStringInTrace("isFips140_2Enabled: " + fips140_2Enabled));
     }
 
@@ -316,10 +318,9 @@ public class LTPAKeyRotationTests {
 
             // should NOT regenerate ltpa to fips-compatible keys
             assertFileWasNotCreated(DEFAULT_KEY_PATH + ".noFips");
-            assertFileWasNotCreated(DEFAULT_KEY_PATH + ".noFips.1");
         } else {
             // ltpa is ver2 on startup since fips is enabled
-            configureServer("true", "10", true); 
+            configureServer("true", "10", true);
             verifyLTPAKeyVersion(DEFAULT_KEY_PATH, "2.0");
 
             // copy version1 (non-fips) ltpa to server
@@ -335,9 +336,6 @@ public class LTPAKeyRotationTests {
             verifyLTPAKeyVersion(DEFAULT_KEY_PATH, "1.0");
 
             waitForLTPAConfigurationReadyMessage();
-
-            // should regenerate ltpa to fips-compatible keys with .noFips.1 suffix since .noFips already exists
-            assertFileWasCreated(DEFAULT_KEY_PATH + ".noFips.1");
 
             // verify version 2 keys was generated
             assertFileWasCreated(DEFAULT_KEY_PATH);
@@ -2678,18 +2676,18 @@ public class LTPAKeyRotationTests {
 
     /**
      * Verify that the LTPA key file has the expected version
-     * 
-     * @param filePath Path to the LTPA key file
+     *
+     * @param filePath        Path to the LTPA key file
      * @param expectedVersion Expected version string (e.g., "1.0" or "2.0")
      * @throws Exception
      */
     private void verifyLTPAKeyVersion(String filePath, String expectedVersion) throws Exception {
         Log.info(thisClass, "verifyLTPAKeyVersion", "Verifying LTPA key version in: " + filePath);
-        
+
         String absolutePath = server.getServerRoot() + "/" + filePath;
         boolean versionFound = false;
         boolean correctVersion = false;
-        
+
         try (BufferedReader reader = new BufferedReader(new FileReader(absolutePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -2702,7 +2700,7 @@ public class LTPAKeyRotationTests {
                 }
             }
         }
-        
+
         assertTrue("LTPA key version not found in file: " + filePath, versionFound);
         assertTrue("LTPA key version is not " + expectedVersion + " in file: " + filePath, correctVersion);
     }

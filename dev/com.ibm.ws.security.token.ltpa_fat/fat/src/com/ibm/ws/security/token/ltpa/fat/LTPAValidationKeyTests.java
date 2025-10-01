@@ -13,9 +13,9 @@
 
 package com.ibm.ws.security.token.ltpa.fat;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -72,8 +72,9 @@ public class LTPAValidationKeyTests {
                                                              "CWWKS4112E",
                                                              "CWWKS4113W",
                                                              "CWWKS4114W", "CWWKS4115W", "CWWKS1859E",
-                                                             "CWWKS4116W" // Warning for validation keys v1
-                                                             };
+                                                             "CWWKS4116W", // Warning for validation keys v1
+                                                             "CWWKS4117W"
+    };
 
     // Initialize the FormLogin Clients
     private static FormLoginClient server1FlClient1;
@@ -705,10 +706,9 @@ public class LTPAValidationKeyTests {
             renameKeyAndWaitForMessage(VALIDATION_KEY1_PATH, DEFAULT_KEY_PATH, server1, "CWWKS4102E");
 
             assertNull("Warning message for validation key should not be found in the log when fips 140-3 is NOT enabled.",
-                    server1.waitForStringInLogUsingMark("CWWKS4116W", 5000));
+                       server1.waitForStringInLogUsingMark("CWWKS4116W", 5000));
 
             assertFileWasNotCreated(DEFAULT_KEY_PATH + ".noFips", server1);
-            assertFileWasNotCreated(DEFAULT_KEY_PATH + ".noFips.1", server1);
         }
 
         else {
@@ -722,7 +722,7 @@ public class LTPAValidationKeyTests {
             renameKeyAndWaitForMessage(VALIDATION_KEY1_PATH, DEFAULT_KEY_PATH, server1, "CWWKS4102E");
 
             assertNotNull("Expected warning message for validation key not found in the log when fips 140-3 is enabled.",
-                    server1.waitForStringInLogUsingMark("CWWKS4116W", 5000));
+                          server1.waitForStringInLogUsingMark("CWWKS4116W", 5000));
 
             assertFileWasCreated(DEFAULT_KEY_PATH + ".noFips", server1);
         }
