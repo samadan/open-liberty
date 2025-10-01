@@ -12,9 +12,12 @@
  *******************************************************************************/
 package io.openliberty.threading.virtual.internal;
 
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.SERVICE_LATE_FILTER;
+
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.ThreadFactory;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
@@ -39,8 +42,11 @@ import io.openliberty.threading.virtual.VirtualThreadOps;
            service = VirtualThreadOps.class)
 @SatisfyingConditionTarget("(&(" + Condition.CONDITION_ID + "=" + JavaInfo.CONDITION_ID + ")(" + JavaInfo.CONDITION_ID + ">=21))")
 public class VirtualThreadOperations implements VirtualThreadOps {
-
     private volatile ThreadTypeOverride overrideService;
+
+    @Activate
+    public VirtualThreadOperations(@Reference(target = SERVICE_LATE_FILTER) Condition servicesLate) {
+    }
 
     @Reference(
                cardinality = ReferenceCardinality.OPTIONAL,

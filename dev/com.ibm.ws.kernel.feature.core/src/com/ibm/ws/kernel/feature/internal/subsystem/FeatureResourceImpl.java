@@ -1,16 +1,26 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2023 IBM Corporation and others.
+ * Copyright (c) 2011, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package com.ibm.ws.kernel.feature.internal.subsystem;
+
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.APPLICATION;
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.APPLICATION_EARLY;
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.APPLICATION_LATE;
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.CONTAINER;
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.CONTAINER_EARLY;
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.CONTAINER_LATE;
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.SERVICE;
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.SERVICE_EARLY;
+import static com.ibm.wsspi.kernel.service.condition.StartPhaseCondition.StartPhase.SERVICE_LATE;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.osgi.framework.VersionRange;
-import org.osgi.framework.Version;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -203,7 +212,7 @@ public class FeatureResourceImpl implements FeatureResource {
         int result = _startLevel.get();
 
         if (result == -1) {
-            result = ProvisionerConstants.LEVEL_FEATURE_CONTAINERS;
+            result = CONTAINER.level();
             // Directive names are in the attributes map, but end with a colon
             String phase = _rawAttributes.get("start-phase:");
 
@@ -224,23 +233,23 @@ public class FeatureResourceImpl implements FeatureResource {
         }
 
         if (ProvisionerConstants.PHASE_APPLICATION.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_APPLICATION;
+            return APPLICATION.level();
         } else if (ProvisionerConstants.PHASE_APPLICATION_LATE.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_APPLICATION + ProvisionerConstants.PHASE_INCREMENT;
+            return APPLICATION_LATE.level();
         } else if (ProvisionerConstants.PHASE_APPLICATION_EARLY.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_APPLICATION - ProvisionerConstants.PHASE_INCREMENT;
+            return APPLICATION_EARLY.level();
         } else if (ProvisionerConstants.PHASE_SERVICE.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_SERVICES;
+            return SERVICE.level();
         } else if (ProvisionerConstants.PHASE_SERVICE_LATE.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_SERVICES + ProvisionerConstants.PHASE_INCREMENT;
+            return SERVICE_LATE.level();
         } else if (ProvisionerConstants.PHASE_SERVICE_EARLY.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_SERVICES - ProvisionerConstants.PHASE_INCREMENT;
+            return SERVICE_EARLY.level();
         } else if (ProvisionerConstants.PHASE_CONTAINER.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_CONTAINERS;
+            return CONTAINER.level();
         } else if (ProvisionerConstants.PHASE_CONTAINER_LATE.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_CONTAINERS + ProvisionerConstants.PHASE_INCREMENT;
+            return CONTAINER_LATE.level();
         } else if (ProvisionerConstants.PHASE_CONTAINER_EARLY.equals(phase)) {
-            return ProvisionerConstants.LEVEL_FEATURE_CONTAINERS - ProvisionerConstants.PHASE_INCREMENT;
+            return CONTAINER_EARLY.level();
         } else {
             Tr.warning(tc, "INVALID_START_PHASE_WARNING", new Object[] { phase, this._symbolicName, this._featureName });
             return original;

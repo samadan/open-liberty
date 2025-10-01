@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -22,17 +22,6 @@ public interface ProvisionerConstants {
 
     /** Location of feature files */
     String LIB_FEATURE_PATH = "lib/features/";
-
-    /** Liberty Server start levels: 0 (stopped) has special meaning w/ OSGi */
-    int LEVEL_FEATURE_PREPARE = 7,
-                    // The next 3 levels all support an early and late level. So changes to these numbers should
-                    // ensure there is at least 2 empty gaps between them.
-                    LEVEL_FEATURE_SERVICES = 9,
-                    LEVEL_FEATURE_CONTAINERS = 12,
-                    LEVEL_FEATURE_APPLICATION = 18,
-                    LEVEL_ACTIVE = 20;
-
-    int PHASE_INCREMENT = 1;
 
     String PHASE_APPLICATION = "APPLICATION";
     String PHASE_APPLICATION_LATE = PHASE_APPLICATION + "_LATE";
