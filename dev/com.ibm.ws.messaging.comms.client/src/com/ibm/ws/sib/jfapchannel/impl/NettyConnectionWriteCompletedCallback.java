@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2023 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -306,25 +306,20 @@ public class NettyConnectionWriteCompletedCallback extends BaseConnectionWriteCa
 	}
 
 	/**
-	 * Returns the single WsByteBuffer set in 'writeCtx', ensuring that it is a direct byte buffer and is of
-	 * sufficient capacity.
+	 * Returns the single direct WsByteBuffer set in 'writeCtx'
+	 * 
 	 * @return the (single, non-null) byte buffer set in 'writeCtx'.
 	 */
 	private WsByteBuffer getWriteContextBuffer() {
 		if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) SibTr.entry(this, tc, "getWriteContextBuffer");
-		WsByteBuffer writeBuffer = null;
+		WsByteBuffer writeBuffer = writeCtx.getBuffer();
 
 		if (firstInvocation.compareAndSet(true, false) || (writeBuffer == null)) {
 			final int writeBufferSize =
 					Integer.parseInt(RuntimeInfo.getProperty("com.ibm.ws.sib.jfapchannel.DEFAULT_WRITE_BUFFER_SIZE", "" + JFapChannelConstants.DEFAULT_WRITE_BUFFER_SIZE));
 
-			// TODO: Verify this code if necessary and if not remove
-			//	         if ((writeBuffer != null) && (!writeBuffer.isDirect() || writeBuffer.capacity() < writeBufferSize)) {
-			//	            writeBuffer.release();
-			//	            writeBuffer = null;
-			//	         }
-
 			writeBuffer = WsByteBufferPool.getInstance().allocateDirect(writeBufferSize);      // F196678.10
+			writeCtx.setBuffer(writeBuffer);  // See OLGH31353, cache just like ConnectionWriteCompletedCallback
 		}
 
 		if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) SibTr.exit(this, tc, "getWriteContextBuffer", writeBuffer);
