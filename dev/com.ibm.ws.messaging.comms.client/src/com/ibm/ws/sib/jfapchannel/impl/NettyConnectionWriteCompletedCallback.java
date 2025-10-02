@@ -337,6 +337,22 @@ public class NettyConnectionWriteCompletedCallback extends BaseConnectionWriteCa
 		if (connection.isLoggingIOEvents()) connection.getConnectionEventRecorder().logDebug("error method invoked on write context " + System.identityHashCode(wrc) + " with exception " + t);
 		try {
 
+			WsByteBuffer buffer = writeCtx.getBuffer();
+			writeCtx.setBuffer(null);
+
+			 if (buffer != null) {
+				try {
+				 	buffer.release();
+				} catch (RuntimeException e) {
+					//Absorb any exceptions if it gets released by another thread (for example by Connection.nonThreadSafePhysicalClose).
+                    //No FFDC code needed
+                   if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) SibTr.debug(this, tc, "Caught exception on releasing buffer.", e);
+				}
+			 } 
+			 else {
+             	if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) SibTr.debug(this, tc, "Request has no buffers: " + writeCtx);
+          	 }
+
 			// Deal with the error by invalidating the connection.  That'll teach 'em.
 			final String message = "IOException received - " + t == null ? "" : t.getMessage();
 			connection.invalidate(false, t, message);  // F176003, F224570
