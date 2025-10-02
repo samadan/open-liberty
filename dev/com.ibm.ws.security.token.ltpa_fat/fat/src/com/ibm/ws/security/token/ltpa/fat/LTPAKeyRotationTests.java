@@ -318,7 +318,21 @@ public class LTPAKeyRotationTests {
 
             // should NOT regenerate ltpa to fips-compatible keys
             assertFileWasNotCreated(DEFAULT_KEY_PATH + ".noFips");
-        } else {
+            assertFileWasNotCreated(DEFAULT_KEY_PATH + ".noFips.1");
+
+        } else if (ibmJdk8Fips140_3Enabled) {
+            // TODO: Combine Semeru and IBM JDK FIPS 140-3 check after removal of beta-guards
+            // Beta check in LTPAKeyInfoManager currently prevents LTPA key regeneration on tests running with IBM JDK 8 FIPS 140-3
+
+            // ltpa is ver2 on startup since fips is enabled
+            configureServer("true", "10", true);
+            verifyLTPAKeyVersion(DEFAULT_KEY_PATH, "2.0");
+
+            // should NOT regenerate ltpa to fips-compatible keys
+            assertFileWasNotCreated(DEFAULT_KEY_PATH + ".noFips");
+            assertFileWasNotCreated(DEFAULT_KEY_PATH + ".noFips.1");
+
+        } else if (semeruFips140_3Enabled) {
             // ltpa is ver2 on startup since fips is enabled
             configureServer("true", "10", true);
             verifyLTPAKeyVersion(DEFAULT_KEY_PATH, "2.0");
