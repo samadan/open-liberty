@@ -3795,9 +3795,6 @@ public class QueryInfo {
                                    DataVersionCompatibility compat) {
         final boolean trace = TraceComponent.isAnyTracingEnabled();
 
-        boolean isCursoredPage = CursoredPage.class.equals(multiType);
-        boolean countPages = isCursoredPage || Page.class.equals(multiType);
-
         // for collecting names of named parameters:
         LinkedHashSet<String> qlParamNames = new LinkedHashSet<>();
 
@@ -3855,7 +3852,7 @@ public class QueryInfo {
             // TODO move this later into shared code with all paths
             if (!modifyAt.isEmpty() &&
                 entityInfo.recordClass != null)
-                jpql = replaceQuery(ql, modifyAt);
+                jpql = replaceQuery(ql, -1, modifyAt);
         } else if (firstChar == 'U' || firstChar == 'u') { // UPDATE EntityName[ SET ... WHERE ...]
             if (startAt + 13 < length
                 && ql.regionMatches(true, startAt + 1, "PDATE", 0, 5)
@@ -3895,8 +3892,12 @@ public class QueryInfo {
             // TODO move this later into shared code with all paths
             if (!modifyAt.isEmpty() &&
                 entityInfo.recordClass != null)
-                jpql = replaceQuery(ql, modifyAt);
+                jpql = replaceQuery(ql, -1, modifyAt);
         } else { // SELECT ... or FROM ... or WHERE ... or ORDER BY ...
+            type = FIND;
+            entityVar = "this";
+            entityVar_ = "";
+
             int select0 = -1, selectLen = 0; // starts after SELECT
             int from0 = -1, fromLen = 0; // starts after FROM
             int entityName0 = -1, entityNameLen = 0;
@@ -4013,11 +4014,6 @@ public class QueryInfo {
             else if (order0 >= 0 && orderLen == 0)
                 orderLen = length - order0;
 
-            type = FIND;
-            entityVar = "this";
-            entityVar_ = "";
-            hasWhere = whereLen > 0;
-
             // Locate the entity identifier variable (if present). Examples of FROM clause:
             // FROM EntityName
             // FROM EntityName e
@@ -4063,9 +4059,7 @@ public class QueryInfo {
                          "    FROM [" + (fromLen > 0 ? ql.substring(from0, from0 + fromLen) : "") + "]",
                          "   WHERE [" + (whereLen > 0 ? ql.substring(where0, where0 + whereLen) : "") + "]",
                          "  [" + (orderLen > 0 ? ql.substring(order0, order0 + orderLen) : "") + "]",
-                         "  entity [" + entityName + "] [" + entityVar + "]",
-                         "  modify " + modifyAt,
-                         "  :named " + qlParamNames);
+                         "  entity [" + entityName + "] [" + entityVar + "]");
             }
 
             boolean hasEntityVar = entityVar_.length() > 0;
@@ -4075,45 +4069,48 @@ public class QueryInfo {
             if (insertEntityVar)
                 entityVar_ = entityVar + ".";
 
-            if (countPages) {
-                // TODO count query cannot always be accurately inferred if Query value is JPQL
-                StringBuilder c = new StringBuilder("SELECT COUNT(");
-                c.append(inferCountFromSelect(ql, select0, selectLen));
-
-                c.append(") FROM");
-                if (from0 >= 0) {
-                    if (entityName0 > 0) {
-                        c.append(ql.substring(from0, entityName0));
-                        c.append(entityName);
-                        c.append(ql.substring(entityName0 + entityNameLen, from0 + fromLen));
-                    } else {
-                        c.append(ql.substring(from0, from0 + fromLen));
-                    }
-                } else {
-                    c.append(' ').append(entityName).append(' ');
-                    if (hasEntityVar)
-                        c.append(entityVar).append(' ');
-                }
-
-                if (whereLen > 0)
-                    if (insertEntityVar) {
-                        c.append("WHERE");
-                        appendWithIdentifierName(ql, where0, where0 + whereLen, entityVar_, c);
-                    } else
-                        c.append("WHERE").append(ql.substring(where0, where0 + whereLen));
-
-                jpqlCount = c.toString();
-
-                if (trace && tc.isDebugEnabled())
-                    Tr.debug(tc, ql, "count query: " + jpqlCount);
-            }
-
             // TODO Eventually send everything through the if block path and
             // remove the else block entirely. The following is just enough to
             // get a couple of test cases working
-            if (!insertEntityVar) { // temporary
-                jpql = modifyAt.isEmpty() ? ql : replaceQuery(ql, modifyAt);
-            } else {
+            if (!insertEntityVar) {
+                jpql = replaceQuery(ql, select0, modifyAt);
+            } else { // The following will be removed after the workaround is no longer needed:
+                boolean isCursoredPage = CursoredPage.class.equals(multiType);
+                boolean countPages = isCursoredPage || Page.class.equals(multiType);
+
+                if (countPages) {
+                    // TODO count query cannot always be accurately inferred if Query value is JPQL
+                    StringBuilder c = new StringBuilder("SELECT COUNT(");
+                    c.append(inferCountFromSelect(ql, select0, selectLen));
+
+                    c.append(") FROM");
+                    if (from0 >= 0) {
+                        if (entityName0 > 0) {
+                            c.append(ql.substring(from0, entityName0));
+                            c.append(entityName);
+                            c.append(ql.substring(entityName0 + entityNameLen, from0 + fromLen));
+                        } else {
+                            c.append(ql.substring(from0, from0 + fromLen));
+                        }
+                    } else {
+                        c.append(' ').append(entityName).append(' ');
+                        if (hasEntityVar)
+                            c.append(entityVar).append(' ');
+                    }
+
+                    if (whereLen > 0)
+                        if (insertEntityVar) {
+                            c.append("WHERE");
+                            appendWithIdentifierName(ql, where0, where0 + whereLen, entityVar_, c);
+                        } else
+                            c.append("WHERE").append(ql.substring(where0, where0 + whereLen));
+
+                    jpqlCount = c.toString();
+
+                    if (trace && tc.isDebugEnabled())
+                        Tr.debug(tc, ql, "count query: " + jpqlCount);
+                }
+
                 if (isCursoredPage) {
                     if (order0 >= 0 ||
                         whereLen > 0 && where0 + whereLen != length)
@@ -4961,7 +4958,6 @@ public class QueryInfo {
      *                                      indices of entity names of FROM clauses.
      * @return the names of named parameters.
      */
-    @Trivial
     private LinkedHashSet<String> parseQuery(String ql,
                                              final int startAt,
                                              Boolean findQueryStartsWithSelect,
@@ -4969,28 +4965,41 @@ public class QueryInfo {
         LinkedHashSet<String> qlParamNames = new LinkedHashSet<>();
         int length = ql.length();
         int i = startAt;
+        boolean isCursoredPage;
+        boolean countPages;
+        boolean countMustOmitSelect;
         boolean needsConstructorEnd = false;
         boolean needsParenthesesEnd = false;
-        boolean isCursoredPage = CursoredPage.class.equals(multiType);
 
-        if (findQueryStartsWithSelect == Boolean.TRUE) {
-            if (producer.provider().compat.atLeast(1, 1) &&
-                singleType.isRecord()) {
-                while (i < length && Character.isWhitespace(ql.charAt(i)))
-                    i++;
-                if (i + 3 < length &&
-                    !Character.isJavaIdentifierPart(ql.charAt(i + 3)) &&
-                    ql.regionMatches(true, startAt, "NEW", 0, 3)) {
-                    // already has constructor syntax
-                    i += 4;
-                } else {
-                    modifyAt.put(i, QueryEdit.ADD_CONSTRUCTOR_BEGIN);
-                    needsConstructorEnd = true;
+        if (findQueryStartsWithSelect == null) {
+            // not a SELECT statement
+            isCursoredPage = false;
+            countPages = false;
+            countMustOmitSelect = false;
+        } else {
+            isCursoredPage = CursoredPage.class.equals(multiType);
+            countPages = isCursoredPage || Page.class.equals(multiType);
+
+            if (findQueryStartsWithSelect == Boolean.TRUE) {
+                countMustOmitSelect = countPages;
+                if (producer.provider().compat.atLeast(1, 1) &&
+                    singleType.isRecord()) {
+                    while (i < length && Character.isWhitespace(ql.charAt(i)))
+                        i++;
+                    if (i + 3 < length &&
+                        !Character.isJavaIdentifierPart(ql.charAt(i + 3)) &&
+                        ql.regionMatches(true, startAt, "NEW", 0, 3)) {
+                        // already has constructor syntax
+                        i += 4;
+                    } else {
+                        modifyAt.put(i, QueryEdit.ADD_CONSTRUCTOR_BEGIN);
+                        needsConstructorEnd = true;
+                    }
                 }
+            } else { // findQueryStartsWithSelect == Boolean.FALSE
+                countMustOmitSelect = false;
+                modifyAt.put(QueryEdit.BEFORE_QUERY, QueryEdit.ADD_SELECT_IF_NEEDED);
             }
-
-        } else if (findQueryStartsWithSelect == Boolean.FALSE) {
-            modifyAt.put(QueryEdit.BEFORE_QUERY, QueryEdit.ADD_SELECT_IF_NEEDED);
         }
 
         Integer addFromAt = findQueryStartsWithSelect == null //
@@ -5030,6 +5039,12 @@ public class QueryInfo {
                             addFromAt == null)
                             addFromAt = -1;
                         if (depth == 0 &&
+                            countMustOmitSelect) {
+                            countMustOmitSelect = false;
+                            modifyAt.put(-i, // avoid possible collision
+                                         QueryEdit.OMIT_SELECT_IN_COUNT);
+                        }
+                        if (depth == 0 &&
                             needsConstructorEnd) {
                             needsConstructorEnd = false;
                             modifyAt.put(i - 1,
@@ -5038,16 +5053,21 @@ public class QueryInfo {
                         i += 5;
                         modifyAt.put(i, QueryEdit.REPLACE_RECORD_ENTITY);
                     } else if (depth == 0) {
-                        boolean isWhere = false, isOrder = false;
+                        boolean isWhere = false, isOrder = false, isGroup = false;
                         if (i + 5 < length &&
                             !Character.isJavaIdentifierPart(ql.charAt(i + 5)) &&
                             ((isWhere = ql.regionMatches(true, i, "WHERE", 0, 5)) ||
                              (isOrder = ql.regionMatches(true, i, "ORDER", 0, 5)) ||
-                             (/*     */ ql.regionMatches(true, i, "GROUP", 0, 5)))
+                             (isGroup = ql.regionMatches(true, i, "GROUP", 0, 5)))
                             ||
                             i + 6 < length &&
                                !Character.isJavaIdentifierPart(ql.charAt(i + 6)) &&
                                ql.regionMatches(true, i, "HAVING", 0, 6)) {
+                            if (countMustOmitSelect) {
+                                countMustOmitSelect = false;
+                                modifyAt.put(-i, // avoid possible collision
+                                             QueryEdit.OMIT_SELECT_IN_COUNT);
+                            }
                             if (needsConstructorEnd) {
                                 needsConstructorEnd = false;
                                 modifyAt.put(i - 1, // avoid possible collision with ADD_FROM
@@ -5061,13 +5081,16 @@ public class QueryInfo {
                             }
                             if (addFromAt == null)
                                 addFromAt = i;
-                            i += 5;
+                            i += isWhere || isOrder || isGroup ? 5 : 6; // HAVING
                             if (isWhere) {
                                 hasWhere = true;
                                 if (isCursoredPage) {
                                     modifyAt.put(i, QueryEdit.ADD_PARENTHESIS_BEGIN);
                                     needsParenthesesEnd = true;
                                 }
+                            } else if (isOrder && countPages) {
+                                modifyAt.put(-i, // avoid possible collision
+                                             QueryEdit.OMIT_ORDER_IN_COUNT);
                             }
                         }
                     }
@@ -5087,6 +5110,10 @@ public class QueryInfo {
 
         if (paramName != null)
             qlParamNames.add(paramName.toString());
+
+        if (countMustOmitSelect)
+            modifyAt.put(-length, // avoid possible collision
+                         QueryEdit.OMIT_SELECT_IN_COUNT);
 
         if (addFromAt == null)
             if (findQueryStartsWithSelect == Boolean.TRUE)
@@ -5114,13 +5141,14 @@ public class QueryInfo {
     /**
      * Replaces the given query with one that includes the requested modifications.
      *
-     * @param ql       the query.
-     * @param modifyAt indices at which to perform modifications.
+     * @param ql                 the query.
+     * @param selectItemsStartAt the position after the SELECT keyword. Otherwise -1.
+     * @param modifyAt           indices at which to perform modifications.
      * @return a query that contains the requested modifications.
      */
-    private String replaceQuery(String ql, TreeMap<Integer, QueryEdit> modifyAt) {
-        if (modifyAt.isEmpty())
-            return ql;
+    private String replaceQuery(String ql,
+                                int selectItemsStartAt,
+                                TreeMap<Integer, QueryEdit> modifyAt) {
 
         final String recordName = entityInfo.recordClass == null //
                         ? null //
@@ -5128,52 +5156,87 @@ public class QueryInfo {
         final int rLen = recordName == null ? 0 : recordName.length();
         final int eLen = entityInfo.name.length();
         final int qlLen = ql.length();
+
+        // for editing the main query
         StringBuilder q = new StringBuilder(10 * modifyAt.size() +
                                             (modifyAt.firstKey() <= 0 ? 100 : 0) +
                                             qlLen);
-        int startAt = 0;
+        int qStartAt = 0; // index into the original query (ql)
+
+        // for generating the count query
+        StringBuilder c = Page.class.equals(multiType) ||
+                          CursoredPage.class.equals(multiType) //
+                                          ? new StringBuilder(qlLen + 50) //
+                                          : null;
+        int cStartAt = 0; // index into the original query (ql)
+        int cEndAt = qlLen;
+
         for (Entry<Integer, QueryEdit> mod : modifyAt.entrySet()) {
             int m = mod.getKey();
             switch (mod.getValue()) {
+                case OMIT_SELECT_IN_COUNT:
+                    cStartAt = -m; // position after end of SELECT clause
+                    int selectItemsLength = cStartAt - selectItemsStartAt;
+                    c.append("SELECT COUNT(");
+                    c.append(inferCountFromSelect(ql, selectItemsStartAt, selectItemsLength));
+                    c.append(") ");
+                    break;
+                case OMIT_ORDER_IN_COUNT:
+                    cEndAt = -m - 5; // start of ORDER BY
+                    break;
                 case ADD_SELECT_IF_NEEDED:
                     // generateSelectClause determines if a SELECT clause is needed
                     q.append(generateSelectClause()).append(' ');
+
+                    if (c != null)
+                        c.append("SELECT COUNT(").append(entityVar).append(") ");
                     break;
                 case ADD_CONSTRUCTOR_BEGIN:
-                    q.append(ql.substring(startAt, startAt = m));
+                    q.append(ql.substring(qStartAt, qStartAt = m));
                     if (!Character.isWhitespace(ql.charAt(m - 1)))
                         q.append(' ');
                     q.append("NEW ").append(singleType.getName()).append('(');
                     break;
                 case ADD_CONSTRUCTOR_END:
-                    q.append(ql.substring(startAt, startAt = m));
+                    q.append(ql.substring(qStartAt, qStartAt = m));
                     char next = ql.charAt(m);
-                    startAt = ++m;
+                    qStartAt = ++m;
                     if (Character.isWhitespace(next))
                         q.append(')').append(next);
                     else
                         q.append(next).append(") ");
                     break;
                 case ADD_FROM:
-                    q.append(ql.substring(startAt, startAt = m));
+                    q.append(ql.substring(qStartAt, qStartAt = cStartAt = m));
                     if (m > 0 && !Character.isWhitespace(ql.charAt(m - 1)))
                         q.append(' ');
+
                     q.append("FROM ").append(entityInfo.name);
-                    if (entityVar_.length() > 0)
+                    if (c != null)
+                        c.append("FROM ").append(entityInfo.name);
+
+                    if (entityVar_.length() > 0) {
                         q.append(' ').append(entityVar);
-                    if (m < qlLen && !Character.isWhitespace(ql.charAt(m)))
+                        if (c != null)
+                            c.append(' ').append(entityVar);
+                    }
+
+                    if (m < qlLen && !Character.isWhitespace(ql.charAt(m))) {
                         q.append(' ');
+                        if (c != null)
+                            c.append(' ');
+                    }
                     break;
                 case ADD_PARENTHESIS_BEGIN:
-                    q.append(ql.substring(startAt, startAt = m));
+                    q.append(ql.substring(qStartAt, qStartAt = m));
                     if (m < qlLen && ql.charAt(m) == ' ') {
-                        startAt = ++m;
+                        qStartAt = ++m;
                         q.append(' ');
                     }
                     q.append('(');
                     break;
                 case ADD_PARENTHESIS_END:
-                    q.append(ql.substring(startAt, (startAt = m) - 1));
+                    q.append(ql.substring(qStartAt, (qStartAt = m) - 1));
                     char last = ql.charAt(m - 1);
                     if (Character.isWhitespace(last))
                         q.append(')').append(last);
@@ -5182,27 +5245,51 @@ public class QueryInfo {
                     break;
                 case REPLACE_RECORD_ENTITY:
                     if (rLen > 0) { // has a record entity to replace
-                        q.append(ql.substring(startAt, startAt = m));
-                        for (char ch; startAt < qlLen &&
-                                      !Character.isJavaIdentifierPart(ch = ql.charAt(startAt)); //
-                                        startAt++)
-                            q.append(ch);
 
-                        if ((startAt + rLen == qlLen // exactly long enough to have RecordName
-                             || startAt + rLen < qlLen // more than long enough and next char must delimit
-                                && !Character.isJavaIdentifierPart(ql.charAt(startAt + rLen)))
-                            && ql.regionMatches(false, startAt, recordName, 0, rLen)) {
-                            q.append(entityInfo.name);
-                            startAt += rLen;
+                        q.append(ql.substring(qStartAt, m));
+                        if (c != null)
+                            c.append(ql.substring(cStartAt, cEndAt < m ? cEndAt : m));
+
+                        for (char ch; m < qlLen &&
+                                      !Character.isJavaIdentifierPart(ch = ql.charAt(m)); //
+                                        m++) {
+                            q.append(ch);
+                            if (c != null && m < cEndAt)
+                                c.append(ch);
                         }
+
+                        if ((m + rLen == qlLen // exactly long enough to have RecordName
+                             || m + rLen < qlLen // more than long enough and next char must delimit
+                                && !Character.isJavaIdentifierPart(ql.charAt(m + rLen)))
+                            && ql.regionMatches(false, m, recordName, 0, rLen)) {
+                            m += rLen;
+                            q.append(entityInfo.name);
+                            if (c != null && m <= cEndAt)
+                                c.append(entityInfo.name);
+                        }
+
+                        qStartAt = m;
+                        cStartAt = m < cEndAt ? m : cEndAt;
                     }
                     break;
                 default:
                     throw new IllegalArgumentException(mod.getValue().toString());
             }
         }
-        if (startAt < qlLen)
-            q.append(ql.substring(startAt));
+
+        if (qStartAt < qlLen)
+            q.append(ql.substring(qStartAt));
+
+        if (c != null) {
+            if (cStartAt < cEndAt)
+                c.append(ql.substring(cStartAt, cEndAt));
+
+            jpqlCount = c.toString();
+
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
+                Tr.debug(tc, ql, "count query: " + jpqlCount);
+        }
+
         return q.toString();
     }
 

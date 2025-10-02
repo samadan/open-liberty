@@ -62,6 +62,22 @@ enum QueryEdit {
     ADD_SELECT_IF_NEEDED,
 
     /**
+     * Instruction to omit the ORDER BY clause when generating a count query.
+     * The key for this instruction is a negative value (to avoid collision)
+     * of which the absolute value points to the position after the
+     * ORDER keyword.
+     */
+    OMIT_ORDER_IN_COUNT,
+
+    /**
+     * Instruction to omit the SELECT clause when generating a count query.
+     * The key for this instruction is a negative value (to avoid collision)
+     * of which the absolute value points to the position after the end of the
+     * SELECT clause.
+     */
+    OMIT_SELECT_IN_COUNT,
+
+    /**
      * Instruction to replace record names with the generated entity class name
      * when the record name appears after the FROM keyword.
      */
