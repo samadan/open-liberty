@@ -106,7 +106,10 @@ public class CommonTestTools {
         String thisMethod = "buildBearerTokenCred";
 
         try {
-            if (accessToken == null || "".equals(accessToken))
+            // On a Netty endpoint, the trailing whitespace in a header is trimmed given the RFC specification referring
+            // to the surrounding whitespace as optional https://datatracker.ietf.org/doc/html/rfc9112#name-field-syntax
+            // Therefore to test an empty access token here, we send an empty value for the Bearer token credential.
+            if ("".equals(accessToken))
                 return "";
             return "Bearer " + accessToken;
         } catch (Exception e) {
