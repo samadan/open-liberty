@@ -9,8 +9,10 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat.utils;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import org.junit.rules.ExternalResource;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -40,6 +42,7 @@ import componenttest.topology.utils.HttpRequest;
 public class McpClient extends ExternalResource {
 
     private static final String ACCEPT_HEADER = "application/json, text/event-stream";
+    public static final String APPLICATION_JSON = "application/json";
     private static final String MCP_PROTOCOL_HEADER = "MCP-Protocol-Version";
     private static final String MCP_PROTOCOL_VERSION = "2025-06-18";
 
@@ -102,6 +105,9 @@ public class McpClient extends ExternalResource {
 
         sessionId = httpRequest.getResponseHeader("Mcp-Session-Id");
         assertNotNull(sessionId);
+
+        String contentType = httpRequest.getResponseHeader("Content-Type");
+        assertThat(contentType, containsString(McpClient.APPLICATION_JSON));
 
         // Notify the server that initialization was successful
         String notification = """
