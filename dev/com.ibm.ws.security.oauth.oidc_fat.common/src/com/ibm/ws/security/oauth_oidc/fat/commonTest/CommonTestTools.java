@@ -106,6 +106,8 @@ public class CommonTestTools {
         String thisMethod = "buildBearerTokenCred";
 
         try {
+            if (accessToken == null || "".equals(accessToken))
+                return "";
             return "Bearer " + accessToken;
         } catch (Exception e) {
             e.printStackTrace();
