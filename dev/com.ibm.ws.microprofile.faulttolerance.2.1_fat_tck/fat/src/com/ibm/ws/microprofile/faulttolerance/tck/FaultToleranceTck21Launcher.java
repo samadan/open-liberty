@@ -29,7 +29,6 @@ import componenttest.topology.impl.JavaInfo.Vendor;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
-import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs the whole Fault Tolerance 2.1 TCK. The TCK results
@@ -113,7 +112,7 @@ public class FaultToleranceTck21Launcher {
     public void launchFaultTolerance21TCK() throws Exception {
         boolean isFullMode = TestModeFilter.shouldRun(TestMode.FULL);
         String suiteFileName = isFullMode ? "tck-suite.xml" : "tck-suite-lite.xml";
-        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.FAULT_TOLERANCE)
+        TCKRunner.build(server, Type.MICROPROFILE, "Fault Tolerance")
                         .withSuiteFileName(suiteFileName)
                         .runTCK();
     }

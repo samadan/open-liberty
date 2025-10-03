@@ -27,7 +27,6 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
-import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs a whole Maven TCK as one test FAT test.
@@ -58,10 +57,9 @@ public class OpenAPITckTest {
         Map<String, String> additionalProps = new HashMap<>();
         additionalProps.put("test.url", protocol + "://" + host + ":" + port);
 
-        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.OPEN_API)
+        TCKRunner.build(server, Type.MICROPROFILE, "Open API")
                  .withDefaultSuiteFileName()
                  .withAdditionalMvnProps(additionalProps)
-                 .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_50) //Latest MicroProfile version
                  .runTCK();
     }
 

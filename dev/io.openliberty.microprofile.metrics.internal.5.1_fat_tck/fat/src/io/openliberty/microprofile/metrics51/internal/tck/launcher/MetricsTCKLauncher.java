@@ -32,7 +32,6 @@ import componenttest.topology.impl.JavaInfo;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
-import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs a whole Maven TCK as one test FAT test.
@@ -104,7 +103,7 @@ public class MetricsTCKLauncher {
         additionalProps.put("test.user", "theUser");
         additionalProps.put("test.pwd", "thePassword");
 
-        TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.METRICS)
+        TCKRunner.build(server, Type.MICROPROFILE, "Metrics")
                         .withDefaultSuiteFileName()
                         .withAdditionalMvnProps(additionalProps)
                         .runTCK();
