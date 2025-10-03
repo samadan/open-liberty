@@ -153,7 +153,7 @@ public class CxfClientPropsTestServlet extends FATServlet {
         String target = null;
         long IBM_TIMEOUT = 5000;
         long MARGIN = defaultMargin;
-        long CXF_TIMEOUT = 70000;
+        long CXF_TIMEOUT = 35000;
         if (isAIX || isWindows) {
             MARGIN = slowHardwareMargin;
         }
