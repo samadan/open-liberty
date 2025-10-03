@@ -187,7 +187,7 @@ public class CxfClientPropsTestServlet extends FATServlet {
         final String m = "testIBMReadTimeoutOverridesCXFReadTimeout";
         long IBM_TIMEOUT = 5000;
         long MARGIN = defaultMargin;
-        long CXF_TIMEOUT = 70000;
+        long CXF_TIMEOUT = 35000;
         if (isAIX || isWindows) {
             MARGIN = slowHardwareMargin;
         }    
