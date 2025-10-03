@@ -36,7 +36,6 @@ import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
-import componenttest.topology.utils.tck.TCKResultsConstants;
 
 import componenttest.topology.impl.LibertyServerFactory;
 
@@ -108,9 +107,8 @@ public class RestClientTckPackageTest {
     public void testRestClient30Tck() throws Exception {
         // Skip running on the windows platform when not running locally.
         if (!(isWindows) || FATRunner.FAT_TEST_LOCALRUN) {
-            TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.REST_CLIENT)
+            TCKRunner.build(server, Type.MICROPROFILE, "Rest Client")
                             .withDefaultSuiteFileName()
-                            .withPlatfromVersion(TCKResultsConstants.MICROPROFILE_VERSION_61) //Latest MicroProfile version
                             .runTCK();
         }
     }

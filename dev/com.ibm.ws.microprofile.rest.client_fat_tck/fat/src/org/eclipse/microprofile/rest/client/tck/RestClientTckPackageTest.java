@@ -25,7 +25,6 @@ import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
-import componenttest.topology.utils.tck.TCKResultsConstants;
 
 /**
  * This is a test class that runs a whole Maven TCK as one test FAT test.
@@ -56,7 +55,7 @@ public class RestClientTckPackageTest {
     public void testRestClient10Tck() throws Exception {
         // Skip running on the windows platform when not running locally.
         if (!(isWindows) || FATRunner.FAT_TEST_LOCALRUN) {
-            TCKRunner.build(server, Type.MICROPROFILE, TCKResultsConstants.REST_CLIENT)
+            TCKRunner.build(server, Type.MICROPROFILE, "Rest Client")
                             .withDefaultSuiteFileName()
                             .runTCK();
         }
