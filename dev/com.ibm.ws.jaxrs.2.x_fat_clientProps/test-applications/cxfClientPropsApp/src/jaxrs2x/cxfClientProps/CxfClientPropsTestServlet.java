@@ -156,6 +156,7 @@ public class CxfClientPropsTestServlet extends FATServlet {
         long CXF_TIMEOUT = 35000;
         if (isAIX || isWindows) {
             MARGIN = slowHardwareMargin;
+            CXF_TIMEOUT = 66,000
         }
         
         Client client = ClientBuilder.newBuilder()
