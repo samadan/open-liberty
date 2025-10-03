@@ -369,13 +369,13 @@ CWWKD1033.ql.orderby.disallowed.explanation=The ORDER BY clause is incompatible 
 CWWKD1033.ql.orderby.disallowed.useraction=Replace the ORDER BY clause with \
  annotations that specify the sort criteria.
 
-CWWKD1034.ql.where.required=CWWKD1034E: The query that is specified by the \
+CWWKD1034.ql.req.end.in.where=CWWKD1034E: The query that is specified by the \
  {0} method of the {1} repository interface must end in a WHERE clause because \
  the method returns {2}. There WHERE clause ends at position {3}, but the \
  length of the query is {4}. The query is: {5}.
-CWWKD1034.ql.where.required.explanation=A WHERE clause is required when \
+CWWKD1034.ql.req.end.in.where.explanation=A WHERE clause is required when \
  using cursor-based pagination.
-CWWKD1034.ql.where.required.useraction=Add a WHERE clause to the query.
+CWWKD1034.ql.req.end.in.where.useraction=Add a WHERE clause to the query.
 
 CWWKD1035.incompat.page.mode=CWWKD1035E: A page request with the {0} pagination \
  mode must not be supplied to the {1} method of the {2} repository interface \
