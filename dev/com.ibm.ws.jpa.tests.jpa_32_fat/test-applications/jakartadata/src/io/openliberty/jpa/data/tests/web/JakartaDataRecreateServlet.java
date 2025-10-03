@@ -456,6 +456,8 @@ public class JakartaDataRecreateServlet extends FATServlet {
     @Test
     //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/28931
     public void testOLGH28931() throws Exception {
+        deleteAllEntities(Business.class);
+
         Business ibmRoc = Business.of(44.05887f, -92.50355f, "Rochester", "Minnesota", 55901, 2800, "37th St", "NW",
                                       "IBM Rochester");
         Business ibmRTP = Business.of(35.90481f, -78.85026f, "Durham", "North Carolina", 27703, 4204, "Miami Blvd", "S",
@@ -2110,8 +2112,9 @@ public class JakartaDataRecreateServlet extends FATServlet {
     }
 
     @Test
-    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/30351")
+    //Reference issue: https://github.com/OpenLiberty/open-liberty/issues/30351
     public void testOLGH30351() throws Exception {
+        deleteAllEntities(Business.class);
 
         Business business1 = Business.of(43.1566f, -77.6109f, "Rochester", "NY", 14623, 123, "Main St", "N", "Acme Corp");
         Business business2 = Business.of(43.1578f, -77.6110f, "Rochester", "NY", 14623, 456, "Broadway", "S", "Beta LLC");
