@@ -81,19 +81,19 @@ public class McpServlet extends HttpServlet {
         McpTransport transport = new McpTransport(req, resp, jsonb);
         String accept = req.getHeader("Accept");
         // Return 405, with SSE-specific message if "text/event-stream" is requested.
-        if (accept != null && HeaderValidation.acceptContains(accept, "text/event-stream")) {
-            HttpResponseException e = new HttpResponseException(
-                                                                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                                                                "GET not supported yet. SSE not implemented.")
-                                                                                                              .withHeader("Allow", "POST");
-            transport.sendHttpException(e);
-        } else {
-            HttpResponseException e = new HttpResponseException(
-                                                                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                                                                "GET method not allowed.")
-                                                                                          .withHeader("Allow", "POST");
-            transport.sendHttpException(e);
-        }
+//        if (accept != null && HeaderValidation.acceptContains(accept, "text/event-stream")) {
+//            String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0008I.sse.unimplemented");
+//            HttpResponseException e = new HttpResponseException(
+//                                                                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+//                                                                excpetionMesaage).withHeader("Allow", "POST");
+//            transport.sendHttpException(e);
+//        }
+        String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0008I.get.disallowed");
+        HttpResponseException e = new HttpResponseException(
+                                                            HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                                                            excpetionMesaage).withHeader("Allow", "POST");
+        transport.sendHttpException(e);
+
     }
 
     @Override
@@ -216,10 +216,10 @@ public class McpServlet extends HttpServlet {
             if (isBusinessException(t, params)) {
                 transport.sendResponse(toErrorResponse(e.getCause()));
             } else {
-                Tr.error(tc, "The {0} tool method threw an unexpected exception. The exception was {1}",
+                Tr.error(tc, "CWMCM0014E.internal.server.error.detailed",
                          params.getMetadata().name(),
                          e.getCause());
-                transport.sendResponse(ToolResponse.error("Internal server error"));
+                transport.sendResponse(ToolResponse.error(Tr.formatMessage(tc, "CWMCM0015E.internal.server.error")));
             }
         } catch (IllegalAccessException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
@@ -232,7 +232,7 @@ public class McpServlet extends HttpServlet {
             try {
                 cc.release();
             } catch (Exception ex) {
-                Tr.warning(tc, "Failed to release bean: " + ex);
+                Tr.warning(tc, "CWMCM0016W.bean.release.fail", ex);
             }
         }
     }

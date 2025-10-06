@@ -57,7 +57,15 @@ public class ToolTest extends FATServletClient {
 
     @AfterClass
     public static void teardown() throws Exception {
-        server.stopServer();
+        server.stopServer(
+                          "CWMCM0009E", //The JSON-RPC request is not valid JSON.
+                          "CWMCM0010E", // The JSON-RPC request was invalid.
+                          "CWMCM0011E", // The requested JSON-RPC method is not found.
+                          "CWMCM0012E", // JSON-RPC PC request contained invalid parameters.
+                          "CWMCM0013E", // An Internal Server Error occurred whilst processing the JSON-RPC request.
+                          "CWMCM0014E", //  Tool method threw an unexpected exception
+                          "CWMCM0015E" // An internal server error occurred
+        );
     }
 
     @Test
@@ -161,11 +169,11 @@ public class ToolTest extends FATServletClient {
         String expectedResponseString = """
                         {"error":{"code":-32600,
                         "data":[
-                            "jsonrpc field must be present. Only JSONRPC 2.0 is currently supported",
-                            "method must be present and not empty",
-                            "id must be a string or number"
+                            "The provided value 1.0 for the JSON-RPC field is invalid.",
+                            "The provided value for the method field is empty.",
+                            "The provided id type is not an acceptable type."
                             ],
-                        "message":"Invalid request"},
+                        "message":"CWMCM0010E: The JSON-RPC request was invalid."},
                         "id":null,
                         "jsonrpc":"2.0"}
                         """;
@@ -185,7 +193,7 @@ public class ToolTest extends FATServletClient {
         String response = client.callMCP(request);
         String expectedResponseString = """
                         {"error":{"code":-32700,
-                        "message":"Parse error",
+                        "message":"CWMCM0009E: The JSON-RPC request is not valid JSON.",
                         "data":["Invalid token=CURLYCLOSE at (line no=1, column no=3, offset=2). Expected tokens are: [CURLYOPEN, SQUAREOPEN, STRING, NUMBER, TRUE, FALSE, NULL]"]},
                         "id":null,
                         "jsonrpc":"2.0"}
@@ -210,9 +218,9 @@ public class ToolTest extends FATServletClient {
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
-                            "Missing arguments in params"
+                            "The request does not have any arguments in parameters."
                             ],
-                        "message":"Invalid params"},
+                        "message":"CWMCM0012E: JSON-RPC PC request contained invalid parameters."},
                         "id":"2",
                         "jsonrpc":"2.0"}
                         """;
@@ -239,10 +247,10 @@ public class ToolTest extends FATServletClient {
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
-                            "args [other] passed but not found in method",
-                            "args [input] were expected by the method"
+                            "The arguments [other] were passed but were not found in method.",
+                            "The arguments [input] were expected by the method but were not provided."
                             ],
-                        "message": "Invalid params"},
+                        "message": "CWMCM0012E: JSON-RPC PC request contained invalid parameters."},
                         "id":"2",
                         "jsonrpc":"2.0"}
                         """;
@@ -271,7 +279,7 @@ public class ToolTest extends FATServletClient {
                         "data":[
                             "call/tools not found"
                             ],
-                        "message":"Method not found"},
+                        "message":"CWMCM0011E: The requested JSON-RPC method is not found."},
                         "id":"2",
                         "jsonrpc":"2.0"}
                         """;
@@ -1253,7 +1261,7 @@ public class ToolTest extends FATServletClient {
         String response = client.callMCP(request);
 
         String expectedResponseString = """
-                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Internal server error"}], "isError": true}}
+                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"CWMCM0015E: An internal server error occurred"}], "isError": true}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
         assertNotNull(server.waitForStringInLogUsingMark("Method call caused runtime exception", server.getDefaultLogFile()));
@@ -1283,7 +1291,7 @@ public class ToolTest extends FATServletClient {
                         "data":[
                             "Could not call privateEcho"
                             ],
-                        "message":"Internal error"},
+                        "message":"CWMCM0013E: An Internal Server Error occured whilst processing the JSON-RPC request."},
                         "id":2,
                         "jsonrpc":"2.0"}
                         """;
@@ -1317,7 +1325,7 @@ public class ToolTest extends FATServletClient {
                                 "data": [
                                     "Method privateEchoMissing not found"
                                 ],
-                                "message": "Invalid params"
+                                "message": "CWMCM0012E: JSON-RPC PC request contained invalid parameters."
                             }
                         }
                         """;

@@ -13,6 +13,9 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+
 import io.openliberty.mcp.internal.RequestMethod;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.MCPRequestValidationException;
 import jakarta.json.Json;
@@ -51,6 +54,8 @@ public record McpRequest(String jsonrpc,
         return jsonb.fromJson(json, type);
     }
 
+    private static final TraceComponent tc = Tr.register(McpRequest.class);
+
     public static McpRequest createValidMCPRequest(Reader reader) throws JsonException, MCPRequestValidationException {
 
         JsonObject requestJson = Json.createReader(reader).readObject();
@@ -88,13 +93,13 @@ public record McpRequest(String jsonrpc,
 
     private static void validateJsonRpc(String jsonRpc, List<String> errors) {
         if (!"2.0".equals(jsonRpc)) {
-            errors.add("jsonrpc field must be present. Only JSONRPC 2.0 is currently supported");
+            errors.add(Tr.formatMessage(tc, "CWMCM0022E.jsonrpc.exception.validation.invalid.version", jsonRpc));
         }
     }
 
     private static void validateMethod(String method, List<String> errors) {
         if (method == null || method.isBlank()) {
-            errors.add("method must be present and not empty");
+            errors.add(Tr.formatMessage(tc, "CWMCM0023E.jsonrpc.validation.empty.method"));
         }
     }
 
@@ -104,13 +109,13 @@ public record McpRequest(String jsonrpc,
             case STRING -> {
                 String idString = ((JsonString) id).getString();
                 if (idString.isBlank()) {
-                    errors.add("id must not be empty");
+                    errors.add(Tr.formatMessage(tc, "CWMCM0025E.jsonrpc.exception.validation.empty.string.id", idString));
                     yield null;
                 }
                 yield new McpRequestId(idString);
             }
             default -> {
-                errors.add("id must be a string or number");
+                errors.add(Tr.formatMessage(tc, "CWMCM0027E.jsonrpc.exception.validation.invalid.id.type"));
                 yield null;
             }
         };

@@ -15,6 +15,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.CancellationImpl;
 import io.openliberty.mcp.internal.requests.ExecutionRequestId;
@@ -28,6 +31,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class McpConnectionTracker {
 
+    private static final TraceComponent tc = Tr.register(McpConnectionTracker.class);
     private final ConcurrentMap<String, Cancellation> ongoingRequests;
 
     public McpConnectionTracker() {
@@ -41,7 +45,7 @@ public class McpConnectionTracker {
     public void registerOngoingRequest(ExecutionRequestId id, Cancellation cancellation) {
         Cancellation previous = ongoingRequests.putIfAbsent(id.toString(), cancellation);
         if (previous != null) {
-            throw new JSONRPCException(INVALID_PARAMS, "A request with id " + id.toString() + " is already in progress");
+            throw new JSONRPCException(INVALID_PARAMS, Tr.formatMessage(tc, "CWMCM0007E.invalid.request.params", String.valueOf(id.id())));
         }
     }
 

@@ -9,12 +9,16 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.responses;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+
 import io.openliberty.mcp.internal.requests.McpRequestId;
 
 /**
  *
  */
 public class McpResultResponse extends McpResponse {
+    private static final TraceComponent tc = Tr.register(McpResultResponse.class);
 
     /**
      * @param id
@@ -25,9 +29,9 @@ public class McpResultResponse extends McpResponse {
     public McpResultResponse(McpRequestId id, Object result) {
         super("2.0", id);
         if (id.getStrVal() != null && id.getStrVal().isBlank())
-            throw new IllegalArgumentException("id must not be empty");
+            throw new IllegalArgumentException(Tr.formatMessage(tc, "CWMCM0024E.jsonrpc.validation.empty.string.id", id.getStrVal()));
         if (result == null)
-            throw new IllegalArgumentException("Result field must be present");
+            throw new IllegalArgumentException(Tr.formatMessage(tc, "CWMCM0031E.jsonrpc.missing.result"));
         this.result = result;
     }
 
