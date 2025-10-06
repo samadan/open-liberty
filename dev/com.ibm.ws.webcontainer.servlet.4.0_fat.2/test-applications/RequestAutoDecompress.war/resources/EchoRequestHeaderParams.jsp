@@ -25,10 +25,15 @@
     }
     out.println();
 
+    int pairNumbers = 0;
     out.println("=== Request Parameters ===");
     java.util.Enumeration<String> paramNames = request.getParameterNames();
     while (paramNames.hasMoreElements()) {
         name = paramNames.nextElement();
         out.println(name + " = " + request.getParameter(name));
+        pairNumbers++;
     }
+    
+    System.out.println("Total pairs [" + pairNumbers + "]");
+    out.println("Total param pairs [" + pairNumbers + "]");
 %>
