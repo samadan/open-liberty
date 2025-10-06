@@ -346,19 +346,10 @@ public class ResteasyCdiExtension implements Extension {
     }
 
     private static ClassLoader getClassLoader() {
-        if (System.getSecurityManager() == null) {
-            ClassLoader result = Thread.currentThread().getContextClassLoader();
-            if (result == null) {
-                result = ResteasyCdiExtension.class.getClassLoader();
-            }
-            return result;
+        ClassLoader result = Thread.currentThread().getContextClassLoader();
+        if (result == null) {
+            result = ResteasyCdiExtension.class.getClassLoader();
         }
-        return AccessController.doPrivileged((PrivilegedAction<ClassLoader>) () -> {
-            ClassLoader result = Thread.currentThread().getContextClassLoader();
-            if (result == null) {
-                result = ResteasyCdiExtension.class.getClassLoader();
-            }
-            return result;
-        });
+        return result;
     }
 }
