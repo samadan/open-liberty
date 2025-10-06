@@ -26,7 +26,6 @@ import com.ibm.wsspi.bytebuffer.WsByteBuffer;
 import com.ibm.wsspi.channelfw.ChannelFrameworkFactory;
 import com.ibm.wsspi.http.channel.exception.IllegalHttpBodyException;
 import com.ibm.wsspi.http.channel.inbound.HttpInboundServiceContext;
-import com.ibm.wsspi.http.channel.values.HttpHeaderKeys;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -70,35 +69,16 @@ public class HttpInputStreamImpl extends HttpInputStreamConnectWeb {
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "HttpInputStreamImpl ENTRY, constructor for CHFW inputStream, isc [" + isc + "], this [" + this + "]");
         }
-       
-        if (this.isc != null) {
-            String contentEncoding = isc.getRequest().getHeader(HttpHeaderKeys.HDR_CONTENT_ENCODING).asString();
-            if (contentEncoding != null && isCompressed(contentEncoding)) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(tc, "HttpInputStreamImpl, decompressing....");
-                }
-                try {
-                    buffer = ((HttpInboundServiceContextImpl) isc).getRequestBodyBuffer();
-                }
-                catch (IOException ioe){
-                    FFDCFilter.processException(ioe, getClass().getName() + ".init", "84");
-                    if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                        Tr.debug(tc, "Exception during decompress: " + ioe);
-                    }
-                    //Continue with the flow.  Later read (if happens) will throw exception and handle accordingly from there.
-                }
-                this.bytesRead += buffer.remaining();
-            }
-        }
-        
-        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "HttpInputStreamImpl EXIT, constructor for CHFW inputStream, this [" + this + "]");
-        }
     }
 
     public HttpInputStreamImpl(HttpInboundServiceContext context, FullHttpRequest request) {
         this.isc = context;
         this.nettyRequest = request;
+        
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "HttpInputStreamImpl ENTRY, constructor for Netty inputStream, isc [" + isc + "], nettyRequest [" + nettyRequest + "], this [" + this + "]");
+        }
+        
         this.nettyBody = nettyRequest.content();
         buffer = ChannelFrameworkFactory.getBufferManager().wrap(nettyBody.nioBuffer()).position(nettyBody.readerIndex());
         // Check if the request content is compressed
