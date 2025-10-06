@@ -181,6 +181,8 @@ public class QueryInfo {
 
     /**
      * For counting the total number of results across all pages.
+     * If less than Util.MIN_COUNT_QUERY_LENGTH characters long, indicates a
+     * query keyword that prevents computation of a count.
      * Null if pagination is not used or if pagination without totals is used.
      */
     String jpqlCount;
@@ -5058,9 +5060,18 @@ public class QueryInfo {
                                     modifyAt.put(i, QueryEdit.ADD_PARENTHESIS_BEGIN);
                                     needsParenthesesEnd = true;
                                 }
-                            } else if (isOrder && countPages) {
-                                modifyAt.put(-i, // avoid possible collision
-                                             QueryEdit.OMIT_ORDER_IN_COUNT);
+                            } else if (isOrder) {
+                                if (countPages)
+                                    modifyAt.put(-i, // avoid possible collision
+                                                 QueryEdit.OMIT_ORDER_IN_COUNT);
+                            } else if (isGroup) {
+                                // indicates that the keyword prevents computing a count
+                                if (jpqlCount == null)
+                                    jpqlCount = ql.substring(i - 5, i);
+                            } else { // HAVING
+                                // indicates that the keyword prevents computing a count
+                                if (jpqlCount == null)
+                                    jpqlCount = ql.substring(i - 6, i);
                             }
                         }
                     }
@@ -5139,10 +5150,11 @@ public class QueryInfo {
         int qStartAt = 0; // index into the original query (ql)
 
         // for generating the count query
-        StringBuilder c = Page.class.equals(multiType) ||
-                          CursoredPage.class.equals(multiType) //
-                                          ? new StringBuilder(qlLen + 50) //
-                                          : null;
+        StringBuilder c = jpqlCount == null &&
+                          (Page.class.equals(multiType) ||
+                           CursoredPage.class.equals(multiType)) //
+                                           ? new StringBuilder(qlLen + 50) //
+                                           : null;
         int cStartAt = 0; // index into the original query (ql)
         int cEndAt = qlLen;
 
@@ -5150,14 +5162,19 @@ public class QueryInfo {
             int m = mod.getKey();
             switch (mod.getValue()) {
                 case OMIT_SELECT_IN_COUNT:
-                    cStartAt = -m; // position after end of SELECT clause
-                    int selectItemsLength = cStartAt - selectItemsStartAt;
-                    c.append("SELECT COUNT(");
-                    c.append(inferCountFromSelect(ql, selectItemsStartAt, selectItemsLength));
-                    c.append(") ");
+                    if (c != null) {
+                        cStartAt = -m; // position after end of SELECT clause
+                        int selectItemsLength = cStartAt - selectItemsStartAt;
+                        c.append("SELECT COUNT(");
+                        c.append(inferCountFromSelect(ql,
+                                                      selectItemsStartAt,
+                                                      selectItemsLength));
+                        c.append(") ");
+                    }
                     break;
                 case OMIT_ORDER_IN_COUNT:
-                    cEndAt = -m - 5; // start of ORDER BY
+                    if (c != null)
+                        cEndAt = -m - 5; // start of ORDER BY
                     break;
                 case ADD_SELECT_IF_NEEDED:
                     // generateSelectClause determines if a SELECT clause is needed

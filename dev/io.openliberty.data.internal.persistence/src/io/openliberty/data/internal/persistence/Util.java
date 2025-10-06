@@ -93,6 +93,14 @@ public class Util {
                     Set.of("count", "delete", "exists", "find");
 
     /**
+     * Minimum number of characters in a valid SELECT COUNT clause.
+     * For example: SELECT COUNT(o)
+     * Any value below this number is considered to instead indicate a
+     * keyword that prevented the computation of a count query, such as GROUP.
+     */
+    static final int MIN_COUNT_QUERY_LENGTH = 15;
+
+    /**
      * Commonly used result types that are not entities.
      */
     static final Set<Class<?>> NON_ENTITY_RESULT_TYPES = new HashSet<>();

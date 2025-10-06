@@ -1202,3 +1202,12 @@ CWWKD1118.param.anno.conflict.explanation=The combination of parameter \
  annotations is not valid.
 CWWKD1118.param.anno.conflict.useraction=Remove one or more of the conflicting \
  annotations from the repository method parameter.
+
+CWWKD1119.keyword.prevents.count=CWWKD1119E: Pages that are retrieved by the \
+ {0} method of the {1} repository interface do not include a total count of \
+ elements and pages because the query contains the {2} keyword. The full query \
+ is: {3}.
+CWWKD1119.keyword.prevents.count.explanation=The keyword is incompatible with \
+ the ability to obtain a total count of elements and pages.
+CWWKD1119.keyword.prevents.count.useraction=Replace the query with one that \
+ does not use the keyword or avoid requesting a total count of elements and pages.
