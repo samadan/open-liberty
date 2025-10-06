@@ -3384,13 +3384,8 @@ public class QueryInfo {
                                     .toString();
                 }
             else
-                throw exc(MappingException.class,
-                          "CWWKD1010.unknown.entity.attr",
-                          name,
-                          entityInfo.getType().getName(),
-                          method.getName(),
-                          repositoryInterface.getName(),
-                          entityInfo.attributeTypes.keySet());
+                // allow functions, such as LENGTH(name)
+                attributeName = name;
         } else if (len == 0) {
             throw exc(MappingException.class,
                       "CWWKD1024.missing.entity.attr",

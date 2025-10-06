@@ -1829,9 +1829,12 @@ public class DataErrPathsTestServlet extends FATServlet {
             List<Voter> found = voters.sortedByEndOfAddress();
             fail("OrderBy annotation with invalid function must cause an error." +
                  " Instead, the repository method returned: " + found);
-        } catch (MappingException x) {
+        } catch (Exception x) {
+            // Jakarta Data cannot filter out invalid functions without
+            // inadvertently filtering out some valid functions as well.
+            // So instead, we let the Jakarta Persistence provider raise the
+            // error,
             if (x.getMessage() != null &&
-                x.getMessage().startsWith("CWWKD1010E") &&
                 x.getMessage().contains("last5DigitsOf(address)"))
                 ; // expected
             else
