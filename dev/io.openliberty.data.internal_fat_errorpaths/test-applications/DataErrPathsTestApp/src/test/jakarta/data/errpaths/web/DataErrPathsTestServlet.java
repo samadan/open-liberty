@@ -891,6 +891,26 @@ public class DataErrPathsTestServlet extends FATServlet {
     }
 
     /**
+     * Verify an appropriate error is raised when a repository method attempts
+     * to use an EXCEPT query with cursor-based pagainstion.
+     */
+    @Test
+    public void testExceptWithCursorPagination() {
+        try {
+            CursoredPage<Voter> page;
+            page = voters.withNameNotAddress("Vincent",
+                                             "770 W Silver Lake Dr NE, Rochester, MN 55906",
+                                             PageRequest.ofSize(5));
+            fail("Obtained a cursored page for an EXCEPT query. " + page);
+        } catch (UnsupportedOperationException x) {
+            if (x.getMessage() == null ||
+                !x.getMessage().startsWith("CWWKD1120E:") ||
+                !x.getMessage().contains("EXCEPT"))
+                throw x;
+        }
+    }
+
+    /**
      * Verify an error is raised when an exists Query by Method Name method
      * tries to return a true/false value as int.
      */
@@ -1256,6 +1276,26 @@ public class DataErrPathsTestServlet extends FATServlet {
             if (x.getMessage() == null ||
                 !x.getMessage().startsWith("CWWKD1018E") ||
                 !x.getMessage().contains("occupying"))
+                throw x;
+        }
+    }
+
+    /**
+     * Verify an appropriate error is raised when a repository method attempts
+     * to use an INTERSECT query for cursor-based pagainstion.
+     */
+    @Test
+    public void testIntersectionForCursorPagination() {
+        try {
+            CursoredPage<Voter> page;
+            page = voters.withNameAndAddress("Vincent",
+                                             "770 W Silver Lake Dr NE, Rochester, MN 55906",
+                                             PageRequest.ofSize(5));
+            fail("Obtained a cursored page for an INTERSECT query. " + page);
+        } catch (UnsupportedOperationException x) {
+            if (x.getMessage() == null ||
+                !x.getMessage().startsWith("CWWKD1120E:") ||
+                !x.getMessage().contains("INTERSECT"))
                 throw x;
         }
     }
@@ -2249,6 +2289,26 @@ public class DataErrPathsTestServlet extends FATServlet {
             if (x.getMessage() == null ||
                 !x.getMessage().startsWith("CWWKD1015E") ||
                 !x.getMessage().contains("addOrUpdate"))
+                throw x;
+        }
+    }
+
+    /**
+     * Verify an appropriate error is raised when a repository method attempts
+     * to use a UNION query for cursor-based pagainstion.
+     */
+    @Test
+    public void testUnionForCursorPagination() {
+        try {
+            CursoredPage<Voter> page;
+            page = voters.unionOfAddresses("701 Silver Creek Rd NE, Rochester, MN 55906",
+                                           "770 W Silver Lake Dr NE, Rochester, MN 55906",
+                                           PageRequest.ofSize(4));
+            fail("Obtained a cursored page for a UNION query. " + page);
+        } catch (UnsupportedOperationException x) {
+            if (x.getMessage() == null ||
+                !x.getMessage().startsWith("CWWKD1120E:") ||
+                !x.getMessage().contains("UNION"))
                 throw x;
         }
     }

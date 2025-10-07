@@ -4997,8 +4997,8 @@ public class QueryInfo {
                                          QueryEdit.ADD_CONSTRUCTOR_END);
                         }
 
-                        i += 5;
-                        modifyAt.put(i, QueryEdit.REPLACE_RECORD_ENTITY);
+                        i += 4;
+                        modifyAt.put(i + 1, QueryEdit.REPLACE_RECORD_ENTITY);
 
                         if (depth == 0 && initEntityVar) {
                             // determine the entity identification variable
@@ -5024,18 +5024,37 @@ public class QueryInfo {
                             entityVar_ = entityVar == "this" ? "" : (entityVar + '.');
                             initEntityVar = false;
                         }
+                        i--; // balances loop increment when already positioned correctly
                     } else if (depth == 0) {
-                        boolean isWhere = false, isOrder = false, isGroup = false;
+                        boolean isWhere = false, isOrder = false;
                         int l; // keyword length
                         if (i + (l = 5) < length &&
                             !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
                             ((isWhere = ql.regionMatches(true, i, "WHERE", 0, l)) ||
                              (isOrder = ql.regionMatches(true, i, "ORDER", 0, l)) ||
-                             (isGroup = ql.regionMatches(true, i, "GROUP", 0, l)))
+                             ql.regionMatches(true, i, "GROUP", 0, l) ||
+                             ql.regionMatches(true, i, "UNION", 0, l))
                             ||
-                            i + (l = 6) < length &&
-                               !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
-                               ql.regionMatches(true, i, "HAVING", 0, l)) {
+                            (i + (l = 6) < length &&
+                             !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
+                             (ql.regionMatches(true, i, "HAVING", 0, l) ||
+                              ql.regionMatches(true, i, "EXCEPT", 0, l)))
+                            ||
+                            (i + (l = 9) < length &&
+                             !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
+                             ql.regionMatches(true, i, "INTERSECT", 0, l))) {
+
+                            if (isCursoredPage && !isWhere && !isOrder)
+                                // ORDER BY isn't allowed with cursored pagination
+                                // either, but has a better error message for it
+                                // elsewhere that points out the correct ways to
+                                // specify order
+                                throw exc(UnsupportedOperationException.class,
+                                          "CWWKD1120.cursor.keyword.mismatch",
+                                          method.getName(),
+                                          repositoryInterface.getName(),
+                                          ql.substring(i, i + l),
+                                          ql);
                             if (countMustOmitSelect) {
                                 countMustOmitSelect = false;
                                 modifyAt.put(-i, // avoid possible collision
@@ -5066,18 +5085,11 @@ public class QueryInfo {
                                     modifyAt.put(-i, // avoid possible collision
                                                  QueryEdit.OMIT_ORDER_IN_COUNT);
                             } else {
-                                if (isCursoredPage)
-                                    throw exc(UnsupportedOperationException.class,
-                                              "CWWKD1120.cursor.keyword.mismatch",
-                                              method.getName(),
-                                              repositoryInterface.getName(),
-                                              ql.substring(i - l, i),
-                                              ql);
-
                                 if (jpqlCount == null)
                                     // indicates that the keyword prevents computing a count
                                     jpqlCount = ql.substring(i - l, i);
                             }
+                            i--; // balances loop increment when already positioned correctly
                         }
                     }
                 } else {
