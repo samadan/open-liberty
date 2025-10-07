@@ -298,7 +298,7 @@ public class SRTServletRequest31 extends SRTServletRequest implements HttpServle
         String contentEncoding = _request.getHeader("Content-Encoding");
         
         //Go chunk if compressed. The content-length here is of the compressed data.  It will not be read correctly inside the RequestUtils.getPostBody
-        if(getContentLengthLong() > 0 && !(contentEncoding != null && ("gzip".equalsIgnoreCase(contentEncoding) || "deflate".equalsIgnoreCase(contentEncoding)))){
+        if(getContentLengthLong() > 0 && !(contentEncoding != null && ("gzip".equalsIgnoreCase(contentEncoding) || "x-gzip".equalsIgnoreCase(contentEncoding) || "deflate".equalsIgnoreCase(contentEncoding)))){
             if (TraceComponent.isAnyTracingEnabled()&&logger.isLoggable (Level.FINE))  
                 logger.logp(Level.FINE, CLASS_NAME,"parsePostData", "parsing post data based upon content length long");
             return  RequestUtils.parsePostDataLong(getContentLengthLong(), getInputStream(), getReaderEncoding(), this.multiReadPropertyEnabled);  // MultiRead
