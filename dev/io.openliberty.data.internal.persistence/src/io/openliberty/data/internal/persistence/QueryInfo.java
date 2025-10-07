@@ -5026,15 +5026,16 @@ public class QueryInfo {
                         }
                     } else if (depth == 0) {
                         boolean isWhere = false, isOrder = false, isGroup = false;
-                        if (i + 5 < length &&
-                            !Character.isJavaIdentifierPart(ql.charAt(i + 5)) &&
-                            ((isWhere = ql.regionMatches(true, i, "WHERE", 0, 5)) ||
-                             (isOrder = ql.regionMatches(true, i, "ORDER", 0, 5)) ||
-                             (isGroup = ql.regionMatches(true, i, "GROUP", 0, 5)))
+                        int l; // keyword length
+                        if (i + (l = 5) < length &&
+                            !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
+                            ((isWhere = ql.regionMatches(true, i, "WHERE", 0, l)) ||
+                             (isOrder = ql.regionMatches(true, i, "ORDER", 0, l)) ||
+                             (isGroup = ql.regionMatches(true, i, "GROUP", 0, l)))
                             ||
-                            i + 6 < length &&
-                               !Character.isJavaIdentifierPart(ql.charAt(i + 6)) &&
-                               ql.regionMatches(true, i, "HAVING", 0, 6)) {
+                            i + (l = 6) < length &&
+                               !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
+                               ql.regionMatches(true, i, "HAVING", 0, l)) {
                             if (countMustOmitSelect) {
                                 countMustOmitSelect = false;
                                 modifyAt.put(-i, // avoid possible collision
@@ -5053,7 +5054,7 @@ public class QueryInfo {
                             }
                             if (addFromAt == null)
                                 addFromAt = i;
-                            i += isWhere || isOrder || isGroup ? 5 : 6; // HAVING
+                            i += l;
                             if (isWhere) {
                                 hasWhere = true;
                                 if (isCursoredPage) {
@@ -5064,14 +5065,18 @@ public class QueryInfo {
                                 if (countPages)
                                     modifyAt.put(-i, // avoid possible collision
                                                  QueryEdit.OMIT_ORDER_IN_COUNT);
-                            } else if (isGroup) {
-                                // indicates that the keyword prevents computing a count
+                            } else {
+                                if (isCursoredPage)
+                                    throw exc(UnsupportedOperationException.class,
+                                              "CWWKD1120.cursor.keyword.mismatch",
+                                              method.getName(),
+                                              repositoryInterface.getName(),
+                                              ql.substring(i - l, i),
+                                              ql);
+
                                 if (jpqlCount == null)
-                                    jpqlCount = ql.substring(i - 5, i);
-                            } else { // HAVING
-                                // indicates that the keyword prevents computing a count
-                                if (jpqlCount == null)
-                                    jpqlCount = ql.substring(i - 6, i);
+                                    // indicates that the keyword prevents computing a count
+                                    jpqlCount = ql.substring(i - l, i);
                             }
                         }
                     }

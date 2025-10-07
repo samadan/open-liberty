@@ -1211,3 +1211,13 @@ CWWKD1119.keyword.prevents.count.explanation=The keyword is incompatible with \
  the ability to obtain a total count of elements and pages.
 CWWKD1119.keyword.prevents.count.useraction=Replace the query with one that \
  does not use the keyword or avoid requesting a total count of elements and pages.
+
+CWWKD1120.cursor.keyword.mismatch=CWWKD1120E: The query that is specified by the \
+ {0} method of the {1} repository interface includes the {2} keyword, which is \
+ incompatible with cursor-based pagination. Queries for cursor-based pagination \
+ must end with the WHERE clause and must not include subqueries. The query is: {3}.
+CWWKD1120.cursor.keyword.mismatch.explanation=Keywords such as GROUP BY, HAVING, \
+ ORDER BY, EXCEPT, INTERSECT, and UNION are not compatible with cursor-based \
+ pagination.
+CWWKD1120.cursor.keyword.mismatch.useraction=Rewrite the query to only include \
+ the clauses: SELECT, FROM, WHERE.

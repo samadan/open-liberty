@@ -1093,6 +1093,24 @@ public class DataErrPathsTestServlet extends FATServlet {
     }
 
     /**
+     * Verify an appropriate error is raised when a repository method attempts
+     * to use a GROUP BY query for cursor-based pagainstion.
+     */
+    @Test
+    public void testGroupByQueryForCursorPagination() {
+        try {
+            CursoredPage<Voter> page1 = //
+                            voters.groupedByAddress(PageRequest.ofSize(4));
+            fail("Obtained a cursored page for a GROUP BY query. " + page1);
+        } catch (UnsupportedOperationException x) {
+            if (x.getMessage() == null ||
+                !x.getMessage().startsWith("CWWKD1120E:") ||
+                !x.getMessage().contains("FROM Voter v GROUP BY v.address"))
+                throw x;
+        }
+    }
+
+    /**
      * Verify an appropriate error is raised for the invalid combination of the
      * IgnoreCase and In keywords on a Query by Method Name method.
      */

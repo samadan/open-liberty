@@ -321,6 +321,14 @@ public interface Voters extends BasicRepository<Voter, Integer> {
     long findSSNAsLongBetween(long min, long max);
 
     /**
+     * This invalid method includes GROUP BY in a query that is used for
+     * cursor-based pagination.
+     */
+    @Query("FROM Voter v GROUP BY v.address")
+    @OrderBy("ssn")
+    CursoredPage<Voter> groupedByAddress(PageRequest pageReq);
+
+    /**
      * This invalid method defines an ordering for results of a delete operation
      * but has a return type that disallows returning results.
      */
