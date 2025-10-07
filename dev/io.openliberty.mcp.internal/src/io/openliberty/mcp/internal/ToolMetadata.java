@@ -29,19 +29,15 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                            String name, String title, String description,
                            List<Class<? extends Throwable>> businessExceptions) {
 
-    <<<<<<<HEAD
     public static final String MISSING_TOOL_ARG_NAME = "<<<MISSING TOOL_ARG NAME>>>";
 
     public record ArgumentMetadata(Type type, int index, String description, boolean required, boolean isDuplicate) {}
 
     public record SpecialArgumentMetadata(SpecialArgumentType.Resolution typeResolution, int index) {}
 
-    public ToolMetadata{arguments=((arguments==null)?Collections.emptyMap():arguments);specialArguments=((specialArguments==null)?Collections.emptyList():specialArguments);
-
-    public record ArgumentMetadata(Type type, int index, String description, boolean required) {
-        public ArgumentMetadata(Type type, int index, String description) {
-            this(type, index, description, true);
-        }
+    public ToolMetadata {
+        arguments = ((arguments == null) ? Collections.emptyMap() : arguments);
+        specialArguments = ((specialArguments == null) ? Collections.emptyList() : specialArguments);
     }
 
     public static ToolMetadata createFrom(Tool annotation, Bean<?> bean, AnnotatedMethod<?> method) {
@@ -97,14 +93,9 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
         List<SpecialArgumentMetadata> result = new ArrayList<>();
         for (AnnotatedParameter<?> p : method.getParameters()) {
             ToolArg pInfo = p.getAnnotation(ToolArg.class);
-
-            if (pInfo != null) {
-                ArgumentMetadata pData = new ArgumentMetadata(p.getBaseType(), p.getPosition(), pInfo.description(), pInfo.required());
-                if (pInfo.name().equals(Tool.ELEMENT_NAME)) {
-                    result.put(method.getJavaMember().getName(), pData);
-                } else {
-                    result.put(pInfo.name(), pData);
-                }
+            if (pInfo == null) {
+                SpecialArgumentMetadata pData = new SpecialArgumentMetadata(SpecialArgumentType.fromClass(p.getBaseType()), p.getPosition());
+                result.add(pData);
             }
         }
         return Collections.unmodifiableList(result);
@@ -116,5 +107,4 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
     public String getToolQualifiedName() {
         return bean.getBeanClass() + "." + method.getJavaMember().getName();
     }
-
 }

@@ -1515,8 +1515,7 @@ public class SchemaTest {
     public @Schema(description = "Returns list of person object") List<?> addWildcardToList(@ToolArg(name = "wildcard list",
                                                                                                      description = "List of wildcard") List<?> list,
                                                                                             @ToolArg(name = "number", description = "number") Number number) {
-        list.add(item);
-        return list;
+        return null;
         //comment
     }
 
@@ -1554,8 +1553,7 @@ public class SchemaTest {
                                                                                                                                description = "List of wildcard") List<? extends NumberRestrictor> list,
                                                                                                                       @ToolArg(name = "number",
                                                                                                                                description = "number") Number number) {
-        list.add(number);
-        return list;
+        return null;
         //comment
     }
 
@@ -1605,8 +1603,7 @@ public class SchemaTest {
                                                                                                                               description = "List of wildcard") List<? super NumberRestrictor> list,
                                                                                                                      @ToolArg(name = "number",
                                                                                                                               description = "number") Number number) {
-        list.add(number);
-        return list;
+        return null;
         //comment
     }
 
@@ -1645,8 +1642,7 @@ public class SchemaTest {
                                                                                                        @ToolArg(name = "generic list 2",
                                                                                                                 description = "List of generics 1 ") List<T>[] list2,
                                                                                                        @ToolArg(name = "generic", description = "Generic object") T item) {
-        list.add(item);
-        return list;
+        return null;
         //comment
     }
 
