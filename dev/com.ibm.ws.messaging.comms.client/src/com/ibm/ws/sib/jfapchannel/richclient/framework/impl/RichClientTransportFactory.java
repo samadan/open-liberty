@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2025 IBM Corporation and others.
+ * Copyright (c) 2003, 2023 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -132,15 +132,43 @@ public class RichClientTransportFactory implements NetworkTransportFactory
     }
 
     /**
-     * NO OP -- Traditional WebSphere behaivor not ported to Liberty.  See OLGH22692
+     * @see com.ibm.ws.sib.jfapchannel.framework.NetworkTransportFactory#getOutboundNetworkConnectionFactoryFromEndPoint(java.lang.Object)
      */
     @Override
     public NetworkConnectionFactory getOutboundNetworkConnectionFactoryFromEndPoint(Object endPoint)
     {
-        if (tc.isDebugEnabled())
-            SibTr.warning(tc, "Within RichClientTransportFactory.java#getOutboundNetworkConnectionFactoryFromEndPoint -- not supported");
-            
-        return null;
+        if (tc.isEntryEnabled())
+            SibTr.entry(this, tc, "getOutboundNetworkConnectionFactoryFromEndPoint", endPoint);
+
+        NetworkConnectionFactory connFactory = null;
+        if (endPoint instanceof CFEndPoint)
+        {
+        	
+        	// Get the virtual connection factory from the EP and wrap it in our implementation of
+        	// the NetworkConnectionFactory interface
+        	// TODO Check this out from a Netty endpoint perspective. Used for other types of connects. See CreateNewVirtualConnectionFactory in ConnectionDataGroup
+        	// If NOT Netty do the same as we've done https://github.com/OpenLiberty/open-liberty/issues/22692
+        	// TODO: Check this if its okay for chain name
+        	String endPointName = ((CFEndPoint) endPoint).getName();
+        	CommsOutboundChain chain = CommsOutboundChain.getChainDetails(endPointName);
+        	if(chain != null && !chain.useNetty()) {
+        		VirtualConnectionFactory vcFactory = ((CFEndPoint) endPoint).getOutboundVCFactory();
+        		connFactory = new CFWNetworkConnectionFactory(vcFactory);
+        	}
+        	else {
+        		// If Netty return null until we figure this out
+        		if (tc.isDebugEnabled())
+        			SibTr.error(tc, "getOutboundNetworkConnectionFactoryFromEndPoint", endPoint);
+        		// TODO: Question It might help more if it blow up here with an explicit string rather than return null "internal logic error"
+        		// Check if we can throw an error here see https://github.com/OpenLiberty/open-liberty/issues/22692
+        		return null;
+        	}
+        	
+        }
+
+        if (tc.isEntryEnabled())
+            SibTr.exit(this, tc, "getOutboundNetworkConnectionFactoryFromEndPoint", connFactory);
+        return connFactory;
     }
 
 }
