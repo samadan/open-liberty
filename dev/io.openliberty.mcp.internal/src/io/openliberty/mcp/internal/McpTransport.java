@@ -12,9 +12,21 @@ package io.openliberty.mcp.internal;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Writer;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.ibm.websphere.ras.Tr;
@@ -32,6 +44,7 @@ import io.openliberty.mcp.internal.responses.McpResultResponse;
 import jakarta.json.JsonException;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbException;
+import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -51,6 +64,13 @@ public class McpTransport {
     private McpProtocolVersion version;
     private String sessionId;
     private McpSession sessionInfo;
+    private static final AtomicInteger TIMEOUT_SECONDS = new AtomicInteger(30);
+    private static final ScheduledExecutorService TIMEOUT_SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "mcp-async-timeout");
+        t.setDaemon(true);
+        return t;
+    });
+    private static final Logger LOG = Logger.getLogger(McpTransport.class.getName());
 
     public McpTransport(HttpServletRequest req, HttpServletResponse res, Jsonb jsonb) throws IOException {
         this.req = req;
@@ -203,6 +223,10 @@ public class McpTransport {
      * @throws IOException
      */
     public void sendResponse(Object result) {
+        if (res.isCommitted()) {
+            Tr.warning(tc, "sendResponse called but response already committed for {0}", req.getRequestURI());
+            return;
+        }
         McpResponse mcpResponse = new McpResultResponse(mcpRequest.id(), result);
         res.setContentType("application/json");
         jsonb.toJson(mcpResponse, writer);
@@ -223,7 +247,11 @@ public class McpTransport {
      * @param e the exception that was caught
      * @throws IOException
      */
-    public void sendError(Exception e) throws IOException {
+    public void sendError(Throwable e) throws IOException {
+        if (res.isCommitted()) {
+            Tr.warning(tc, "sendResponse called but response already committed for {0}", req.getRequestURI());
+            return;
+        }
         String excpetionMessage = Tr.formatMessage(tc, "CWMCM0014E.unexpected.server.error", new Object[] { req.getMethod(), req.getRequestURI(), req.getQueryString() });
         Tr.error(tc, "CWMCM0015E.unexpected.server.error.exception", req.getMethod(), req.getRequestURI(), req.getQueryString(), e.getMessage());
         res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, excpetionMessage);
@@ -270,5 +298,106 @@ public class McpTransport {
 
     public McpProtocolVersion getProtocolVersion() {
         return version;
+    }
+
+    public <T> CompletionStage<Void> sendResultAsync(CompletionStage<T> stage) {
+
+        if (res.isCommitted()) {
+            Tr.warning(tc, "Response already committed prior to sendResultAsync for {0}", req.getRequestURI());
+            return CompletableFuture.completedFuture(null);
+        }
+
+        AsyncContext asyncContext = req.startAsync();
+        asyncContext.setTimeout(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS.get()));
+
+        CompletableFuture<T> timeoutFuture = failAfter(Duration.ofSeconds(TIMEOUT_SECONDS.get()));
+
+        CompletableFuture<T> combined = CompletableFuture.anyOf(
+                                                                stage.toCompletableFuture(),
+                                                                timeoutFuture)
+                                                         .thenApply(obj -> (T) obj);
+
+        AtomicBoolean responseSent = new AtomicBoolean(false);
+
+        return combined.handle((result, throwable) -> {
+            if (!responseSent.compareAndSet(false, true)) {
+                Tr.warning(tc, "Duplicate async completion detected for request {0}, ignoring.", req.getRequestURI());
+                try {
+                    asyncContext.complete();
+                } catch (IllegalStateException ignored) {
+                }
+                return null;
+            }
+            try {
+                if (throwable == null) {
+                    // success path
+                    try {
+                        if (!res.isCommitted()) {
+                            sendResponse(result);
+                        } else {
+                            Tr.warning(tc, "Response already committed when trying to send result for {0}", req.getRequestURI());
+                        }
+                    } catch (Exception io) {
+                        // writing failed: if response not committed try to send an error, otherwise log
+                        Tr.error(tc, "Exception writing success response: {0}", io);
+                        if (!res.isCommitted()) {
+                            sendErrorSafe(new Exception(io));
+                        } else {
+                            Tr.warning(tc, "Cannot send error - response already committed after IOException for {0}", req.getRequestURI());
+                        }
+                    }
+                } else {
+                    // error path - unwrap cause
+                    Throwable cause = unwrapCompletionException(throwable);
+                    Tr.error(tc, "Async tool threw exception for {0}: {1}", req.getRequestURI(), cause);
+
+                    if (!res.isCommitted()) {
+                        if (cause instanceof TimeoutException) {
+                            sendErrorSafe(new Exception("Internal server error: CompletionStage cannot be completed"));
+                        } else {
+                            // convert to Exception safely
+                            Exception exToSend = (cause instanceof Exception) ? (Exception) cause : new Exception(cause);
+                            sendErrorSafe(exToSend);
+                        }
+                    } else {
+                        Tr.warning(tc, "Cannot send error - response already committed for {0}", req.getRequestURI());
+                    }
+                }
+            } finally {
+                try {
+                    asyncContext.complete();
+                } catch (IllegalStateException ise) {
+                    Tr.warning(tc, "asyncContext.complete() failed (already completed) for {0}", req.getRequestURI());
+                }
+            }
+            return null;
+        });
+    }
+
+    private void sendErrorSafe(Exception e) {
+        try {
+            if (!res.isCommitted()) {
+                sendError(e);
+            } else {
+                Tr.error(tc, "sendErrorSafe: response already committed; logging exception: {0}", e);
+            }
+        } catch (IOException io) {
+            Tr.error(tc, "sendErrorSafe failed to sendError: {0}", io);
+        }
+    }
+
+    private <T> CompletableFuture<T> failAfter(Duration duration) {
+        final CompletableFuture<T> promise = new CompletableFuture<>();
+        TIMEOUT_SCHEDULER.schedule(() -> {
+            promise.completeExceptionally(new TimeoutException("Stage did not complete in time"));
+        }, duration.toMillis(), TimeUnit.MILLISECONDS);
+        return promise;
+    }
+
+    private Throwable unwrapCompletionException(Throwable throwable) {
+        if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
+            return throwable.getCause() != null ? throwable.getCause() : throwable;
+        }
+        return throwable;
     }
 }

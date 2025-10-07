@@ -11,11 +11,14 @@ package io.openliberty.mcp.internal;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
+import java.util.logging.Logger;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -61,12 +64,10 @@ public class McpServlet extends HttpServlet {
     private static final ServiceCaller<McpConfiguration> mcpConfigService = new ServiceCaller<>(McpServlet.class, McpConfiguration.class);
 
     private Jsonb jsonb;
+    private static final Logger LOG = Logger.getLogger(McpServlet.class.getName());
 
     @Inject
     BeanManager bm;
-
-    @Inject
-    McpConnectionTracker connectionTracker;
 
     @Inject
     McpSessionStore sessionStore;
@@ -162,7 +163,7 @@ public class McpServlet extends HttpServlet {
             McpSession session = sessionStore.getSession(sessionId);
 
             if (session != null) {
-                connectionTracker.cancelSessionRequests(session);
+                connection.cancelSessionRequests(session);
             }
             resp.setStatus(HttpServletResponse.SC_OK);
         } else {
@@ -170,7 +171,6 @@ public class McpServlet extends HttpServlet {
         }
     }
 
-    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpTransport transport) {
         ExecutionRequestId requestId = createOngoingRequestId(transport);
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
@@ -189,6 +189,21 @@ public class McpServlet extends HttpServlet {
 
         CreationalContext<Object> cc = bm.createCreationalContext(null);
         Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
+        Method method = params.getMethod();
+        boolean returnsCompletionStage = CompletionStage.class.isAssignableFrom(method.getReturnType());
+        if (returnsCompletionStage) {
+            callToolMethodAndSendResponseAsync(transport, requestId, params, cc, bean, method);
+        } else {
+            callToolSynchronously(transport, requestId, params, cc, bean, method);
+        }
+    }
+
+    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
+    private void callToolSynchronously(McpTransport transport,
+                                       ExecutionRequestId requestId,
+                                       McpToolCallParams params,
+                                       CreationalContext<Object> cc,
+                                       Object bean, Method method) {
         try {
             Object[] arguments = params.getArguments(jsonb);
             addSpecialArguments(arguments, requestId, params.getMetadata());
@@ -197,27 +212,11 @@ public class McpServlet extends HttpServlet {
                 Tr.event(this, tc, "Calling tool " + params.getMetadata().name(), arguments);
             }
 
-            // Call the tool method
-            Object result = params.getMethod().invoke(bean, arguments);
+            // Call the tool method synchronously
+            Object result = method.invoke(bean, arguments);
 
-            boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
+            transport.sendResponse(evaluateToolResponse(result, params));
 
-            // Map method response to a ToolResponse
-            if (result instanceof ToolResponse response) {
-                transport.sendResponse(response);
-            } else if (result instanceof List<?> list && !list.isEmpty() && list.stream().allMatch(item -> item instanceof Content)) {
-                @SuppressWarnings("unchecked")
-                List<Content> contents = (List<Content>) list;
-                transport.sendResponse(ToolResponse.success(contents));
-            } else if (result instanceof Content content) {
-                transport.sendResponse(ToolResponse.success(content));
-            } else if (result instanceof String s) {
-                transport.sendResponse(ToolResponse.success(s));
-            } else if (includeStructuredContent) {
-                transport.sendResponse(ToolResponse.structuredSuccess(jsonb.toJson(result), result));
-            } else {
-                transport.sendResponse(ToolResponse.success(Objects.toString(result)));
-            }
         } catch (JSONRPCException e) {
             throw e;
         } catch (InvocationTargetException e) {
@@ -235,7 +234,54 @@ public class McpServlet extends HttpServlet {
         } catch (IllegalArgumentException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
         } finally {
-            if (connection.isOngoingRequest(requestId)) {
+            cleanup(requestId, cc);
+        }
+    }
+
+    @FFDCIgnore({ InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
+    private void callToolMethodAndSendResponseAsync(McpTransport transport,
+                                                    ExecutionRequestId requestId,
+                                                    McpToolCallParams params,
+                                                    CreationalContext<Object> cc,
+                                                    Object bean,
+                                                    Method method) {
+        try {
+            Object[] arguments = params.getArguments(jsonb);
+            addSpecialArguments(arguments, requestId, params.getMetadata());
+
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                Tr.event(this, tc, "Calling tool " + params.getMetadata().name(), arguments);
+            }
+            CompletionStage<?> stage = ((CompletionStage<?>) method.invoke(bean, arguments))
+                                                                                            .thenApply(result -> evaluateToolResponse(result, params))
+                                                                                            .exceptionally(throwable -> {
+                                                                                                Tr.error(tc,
+                                                                                                         "The {0} tool method threw an unexpected exception. The exception was {1}",
+                                                                                                         params.getMetadata().name(),
+                                                                                                         throwable.getCause());
+                                                                                                return ToolResponse.error("Internal server error");
+                                                                                            });
+            transport.sendResultAsync(stage)
+                     .whenComplete((result, throwable) -> cleanup(requestId, cc));
+        } catch (InvocationTargetException e) {
+            Throwable t = e.getCause();
+            if (isBusinessException(t, params)) {
+                transport.sendResponse(toErrorResponse(e.getCause()));
+            } else {
+                Tr.error(tc, "The {0} tool method threw an unexpected exception. The exception was {1}",
+                         params.getMetadata().name(),
+                         e.getCause());
+                transport.sendResponse(ToolResponse.error("Internal server error"));
+            }
+        } catch (IllegalAccessException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
+        } catch (IllegalArgumentException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
+        }
+    }
+
+    private void cleanup(ExecutionRequestId requestId, CreationalContext<Object> cc) {
+        if (connection.isOngoingRequest(requestId)) {
                 connection.deregisterOngoingRequest(requestId);
             }
             try {
@@ -243,6 +289,26 @@ public class McpServlet extends HttpServlet {
             } catch (Exception ex) {
                 Tr.warning(tc, "CWMCM0012E.bean.release.fail", ex, params.getName());
             }
+    }
+
+    private Object evaluateToolResponse(Object result, McpToolCallParams params) {
+        boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
+
+        // Map method response to a ToolResponse
+        if (result instanceof ToolResponse response) {
+            return response;
+        } else if (result instanceof List<?> list && !list.isEmpty() && list.stream().allMatch(item -> item instanceof Content)) {
+            @SuppressWarnings("unchecked")
+            List<Content> contents = (List<Content>) list;
+            return ToolResponse.success(contents);
+        } else if (result instanceof Content content) {
+            return ToolResponse.success(content);
+        } else if (result instanceof String s) {
+            return ToolResponse.success(s);
+        } else if (includeStructuredContent) {
+            return ToolResponse.structuredSuccess(jsonb.toJson(result), result);
+        } else {
+            return ToolResponse.success(Objects.toString(result));
         }
     }
 

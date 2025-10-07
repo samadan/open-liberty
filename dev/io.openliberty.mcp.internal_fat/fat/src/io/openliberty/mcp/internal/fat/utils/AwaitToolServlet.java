@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.fat.tool.cancellationApp;
+package io.openliberty.mcp.internal.fat.utils;
 
 import java.io.IOException;
 

@@ -35,6 +35,7 @@ import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.cancellationApp.CancellationTools;
+import io.openliberty.mcp.internal.fat.utils.AwaitToolServlet;
 import io.openliberty.mcp.internal.fat.utils.McpClient;
 
 @RunWith(FATRunner.class)
@@ -49,7 +50,9 @@ public class CancellationTest extends FATServletClient {
 
     @BeforeClass
     public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "cancellationTest.war").addPackage(CancellationTools.class.getPackage());
+        WebArchive war = ShrinkWrap.create(WebArchive.class, "cancellationTest.war")
+                                   .addPackage(CancellationTools.class.getPackage())
+                                   .addPackage(AwaitToolServlet.class.getPackage());
 
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
