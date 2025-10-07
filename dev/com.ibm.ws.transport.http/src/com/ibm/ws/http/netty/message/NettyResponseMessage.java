@@ -206,12 +206,10 @@ public class NettyResponseMessage extends NettyBaseMessage implements HttpRespon
 
     @Override
     public void setTransferEncoding(TransferEncodingValues value) {
-        super.setTransferEncoding(value);
     }
 
     @Override
     public void setTransferEncoding(TransferEncodingValues[] values) {
-        super.setTransferEncoding(values);
     }
 
     @Override
