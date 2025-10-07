@@ -19,7 +19,9 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.ibm.ws.example.spring'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 17
+java {
+  sourceCompatibility = 17
+}
 
 apply from: '../wlp-gradle/subprojects/maven-central-mirror.gradle'
 
@@ -30,7 +32,7 @@ dependencies {
   providedCompile 'org.springframework.boot:spring-boot-starter-tomcat'
 }
 bootJar {
-  duplicatesStrategy 'warn'
+  duplicatesStrategy = 'warn'
 }
 
 // Disable jar because it would need a dependency on ':io.openliberty.springboot.fat30.jms.app:module:compileTestJava' and 

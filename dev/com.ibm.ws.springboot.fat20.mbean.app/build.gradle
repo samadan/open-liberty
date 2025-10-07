@@ -22,7 +22,9 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.ibm.ws.example.spring'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 1.8
+java {
+  sourceCompatibility = 1.8
+}
 
 apply from: '../wlp-gradle/subprojects/maven-central-mirror.gradle'
 
@@ -32,7 +34,7 @@ dependencies {
 }
 
 bootJar {
-  duplicatesStrategy 'warn'
+  duplicatesStrategy = 'warn'
 }
 
 // Disable jar because it would need a dependency on ':com.ibm.ws.springboot.fat20.war.app:module:compileTestJava' and 
