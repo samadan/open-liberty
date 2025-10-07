@@ -103,10 +103,12 @@ public interface AuthenticationService {
 
      /**
      * 
-     * @return - true indicating authentication should proceed even if no custom Subject is found in the authentication cache, else returns false indicating re-login is required to create a new custom Subject. .
+     * @return - true indicating authentication should proceed even if no custom Subject is found in the authentication cache, else returns false indicating re-login is required to create a new custom Subject.
      *
      */
-    public Boolean ignoreCustomCacheKey();
+    public default Boolean ignoreCustomCacheKey() {
+        return Boolean.FALSE;
+    }
 
 
 }
