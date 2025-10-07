@@ -12,6 +12,7 @@
  *******************************************************************************/
 package io.openliberty.jakarta.validation.tck;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
