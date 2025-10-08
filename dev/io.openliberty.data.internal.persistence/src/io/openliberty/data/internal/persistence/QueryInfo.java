@@ -181,6 +181,8 @@ public class QueryInfo {
 
     /**
      * For counting the total number of results across all pages.
+     * If less than Util.MIN_COUNT_QUERY_LENGTH characters long, indicates a
+     * query keyword that prevents computation of a count.
      * Null if pagination is not used or if pagination without totals is used.
      */
     String jpqlCount;
@@ -3384,13 +3386,8 @@ public class QueryInfo {
                                     .toString();
                 }
             else
-                throw exc(MappingException.class,
-                          "CWWKD1010.unknown.entity.attr",
-                          name,
-                          entityInfo.getType().getName(),
-                          method.getName(),
-                          repositoryInterface.getName(),
-                          entityInfo.attributeTypes.keySet());
+                // allow functions, such as LENGTH(name)
+                attributeName = name;
         } else if (len == 0) {
             throw exc(MappingException.class,
                       "CWWKD1024.missing.entity.attr",
@@ -5000,8 +4997,8 @@ public class QueryInfo {
                                          QueryEdit.ADD_CONSTRUCTOR_END);
                         }
 
-                        i += 5;
-                        modifyAt.put(i, QueryEdit.REPLACE_RECORD_ENTITY);
+                        i += 4;
+                        modifyAt.put(i + 1, QueryEdit.REPLACE_RECORD_ENTITY);
 
                         if (depth == 0 && initEntityVar) {
                             // determine the entity identification variable
@@ -5027,17 +5024,37 @@ public class QueryInfo {
                             entityVar_ = entityVar == "this" ? "" : (entityVar + '.');
                             initEntityVar = false;
                         }
+                        i--; // balances loop increment when already positioned correctly
                     } else if (depth == 0) {
-                        boolean isWhere = false, isOrder = false, isGroup = false;
-                        if (i + 5 < length &&
-                            !Character.isJavaIdentifierPart(ql.charAt(i + 5)) &&
-                            ((isWhere = ql.regionMatches(true, i, "WHERE", 0, 5)) ||
-                             (isOrder = ql.regionMatches(true, i, "ORDER", 0, 5)) ||
-                             (isGroup = ql.regionMatches(true, i, "GROUP", 0, 5)))
+                        boolean isWhere = false, isOrder = false;
+                        int l; // keyword length
+                        if (i + (l = 5) < length &&
+                            !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
+                            ((isWhere = ql.regionMatches(true, i, "WHERE", 0, l)) ||
+                             (isOrder = ql.regionMatches(true, i, "ORDER", 0, l)) ||
+                             ql.regionMatches(true, i, "GROUP", 0, l) ||
+                             ql.regionMatches(true, i, "UNION", 0, l))
                             ||
-                            i + 6 < length &&
-                               !Character.isJavaIdentifierPart(ql.charAt(i + 6)) &&
-                               ql.regionMatches(true, i, "HAVING", 0, 6)) {
+                            (i + (l = 6) < length &&
+                             !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
+                             (ql.regionMatches(true, i, "HAVING", 0, l) ||
+                              ql.regionMatches(true, i, "EXCEPT", 0, l)))
+                            ||
+                            (i + (l = 9) < length &&
+                             !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
+                             ql.regionMatches(true, i, "INTERSECT", 0, l))) {
+
+                            if (isCursoredPage && !isWhere && !isOrder)
+                                // ORDER BY isn't allowed with cursored pagination
+                                // either, but has a better error message for it
+                                // elsewhere that points out the correct ways to
+                                // specify order
+                                throw exc(UnsupportedOperationException.class,
+                                          "CWWKD1120.cursor.keyword.mismatch",
+                                          method.getName(),
+                                          repositoryInterface.getName(),
+                                          ql.substring(i, i + l),
+                                          ql);
                             if (countMustOmitSelect) {
                                 countMustOmitSelect = false;
                                 modifyAt.put(-i, // avoid possible collision
@@ -5056,17 +5073,23 @@ public class QueryInfo {
                             }
                             if (addFromAt == null)
                                 addFromAt = i;
-                            i += isWhere || isOrder || isGroup ? 5 : 6; // HAVING
+                            i += l;
                             if (isWhere) {
                                 hasWhere = true;
                                 if (isCursoredPage) {
                                     modifyAt.put(i, QueryEdit.ADD_PARENTHESIS_BEGIN);
                                     needsParenthesesEnd = true;
                                 }
-                            } else if (isOrder && countPages) {
-                                modifyAt.put(-i, // avoid possible collision
-                                             QueryEdit.OMIT_ORDER_IN_COUNT);
+                            } else if (isOrder) {
+                                if (countPages)
+                                    modifyAt.put(-i, // avoid possible collision
+                                                 QueryEdit.OMIT_ORDER_IN_COUNT);
+                            } else {
+                                if (jpqlCount == null)
+                                    // indicates that the keyword prevents computing a count
+                                    jpqlCount = ql.substring(i - l, i);
                             }
+                            i--; // balances loop increment when already positioned correctly
                         }
                     }
                 } else {
@@ -5144,10 +5167,11 @@ public class QueryInfo {
         int qStartAt = 0; // index into the original query (ql)
 
         // for generating the count query
-        StringBuilder c = Page.class.equals(multiType) ||
-                          CursoredPage.class.equals(multiType) //
-                                          ? new StringBuilder(qlLen + 50) //
-                                          : null;
+        StringBuilder c = jpqlCount == null &&
+                          (Page.class.equals(multiType) ||
+                           CursoredPage.class.equals(multiType)) //
+                                           ? new StringBuilder(qlLen + 50) //
+                                           : null;
         int cStartAt = 0; // index into the original query (ql)
         int cEndAt = qlLen;
 
@@ -5155,14 +5179,19 @@ public class QueryInfo {
             int m = mod.getKey();
             switch (mod.getValue()) {
                 case OMIT_SELECT_IN_COUNT:
-                    cStartAt = -m; // position after end of SELECT clause
-                    int selectItemsLength = cStartAt - selectItemsStartAt;
-                    c.append("SELECT COUNT(");
-                    c.append(inferCountFromSelect(ql, selectItemsStartAt, selectItemsLength));
-                    c.append(") ");
+                    if (c != null) {
+                        cStartAt = -m; // position after end of SELECT clause
+                        int selectItemsLength = cStartAt - selectItemsStartAt;
+                        c.append("SELECT COUNT(");
+                        c.append(inferCountFromSelect(ql,
+                                                      selectItemsStartAt,
+                                                      selectItemsLength));
+                        c.append(") ");
+                    }
                     break;
                 case OMIT_ORDER_IN_COUNT:
-                    cEndAt = -m - 5; // start of ORDER BY
+                    if (c != null)
+                        cEndAt = -m - 5; // start of ORDER BY
                     break;
                 case ADD_SELECT_IF_NEEDED:
                     // generateSelectClause determines if a SELECT clause is needed
