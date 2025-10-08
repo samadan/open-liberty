@@ -26,9 +26,9 @@ public abstract class McpResponse {
 
     public McpResponse(String jsonrpc, McpRequestId id) {
         if (jsonrpc == null || !jsonrpc.equals("2.0"))
-            throw new IllegalArgumentException(Tr.formatMessage(tc, "CWMCM0021E.jsonrpc.validation.invalid.version", jsonrpc));
+            throw new IllegalArgumentException(Tr.formatMessage(tc, "jsonrpc field must be present. Only JSONRPC 2.0 is currently supported\"", jsonrpc));
         if (id == null)
-            throw new IllegalArgumentException(Tr.formatMessage(tc, "CWMCM0026E.jsonrpc.validation.invalid.id.type", id));
+            throw new IllegalArgumentException(Tr.formatMessage(tc, "id must not be null", id));
 
         this.jsonrpc = jsonrpc;
         this.id = id;

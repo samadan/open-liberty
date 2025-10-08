@@ -262,11 +262,11 @@ public class McpTransport {
 
     public String getRequestIpAddress() {
         String ipAddress = req.getRemoteAddr();
-//        String proxyAddress = req.getHeader("X-Forwarded-For");
-//        if (proxyAddress != null && !proxyAddress.equals(ipAddress)) {
-//            String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0020E.unknown.proxy.address");
-//            throw new HttpResponseException(HttpServletResponse.SC_FORBIDDEN, excpetionMesaage);
-//        }
+        String proxyAddress = req.getHeader("X-Forwarded-For");
+        if (proxyAddress != null && !proxyAddress.equals(ipAddress)) {
+            Tr.error(tc, "CWMCM0020E.unknown.proxy.address");
+            throw new HttpResponseException(HttpServletResponse.SC_FORBIDDEN, "");
+        }
         return ipAddress;
     }
 

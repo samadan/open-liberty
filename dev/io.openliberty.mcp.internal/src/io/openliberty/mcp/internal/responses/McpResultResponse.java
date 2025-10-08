@@ -29,9 +29,9 @@ public class McpResultResponse extends McpResponse {
     public McpResultResponse(McpRequestId id, Object result) {
         super("2.0", id);
         if (id.getStrVal() != null && id.getStrVal().isBlank())
-            throw new IllegalArgumentException(Tr.formatMessage(tc, "CWMCM0024E.jsonrpc.validation.empty.string.id", id.getStrVal()));
+            throw new IllegalArgumentException("id must not be empty");
         if (result == null)
-            throw new IllegalArgumentException(Tr.formatMessage(tc, "CWMCM0031E.jsonrpc.missing.result"));
+            throw new IllegalArgumentException("Result field must be present");
         this.result = result;
     }
 

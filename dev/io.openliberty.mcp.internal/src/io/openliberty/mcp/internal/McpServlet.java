@@ -79,15 +79,6 @@ public class McpServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         McpTransport transport = new McpTransport(req, resp, jsonb);
-        String accept = req.getHeader("Accept");
-        // Return 405, with SSE-specific message if "text/event-stream" is requested.
-//        if (accept != null && HeaderValidation.acceptContains(accept, "text/event-stream")) {
-//            String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0008I.sse.unimplemented");
-//            HttpResponseException e = new HttpResponseException(
-//                                                                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-//                                                                excpetionMesaage).withHeader("Allow", "POST");
-//            transport.sendHttpException(e);
-//        }
         String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0008I.get.disallowed");
         HttpResponseException e = new HttpResponseException(
                                                             HttpServletResponse.SC_METHOD_NOT_ALLOWED,
@@ -232,7 +223,7 @@ public class McpServlet extends HttpServlet {
             try {
                 cc.release();
             } catch (Exception ex) {
-                Tr.warning(tc, "CWMCM0016W.bean.release.fail", ex);
+                Tr.warning(tc, "CWMCM0016W.bean.release.fail", ex, params.getName());
             }
         }
     }

@@ -126,7 +126,7 @@ public class ToolErrorHandlingTest extends FATServletClient {
                             "content": [
                               {
                                 "type": "text",
-                                "text": "CWMCM0015E: An internal server error occurred"
+                                "text": "CWMCM0015E: An internal server error occurred while running the tool."
                               }
                             ]
                           }
@@ -271,7 +271,7 @@ public class ToolErrorHandlingTest extends FATServletClient {
                                 "content": [
                                   {
                                     "type": "text",
-                                    "text": "CWMCM0015E: An internal server error occurred"
+                                    "text": "CWMCM0015E: An internal server error occurred while running the tool."
                                   }
                                 ]
                               }
@@ -344,7 +344,7 @@ public class ToolErrorHandlingTest extends FATServletClient {
                             "content": [
                               {
                                 "type": "text",
-                                "text": "CWMCM0015E: An internal server error occurred"
+                                "text": "CWMCM0015E: An internal server error occurred while running the tool."
                               }
                             ]
                           }

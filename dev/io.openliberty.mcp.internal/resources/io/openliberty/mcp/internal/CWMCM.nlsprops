@@ -14,35 +14,35 @@
 #NLS_MESSAGEFORMAT_NONE
 #ISMESSAGEFILE true
 
-# for server
+# Used for server logging
 # do not translate MCP
 # {0} = The list of qualified names of the tool
 CWMCM0001E.blank.arguments=CWMCM0001E: One or more MCP tool methods have arguments with blank names: {0}
 CWMCM0001E.blank.arguments.explanation=MCP Tool arguments were provided but they had missing names. Each argument to a tool method must have a name.
 CWMCM0001E.blank.arguments.useraction=Provide non-empty values for all required arguments.
 
-# for server
+# Used for server logging
 # do not translate MCP
 # {0} = The list of qualified name of the tool and corresponding argument
 CWMCM0002E.duplicate.arguments=CWMCM0002E: Duplicate argument names were found for MCP Tool: {0}.
 CWMCM0002E.duplicate.arguments.explanation=One or more arguments have the same name. Each argument of an MCP tool method must have a different name.
 CWMCM0002E.duplicate.arguments.useraction=Give each tool argument a different name.
 
-# for server
+# Used for server logging
 # do not translate MCP
 # {0} = The list of qualified name of the tool
 CWMCM0003E.missing.tool.argument.name=CWMCM0003E:  Missing argument names were found for MCP Tool: {0}.
 CWMCM0003E.missing.tool.argument.name.explanation=One or more Tool argument name(s) was not provided for MCP Tools.
 CWMCM0003E.missing.tool.argument.name.useraction=Either add a name to the @ToolArg annotation, or to add the -parameters compiler option to use the parameter name.
 
-# for server
+# Used for server logging
 # do not translate MCP
 # {0} = The list of qualified names of the tool
 CWMCM0004E.duplicate.tools=CWMCM0004E: Multiple MCP tool have the same name: {0}.
 CWMCM0004E.duplicate.tools.explanation=One or more MCP Tool names occured multiples times.The server expects one name per tool for uniqueness.
 CWMCM0004E.duplicate.tools.useraction=Only provide a unique name for each MCP Tool.
 
-# for server
+# Used for server logging
 # do not translate MCP
 # {0} = The fully qualified method name
 # {1} = The parameter type simple name
@@ -50,69 +50,69 @@ CWMCM0005E.duplicate.special.arguments=CWMCM0005E: The {0} MCP Tool has more tha
 CWMCM0005E.duplicate.special.arguments.explanation=One or more special arguments occured multiples times, only one is expected.
 CWMCM0005E.duplicate.special.arguments.useraction=Remove the extra instances.
 
-# for server
+# Used for server logging
 # {0} = The fully qualified method name
 # {1} = The parameter type simple name
 CWMCM0006E.invalid.arguments=CWMCM0006E: The {0} MCP Tool has a parameter of type {1} which is not a recognised special argument type and does not have a `@ToolArg` annotation.
 CWMCM0006E.invalid.arguments.explanation=One or more parameters were not annotated as tool arguments and are not recognised special argument types.
 CWMCM0006E.invalid.arguments.useraction=Please check if you have the correct class imported for your argument, or you meant to include @ToolArg.
 
-# for client
+# Used as part of a response to a client
 # {0} = Request id
 CWMCM0007E.invalid.request.params=CWMCM0007E: A request with ID {0} is already in progress.
 CWMCM0007E.invalid.request.params.explanation= A request with the same id is still in progress. Requests from the same client must have unique IDs.
 CWMCM0007E.invalid.request.params.useraction=Use a unique ID for every request
 
-# for client
+# Used as part of a response to a client
 # do not translate GET, POST
 CWMCM0008I.get.disallowed=CWMCM0008I: GET requests are not supported.
 CWMCM0008I.get.disallowed.explanation=A GET request was sent but this functionality is not supported.
 CWMCM0008I.get.disallowed.useraction=Use a supported HTTP request i.e POST
 
-# for client
+# Used as part of a response to a client
 # do not translate JSON-RPC, JSON
 CWMCM0009E.jsonrpc.parse.error=CWMCM0009E: The JSON-RPC request is not valid JSON.
 CWMCM0009E.jsonrpc.parse.error.explanation=The JSON-RPC request could not be parsed by the server due to invalid JSON being parsed. 
 CWMCM0009E.jsonrpc.parse.error.useraction=Correct the JSON-RPC request message.
 
-# for client
+# Used as part of a response to a client
 # do not translate JSON-RPC, JSON
 CWMCM0010E.jsonrpc.invalid.request=CWMCM0010E: The JSON-RPC request was invalid.
 CWMCM0010E.jsonrpc.invalid.request.explanation=The JSON recieved is not a valid JSON-RPC request object.
 CWMCM0010E.jsonrpc.invalid.request.useraction=Fix the issues in the request that have been highlighted.
 
-# for client
+# Used as part of a response to a client
 # do not translate JSON-RPC
-CWMCM0011E.jsonrpc.unkown.method=CWMCM0011E: The requested JSON-RPC method is not found.
-CWMCM0011E.jsonrpc.unkown.method.explanation=The JSON-RPC request is for a method which is not supported by the server
-CWMCM0011E.jsonrpc.unkown.method.useraction=Call a supported method.
+CWMCM0011E.jsonrpc.unknown.method=CWMCM0011E: The requested JSON-RPC method is not found.
+CWMCM0011E.jsonrpc.unknown.method.explanation=The JSON-RPC request is for a method which is not supported by the server
+CWMCM0011E.jsonrpc.unknown.method.useraction=Call a supported method.
 
-# for client
+# Used as part of a response to a client
 # do not translate JSON-RPC
-CWMCM0012E.jsonrpc.invalid.params=CWMCM0012E: JSON-RPC PC request contained invalid parameters.
+CWMCM0012E.jsonrpc.invalid.params=CWMCM0012E: JSON-RPC request contained invalid parameters.
 CWMCM0012E.jsonrpc.invalid.params.explanation=The JSON-RPC request contained invalid parameters.
 CWMCM0012E.jsonrpc.invalid.params.useraction=Check that the request includes the correct parameters for the method that is being called.
 
-# for client
+# Used as part of a response to a client
 # do not translate JSON-RPC
 # {0} = internal error details
 CWMCM0013E.jsonrpc.internal.error=CWMCM0013E: An Internal Server Error occured whilst processing the JSON-RPC request.
-CWMCM0013E.jsonrpc.internal.error.explanation=An Internal Server Error occured whilst processing the JSON-RPC request. 
-CWMCM0013E.jsonrpc.internal.error.useraction=Review the server message.log and FFDC logs to identify the problem.
+CWMCM0013E.jsonrpc.internal.error.explanation=The server was not able to process the JSON-RPC request.
+CWMCM0013E.jsonrpc.internal.error.useraction=Check that the request is correct. More information about the failure may be found in the server messages.log.
 
-# for server
+# Used for server logging
 # {0} = tool name
 # {1} = exception details
 CWMCM0014E.internal.server.error.detailed=CWMCM0014E: The {0} tool method threw an unexpected exception. The exception was {1}
 CWMCM0014E.internal.server.error.detailed.explanation=The tool method threw an unexpected exception.
 CWMCM0014E.internal.server.error.detailed.useraction=Review the server message.log and FFDC logs to identify the problem.
 
-# for client
-CWMCM0015E.internal.server.error=CWMCM0015E: An internal server error occurred
-CWMCM0015E.internal.server.error.explanation=An internal server error occurred
-CWMCM0015E.internal.server.error.useraction=Review the server message.log and FFDC logs to identify the problem.
+# Used as part of a response to a client
+CWMCM0015E.internal.server.error=CWMCM0015E: An internal server error occurred while running the tool.
+CWMCM0015E.internal.server.error.explanation=The server was not able to complete the tool call request.
+CWMCM0015E.internal.server.error.useraction=Check that the request is correct. More information about the failure may be found in the server messages.log.
 
-# for server
+# Used for server logging
 # do not translate bean
 # {0} = bean error details
 # {1} = tool name
@@ -120,83 +120,60 @@ CWMCM0016W.bean.release.fail=CWMCM0016W: An error occurred when releasing the CD
 CWMCM0016W.bean.release.fail.explanation=When calling a tool method, an instance of the CDI bean which declares the method is acquired before calling the method and released afterwards. An error occurred when releasing the bean instance.
 CWMCM0016W.bean.release.fail.useraction=Review the server message.log and FFDC logs to identify the problem.
 
-# for server and client
+# Used for server logging and client response
 # do not translate MCP-Protocol-Version, MCP
 # {0} = List of supported MCP-Protocol-Version values
 CWMCM0017E.unsupported.mcp.http.version=CWMCM0017E: An unsupported MCP-Protocol-Version header was provided. Supported values: {0}
-CWMCM0017E.unsupported.mcp.http.version.explanation=A unsupported MCP-Protocol-Version header was provided in the request.
-CWMCM0017E.unsupported.mcp.http.version.useraction=Provide an MCP version in the header that's in the list of supported values.
+CWMCM0017E.unsupported.mcp.http.version.explanation=The protocol version indicated by the MCP-Protocol-Version header is not supported by the server.
+CWMCM0017E.unsupported.mcp.http.version.useraction=Use a supported protocol version.
 
-#for client
+# Used as part of a response to a client
 #do not translate Method, RequestURI, RequestQuery
 # {0} = Method
 # {1} = RequestURI
 # {2} = RequestQuery
 CWMCM0018E.unexpected.server.error=CWMCM0018E: Unexpected Server Error. Method={0} RequestURI={1} RequestQuery={2}
-CWMCM0018E.unexpected.server.error.explanation=An unexpected  server error occurred whilst processing the request. The request could not be completed.
+CWMCM0018E.unexpected.server.error.explanation=An unexpected server error occurred whilst processing the request. The request could not be completed.
 CWMCM0018E.unexpected.server.error.useraction=No action is required.
 
-# for server and client
-#do not translate Method, RequestURI, RequestQuery
+# Used for server logging
+# do not translate Method, RequestURI, RequestQuery
 # {0} = Method
 # {1} = RequestURI
 # {2} = RequestQuery
-# {2} = ExceptionMessage
+# {3} = ExceptionMessage
 CWMCM0019E.unexpected.server.error.exception=CWMCM0019E: Unexpected Server Error. Method={0} RequestURI={1} RequestQuery={2}, Exception: {3}
-CWMCM0019E.unexpected.server.error.exception.explanation=An unexpected  server error occurred whilst processing the request. The request could not be completed.
+CWMCM0019E.unexpected.server.error.exception.explanation=An unexpected server error occurred whilst processing the request. The request could not be completed.
 CWMCM0019E.unexpected.server.error.exception.useraction=No action is required.
 
-# for client
+# Used as part of a response to a client
 CWMCM0020E.unknown.proxy.address=CWMCM0020E: An unknown proxy address was provided in the request.
 CWMCM0020E.unknown.proxy.address.explanation=An X-Forwarded-For or Forwarded header was provided in the request but it does not match the reported client IP address. If using a reverse-proxy, check that httpEndpoint.remoteIp.proxies is configured correctly.
 CWMCM0020E.unknown.proxy.address.useraction=Make sure the proxy address matches the ip address
 
-# for server
+
+# Used as part of a response to a client
 # do not translate JSON-RPC
 # {0} = JSON-RPC value
-CWMCM0021E.jsonrpc.validation.invalid.version=CWMCM0021E:The provided value {0} for the JSON-RPC field is invalid.
-CWMCM0021E.jsonrpc.validation.invalid.version.explanation=The JSON-RPC field must be present. Only JSON-RPC 2.0 is currently supported 
-CWMCM0021E.jsonrpc.validation.invalid.version.useraction=Provide a JSON-RPC version of 2.0
+CWMCM0021E.jsonrpc.exception.validation.invalid.version=The provided value {0} for the JSON-RPC field is invalid.
 
-# for client
-# do not translate JSON-RPC
-# {0} = JSON-RPC value
-CWMCM0022E.jsonrpc.exception.validation.invalid.version=The provided value {0} for the JSON-RPC field is invalid.
+# Used as part of a response to a client
+CWMCM0022E.jsonrpc.validation.empty.method=The provided value for the method field is empty.
 
-# for client
-CWMCM0023E.jsonrpc.validation.empty.method=The provided value for the method field is empty.
-
-# for server
+# Used as part of a response to a client
 # {0} = id value
-CWMCM0024E.jsonrpc.validation.empty.string.id=CWMCM0024E:  The provided value `{0}` for the id field is invalid.
-CWMCM0024E.jsonrpc.validation.empty.string.id.explanation= The id must not be empty if a string is provided.
-CWMCM0024E.jsonrpc.validation.empty.string.id.useraction=If using a string id make sure it is not empty
+CWMCM0023E.jsonrpc.exception.validation.empty.string.id=The provided value `{0}` for the id field is invalid.
 
-# for client
-# {0} = id value
-CWMCM0025E.jsonrpc.exception.validation.empty.string.id=The provided value `{0}` for the id field is invalid.
+# Used as part of a response to a client
+CWMCM0024E.jsonrpc.exception.validation.invalid.id.type=The provided id type is not an acceptable type.
 
-# for server
-CWMCM0026E.jsonrpc.validation.invalid.id.type=CWMCM0026E: The provided id type is not an acceptable type.
-CWMCM0026E.jsonrpc.validation.invalid.id.type.explanation= The id must be a string or integer
-CWMCM0026E.jsonrpc.validation.invalid.id.type.useraction=Provide an id that is either a string or Integer.
+# Used as part of a response to a client
+CWMCM0025E.jsonrpc.missing.params=The request does not have any arguments in parameters.
 
-# for client
-CWMCM0027E.jsonrpc.exception.validation.invalid.id.type=The provided id type is not an acceptable type.
-
-#for client
-CWMCM0028E.jsonrpc.missing.params=The request does not have any arguments in parameters.
-
-# for client
+# Used as part of a response to a client
 # {0} = list of arguments
-CWMCM0029E.jsonrpc.extra.arguments=The arguments {0} were passed but were not found in method.
+CWMCM0026E.jsonrpc.extra.arguments=The arguments {0} were passed but were not found in method.
 
-# for client
+# Used as part of a response to a client
 # {0} = list of arguments
-CWMCM0030E.jsonrpc.missing.arguments=The arguments {0} were expected by the method but were not provided.
-
-
-# for server
-CWMCM0031E.jsonrpc.missing.result=CWMCM0031E: The response is missing a result field
-CWMCM0031E.jsonrpc.missing.result.explanation=The result fields must be present and not null
-CWMCM0031E.jsonrpc.missing.result.useraction=Provide a result field in the response
+CWMCM0027E.jsonrpc.missing.arguments=The arguments {0} were expected by the method but were not provided.

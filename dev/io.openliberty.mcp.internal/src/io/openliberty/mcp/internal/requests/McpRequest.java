@@ -31,6 +31,8 @@ public record McpRequest(String jsonrpc,
                          String method,
                          JsonObject params) {
 
+    private static final TraceComponent tc = Tr.register(McpRequest.class);
+
 //    Returns the enum value of the supported tool methods
     /**
      * Converts the string value of the method from an MCP request into a matching enum value
@@ -53,8 +55,6 @@ public record McpRequest(String jsonrpc,
         String json = jsonb.toJson(this.params);
         return jsonb.fromJson(json, type);
     }
-
-    private static final TraceComponent tc = Tr.register(McpRequest.class);
 
     public static McpRequest createValidMCPRequest(Reader reader) throws JsonException, MCPRequestValidationException {
 
@@ -93,13 +93,13 @@ public record McpRequest(String jsonrpc,
 
     private static void validateJsonRpc(String jsonRpc, List<String> errors) {
         if (!"2.0".equals(jsonRpc)) {
-            errors.add(Tr.formatMessage(tc, "CWMCM0022E.jsonrpc.exception.validation.invalid.version", jsonRpc));
+            errors.add(Tr.formatMessage(tc, "CWMCM0021E.jsonrpc.exception.validation.invalid.version", jsonRpc));
         }
     }
 
     private static void validateMethod(String method, List<String> errors) {
         if (method == null || method.isBlank()) {
-            errors.add(Tr.formatMessage(tc, "CWMCM0023E.jsonrpc.validation.empty.method"));
+            errors.add(Tr.formatMessage(tc, "CWMCM0022E.jsonrpc.validation.empty.method"));
         }
     }
 
@@ -109,13 +109,13 @@ public record McpRequest(String jsonrpc,
             case STRING -> {
                 String idString = ((JsonString) id).getString();
                 if (idString.isBlank()) {
-                    errors.add(Tr.formatMessage(tc, "CWMCM0025E.jsonrpc.exception.validation.empty.string.id", idString));
+                    errors.add(Tr.formatMessage(tc, "CWMCM0023E.jsonrpc.exception.validation.empty.string.id", idString));
                     yield null;
                 }
                 yield new McpRequestId(idString);
             }
             default -> {
-                errors.add(Tr.formatMessage(tc, "CWMCM0027E.jsonrpc.exception.validation.invalid.id.type"));
+                errors.add(Tr.formatMessage(tc, "CWMCM0024E.jsonrpc.exception.validation.invalid.id.type"));
                 yield null;
             }
         };

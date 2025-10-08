@@ -22,7 +22,6 @@ public class JSONRPCException extends RuntimeException {
     private Object data;
 
     public JSONRPCException(JSONRPCErrorCode errorCode, Object data) {
-        super(Tr.formatMessage(tc, errorCode.getMessage()));
         this.errorCode = errorCode;
         this.data = data;
     }
