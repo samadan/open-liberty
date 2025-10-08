@@ -4614,9 +4614,9 @@ public class QueryInfo {
                         i++;
                     if (i + 3 < length &&
                         !Character.isJavaIdentifierPart(ql.charAt(i + 3)) &&
-                        ql.regionMatches(true, startAt, "NEW", 0, 3)) {
+                        ql.regionMatches(true, i, "NEW", 0, 3)) {
                         // already has constructor syntax
-                        i += 4;
+                        i += 3;
                     } else {
                         modifyAt.put(i, QueryEdit.ADD_CONSTRUCTOR_BEGIN);
                         needsConstructorEnd = true;
