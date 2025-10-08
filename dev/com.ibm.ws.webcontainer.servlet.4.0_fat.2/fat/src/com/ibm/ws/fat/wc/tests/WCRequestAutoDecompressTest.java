@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.logging.Logger;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -68,21 +69,21 @@ public class WCRequestAutoDecompressTest {
     }
 
     @Test
-    public void test_SmallDataDecompression() throws IOException, ParseException {
+    public void test_SmallDataDecompressionGzip() throws IOException, ParseException {
         LOG.info("====== <test_SmallDataDecompression> ======");
-        sendPostRequestCompressedData("small", null);
+        sendPostRequestCompressedData("small", "gzip");
     }
 
     @Test
-    public void test_MediumDataDecompression() throws IOException, ParseException {
+    public void test_MediumDataDecompressionGzip() throws IOException, ParseException {
         LOG.info("====== <test_MediumDataDecompression> ======");
-        sendPostRequestCompressedData("medium", null);
+        sendPostRequestCompressedData("medium", "gzip");
     }
 
     @Test
-    public void test_LargeDataDecompression() throws IOException, ParseException {
+    public void test_LargeDataDecompressionGzip() throws IOException, ParseException {
         LOG.info("====== <test_LargeDataDecompression> ======");
-        sendPostRequestCompressedData("large", null);
+        sendPostRequestCompressedData("large", "gzip");
     }
     
     @Test
@@ -92,9 +93,21 @@ public class WCRequestAutoDecompressTest {
     }
     
     @Test
-    public void test_LargeDataDecompressionXGzip() throws IOException, ParseException {
+    public void Dtest_LargeDataecompressionXGzip() throws IOException, ParseException {
         LOG.info("====== <test_LargeDataDecompression> ======");
         sendPostRequestCompressedData("large", "x-gzip");
+    }
+    
+    @Test
+    public void test_MediumDataDecompressionDeflate() throws IOException, ParseException {
+        LOG.info("====== <test_MediumDataDecompressionXGzip> ======");
+        sendPostRequestCompressedData("medium", "deflate");
+    }
+    
+    @Test
+    public void test_LargeDataDecompressionDeflate() throws IOException, ParseException {
+        LOG.info("====== <test_MediumDataDecompressionXGzip> ======");
+        sendPostRequestCompressedData("medium", "deflate");
     }
     
     /*
@@ -103,10 +116,6 @@ public class WCRequestAutoDecompressTest {
      */
     private void sendPostRequestCompressedData(String dataSize, String compressMethod) throws IOException, ParseException {
         String url = "http://" + server.getHostname() + ":" + server.getHttpDefaultPort() + "/" + APP_NAME + "/EchoRequestHeaderParams.jsp";
-        
-        //default is gzip
-        compressMethod = (compressMethod == null ? "gzip" : compressMethod);
-        
         int totalExpectedPairs = 0;
 
         //94 words/bytes; 5 pairs
@@ -120,28 +129,33 @@ public class WCRequestAutoDecompressTest {
 
         // Compress the data using GZIP.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        GZIPOutputStream gzipOS = new GZIPOutputStream(baos);
+        DeflaterOutputStream stream = null;
+        
+        if (compressMethod.equals("x-gzip") || compressMethod.equals("gzip"))
+            stream = new GZIPOutputStream(baos);
+        else if (compressMethod.equals("deflate"))
+            stream = new DeflaterOutputStream(baos); 
 
         switch (dataSize) {
             case "medium":
-                gzipOS.write(mediumData.getBytes("ISO-8859-1"));
+                stream.write(mediumData.getBytes("ISO-8859-1"));
                 totalExpectedPairs = 502;
                 break;
             case "large":
-                gzipOS.write(largeData.getBytes("ISO-8859-1"));
+                stream.write(largeData.getBytes("ISO-8859-1"));
                 totalExpectedPairs = 2002;
                 break;
             default:
-                gzipOS.write(smallData.getBytes("ISO-8859-1"));
+                stream.write(smallData.getBytes("ISO-8859-1"));
                 totalExpectedPairs = 5;
                 break;
         }
-        gzipOS.close();
+        stream.close();
         byte[] compressedData = baos.toByteArray();
         ByteArrayEntity entity = new ByteArrayEntity(compressedData, ContentType.APPLICATION_FORM_URLENCODED);
 
         HttpPost httpPost = new HttpPost(url);
-        httpPost.setHeader("Content-Encoding", compressMethod);
+        httpPost.setHeader("content-encoding", compressMethod); //lower case content-encoding is intentionally
         httpPost.setEntity(entity);
 
         String startExpectedResponse = "BEGIN_AUTO_DECOMPRESS";
