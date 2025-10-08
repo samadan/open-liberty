@@ -14,35 +14,35 @@
 #NLS_MESSAGEFORMAT_NONE
 #ISMESSAGEFILE true
 
-# for client
+# for server
 # do not translate MCP
 # {0} = The list of qualified names of the tool
 CWMCM0001E.blank.arguments=CWMCM0001E: One or more MCP tool methods have arguments with blank names: {0}
 CWMCM0001E.blank.arguments.explanation=MCP Tool arguments were provided but they had missing names. Each argument to a tool method must have a name.
 CWMCM0001E.blank.arguments.useraction=Provide non-empty values for all required arguments.
 
-# for client
+# for server
 # do not translate MCP
 # {0} = The list of qualified name of the tool and corresponding argument
 CWMCM0002E.duplicate.arguments=CWMCM0002E: Duplicate argument names were found for MCP Tool: {0}.
 CWMCM0002E.duplicate.arguments.explanation=One or more arguments have the same name. Each argument of an MCP tool method must have a different name.
 CWMCM0002E.duplicate.arguments.useraction=Give each tool argument a different name.
 
-# for client
+# for server
 # do not translate MCP
 # {0} = The list of qualified name of the tool
 CWMCM0003E.missing.tool.argument.name=CWMCM0003E:  Missing argument names were found for MCP Tool: {0}.
 CWMCM0003E.missing.tool.argument.name.explanation=One or more Tool argument name(s) was not provided for MCP Tools.
 CWMCM0003E.missing.tool.argument.name.useraction=Either add a name to the @ToolArg annotation, or to add the -parameters compiler option to use the parameter name.
 
-# for client
+# for server
 # do not translate MCP
 # {0} = The list of qualified names of the tool
 CWMCM0004E.duplicate.tools=CWMCM0004E: Multiple MCP tool have the same name: {0}.
 CWMCM0004E.duplicate.tools.explanation=One or more MCP Tool names occured multiples times.The server expects one name per tool for uniqueness.
 CWMCM0004E.duplicate.tools.useraction=Only provide a unique name for each MCP Tool.
 
-# for client
+# for server
 # do not translate MCP
 # {0} = The fully qualified method name
 # {1} = The parameter type simple name
@@ -50,7 +50,7 @@ CWMCM0005E.duplicate.special.arguments=CWMCM0005E: The {0} MCP Tool has more tha
 CWMCM0005E.duplicate.special.arguments.explanation=One or more special arguments occured multiples times, only one is expected.
 CWMCM0005E.duplicate.special.arguments.useraction=Remove the extra instances.
 
-# for client
+# for server
 # {0} = The fully qualified method name
 # {1} = The parameter type simple name
 CWMCM0006E.invalid.arguments=CWMCM0006E: The {0} MCP Tool has a parameter of type {1} which is not a recognised special argument type and does not have a `@ToolArg` annotation.
