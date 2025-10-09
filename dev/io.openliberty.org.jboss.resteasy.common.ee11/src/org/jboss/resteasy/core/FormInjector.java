@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source.
  *
- * Copyright 2024 Red Hat, Inc., and individual contributors
+ * Copyright 2025 Red Hat, Inc., and individual contributors
  * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +20,8 @@
 package org.jboss.resteasy.core;
 
 import java.lang.reflect.Constructor;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+import java.security.AccessController; //Liberty Change
+import java.security.PrivilegedAction; //Liberty Change
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 

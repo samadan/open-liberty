@@ -71,14 +71,15 @@ public class LibertyResteasyClientBuilderImpl extends ResteasyClientBuilderImpl 
         }
 
         boolean resetProxy = false;
-        if (this.defaultProxy == null) {
+        if (getDefaultProxyHostname() == null) {
            resetProxy = true;
            // check for proxy config parameters
            setProxyIfNeeded(config);
         }
 
         if (resetProxy) {
-           this.defaultProxy = null;
+           // Reset proxy by setting it to null
+           defaultProxy(null, -1, null);
         }
 
         ExecutorService executor = getExecutorService();

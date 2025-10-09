@@ -31,6 +31,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
+import java.security.AccessController; //Liberty Change
+import java.security.PrivilegedAction; //Liberty Change
 
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Application;
@@ -48,6 +50,7 @@ import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.ValueInjector;
 import org.jboss.resteasy.spi.util.Types;
+import org.eclipse.osgi.internal.loader.EquinoxClassLoader; //Liberty Change
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
