@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package test.jakarta.data.jpa.web;
+package test.jakarta.data.jpa.web.eclipselink;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
