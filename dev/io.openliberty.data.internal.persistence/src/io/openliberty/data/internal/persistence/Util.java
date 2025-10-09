@@ -38,11 +38,11 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.ibm.websphere.ras.annotation.Trivial;
-import com.ibm.ws.util.UUID;
 
 import io.openliberty.data.internal.AttributeConstraint;
 import io.openliberty.data.internal.persistence.cdi.RepositoryProducer;
