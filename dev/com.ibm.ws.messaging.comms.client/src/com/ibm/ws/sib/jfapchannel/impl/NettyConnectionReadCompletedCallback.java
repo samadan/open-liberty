@@ -139,7 +139,7 @@ public class NettyConnectionReadCompletedCallback extends BaseConnectionReadCall
 		if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) SibTr.entry(this, tc, "readCompleted", new Object[] {buff});
 
 		// Update the invocation count. Otherwise, start counting from 1 again.
-		if (invocationCount < MAX_INVOCATIONS_BEFORE_THREAD_SWITCH)
+		if (invocationCount <= MAX_INVOCATIONS_BEFORE_THREAD_SWITCH)
 		{
 			invocationCount++;
 		}
