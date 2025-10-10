@@ -49,6 +49,7 @@ import org.apache.hc.core5.http.nio.AsyncPushConsumer;
 import org.apache.hc.core5.http.nio.entity.StringAsyncEntityConsumer;
 import org.apache.hc.core5.http.nio.support.BasicRequestProducer;
 import org.apache.hc.core5.http.nio.support.BasicResponseConsumer;
+import org.apache.hc.core5.http2.HttpVersionPolicy;
 import org.apache.hc.core5.http2.config.H2Config;
 import org.apache.hc.core5.http2.frame.RawFrame;
 import org.apache.hc.core5.http2.impl.nio.H2StreamListener;
@@ -105,6 +106,7 @@ public class SecureHttp2Client {
 
         final HttpAsyncRequester requester = H2RequesterBootstrap.bootstrap().register("*", createAsyncPushConsumerSupplier(responseMessages,
                                                                                                                             latch)).setH2Config(h2Config).setTlsStrategy(createTlsStrategy(sslContext))
+                        .setVersionPolicy(HttpVersionPolicy.FORCE_HTTP_2)
                         //.setStreamListener(createStreamListener()) // uncomment for detailed logging on each stream
                         .create();
         requester.start();
