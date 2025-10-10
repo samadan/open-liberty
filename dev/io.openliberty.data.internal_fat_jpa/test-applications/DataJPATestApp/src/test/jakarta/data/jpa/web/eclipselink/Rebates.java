@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022,2024 IBM Corporation and others.
+ * Copyright (c) 2022,2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package test.jakarta.data.jpa.web;
+package test.jakarta.data.jpa.web.eclipselink;
 
 import static jakarta.data.repository.By.ID;
 
@@ -33,11 +33,15 @@ import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 
+import test.jakarta.data.jpa.web.PurchaseTime;
+
 /**
  * Experiments with auto-generated keys on records.
  */
-@Repository
-public interface Rebates { // Do not allow this interface to inherit from other repositories, so that it tests inferring a primary entity class
+@Repository(dataStore = "java:module/jdbc/EclipseLinkDataStore")
+public interface Rebates { // Do not allow this interface to inherit from other
+    // repositories, so that it tests inferring a primary entity class
+
     @Insert
     Rebate add(Rebate r);
 
@@ -80,7 +84,10 @@ public interface Rebates { // Do not allow this interface to inherit from other 
     @OrderBy(value = "amount", descending = true)
     List<Integer> notRecentlyUpdated(String customerIdPattern);
 
-    @Query("WHERE customerId=?1 AND status=test.jakarta.data.jpa.web.Rebate.Status.PAID ORDER BY amount DESC, id ASC")
+    @Query("""
+                    WHERE customerId=?1
+                      AND status=test.jakarta.data.jpa.web.eclipselink.Rebate.Status.PAID
+                    ORDER BY amount DESC, id ASC""")
     List<Rebate> paidTo(String customerId);
 
     @Save
