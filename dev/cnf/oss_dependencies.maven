@@ -940,6 +940,7 @@ org.springframework.boot:spring-boot:1.5.9.RELEASE
 org.springframework.boot:spring-boot:2.7.18
 org.springframework.boot:spring-boot:3.3.5
 org.springframework.boot:spring-boot:4.0.0-M1
+org.springframework.boot:spring-boot:4.0.0-M3
 org.springframework.data:spring-data-commons:2.7.6
 org.springframework.data:spring-data-commons:3.2.4
 org.springframework.data:spring-data-commons:3.3.0
