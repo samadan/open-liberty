@@ -166,6 +166,18 @@ public class Http2LiteModeTests extends FATServletClient {
     }
 
     /**
+     * Test Coverage: Test Server can receive data on it's first upgrade request.
+     * Test Outcome: Data is read and returned on the response.
+     * Spec Section: Basic Functionality
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDataPost() throws Exception {
+        runTest(Http2FullModeTests.defaultServletPath, testName.getMethodName());
+    }
+
+    /**
      * Test Coverage: Client send an HTTP/2 Post Request. Test that Server can respond with Header and Data frames.
      * Test Outcome: Frames transfer with no error.
      * Spec Section: Basic Functionality
