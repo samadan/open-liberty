@@ -42,7 +42,9 @@ public class DeploymentProblemTest extends FATServletClient {
                           "CWMCM0001E", // Blank arguments
                           "CWMCM0002E", // Duplicate arguments
                           "CWMCM0004E", // Duplicate toold
-                          "CWMCM0005E" // There are one or more MCP validation errors.
+                          "CWMCM0005E", // There are one or more MCP validation errors.
+                          "CWMCM0006E", // Duplicate special arguments.
+                          "CWMCM0007E" // Invalid Special arguments.
         );
     }
 
@@ -61,7 +63,7 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @Test
     public void testBlankToolArg() throws Exception {
-        String expectedErrorHeader = "CWMCM0005E: There are one or more MCP validation errors.";
+        String expectedErrorHeader = "CWMCM0001E: The (.+?) MCP tool method has one or more arguments with blank names";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.argNameisBlank",
                                                  "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.argNameisBlankVariant");
         ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Blank Tool Arg: ", expectedErrorHeader, expectedErrorList, server);
@@ -69,7 +71,7 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @Test
     public void testDuplicatesToolArgs() throws Exception {
-        String expectedErrorHeader = "CWMCM0005E: There are one or more MCP validation errors.";
+        String expectedErrorHeader = "CWMCM0002E: The (.+?) MCP tool method has more than one argument named (.+?)";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParam.*arg",
                                                  "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParamVariant.*arg");
         ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Duplicate Tool Arg: ", expectedErrorHeader, expectedErrorList, server);
