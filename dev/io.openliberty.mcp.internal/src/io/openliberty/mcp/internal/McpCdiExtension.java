@@ -9,8 +9,10 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,6 +35,7 @@ import jakarta.enterprise.inject.spi.ProcessManagedBean;
 /**
  * Finds tools
  */
+
 public class McpCdiExtension implements Extension {
 
     private static final TraceComponent tc = Tr.register(McpCdiExtension.class);
@@ -64,9 +67,9 @@ public class McpCdiExtension implements Extension {
      * @param afterDeploymentValidation
      */
     private void reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
-        StringBuilder sbBlankArgs = new StringBuilder("Blank arguments found in MCP Tool:");
-        StringBuilder sbDuplicateArgs = new StringBuilder("Duplicate arguments found in MCP Tool:");
-        StringBuilder sbMissingArgs = new StringBuilder("Missing arguments found in MCP Tool:");
+        List<String> blankArgsList = new ArrayList<>();
+        List<String> duplicateArgsList = new ArrayList<>();
+        List<String> missingArgsList = new ArrayList<>();
         boolean blankArgumentsFound = false;
         boolean duplicateArgumentsFound = false;
         boolean missingArgumentName = false;
@@ -76,49 +79,34 @@ public class McpCdiExtension implements Extension {
 
             for (String argName : arguments.keySet()) {
                 if (argName.isBlank()) {
-                    sbBlankArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
+                    Tr.error(tc, "CWMCM0001E.blank.arguments", tool.getToolQualifiedName());
                     blankArgumentsFound = true;
                 } else if (arguments.get(argName).isDuplicate()) {
-                    sbDuplicateArgs.append("\n").append("Tool: " + tool.getToolQualifiedName() + " -  Argument: " + argName);
+                    Tr.error(tc, "CWMCM0002E.duplicate.arguments", tool.getToolQualifiedName(), argName);
                     duplicateArgumentsFound = true;
                 } else if (argName.equals(ToolMetadata.MISSING_TOOL_ARG_NAME)) {
-                    sbMissingArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
-                    sbMissingArgs.append("\n Tool argument name was not provided for the parameter. Either add a name to the @ToolArg annotation, or to add the -parameters compiler option to use the parameter name");
+                    Tr.error(tc, "CWMCM0003E.missing.tool.argument.name", tool.getToolQualifiedName());
                     missingArgumentName = true;
                 }
             }
         }
-        if (blankArgumentsFound) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(sbBlankArgs.toString()));
-        }
-        if (duplicateArgumentsFound) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(sbDuplicateArgs.toString()));
-        }
-        if (missingArgumentName) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(sbMissingArgs.toString()));
+        if (blankArgumentsFound || duplicateArgumentsFound || missingArgumentName) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
         }
     }
 
     private void reportOnDuplicateTools(AfterDeploymentValidation afterDeploymentValidation) {
         // prune items that are not duplicates
         duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
-        StringBuilder sb = new StringBuilder("More than one MCP tool has the same name: \n");
+        List<String> duplicateToolsList = new ArrayList<>();
         for (String toolName : duplicateToolsMap.keySet()) {
             LinkedList<String> qualifiedNames = duplicateToolsMap.get(toolName);
-            sb.append("Tool: ").append(toolName);
-            sb.append(" -- Methods found:\n");
-            for (String qualifiedName : qualifiedNames) {
-                sb.append("    - ").append(qualifiedName + "\n");
-            }
+            Tr.error(tc, "CWMCM0004E.duplicate.tools", toolName, qualifiedNames);
         }
 
-        if (duplicateToolsMap.size() != 0) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(sb.toString()));
-        }
     }
 
     private void reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
-        StringBuilder sbDuplicateSpecialArgs = new StringBuilder("Only 1 instance is allowed, of type: ");
         for (ToolMetadata tool : tools.getAllTools()) {
             Map<SpecialArgumentType.Resolution, Integer> resultCountMap = new HashMap<>();
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
@@ -127,25 +115,25 @@ public class McpCdiExtension implements Extension {
                     continue;
                 }
                 resultCountMap.merge(specialArgumentTypeResolution, 1, Integer::sum);
-                if (resultCountMap.get(specialArgumentTypeResolution) > 1) {
-                    sbDuplicateSpecialArgs.append(specialArgumentTypeResolution);
-                    sbDuplicateSpecialArgs.append("\n  But more than 1 argument was found. Please remove the extra instance, or check if you meant to include @ToolArg to one of them");
-                    sbDuplicateSpecialArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
-                    afterDeploymentValidation.addDeploymentProblem(new Exception(sbDuplicateSpecialArgs.toString()));
-                }
+
             }
+            resultCountMap.forEach((k, v) -> {
+                if (v > 1) {
+                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0006E.duplicate.special.arguments", tool.getToolQualifiedName(),
+                                                                                                  k.actualClass().getSimpleName())));
+                }
+            });
+
         }
     }
 
     private void reportOnInvalidSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
-        StringBuilder sbInvalidSpecialArgs = new StringBuilder("Special argument type not supported: ");
+        List<String> invalidArgsList = new ArrayList<>();
         for (ToolMetadata tool : tools.getAllTools()) {
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
                 if (specialArgument.typeResolution().specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
-                    sbInvalidSpecialArgs.append(specialArgument.typeResolution());
-                    sbInvalidSpecialArgs.append("\n  Please check if you have the correct class imported for your argument, or you meant to include @ToolArg");
-                    sbInvalidSpecialArgs.append("\n").append("Tool: " + tool.getToolQualifiedName());
-                    afterDeploymentValidation.addDeploymentProblem(new Exception(sbInvalidSpecialArgs.toString()));
+                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0007E.invalid.arguments", tool.getToolQualifiedName(),
+                                                                                                  specialArgument.typeResolution())));
                 }
             }
         }

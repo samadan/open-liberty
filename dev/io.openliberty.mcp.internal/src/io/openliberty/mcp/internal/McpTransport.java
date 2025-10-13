@@ -77,8 +77,8 @@ public class McpTransport {
             String supportedValues = Arrays.stream(McpProtocolVersion.values())
                                            .map(McpProtocolVersion::getVersion)
                                            .collect(Collectors.joining(", "));
-            throw new HttpResponseException(HttpServletResponse.SC_BAD_REQUEST,
-                                            "Unsupported MCP-Protocol-Version header. Supported values: " + supportedValues);
+            String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0013E.unsupported.mcp.http.version", supportedValues);
+            throw new HttpResponseException(HttpServletResponse.SC_BAD_REQUEST, excpetionMesaage);
         }
         this.mcpRequest = toRequest();
         final String sessionIdHeader = req.getHeader(MCP_SESSION_ID_HEADER);
@@ -224,8 +224,9 @@ public class McpTransport {
      * @throws IOException
      */
     public void sendError(Exception e) throws IOException {
-        Tr.error(tc, "Unexpected Server Error. Method={0} RequestURI={1} RequestQuery={2}", req.getMethod(), req.getRequestURI(), req.getQueryString());
-        res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again later.");
+        String excpetionMessage = Tr.formatMessage(tc, "CWMCM0014E.unexpected.server.error", new Object[] { req.getMethod(), req.getRequestURI(), req.getQueryString() });
+        Tr.error(tc, "CWMCM0015E.unexpected.server.error.exception", req.getMethod(), req.getRequestURI(), req.getQueryString(), e.getMessage());
+        res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, excpetionMessage);
     }
 
     /**
@@ -261,7 +262,8 @@ public class McpTransport {
         String ipAddress = req.getRemoteAddr();
         String proxyAddress = req.getHeader("X-Forwarded-For");
         if (proxyAddress != null && !proxyAddress.equals(ipAddress)) {
-            throw new HttpResponseException(HttpServletResponse.SC_FORBIDDEN, "Unknown proxy address.");
+            Tr.error(tc, "CWMCM0021E.unknown.proxy.address");
+            throw new HttpResponseException(HttpServletResponse.SC_FORBIDDEN, "");
         }
         return ipAddress;
     }

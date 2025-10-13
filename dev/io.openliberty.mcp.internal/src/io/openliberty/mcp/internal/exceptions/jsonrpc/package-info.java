@@ -11,4 +11,4 @@
  *
  */
 @com.ibm.websphere.ras.annotation.TraceOptions(messageBundle = "io.openliberty.mcp.internal.CWMCM", traceGroup = "MCP")
-package io.openliberty.mcp.internal.requests;
+package io.openliberty.mcp.internal.exceptions.jsonrpc;
