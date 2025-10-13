@@ -3467,6 +3467,31 @@
       <version>5.0.0-B11</version>
     </dependency>
     <dependency>
+      <groupId>org.eclipse.platform</groupId>
+      <artifactId>org.eclipse.equinox.console</artifactId>
+      <version>1.4.1100</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.platform</groupId>
+      <artifactId>org.eclipse.equinox.coordinator</artifactId>
+      <version>1.5.500</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.platform</groupId>
+      <artifactId>org.eclipse.equinox.metatype</artifactId>
+      <version>1.6.900</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.platform</groupId>
+      <artifactId>org.eclipse.equinox.region</artifactId>
+      <version>1.5.800</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.platform</groupId>
+      <artifactId>org.eclipse.osgi</artifactId>
+      <version>3.23.200</version>
+    </dependency>
+    <dependency>
       <groupId>org.eclipse.transformer</groupId>
       <artifactId>org.eclipse.transformer.bnd.analyzer</artifactId>
       <version>0.5.0</version>
@@ -5635,26 +5660,6 @@
       <groupId>org.apache.neethi</groupId>
       <artifactId>neethi</artifactId>
       <version>3.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.platform</groupId>
-      <artifactId>org.eclipse.equinox.console</artifactId>
-      <version>1.4.300</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.platform</groupId>
-      <artifactId>org.eclipse.equinox.coordinator</artifactId>
-      <version>1.4.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.platform</groupId>
-      <artifactId>org.eclipse.equinox.metatype</artifactId>
-      <version>1.6.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.platform</groupId>
-      <artifactId>org.eclipse.equinox.region</artifactId>
-      <version>1.5.100</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.classfilewriter</groupId>
