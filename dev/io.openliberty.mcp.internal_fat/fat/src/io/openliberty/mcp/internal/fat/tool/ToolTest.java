@@ -58,13 +58,13 @@ public class ToolTest extends FATServletClient {
     @AfterClass
     public static void teardown() throws Exception {
         server.stopServer(
-                          "CWMCM0009E", //The JSON-RPC request is not valid JSON.
-                          "CWMCM0010E", // The JSON-RPC request was invalid.
-                          "CWMCM0011E", // The requested JSON-RPC method is not found.
-                          "CWMCM0012E", // JSON-RPC PC request contained invalid parameters.
-                          "CWMCM0013E", // An Internal Server Error occurred whilst processing the JSON-RPC request.
-                          "CWMCM0014E", //  Tool method threw an unexpected exception
-                          "CWMCM0015E" // An internal server error occurred
+                          "CWMCM0010E", //The JSON-RPC request is not valid JSON.
+                          "CWMCM0011E", // The JSON-RPC request was invalid.
+                          "CWMCM0012E", // The requested JSON-RPC method is not found.
+                          "CWMCM0013E", // JSON-RPC PC request contained invalid parameters.
+                          "CWMCM0014E", // An Internal Server Error occurred whilst processing the JSON-RPC request.
+                          "CWMCM0010E", //  Tool method threw an unexpected exception
+                          "CWMCM0011E" // An internal server error occurred
         );
     }
 
@@ -169,9 +169,9 @@ public class ToolTest extends FATServletClient {
         String expectedResponseString = """
                         {"error":{"code":-32600,
                         "data":[
-                            "The provided value 1.0 for the JSON-RPC field is invalid.",
-                            "The provided value for the method field is empty.",
-                            "The provided id type is not an acceptable type."
+                            "The jsonrpc field must be present. Only JSONRPC 2.0 is currently supported.",
+                            "The method field is empty.",
+                            "The id type is not an acceptable type.The id must be a string or integer."
                             ],
                         "message":"Invalid request"},
                         "id":null,
@@ -1261,7 +1261,7 @@ public class ToolTest extends FATServletClient {
         String response = client.callMCP(request);
 
         String expectedResponseString = """
-                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"CWMCM0015E: An internal server error occurred while running the tool."}], "isError": true}}
+                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"type":"text","text":"CWMCM0011E: An internal server error occurred while running the tool."}], "isError": true}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
         assertNotNull(server.waitForStringInLogUsingMark("Method call caused runtime exception", server.getDefaultLogFile()));

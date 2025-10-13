@@ -69,7 +69,7 @@ public class McpToolCallParams {
 
     public Object[] getArguments(Jsonb jsonb) {
         if (this.arguments == null) {
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of(Tr.formatMessage(tc, "CWMCM0025E.jsonrpc.missing.params")));
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of(Tr.formatMessage(tc, "CWMCM0020E.jsonrpc.missing.params")));
         }
         if (parsedArguments == null) {
             parsedArguments = parseArguments(arguments, jsonb);
@@ -114,10 +114,10 @@ public class McpToolCallParams {
         extra.removeAll(expected);
         ArrayList<String> data = new ArrayList<>();
         if (!extra.isEmpty()) {
-            data.add(Tr.formatMessage(tc, "CWMCM0026E.jsonrpc.extra.arguments", extra));
+            data.add(Tr.formatMessage(tc, "CWMCM0021E.jsonrpc.extra.arguments", extra));
         }
         if (!missing.isEmpty()) {
-            data.add(Tr.formatMessage(tc, "CWMCM0027E.jsonrpc.missing.arguments", missing));
+            data.add(Tr.formatMessage(tc, "CWMCM0022E.jsonrpc.missing.arguments", missing));
         }
         return !data.isEmpty() ? data : null;
     }

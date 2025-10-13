@@ -77,7 +77,7 @@ public class McpTransport {
             String supportedValues = Arrays.stream(McpProtocolVersion.values())
                                            .map(McpProtocolVersion::getVersion)
                                            .collect(Collectors.joining(", "));
-            String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0017E.unsupported.mcp.http.version", supportedValues);
+            String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0013E.unsupported.mcp.http.version", supportedValues);
             throw new HttpResponseException(HttpServletResponse.SC_BAD_REQUEST, excpetionMesaage);
         }
         this.mcpRequest = toRequest();
@@ -224,11 +224,9 @@ public class McpTransport {
      * @throws IOException
      */
     public void sendError(Exception e) throws IOException {
-        String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0018E.unexpected.server.error", new Object[] { req.getMethod(), req.getRequestURI(), req.getQueryString() });
-        String serverExcpetionMesaage = Tr.formatMessage(tc, "CWMCM0019E.unexpected.server.error.exception",
-                                                         new Object[] { req.getMethod(), req.getRequestURI(), req.getQueryString(), e.getMessage() });
-        Tr.error(tc, serverExcpetionMesaage);
-        res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, excpetionMesaage);
+        String excpetionMessage = Tr.formatMessage(tc, "CWMCM0014E.unexpected.server.error", new Object[] { req.getMethod(), req.getRequestURI(), req.getQueryString() });
+        Tr.error(tc, "CWMCM0015E.unexpected.server.error.exception", req.getMethod(), req.getRequestURI(), req.getQueryString(), e.getMessage());
+        res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, excpetionMessage);
     }
 
     /**
@@ -264,7 +262,7 @@ public class McpTransport {
         String ipAddress = req.getRemoteAddr();
         String proxyAddress = req.getHeader("X-Forwarded-For");
         if (proxyAddress != null && !proxyAddress.equals(ipAddress)) {
-            Tr.error(tc, "CWMCM0020E.unknown.proxy.address");
+            Tr.error(tc, "CWMCM0021E.unknown.proxy.address");
             throw new HttpResponseException(HttpServletResponse.SC_FORBIDDEN, "");
         }
         return ipAddress;

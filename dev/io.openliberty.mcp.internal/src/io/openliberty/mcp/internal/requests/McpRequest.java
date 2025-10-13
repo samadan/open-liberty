@@ -93,13 +93,13 @@ public record McpRequest(String jsonrpc,
 
     private static void validateJsonRpc(String jsonRpc, List<String> errors) {
         if (!"2.0".equals(jsonRpc)) {
-            errors.add(Tr.formatMessage(tc, "CWMCM0021E.jsonrpc.exception.validation.invalid.version", jsonRpc));
+            errors.add(Tr.formatMessage(tc, "CWMCM0016E.jsonrpc.exception.validation.invalid.version", jsonRpc));
         }
     }
 
     private static void validateMethod(String method, List<String> errors) {
         if (method == null || method.isBlank()) {
-            errors.add(Tr.formatMessage(tc, "CWMCM0022E.jsonrpc.validation.empty.method"));
+            errors.add(Tr.formatMessage(tc, "CWMCM0017E.jsonrpc.validation.empty.method"));
         }
     }
 
@@ -109,13 +109,13 @@ public record McpRequest(String jsonrpc,
             case STRING -> {
                 String idString = ((JsonString) id).getString();
                 if (idString.isBlank()) {
-                    errors.add(Tr.formatMessage(tc, "CWMCM0023E.jsonrpc.exception.validation.empty.string.id", idString));
+                    errors.add(Tr.formatMessage(tc, "CWMCM0018E.jsonrpc.exception.validation.empty.string.id", idString));
                     yield null;
                 }
                 yield new McpRequestId(idString);
             }
             default -> {
-                errors.add(Tr.formatMessage(tc, "CWMCM0024E.jsonrpc.exception.validation.invalid.id.type"));
+                errors.add(Tr.formatMessage(tc, "CWMCM0019E.jsonrpc.exception.validation.invalid.id.type"));
                 yield null;
             }
         };

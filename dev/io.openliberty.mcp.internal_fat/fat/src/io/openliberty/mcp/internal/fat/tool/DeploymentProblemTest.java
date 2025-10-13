@@ -38,12 +38,17 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @AfterClass
     public static void teardown() throws Exception {
-        server.stopServer(ExpectedAppFailureValidator.APP_START_FAILED_CODE); // will be extended for translations
+        server.stopServer(ExpectedAppFailureValidator.APP_START_FAILED_CODE,
+                          "CWMCM0001E", // Blank arguments
+                          "CWMCM0002E", // Duplicate arguments
+                          "CWMCM0004E", // Duplicate toold
+                          "CWMCM0005E" // There are one or more MCP validation errors.
+        );
     }
 
     @Test
     public void testDuplicateToolDeploymentError() throws Exception {
-        String expectedErrorHeader = "CWMCM0004E: Multiple MCP tool have the same name:";
+        String expectedErrorHeader = "CWMCM0004E: There are multiple MCP tool methods named (.+?). The methods are (.+?).";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.bob",
                                                  "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest.duplicateBob",
                                                  "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateToolErrorTest2.duplicateBob",
@@ -56,7 +61,7 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @Test
     public void testBlankToolArg() throws Exception {
-        String expectedErrorHeader = "CWMCM0001E: One or more MCP tool methods have arguments with blank names:";
+        String expectedErrorHeader = "CWMCM0005E: There are one or more MCP validation errors.";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.argNameisBlank",
                                                  "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.argNameisBlankVariant");
         ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Blank Tool Arg: ", expectedErrorHeader, expectedErrorList, server);
@@ -64,7 +69,7 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @Test
     public void testDuplicatesToolArgs() throws Exception {
-        String expectedErrorHeader = "CWMCM0002E: Duplicate argument names were found for MCP Tool:";
+        String expectedErrorHeader = "CWMCM0005E: There are one or more MCP validation errors.";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParam.*arg",
                                                  "io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.ToolArgValidationTest.duplicateParamVariant.*arg");
         ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Duplicate Tool Arg: ", expectedErrorHeader, expectedErrorList, server);

@@ -58,8 +58,8 @@ public class ToolErrorHandlingTest extends FATServletClient {
     @AfterClass
     public static void teardown() throws Exception {
         server.stopServer(
-                          "CWMCM0014E", //  Tool method threw an unexpected exception
-                          "CWMCM0015E" // An internal server error occurred
+                          "CWMCM0010E", //  Tool method threw an unexpected exception
+                          "CWMCM0011E" // An internal server error occurred
         );
     }
 
@@ -126,7 +126,7 @@ public class ToolErrorHandlingTest extends FATServletClient {
                             "content": [
                               {
                                 "type": "text",
-                                "text": "CWMCM0015E: An internal server error occurred while running the tool."
+                                "text": "CWMCM0011E: An internal server error occurred while running the tool."
                               }
                             ]
                           }
@@ -271,7 +271,7 @@ public class ToolErrorHandlingTest extends FATServletClient {
                                 "content": [
                                   {
                                     "type": "text",
-                                    "text": "CWMCM0015E: An internal server error occurred while running the tool."
+                                    "text": "CWMCM0011E: An internal server error occurred while running the tool."
                                   }
                                 ]
                               }
@@ -344,7 +344,7 @@ public class ToolErrorHandlingTest extends FATServletClient {
                             "content": [
                               {
                                 "type": "text",
-                                "text": "CWMCM0015E: An internal server error occurred while running the tool."
+                                "text": "CWMCM0011E: An internal server error occurred while running the tool."
                               }
                             ]
                           }

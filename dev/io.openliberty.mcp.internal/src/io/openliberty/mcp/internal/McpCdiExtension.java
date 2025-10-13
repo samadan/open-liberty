@@ -79,26 +79,19 @@ public class McpCdiExtension implements Extension {
 
             for (String argName : arguments.keySet()) {
                 if (argName.isBlank()) {
-                    blankArgsList.add(tool.getToolQualifiedName());
+                    Tr.error(tc, "CWMCM0001E.blank.arguments", tool.getToolQualifiedName());
                     blankArgumentsFound = true;
                 } else if (arguments.get(argName).isDuplicate()) {
-                    duplicateArgsList.add(tool.getToolQualifiedName() + " -  Argument: " + argName);
+                    Tr.error(tc, "CWMCM0002E.duplicate.arguments", tool.getToolQualifiedName(), argName);
                     duplicateArgumentsFound = true;
                 } else if (argName.equals(ToolMetadata.MISSING_TOOL_ARG_NAME)) {
-                    missingArgsList.add(tool.getToolQualifiedName());
+                    Tr.error(tc, "CWMCM0003E.missing.tool.argument.name", tool.getToolQualifiedName());
                     missingArgumentName = true;
                 }
             }
         }
-        if (blankArgumentsFound) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0001E.blank.arguments", String.join(",\n", blankArgsList))));
-
-        }
-        if (duplicateArgumentsFound) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0002E.duplicate.arguments", String.join(",\n", duplicateArgsList))));
-        }
-        if (missingArgumentName) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0003E.missing.tool.argument.name", String.join(",\n", missingArgsList))));
+        if (blankArgumentsFound || duplicateArgumentsFound || missingArgumentName) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
         }
     }
 
@@ -107,19 +100,10 @@ public class McpCdiExtension implements Extension {
         duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
         List<String> duplicateToolsList = new ArrayList<>();
         for (String toolName : duplicateToolsMap.keySet()) {
-            StringBuilder sb = new StringBuilder();
             LinkedList<String> qualifiedNames = duplicateToolsMap.get(toolName);
-            sb.append("Tool: ").append(toolName);
-            sb.append(" -- Methods found:\n");
-            for (String qualifiedName : qualifiedNames) {
-                sb.append("    - ").append(qualifiedName + "\n");
-            }
-            duplicateToolsList.add(sb.toString());
+            Tr.error(tc, "CWMCM0004E.duplicate.tools", toolName, qualifiedNames);
         }
 
-        if (duplicateToolsMap.size() != 0) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0004E.duplicate.tools", String.join(",", duplicateToolsList))));
-        }
     }
 
     private void reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
@@ -131,18 +115,12 @@ public class McpCdiExtension implements Extension {
                     continue;
                 }
                 resultCountMap.merge(specialArgumentTypeResolution, 1, Integer::sum);
-//                if (resultCountMap.get(specialArgumentTypeResolution) > 1) {
-//                    sbDuplicateSpecialArgs.append(specialArgumentTypeResolution);
-//                    sbDuplicateSpecialArgs.append(" Tool: " + tool.getToolQualifiedName());
-//                    duplicateArgsList.add(sbDuplicateSpecialArgs.toString());
-//                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.duplicate.special.arguments",
-//                                                                                                  String.join(",", duplicateArgsList))));
-//                }
 
             }
             resultCountMap.forEach((k, v) -> {
                 if (v > 1) {
-                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.duplicate.special.arguments", tool.getToolQualifiedName(), k)));
+                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0006E.duplicate.special.arguments", tool.getToolQualifiedName(),
+                                                                                                  k.actualClass().getSimpleName())));
                 }
             });
 
@@ -154,7 +132,7 @@ public class McpCdiExtension implements Extension {
         for (ToolMetadata tool : tools.getAllTools()) {
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
                 if (specialArgument.typeResolution().specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
-                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0006E.invalid.arguments", tool.getToolQualifiedName(),
+                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0007E.invalid.arguments", tool.getToolQualifiedName(),
                                                                                                   specialArgument.typeResolution())));
                 }
             }

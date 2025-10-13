@@ -79,7 +79,7 @@ public class McpServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         McpTransport transport = new McpTransport(req, resp, jsonb);
-        String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0008I.get.disallowed");
+        String excpetionMesaage = Tr.formatMessage(tc, "CWMCM0009I.get.disallowed");
         HttpResponseException e = new HttpResponseException(
                                                             HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                                                             excpetionMesaage).withHeader("Allow", "POST");
@@ -207,10 +207,10 @@ public class McpServlet extends HttpServlet {
             if (isBusinessException(t, params)) {
                 transport.sendResponse(toErrorResponse(e.getCause()));
             } else {
-                Tr.error(tc, "CWMCM0014E.internal.server.error.detailed",
+                Tr.error(tc, "CWMCM0010E.internal.server.error.detailed",
                          params.getMetadata().name(),
                          e.getCause());
-                transport.sendResponse(ToolResponse.error(Tr.formatMessage(tc, "CWMCM0015E.internal.server.error")));
+                transport.sendResponse(ToolResponse.error(Tr.formatMessage(tc, "CWMCM0011E.internal.server.error")));
             }
         } catch (IllegalAccessException e) {
             throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
@@ -223,7 +223,7 @@ public class McpServlet extends HttpServlet {
             try {
                 cc.release();
             } catch (Exception ex) {
-                Tr.warning(tc, "CWMCM0016W.bean.release.fail", ex, params.getName());
+                Tr.warning(tc, "CWMCM0012E.bean.release.fail", ex, params.getName());
             }
         }
     }

@@ -36,12 +36,12 @@ public class McpRequestIdDeserializer implements JsonbDeserializer<McpRequestId>
             case STRING:
                 String strVal = ((JsonString) jsonVal).getString();
                 if (strVal.isBlank())
-                    throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR, Tr.formatMessage(tc, "CWMCM0024E.jsonrpc.validation.empty.string.id", strVal));
+                    throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR, Tr.formatMessage(tc, "CWMCM0019E.jsonrpc.validation.empty.string.id", strVal));
                 return new McpRequestId(strVal);
             case NUMBER:
                 return new McpRequestId(((JsonNumber) jsonVal).bigDecimalValue());
             default:
-                throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR, Tr.formatMessage(tc, "CWMCM0026E.jsonrpc.validation.invalid.id.type"));
+                throw new JSONRPCException(JSONRPCErrorCode.PARSE_ERROR, Tr.formatMessage(tc, "CWMCM0021E.jsonrpc.validation.invalid.id.type"));
 
         }
     }

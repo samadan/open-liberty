@@ -45,7 +45,7 @@ public class McpConnectionTracker {
     public void registerOngoingRequest(ExecutionRequestId id, Cancellation cancellation) {
         Cancellation previous = ongoingRequests.putIfAbsent(id.toString(), cancellation);
         if (previous != null) {
-            throw new JSONRPCException(INVALID_PARAMS, Tr.formatMessage(tc, "CWMCM0007E.invalid.request.params", String.valueOf(id.id())));
+            throw new JSONRPCException(INVALID_PARAMS, Tr.formatMessage(tc, "CWMCM0008E.invalid.request.params", id.id()));
         }
     }
 
