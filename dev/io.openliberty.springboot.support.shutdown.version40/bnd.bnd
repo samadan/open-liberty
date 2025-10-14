@@ -20,6 +20,8 @@ bVersion=1.0
 javac.source: 17
 javac.target: 17
 
+Require-Capability: osgi.ee; filter:="(&(osgi.ee=JavaSE)(version=17))"
+
 Bundle-Name: WebSphere Spring Boot 4 Application Closer
 Bundle-SymbolicName: io.openliberty.springboot.support.shutdown.version40
 Bundle-Description: WebSphere Spring Boot 4 Application Closer, version ${bVersion}
