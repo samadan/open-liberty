@@ -56,16 +56,17 @@ public class McpCdiExtension implements Extension {
     }
 
     void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
-        reportOnDuplicateTools(afterDeploymentValidation);
-        reportOnToolArgEdgeCases(afterDeploymentValidation);
-        reportOnDuplicateSpecialArguments(afterDeploymentValidation);
-        reportOnInvalidSpecialArguments(afterDeploymentValidation);
+        boolean error = reportOnDuplicateTools(afterDeploymentValidation) | reportOnToolArgEdgeCases(afterDeploymentValidation) |
+                        reportOnDuplicateSpecialArguments(afterDeploymentValidation) | reportOnInvalidSpecialArguments(afterDeploymentValidation);
+        if (error) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
+        }
     }
 
     /**
      * @param afterDeploymentValidation
      */
-    private void reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
+    private boolean reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
         boolean blankArgumentsFound = false;
         boolean duplicateArgumentsFound = false;
         boolean missingArgumentName = false;
@@ -86,12 +87,10 @@ public class McpCdiExtension implements Extension {
                 }
             }
         }
-        if (blankArgumentsFound || duplicateArgumentsFound || missingArgumentName) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
-        }
+        return blankArgumentsFound || duplicateArgumentsFound || missingArgumentName;
     }
 
-    private void reportOnDuplicateTools(AfterDeploymentValidation afterDeploymentValidation) {
+    private boolean reportOnDuplicateTools(AfterDeploymentValidation afterDeploymentValidation) {
         boolean error = false;
         // prune items that are not duplicates
         duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
@@ -100,13 +99,11 @@ public class McpCdiExtension implements Extension {
             LinkedList<String> qualifiedNames = duplicateToolsMap.get(toolName);
             Tr.error(tc, "CWMCM0004E.duplicate.tools", toolName, String.join(",", qualifiedNames));
         }
-        if (error) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
-        }
+        return error;
 
     }
 
-    private void reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+    private boolean reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
         AtomicBoolean error = new AtomicBoolean(false);
         for (ToolMetadata tool : tools.getAllTools()) {
             Map<SpecialArgumentType.Resolution, Integer> resultCountMap = new HashMap<>();
@@ -128,13 +125,11 @@ public class McpCdiExtension implements Extension {
 
             });
         }
-        if (error.get()) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
-        }
+        return error.get();
 
     }
 
-    private void reportOnInvalidSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+    private boolean reportOnInvalidSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
         boolean error = false;
         for (ToolMetadata tool : tools.getAllTools()) {
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
@@ -145,9 +140,7 @@ public class McpCdiExtension implements Extension {
                 }
             }
         }
-        if (error) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
-        }
+        return error;
     }
 
     private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method) {
