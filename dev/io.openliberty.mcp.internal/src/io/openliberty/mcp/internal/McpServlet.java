@@ -20,10 +20,12 @@ import java.util.Optional;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
+import com.ibm.ws.kernel.service.util.ServiceCaller;
 
 import io.openliberty.mcp.content.Content;
 import io.openliberty.mcp.internal.Capabilities.ServerCapabilities;
 import io.openliberty.mcp.internal.ToolMetadata.SpecialArgumentMetadata;
+import io.openliberty.mcp.internal.config.McpConfiguration;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.HttpResponseException;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCErrorCode;
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
@@ -56,6 +58,8 @@ public class McpServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final TraceComponent tc = Tr.register(McpServlet.class);
+    private static final ServiceCaller<McpConfiguration> mcpConfigService = new ServiceCaller<>(McpServlet.class, McpConfiguration.class);
+
     private Jsonb jsonb;
 
     @Inject
@@ -92,16 +96,22 @@ public class McpServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, JSONRPCException {
         McpTransport transport = new McpTransport(req, resp, jsonb);
         try {
+            Boolean stateless = mcpConfigService.run(config -> {
+                boolean s = config.isStateless();
+                return s;
+            }).orElse(false);
+
             transport.init(sessionStore);
 
             RequestMethod method = transport.getMcpRequest().getRequestMethod();
-            if (method != RequestMethod.INITIALIZE && method != RequestMethod.PING) {
+
+            if (!stateless && method != RequestMethod.INITIALIZE && method != RequestMethod.PING) {
                 McpSession session = transport.getSession();
                 if (session == null) {
-                    throw new HttpResponseException(HttpServletResponse.SC_BAD_REQUEST, "Missing Mcp-Session-Id header");
+                    throw new HttpResponseException(HttpServletResponse.SC_BAD_REQUEST,
+                                                    "Missing Mcp-Session-Id header");
                 }
             }
-
             callRequest(transport);
         } catch (JSONRPCException e) {
             transport.sendJsonRpcException(e);
@@ -133,6 +143,14 @@ public class McpServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        boolean stateless = Boolean.TRUE.equals(
+                                                mcpConfigService.run(McpConfiguration::isStateless).orElse(false));
+
+        if (stateless) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Session not found");
+            return;
+        }
+
         final String sessionId = req.getHeader(McpTransport.MCP_SESSION_ID_HEADER);
 
         if (sessionId == null) {
