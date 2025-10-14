@@ -1720,6 +1720,56 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
+     * Tests the Empty (and NotEmpty) Query by Method Name keyword.
+     */
+    @Test
+    public void testEmptyAndNotEmpty() {
+        mobilePhones.removeAll();
+
+        Mobile m1 = mobilePhones.insert(Mobile.of(OS.ANDROID,
+                                                  List.of("Camera",
+                                                          "Photos",
+                                                          "Email"),
+                                                  List.of()));
+
+        Mobile m2 = mobilePhones.insert(Mobile.of(OS.IOS,
+                                                  List.of(),
+                                                  List.of("email1@openliberty.io",
+                                                          "email2@openliberty.io",
+                                                          "email3@openliberty.io")));
+
+        List<Mobile> list = mobilePhones.findByEmailsEmpty();
+        assertEquals(list.toString(), 1, list.size());
+        Mobile m = list.get(0);
+        assertEquals(OS.ANDROID,
+                     m.operatingSystem);
+        assertEquals(m1.deviceId,
+                     m.deviceId);
+        assertEquals(List.of("Camera",
+                             "Photos",
+                             "Email"),
+                     m.apps);
+        assertEquals(List.of(),
+                     m.emails);
+
+        list = mobilePhones.findByEmailsNotEmpty();
+        assertEquals(list.toString(), 1, list.size());
+        m = list.get(0);
+        assertEquals(OS.IOS,
+                     m.operatingSystem);
+        assertEquals(m2.deviceId,
+                     m.deviceId);
+        assertEquals(List.of(),
+                     m.apps);
+        assertEquals(List.of("email1@openliberty.io",
+                             "email2@openliberty.io",
+                             "email3@openliberty.io"),
+                     m.emails);
+
+        mobilePhones.removeAll();
+    }
+
+    /**
      * Tests CrudRepository methods that supply entities as parameters.
      * Also tests compatibility with Converters using OffsetDateTimeToStringConverter
      */
