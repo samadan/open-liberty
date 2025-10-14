@@ -191,7 +191,7 @@ parent.subprojects {
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
-import groovy.util.XmlSlurper
+import groovy.xml.XmlSlurper
 
 String getVersionFromReleaseRepo(String org, String name) {
     def versions = []
