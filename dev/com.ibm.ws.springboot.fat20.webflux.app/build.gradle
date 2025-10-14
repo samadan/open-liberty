@@ -12,13 +12,11 @@
  ********************************************************************************/
 
 plugins {
-  id 'org.springframework.boot' version '2.7.1'
+  id 'org.springframework.boot' version '3.5.3'
 }
-apply from: '../wlp-gradle/subprojects/spring.gradle'
-def sv = springVersions[ '2.0' ]
+apply from: '../wlp-gradle/subprojects/springboot2.gradle'
 
 apply plugin: 'java'
-apply plugin: 'io.spring.dependency-management'
 
 group = 'com.ibm.ws.example.spring'
 version = '0.0.1-SNAPSHOT'
@@ -26,8 +24,6 @@ java {
   sourceCompatibility = 1.8
 }
 
-apply from: '../wlp-gradle/subprojects/maven-central-mirror.gradle'
-
 dependencies {
-  implementation('org.springframework.boot:spring-boot-starter-webflux') // + ':' + sv['springBoot'])
+  implementation('org.springframework.boot:spring-boot-starter-webflux')
 }
