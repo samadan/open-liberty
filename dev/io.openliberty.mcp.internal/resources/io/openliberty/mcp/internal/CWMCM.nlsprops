@@ -45,7 +45,7 @@ CWMCM0004E.duplicate.tools.useraction=Only provide a unique name for each MCP To
 
 # Used for server logging
 # do not translate MCP
-CWMCM0005E.validation.error=CWMCM0005E: There are one or more MCP validation errors.
+CWMCM0005E.validation.error=CWMCM0005E: There are one or more MCP validation errors. Check logs for more details.
 CWMCM0005E.validation.error.explanation=Server failed due to invalid arguments being passed.
 CWMCM0005E.validation.error.useraction=Check logs for more details.
 
@@ -123,25 +123,25 @@ CWMCM0015E.unexpected.server.error.exception.useraction=No action is required.
 # Used as part of a response to a client
 # do not translate jsonrpc
 # {0} = jsonrpc value
-CWMCM0016E.jsonrpc.exception.validation.invalid.version=The jsonrpc field must be present. Only JSONRPC 2.0 is currently supported.
+jsonrpc.exception.validation.invalid.version=The jsonrpc field must be present. Only JSONRPC 2.0 is currently supported.
 
 # Used as part of a response to a client
-CWMCM0017E.jsonrpc.validation.empty.method=The method field is empty.
+jsonrpc.validation.empty.method=The method field is empty.
 
 # Used as part of a response to a client
 # {0} = id value
-CWMCM0018E.jsonrpc.exception.validation.empty.string.id=The id field is invalid.The id must not be blank if a string is provided.
+jsonrpc.exception.validation.empty.string.id=The id field is invalid.The id must not be blank if a string is provided.
 
 # Used as part of a response to a client
-CWMCM0019E.jsonrpc.exception.validation.invalid.id.type=The id type is not an acceptable type.The id must be a string or integer.
+jsonrpc.exception.validation.invalid.id.type=The id type is not an acceptable type.The id must be a string or integer.
 
 # Used as part of a response to a client
-CWMCM0020E.jsonrpc.missing.params=The request does not have any arguments in parameters.
-
-# Used as part of a response to a client
-# {0} = list of arguments
-CWMCM0021E.jsonrpc.extra.arguments=The arguments {0} were passed but were not found in method.
+jsonrpc.missing.params=The request does not have any arguments in parameters.
 
 # Used as part of a response to a client
 # {0} = list of arguments
-CWMCM0022E.jsonrpc.missing.arguments=The arguments {0} were expected by the method but were not provided.
+jsonrpc.extra.arguments=The arguments {0} were passed but were not found in method.
+
+# Used as part of a response to a client
+# {0} = list of arguments
+jsonrpc.missing.arguments=The arguments {0} were expected by the method but were not provided.

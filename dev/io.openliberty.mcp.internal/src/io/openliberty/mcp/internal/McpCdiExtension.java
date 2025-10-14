@@ -9,12 +9,11 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -57,19 +56,17 @@ public class McpCdiExtension implements Extension {
     }
 
     void afterDeploymentValidation(@Observes AfterDeploymentValidation afterDeploymentValidation, BeanManager manager) {
-        reportOnDuplicateTools(afterDeploymentValidation);
-        reportOnToolArgEdgeCases(afterDeploymentValidation);
-        reportOnDuplicateSpecialArguments(afterDeploymentValidation);
-        reportOnInvalidSpecialArguments(afterDeploymentValidation);
+        boolean error = reportOnDuplicateTools(afterDeploymentValidation) | reportOnToolArgEdgeCases(afterDeploymentValidation) |
+                        reportOnDuplicateSpecialArguments(afterDeploymentValidation) | reportOnInvalidSpecialArguments(afterDeploymentValidation);
+        if (error) {
+            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
+        }
     }
 
     /**
      * @param afterDeploymentValidation
      */
-    private void reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
-        List<String> blankArgsList = new ArrayList<>();
-        List<String> duplicateArgsList = new ArrayList<>();
-        List<String> missingArgsList = new ArrayList<>();
+    private boolean reportOnToolArgEdgeCases(AfterDeploymentValidation afterDeploymentValidation) {
         boolean blankArgumentsFound = false;
         boolean duplicateArgumentsFound = false;
         boolean missingArgumentName = false;
@@ -90,23 +87,24 @@ public class McpCdiExtension implements Extension {
                 }
             }
         }
-        if (blankArgumentsFound || duplicateArgumentsFound || missingArgumentName) {
-            afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0005E.validation.error")));
-        }
+        return blankArgumentsFound || duplicateArgumentsFound || missingArgumentName;
     }
 
-    private void reportOnDuplicateTools(AfterDeploymentValidation afterDeploymentValidation) {
+    private boolean reportOnDuplicateTools(AfterDeploymentValidation afterDeploymentValidation) {
+        boolean error = false;
         // prune items that are not duplicates
         duplicateToolsMap.entrySet().removeIf(e -> e.getValue().size() == 1);
-        List<String> duplicateToolsList = new ArrayList<>();
         for (String toolName : duplicateToolsMap.keySet()) {
+            error = true;
             LinkedList<String> qualifiedNames = duplicateToolsMap.get(toolName);
-            Tr.error(tc, "CWMCM0004E.duplicate.tools", toolName, qualifiedNames);
+            Tr.error(tc, "CWMCM0004E.duplicate.tools", toolName, String.join(",", qualifiedNames));
         }
+        return error;
 
     }
 
-    private void reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+    private boolean reportOnDuplicateSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+        AtomicBoolean error = new AtomicBoolean(false);
         for (ToolMetadata tool : tools.getAllTools()) {
             Map<SpecialArgumentType.Resolution, Integer> resultCountMap = new HashMap<>();
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
@@ -119,24 +117,30 @@ public class McpCdiExtension implements Extension {
             }
             resultCountMap.forEach((k, v) -> {
                 if (v > 1) {
-                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0006E.duplicate.special.arguments", tool.getToolQualifiedName(),
-                                                                                                  k.actualClass().getSimpleName())));
-                }
-            });
+                    error.set(true);
+                    Tr.error(tc, "CWMCM0006E.duplicate.special.arguments", tool.getToolQualifiedName(),
+                             k.actualClass().getSimpleName());
 
+                }
+
+            });
         }
+        return error.get();
+
     }
 
-    private void reportOnInvalidSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
-        List<String> invalidArgsList = new ArrayList<>();
+    private boolean reportOnInvalidSpecialArguments(AfterDeploymentValidation afterDeploymentValidation) {
+        boolean error = false;
         for (ToolMetadata tool : tools.getAllTools()) {
             for (SpecialArgumentMetadata specialArgument : tool.specialArguments()) {
                 if (specialArgument.typeResolution().specialArgsType() == SpecialArgumentType.UNSUPPORTED) {
-                    afterDeploymentValidation.addDeploymentProblem(new Exception(Tr.formatMessage(tc, "CWMCM0007E.invalid.arguments", tool.getToolQualifiedName(),
-                                                                                                  specialArgument.typeResolution())));
+                    error = true;
+                    Tr.error(tc, "CWMCM0007E.invalid.arguments", tool.getToolQualifiedName(),
+                             specialArgument.typeResolution());
                 }
             }
         }
+        return error;
     }
 
     private void registerTool(Tool tool, Bean<?> bean, AnnotatedMethod<?> method) {
