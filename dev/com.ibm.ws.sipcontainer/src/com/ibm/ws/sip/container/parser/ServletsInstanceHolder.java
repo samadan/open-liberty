@@ -274,6 +274,8 @@ public class ServletsInstanceHolder implements ServletInstanceHolderInterface{
 				c_logger.traceDebug(this,"saveOnStartupServlet","members is null");	
 			}
 		}
+
+		//avoid classloader memory leak - see open-liberty issue #31839
 		sipServletThreadLocal.remove();
 	}
 }
