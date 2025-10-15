@@ -11,7 +11,9 @@ package io.openliberty.mcp.internal.schemas;
 
 import java.util.HashMap;
 
-import io.openliberty.mcp.internal.ToolMetadata;
+import io.openliberty.mcp.internal.McpCdiExtension;
+import jakarta.enterprise.inject.spi.AnnotatedMethod;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.json.JsonObject;
 
 /**
@@ -22,6 +24,20 @@ public class SchemaRegistry {
     private HashMap<SchemaKey, JsonObject> schemaCache = new HashMap<>();
 
     private SchemaCreationBlueprintRegistry blueprintRegistry = new SchemaCreationBlueprintRegistry();
+
+    private static SchemaRegistry staticInstance = null;
+
+    public static SchemaRegistry get() {
+        if (staticInstance != null) {
+            return staticInstance;
+        }
+        return CDI.current().select(McpCdiExtension.class).get().getSchemaRegistry();
+    }
+
+    // used for testing
+    public static void set(SchemaRegistry staticInstance) {
+        SchemaRegistry.staticInstance = staticInstance;
+    }
 
     /**
      * Gets the JSON schema for a class
@@ -51,9 +67,9 @@ public class SchemaRegistry {
      * @param toolMetadata the tool to get the schema for
      * @return the json schema
      */
-    public JsonObject getToolInputSchema(ToolMetadata toolMetadata) {
-        ToolKey key = new ToolKey(toolMetadata, SchemaDirection.INPUT);
-        return schemaCache.computeIfAbsent(key, k -> SchemaGenerator.generateToolInputSchema(toolMetadata, blueprintRegistry));
+    public JsonObject getToolInputSchema(AnnotatedMethod<?> toolMethod) {
+        ToolKey key = new ToolKey(toolMethod, SchemaDirection.INPUT);
+        return schemaCache.computeIfAbsent(key, k -> SchemaGenerator.generateToolInputSchema(toolMethod, blueprintRegistry));
     }
 
     /**
@@ -62,9 +78,9 @@ public class SchemaRegistry {
      * @param toolMetadata the tool to get the schema for
      * @return the json schema
      */
-    public JsonObject getToolOuputSchema(ToolMetadata toolMetadata) {
-        ToolKey key = new ToolKey(toolMetadata, SchemaDirection.OUTPUT);
-        return schemaCache.computeIfAbsent(key, k -> SchemaGenerator.generateToolOutputSchema(toolMetadata, blueprintRegistry));
+    public JsonObject getToolOutputSchema(AnnotatedMethod<?> toolMethod) {
+        ToolKey key = new ToolKey(toolMethod, SchemaDirection.OUTPUT);
+        return schemaCache.computeIfAbsent(key, k -> SchemaGenerator.generateToolOutputSchema(toolMethod, blueprintRegistry));
     }
 
     /**
@@ -74,6 +90,6 @@ public class SchemaRegistry {
 
     public record ClassKey(Class<?> cls, SchemaDirection direction) implements SchemaKey {};
 
-    public record ToolKey(ToolMetadata tool, SchemaDirection direction) implements SchemaKey {};
+    public record ToolKey(AnnotatedMethod<?> tool, SchemaDirection direction) implements SchemaKey {};
 
 }

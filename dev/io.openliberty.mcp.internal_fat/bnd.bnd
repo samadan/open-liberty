@@ -33,5 +33,7 @@ tested.features: \
 	com.ibm.ws.logging;version=latest,\
 	com.ibm.websphere.appserver.spi.logging,\
 	com.ibm.ws.logging.core,\
+	io.openliberty.jakarta.jsonb.3.0;version=latest,\
+	io.openliberty.jakarta.jsonp.2.1;version=latest,\
 	io.openliberty.jakarta.annotation.2.1,\
 	io.openliberty.jakarta.concurrency.3.0

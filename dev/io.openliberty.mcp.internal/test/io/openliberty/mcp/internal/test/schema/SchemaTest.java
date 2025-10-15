@@ -9,11 +9,9 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.test.schema;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,9 +21,10 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
-import io.openliberty.mcp.internal.ToolMetadata;
 import io.openliberty.mcp.internal.schemas.SchemaDirection;
 import io.openliberty.mcp.internal.schemas.SchemaRegistry;
+import io.openliberty.mcp.internal.testutils.MockAnnotatedMethod;
+import io.openliberty.mcp.internal.testutils.TestUtils;
 import jakarta.json.bind.annotation.JsonbProperty;
 import jakarta.json.bind.annotation.JsonbTransient;
 
@@ -36,22 +35,22 @@ public class SchemaTest {
     private static SchemaRegistry registry;
 
     @Schema(description = "A person object contains address, company objects")
-    public static record person(@JsonbProperty("fullname") String name, address address, company company) {};
+    public static record Person(@JsonbProperty("fullname") String name, Address address, Company company) {};
 
-    public static record address(int number, @Schema(description = "A street object to represent complex streets") street street, String postcode,
+    public static record Address(int number, @Schema(description = "A street object to represent complex streets") Street street, String postcode,
                                  @JsonbTransient String directions) {};
 
     @Schema("{\"properties\": {  \"streetName\": { \"type\": \"string\" }, \"roadType\": { \"type\": \"string\" } }, \"required\": [ \"streetName\" ], \"type\": \"object\"}")
-    public static record street(String streetname, String roadtype) {}
+    public static record Street(String streetname, String roadtype) {}
 
-    public static record company(String name, address address, @Schema(description = "A list of employees (person object)") List<person> employees,
-                                 @Schema(value = "{\"properties\": {\"key\":{ \"type\": \"integer\" }, \"value\":{ \"$ref\": \"#/$defs/person\" }},\"required\": [ ], \"type\": \"object\"}") Map<String, person> employeeRegistry) {};
+    public static record Company(String name, Address address, @Schema(description = "A list of employees (person object)") List<Person> employees,
+                                 @Schema(value = "{\"properties\": {\"key\":{ \"type\": \"integer\" }, \"value\":{ \"$ref\": \"#/$defs/Person\" }},\"required\": [ ], \"type\": \"object\"}") Map<String, Person> employeeRegistry) {};
 
-    public static record partialPerson(String name, Optional<address> address, partialCompany partialCompany) {}
+    public static record PartialPerson(String name, Optional<Address> address, PartialCompany partialCompany) {}
 
-    public static record partialCompany(Optional<String> name, Optional<address> address,
-                                        @Schema(description = "A list of employees (person object)") Optional<List<partialPerson>> employees,
-                                        Optional<Map<String, Optional<partialPerson>>> employeeRegistry) {}
+    public static record PartialCompany(Optional<String> name, Optional<Address> address,
+                                        @Schema(description = "A list of employees (person object)") Optional<List<PartialPerson>> employees,
+                                        Optional<Map<String, Optional<PartialPerson>>> employeeRegistry) {}
 
     public static class SoftwareCompanyEntry {
         SoftwareCompanyEntry.person person;
@@ -59,7 +58,7 @@ public class SchemaTest {
 
         public SoftwareCompanyEntry(SoftwareCompanyEntry.person person, String companyName) {}
 
-        public static record person(SchemaTest.person person, int softwareid) {}
+        public static record person(SchemaTest.Person person, int softwareid) {}
 
         /**
          * @return the person
@@ -97,7 +96,7 @@ public class SchemaTest {
 
         public ConstructionCompanyEntry(ConstructionCompanyEntry.person person, String companyName) {}
 
-        public static record person(SchemaTest.person person, String constructionid) {}
+        public static record person(SchemaTest.Person person, String constructionid) {}
 
         /**
          * @return the person
@@ -166,14 +165,14 @@ public class SchemaTest {
     };
 
     @Tool(name = "checkPerson", title = "checks if person is in employee list", description = "Returns boolean")
-    public boolean checkPerson(@ToolArg(name = "person", description = "Person object") person person, @ToolArg(name = "company", description = "Company object") company company) {
+    public boolean checkPerson(@ToolArg(name = "person", description = "Person object") Person person, @ToolArg(name = "company", description = "Company object") Company company) {
         return true;
     }
 
     @Tool(name = "addPersonToList", title = "adds person to employee list", description = "adds person to employee list, returns nothing")
-    public @Schema(description = "Returns list of person object") List<person> addPersonToList(@ToolArg(name = "employeeList",
-                                                                                                        description = "List of people") List<person> employeeList,
-                                                                                               @ToolArg(name = "person", description = "Person object") person person) {
+    public @Schema(description = "Returns list of person object") List<Person> addPersonToList(@ToolArg(name = "employeeList",
+                                                                                                        description = "List of people") List<Person> employeeList,
+                                                                                               @ToolArg(name = "person", description = "Person object") Person person) {
         employeeList.add(person);
         return employeeList;
         //comment
@@ -186,11 +185,11 @@ public class SchemaTest {
 
     @Test
     public void testPersonSchema() {
-        String response = registry.getSchema(person.class, SchemaDirection.INPUT).toString();
+        String response = registry.getSchema(Person.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
-                                "address": {
+                                "Address": {
                                     "properties": {
                                         "number": {
                                             "type": "integer"
@@ -221,16 +220,16 @@ public class SchemaTest {
                                     ],
                                     "type": "object"
                                 },
-                                "person": {
+                                "Person": {
                                     "description": "A person object contains address, company objects",
                                     "properties": {
                                         "address": {
-                                            "$ref": "#/$defs/address"
+                                            "$ref": "#/$defs/Address"
                                         },
                                         "company": {
                                             "properties": {
                                                 "address": {
-                                                    "$ref": "#/$defs/address"
+                                                    "$ref": "#/$defs/Address"
                                                 },
                                                 "name": {
                                                     "type": "string"
@@ -238,14 +237,14 @@ public class SchemaTest {
                                                 "employees": {
                                                     "description": "A list of employees (person object)",
                                                     "items": {
-                                                        "$ref": "#/$defs/person"
+                                                        "$ref": "#/$defs/Person"
                                                     },
                                                     "type": "array"
                                                 },
                                                 "employeeRegistry": {
                                                     "properties": {
                                                         "value": {
-                                                            "$ref": "#/$defs/person"
+                                                            "$ref": "#/$defs/Person"
                                                         },
                                                         "key": {
                                                             "type": "integer"
@@ -275,7 +274,7 @@ public class SchemaTest {
                                     "type": "object"
                                 }
                             },
-                            "$ref": "#/$defs/person"
+                            "$ref": "#/$defs/Person"
                         }
                             """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
@@ -291,9 +290,9 @@ public class SchemaTest {
 
     @Test
     public void testToolInputSchema() throws NoSuchMethodException, SecurityException {
-        ToolMetadata toolMetadata = findTool("updateWidget");
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "updateWidget");
 
-        String toolInputSchema = registry.getToolInputSchema(toolMetadata).toString();
+        String toolInputSchema = registry.getToolInputSchema(toolMethod).toString();
         String expectedSchema = """
                         {
                         "type" : "object",
@@ -330,9 +329,9 @@ public class SchemaTest {
 
     @Test
     public void testToolOutputSchema() throws NoSuchMethodException, SecurityException {
-        ToolMetadata toolMetadata = findTool("updateWidget");
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "updateWidget");
 
-        String toolInputSchema = registry.getToolOuputSchema(toolMetadata).toString();
+        String toolInputSchema = registry.getToolOutputSchema(toolMethod).toString();
         String expectedSchema = """
                         {
                             "type": "object",
@@ -353,25 +352,6 @@ public class SchemaTest {
         JSONAssert.assertEquals(expectedSchema, toolInputSchema, true);
     }
 
-    /**
-     * Finds a tool method in the current class by name
-     *
-     * @param name the name of the tool
-     * @return the tool metadata
-     */
-    private ToolMetadata findTool(String name) {
-        List<ToolMetadata> tools = Arrays.stream(SchemaTest.class.getDeclaredMethods())
-                                         .filter(m -> m.isAnnotationPresent(Tool.class))
-                                         .map(m -> ToolMetadata.createFrom(m.getAnnotation(Tool.class), null, new MockAnnotatedMethod<>(m)))
-                                         .filter(m -> m.name().equals(name))
-                                         .collect(Collectors.toList());
-        if (tools.size() != 1) {
-            throw new RuntimeException("Found " + tools.size() + " tools with name " + name);
-        }
-
-        return tools.get(0);
-    }
-
     public record CompositeWidget(String name, int flangeCount, List<CompositeWidget> subwidgets) {}
 
     @Tool(description = "combine two widgets to make a new widget")
@@ -382,8 +362,8 @@ public class SchemaTest {
 
     @Test
     public void testToolInputRecursive() {
-        ToolMetadata toolMetadata = findTool("combineWidgets");
-        String toolInputSchema = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "combineWidgets");
+        String toolInputSchema = registry.getToolInputSchema(toolMethod).toString();
 
         String expectedSchema = """
                         {
@@ -433,8 +413,8 @@ public class SchemaTest {
 
     @Test
     public void testToolOutputRecursive() {
-        ToolMetadata toolMetadata = findTool("combineWidgets");
-        String toolInputSchema = registry.getToolOuputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "combineWidgets");
+        String toolInputSchema = registry.getToolOutputSchema(toolMethod).toString();
         String expectedSchema = """
                         {
                             "$defs": {
@@ -470,12 +450,12 @@ public class SchemaTest {
 
     @Test
     public void testPersonCheckToolSchema() throws NoSuchMethodException, SecurityException {
-        ToolMetadata toolMetadata = findTool("checkPerson");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "checkPerson");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                         {
                             "$defs": {
-                                "address": {
+                                "Address": {
                                     "properties": {
                                         "number": {
                                             "type": "integer"
@@ -506,14 +486,14 @@ public class SchemaTest {
                                     ],
                                     "type": "object"
                                 },
-                                "person": {
+                                "Person": {
                                     "description": "A person object contains address, company objects",
                                     "properties": {
                                         "address": {
-                                            "$ref": "#/$defs/address"
+                                            "$ref": "#/$defs/Address"
                                         },
                                         "company": {
-                                            "$ref": "#/$defs/company"
+                                            "$ref": "#/$defs/Company"
                                         },
                                         "fullname": {
                                             "type": "string"
@@ -526,10 +506,10 @@ public class SchemaTest {
                                     ],
                                     "type": "object"
                                 },
-                                "company": {
+                                "Company": {
                                     "properties": {
                                         "address": {
-                                            "$ref": "#/$defs/address"
+                                            "$ref": "#/$defs/Address"
                                         },
                                         "name": {
                                             "type": "string"
@@ -537,14 +517,14 @@ public class SchemaTest {
                                         "employees": {
                                             "description": "A list of employees (person object)",
                                             "items": {
-                                                "$ref": "#/$defs/person"
+                                                "$ref": "#/$defs/Person"
                                             },
                                             "type": "array"
                                         },
                                         "employeeRegistry": {
                                             "properties": {
                                                 "value": {
-                                                    "$ref": "#/$defs/person"
+                                                    "$ref": "#/$defs/Person"
                                                 },
                                                 "key": {
                                                     "type": "integer"
@@ -565,11 +545,11 @@ public class SchemaTest {
                             },
                             "properties": {
                                 "person": {
-                                    "$ref": "#/$defs/person",
+                                    "$ref": "#/$defs/Person",
                                     "description": "Person object"
                                 },
                                 "company": {
-                                    "$ref": "#/$defs/company",
+                                    "$ref": "#/$defs/Company",
                                     "description": "Company object"
                                 }
                             },
@@ -585,7 +565,7 @@ public class SchemaTest {
 
     @Test
     public void testAddressSchema() {
-        String response = registry.getSchema(address.class, SchemaDirection.INPUT).toString();
+        String response = registry.getSchema(Address.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                            {
                             "properties": {
@@ -624,7 +604,7 @@ public class SchemaTest {
 
     @Test
     public void testStreetSchema() {
-        String response = registry.getSchema(street.class, SchemaDirection.INPUT).toString();
+        String response = registry.getSchema(Street.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                         {
                           "properties": {
@@ -646,11 +626,11 @@ public class SchemaTest {
 
     @Test
     public void testCompanySchema() {
-        String response = registry.getSchema(company.class, SchemaDirection.INPUT).toString();
+        String response = registry.getSchema(Company.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
-                                "address": {
+                                "Address": {
                                     "properties": {
                                         "number": {
                                             "type": "integer"
@@ -681,14 +661,14 @@ public class SchemaTest {
                                     ],
                                     "type": "object"
                                 },
-                                "person": {
+                                "Person": {
                                     "description": "A person object contains address, company objects",
                                     "properties": {
                                         "address": {
-                                            "$ref": "#/$defs/address"
+                                            "$ref": "#/$defs/Address"
                                         },
                                         "company": {
-                                            "$ref": "#/$defs/company"
+                                            "$ref": "#/$defs/Company"
                                         },
                                         "fullname": {
                                             "type": "string"
@@ -701,10 +681,10 @@ public class SchemaTest {
                                     ],
                                     "type": "object"
                                 },
-                                "company": {
+                                "Company": {
                                     "properties": {
                                         "address": {
-                                            "$ref": "#/$defs/address"
+                                            "$ref": "#/$defs/Address"
                                         },
                                         "name": {
                                             "type": "string"
@@ -712,14 +692,14 @@ public class SchemaTest {
                                         "employees": {
                                             "description": "A list of employees (person object)",
                                             "items": {
-                                                "$ref": "#/$defs/person"
+                                                "$ref": "#/$defs/Person"
                                             },
                                             "type": "array"
                                         },
                                         "employeeRegistry": {
                                             "properties": {
                                                 "value": {
-                                                    "$ref": "#/$defs/person"
+                                                    "$ref": "#/$defs/Person"
                                                 },
                                                 "key": {
                                                     "type": "integer"
@@ -738,7 +718,7 @@ public class SchemaTest {
                                     "type": "object"
                                 }
                             },
-                            "$ref": "#/$defs/company"
+                            "$ref": "#/$defs/Company"
                         }
                                 """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
@@ -750,7 +730,7 @@ public class SchemaTest {
         String expectedResponseString = """
                             {
                             "$defs": {
-                                "address": {
+                                "Address": {
                                     "properties": {
                                         "number": {
                                             "type": "integer"
@@ -781,16 +761,16 @@ public class SchemaTest {
                                     ],
                                     "type": "object"
                                 },
-                                "person": {
+                                "Person": {
                                     "description": "A person object contains address, company objects",
                                     "properties": {
                                         "address": {
-                                            "$ref": "#/$defs/address"
+                                            "$ref": "#/$defs/Address"
                                         },
                                         "company": {
                                             "properties": {
                                                 "address": {
-                                                    "$ref": "#/$defs/address"
+                                                    "$ref": "#/$defs/Address"
                                                 },
                                                 "name": {
                                                     "type": "string"
@@ -798,14 +778,14 @@ public class SchemaTest {
                                                 "employees": {
                                                     "description": "A list of employees (person object)",
                                                     "items": {
-                                                        "$ref": "#/$defs/person"
+                                                        "$ref": "#/$defs/Person"
                                                     },
                                                     "type": "array"
                                                 },
                                                 "employeeRegistry": {
                                                     "properties": {
                                                         "value": {
-                                                            "$ref": "#/$defs/person"
+                                                            "$ref": "#/$defs/Person"
                                                         },
                                                         "key": {
                                                             "type": "integer"
@@ -844,7 +824,7 @@ public class SchemaTest {
                                                     "type": "integer"
                                                 },
                                                 "person": {
-                                                    "$ref": "#/$defs/person"
+                                                    "$ref": "#/$defs/Person"
                                                 }
                                             },
                                             "required": [
@@ -868,7 +848,7 @@ public class SchemaTest {
                                         "person": {
                                             "properties": {
                                                 "person": {
-                                                    "$ref": "#/$defs/person"
+                                                    "$ref": "#/$defs/Person"
                                                 },
                                                 "constructionid": {
                                                     "type": "string"
@@ -903,12 +883,12 @@ public class SchemaTest {
 
     @Test
     public void testPersonAddtoListToolInputSchema() throws NoSuchMethodException, SecurityException {
-        ToolMetadata toolMetadata = findTool("addPersonToList");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addPersonToList");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                                                 {
                                                 "$defs": {
-                                                    "address": {
+                                                    "Address": {
                                                         "properties": {
                                                             "number": {
                                                                 "type": "integer"
@@ -939,16 +919,16 @@ public class SchemaTest {
                                                         ],
                                                         "type": "object"
                                                     },
-                                                    "person": {
+                                                    "Person": {
                                                         "description": "A person object contains address, company objects",
                                                         "properties": {
                                                             "address": {
-                                                                "$ref": "#/$defs/address"
+                                                                "$ref": "#/$defs/Address"
                                                             },
                                                             "company": {
                                                                 "properties": {
                                                                     "address": {
-                                                                        "$ref": "#/$defs/address"
+                                                                        "$ref": "#/$defs/Address"
                                                                     },
                                                                     "name": {
                                                                         "type": "string"
@@ -956,14 +936,14 @@ public class SchemaTest {
                                                                     "employees": {
                                                                         "description": "A list of employees (person object)",
                                                                         "items": {
-                                                                            "$ref": "#/$defs/person"
+                                                                            "$ref": "#/$defs/Person"
                                                                         },
                                                                         "type": "array"
                                                                     },
                                                                     "employeeRegistry": {
                                                                         "properties": {
                                                                             "value": {
-                                                                                "$ref": "#/$defs/person"
+                                                                                "$ref": "#/$defs/Person"
                                                                             },
                                                                             "key": {
                                                                                 "type": "integer"
@@ -997,12 +977,12 @@ public class SchemaTest {
                                                     "employeeList": {
                                                         "description": "List of people",
                                                         "items": {
-                                                            "$ref": "#/$defs/person"
+                                                            "$ref": "#/$defs/Person"
                                                         },
                                                         "type": "array"
                                                     },
                                                     "person": {
-                                                        "$ref": "#/$defs/person",
+                                                        "$ref": "#/$defs/Person",
                                                         "description": "Person object"
                                                     }
                                                 },
@@ -1018,12 +998,12 @@ public class SchemaTest {
 
     @Test
     public void testPersonAddtoListToolOutputSchema() throws NoSuchMethodException, SecurityException {
-        ToolMetadata toolMetadata = findTool("addPersonToList");
-        String response = registry.getToolOuputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addPersonToList");
+        String response = registry.getToolOutputSchema(toolMethod).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
-                                "address": {
+                                "Address": {
                                     "properties": {
                                         "number": {
                                             "type": "integer"
@@ -1054,16 +1034,16 @@ public class SchemaTest {
                                     ],
                                     "type": "object"
                                 },
-                                "person": {
+                                "Person": {
                                     "description": "A person object contains address, company objects",
                                     "properties": {
                                         "address": {
-                                            "$ref": "#/$defs/address"
+                                            "$ref": "#/$defs/Address"
                                         },
                                         "company": {
                                             "properties": {
                                                 "address": {
-                                                    "$ref": "#/$defs/address"
+                                                    "$ref": "#/$defs/Address"
                                                 },
                                                 "name": {
                                                     "type": "string"
@@ -1071,14 +1051,14 @@ public class SchemaTest {
                                                 "employees": {
                                                     "description": "A list of employees (person object)",
                                                     "items": {
-                                                        "$ref": "#/$defs/person"
+                                                        "$ref": "#/$defs/Person"
                                                     },
                                                     "type": "array"
                                                 },
                                                 "employeeRegistry": {
                                                     "properties": {
                                                         "value": {
-                                                            "$ref": "#/$defs/person"
+                                                            "$ref": "#/$defs/Person"
                                                         },
                                                         "key": {
                                                             "type": "integer"
@@ -1109,7 +1089,7 @@ public class SchemaTest {
                                 }
                             },
                             "items": {
-                                "$ref": "#/$defs/person"
+                                "$ref": "#/$defs/Person"
                             },
                             "type": "array"
                         }
@@ -1178,11 +1158,11 @@ public class SchemaTest {
 
     @Test
     public void testOptionalPartialPersonSchema() {
-        String response = registry.getSchema(partialPerson.class, SchemaDirection.INPUT).toString();
+        String response = registry.getSchema(PartialPerson.class, SchemaDirection.INPUT).toString();
         String expectedResponseString = """
                             {
                             "$defs": {
-                                "address": {
+                                "Address": {
                                     "properties": {
                                         "number": {
                                             "type": "integer"
@@ -1213,24 +1193,24 @@ public class SchemaTest {
                                     ],
                                     "type": "object"
                                 },
-                                "partialPerson": {
+                                "PartialPerson": {
                                     "type": "object",
                                     "properties": {
                                         "name": {"type": "string"},
-                                        "address": {"$ref": "#/$defs/address"},
+                                        "address": {"$ref": "#/$defs/Address"},
                                         "partialCompany": {
                                             "type": "object",
                                             "properties": {
                                                 "name": {"type": "string"},
-                                                "address": {"$ref": "#/$defs/address"},
+                                                "address": {"$ref": "#/$defs/Address"},
                                                 "employees": {
                                                     "type": "array",
                                                     "description": "A list of employees (person object)",
-                                                    "items": {"$ref": "#/$defs/partialPerson"}
+                                                    "items": {"$ref": "#/$defs/PartialPerson"}
                                                 },
                                                 "employeeRegistry": {
                                                     "type": "object",
-                                                    "additionalProperties": {"$ref": "#/$defs/partialPerson"}
+                                                    "additionalProperties": {"$ref": "#/$defs/PartialPerson"}
                                                 }
                                             },
                                             "required": []
@@ -1242,7 +1222,7 @@ public class SchemaTest {
                                     ]
                                 }
                             },
-                            "$ref": "#/$defs/partialPerson"
+                            "$ref": "#/$defs/PartialPerson"
                         }
                             """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
@@ -1362,8 +1342,8 @@ public class SchemaTest {
 
     @Test
     public void testGenericToolArg() {
-        ToolMetadata toolMetadata = findTool("addGenericToList");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addGenericToList");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                             {
                             "type": "object",
@@ -1406,8 +1386,8 @@ public class SchemaTest {
 
     @Test
     public void testGenericSingleBoundToolArg() {
-        ToolMetadata toolMetadata = findTool("addGenericSingleBoundToList");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addGenericSingleBoundToList");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                             {
                             "type": "object",
@@ -1460,8 +1440,8 @@ public class SchemaTest {
 
     @Test
     public void testGenericMultipleBoundsToolArg() {
-        ToolMetadata toolMetadata = findTool("addGenericMultipleBoundsToList");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addGenericMultipleBoundsToList");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                             {
                             "type": "object",
@@ -1521,8 +1501,8 @@ public class SchemaTest {
 
     @Test
     public void testWildcardToolArg() {
-        ToolMetadata toolMetadata = findTool("addWildcardToList");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addWildcardToList");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                         {
                             "type": "object",
@@ -1559,8 +1539,8 @@ public class SchemaTest {
 
     @Test
     public void testGenericExtendBoundToolArg() {
-        ToolMetadata toolMetadata = findTool("addWildcardExtendBoundToList");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addWildcardExtendBoundToList");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                                     {
                                         "type": "object",
@@ -1609,8 +1589,8 @@ public class SchemaTest {
 
     @Test
     public void testWildcardSuperBoundsToolArg() {
-        ToolMetadata toolMetadata = findTool("addWildcardSuperBoundsToList");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addWildcardSuperBoundsToList");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                                     {
                                         "type": "object",
@@ -1648,8 +1628,8 @@ public class SchemaTest {
 
     @Test
     public void testGenericArrayToolArg() {
-        ToolMetadata toolMetadata = findTool("addGenericToGenericArray");
-        String response = registry.getToolInputSchema(toolMetadata).toString();
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "addGenericToGenericArray");
+        String response = registry.getToolInputSchema(toolMethod).toString();
         String expectedResponseString = """
                                     {
                                         "type": "object",
@@ -1687,6 +1667,22 @@ public class SchemaTest {
                                             }
                                         }
                                     }
+                        """;
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+    }
+
+    @Tool(name = "primitiveArrayTest", title = "Test Content Response", description = "tests Content Response")
+    public int[] primitiveArrayTest(@ToolArg(name = "name", description = "name") String name) {
+        return null;
+        //comment
+    }
+
+    @Test
+    public void testPrimitiveArray() {
+        MockAnnotatedMethod<Object> toolMethod = TestUtils.findMethod(SchemaTest.class, "primitiveArrayTest");
+        String response = registry.getToolOutputSchema(toolMethod).toString();
+        String expectedResponseString = """
+                                    {"type":"array","items":{"type":"integer"}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }

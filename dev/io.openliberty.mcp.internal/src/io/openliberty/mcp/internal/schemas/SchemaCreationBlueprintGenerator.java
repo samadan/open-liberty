@@ -10,8 +10,6 @@
 package io.openliberty.mcp.internal.schemas;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedArrayType;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
@@ -55,7 +53,7 @@ public class SchemaCreationBlueprintGenerator {
                 return generateEnumSchemaCreationBlueprint(type);
 
             } else if (cls.isArray()) {
-                return generateArraySchemaCreationBlueprint(type);
+                return generateArraySchemaCreationBlueprint(cls);
 
             } else if (Optional.class.isAssignableFrom(cls)) {
                 return generateRawOptionalSchemaCreationBlueprint(type);
@@ -153,8 +151,8 @@ public class SchemaCreationBlueprintGenerator {
     }
 
     public static ListSchemaCreationBlueprint generateArraySchemaCreationBlueprint(Type type) {
-        AnnotatedType elementType = ((AnnotatedArrayType) type).getAnnotatedGenericComponentType();
-        return new ListSchemaCreationBlueprint(type, elementType.getType());
+        Type elementType = ((Class<?>) type).getComponentType();
+        return new ListSchemaCreationBlueprint(type, elementType);
     }
 
     public static ListSchemaCreationBlueprint generateGenericArraySchemaCreationBlueprint(Type type) {
