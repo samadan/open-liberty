@@ -56,12 +56,10 @@ public class PlatformTCKServlet extends FATServlet {
     
     @Inject
     @ShortScoped
-    @Dependent
     private EntityManager shortScopedEM; // Dependent scope (shorter than TransactionScoped)
 
     @Inject
     @LongScoped
-    @ApplicationScoped
     private EntityManager longScopedEM; // ApplicationScoped (longer than TransactionScoped)
     
     @Inject
