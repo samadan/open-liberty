@@ -32,9 +32,9 @@ public class FolderStructureGeneratorTest {
     public TestRule outputRule = outputMgr;
 
     @Test
-    public void testMD5() {
-        String md5 = new ServerDumpPackager.FolderStructureGenerator().hash(new File(dataDir, "/sha512-1.txt"));
-        Assert.assertEquals("1f47c433a2b1d1aef1c6f6d645af845374f3e0707cf44f11edeaabb9d376ecb948c9f7bafc7ba14320f1ff1de189cb137e834444d0b4e832af68f39cfb4cfe7e", md5);
+    public void testSha512() {
+        String sha512 = new ServerDumpPackager.FolderStructureGenerator().hash(new File(dataDir, "/sha512-1.txt"));
+        Assert.assertEquals("1f47c433a2b1d1aef1c6f6d645af845374f3e0707cf44f11edeaabb9d376ecb948c9f7bafc7ba14320f1ff1de189cb137e834444d0b4e832af68f39cfb4cfe7e", sha512);
     }
 
     @Test
