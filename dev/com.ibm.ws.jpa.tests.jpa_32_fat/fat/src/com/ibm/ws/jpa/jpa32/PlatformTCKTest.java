@@ -31,6 +31,7 @@ import componenttest.topology.database.container.DatabaseContainerType;
 import componenttest.topology.database.container.DatabaseContainerUtil;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.PrivHelper;
+import io.openliberty.jpa.platformtck.tests.models.TestEntity;
 import io.openliberty.jpa.platformtck.tests.web.PlatformTCKServlet;
 
 /**
@@ -68,8 +69,8 @@ public class PlatformTCKTest {
         final String resPath = "test-applications/" + APP_NAME + "/resources/jpa-" + specLevel + "/web/";
 
         WebArchive app = ShrinkWrap.create(WebArchive.class, APP_NAME + "_" + specLevel + ".war");
-        app.addPackage("io.openliberty.jpa.platformtck.tests.models");
-        app.addPackage("io.openliberty.jpa.platformtck.tests.web");
+        app.addPackage(TestEntity.class.getPackage().getName());
+        app.addPackage(PlatformTCKServlet.class.getPackage().getName());
         app.merge(
                 ShrinkWrap.create(GenericArchive.class).as(ExplodedImporter.class).importDirectory(resPath)
                         .as(GenericArchive.class),

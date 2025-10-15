@@ -19,6 +19,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import componenttest.app.FATServlet;
 import io.openliberty.jpa.platformtck.tests.models.TestEntity;
@@ -28,8 +29,10 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.transaction.UserTransaction;
+import jakarta.transaction.Status;
 import jakarta.inject.Inject;
 import org.junit.Ignore;
 
@@ -311,5 +314,18 @@ public class PlatformTCKServlet extends FATServlet {
             }
             throw e;
         }
+    }
+    
+    @Test
+    public void testOperationOutsideTransactionThrows() throws Exception {
+         tx.begin();
+         tx.commit();
+         try {
+             defaultEM.find(TestEntity.class, 1L);
+             fail("Expected ContextNotActiveException but no exception was thrown");
+         } catch (ContextNotActiveException e) {
+             // Expected exception
+             System.out.println("Correctly caught TransactionRequiredException when no transaction is active");
+         }
     }
 }

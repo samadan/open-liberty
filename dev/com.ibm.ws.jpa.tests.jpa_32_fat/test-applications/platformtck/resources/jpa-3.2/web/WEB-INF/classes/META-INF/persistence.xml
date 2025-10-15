@@ -36,7 +36,7 @@
             <property name="eclipselink.logging.parameters" value="true"/>
             <property name="jakarta.persistence.bean.classes" value="jakarta.persistence.EntityManager,jakarta.persistence.EntityManagerFactory,jakarta.persistence.criteria.CriteriaBuilder,jakarta.persistence.PersistenceUnitUtil,jakarta.persistence.Cache,jakarta.persistence.metamodel.Metamodel"/>
         </properties>
-    </persistence-unit>
+    </persistence-unit> 
     
     <!-- Default Transaction Scoped Persistence Unit (original) -->
     <persistence-unit name="DefaultScopedPU">
