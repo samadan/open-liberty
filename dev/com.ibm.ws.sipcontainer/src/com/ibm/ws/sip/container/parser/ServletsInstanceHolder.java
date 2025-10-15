@@ -245,7 +245,6 @@ public class ServletsInstanceHolder implements ServletInstanceHolderInterface{
 		
 		InitMembers members = new InitMembers(sipApp, sipServlet, sipletContext);
 		sipServletThreadLocal.set(members);
-		System.out.println("DEBUG: saveSipletReference" + sipServletThreadLocal);
 	}
 
 	/**
@@ -275,7 +274,6 @@ public class ServletsInstanceHolder implements ServletInstanceHolderInterface{
 				c_logger.traceDebug(this,"saveOnStartupServlet","members is null");	
 			}
 		}
-		System.out.println("DEBUG: saveOnStartupServlet called remove" );
 		sipServletThreadLocal.remove();
 	}
 }
