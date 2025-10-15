@@ -284,7 +284,7 @@ public class FeatureAuditor implements EnvironmentPostProcessor {
         if ( appHasSpring30 ) {
             // Don't test '!libertyHasSpring30'; that may not be set.
             if ( libertyHasSpring15 || libertyHasSpring20 || libertyHasSpring40) {
-                ApplicationTr.error("error.spring3.required");
+                ApplicationTr.error("error.spring3.required", "springBoot-3.0", libertySpringFeature, "3.0");
                 // "CWWKC0273E: Error: Feature springBoot-3.0 must be provisioned:
                 // Feature springBoot-1.5 or springBoot-2.0 is provisioned
                 // and the application has Spring 3.0 content."
