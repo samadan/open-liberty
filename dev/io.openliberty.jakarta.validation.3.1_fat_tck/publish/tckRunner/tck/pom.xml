@@ -30,7 +30,7 @@
 		<jakarta.validation.tck.version>3.1.1</jakarta.validation.tck.version>
 		<jakarta.validation.version>3.1.0</jakarta.validation.version>
 		<arquillian.version>1.9.1.Final</arquillian.version>
-		<arquillian.liberty.managed.jakarta.version>2.1.3</arquillian.liberty.managed.jakarta.version>
+		<arquillian.liberty.managed.jakarta.version>2.1.1</arquillian.liberty.managed.jakarta.version>
 		<testng.version>7.9.0</testng.version>
 		<slf4j.version>2.0.6</slf4j.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
