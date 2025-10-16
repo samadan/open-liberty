@@ -673,6 +673,16 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
             getChannel().getFactory().releaseLargeMessage();
         }
 
+        // We are in an H2 connection so we need to do that close instead
+        if (this.myInterface.getLink() instanceof H2HttpInboundLinkWrap) {
+            if (bTrace && tc.isDebugEnabled()) {
+                Tr.debug(tc, "we're H2, calling that close");
+            }
+            this.myInterface.getLink().close(inVC, e);
+
+            return;
+        }
+
         // check to see if the message has been fully sent (unless we
         // are in an error state)
 
@@ -737,15 +747,6 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
                 }
                 errorState = true;
             }
-        }
-
-        if (this.myInterface.getLink() instanceof H2HttpInboundLinkWrap) {
-            if (bTrace && tc.isDebugEnabled()) {
-                Tr.debug(tc, "we're H2, calling that close");
-            }
-            this.myInterface.getLink().close(inVC, e);
-
-            return;
         }
 
         // If servlet upgrade processing is being used, then don't close the socket here
