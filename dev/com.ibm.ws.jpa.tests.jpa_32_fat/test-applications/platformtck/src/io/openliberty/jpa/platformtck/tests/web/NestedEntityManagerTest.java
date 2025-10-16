@@ -19,10 +19,6 @@ import io.openliberty.jpa.platformtck.tests.models.TestEntity;
 /**
  * This class demonstrates a hierarchical CDI bean structure where both parent and child beans
  * inject and use EntityManager instances.
- *
- * This test is important for validating that the JPA provider correctly handles
- * EntityManager instances across a CDI bean hierarchy, ensuring proper persistence
- * context propagation between parent and child beans.
  */
 @RequestScoped
 public class NestedEntityManagerTest {
@@ -46,11 +42,19 @@ public class NestedEntityManagerTest {
         // Create entity using parent's EntityManager
         TestEntity parentEntity = new TestEntity("Created by parent");
         parentEM.persist(parentEntity);
+        if (!parentEM.isJoinedToTransaction()) {
+            parentEM.joinTransaction();
+        }
+        parentEM.flush();
         parentEntityId = parentEntity.getId();
+        System.out.println("Parent created entity with ID: " + parentEntityId);
         
         // Create entities using child beans
         child1.createEntity();
         child2.createEntity();
+        
+        // Ensure all entity managers are flushed
+        parentEM.flush();
     }
     
     /**
@@ -127,21 +131,26 @@ public class NestedEntityManagerTest {
             TestEntity child1Entity = parentEM.find(TestEntity.class, child1.getEntityId());
             if (child1Entity != null) {
                 child1Entity.setName("Child1 updated by parent");
-                System.out.println("Parent updated Child1 entity");
+                System.out.println("Parent updated Child1 entity with ID: " + child1.getEntityId());
+                if (!parentEM.isJoinedToTransaction()) {
+                    parentEM.joinTransaction();
+                }
+                parentEM.flush();
             } else {
-                System.out.println("ERROR: Parent could not find Child1 entity");
+                System.out.println("ERROR: Parent could not find Child1 entity with ID: " + child1.getEntityId());
             }
             
             TestEntity child2Entity = parentEM.find(TestEntity.class, child2.getEntityId());
             if (child2Entity != null) {
                 child2Entity.setName("Child2 updated by parent");
-                System.out.println("Parent updated Child2 entity");
+                System.out.println("Parent updated Child2 entity with ID: " + child2.getEntityId());
+                if (!parentEM.isJoinedToTransaction()) {
+                    parentEM.joinTransaction();
+                }
+                parentEM.flush();
             } else {
-                System.out.println("ERROR: Parent could not find Child2 entity");
+                System.out.println("ERROR: Parent could not find Child2 entity with ID: " + child2.getEntityId());
             }
-            
-            // Flush changes to ensure they're visible to other EntityManagers
-            parentEM.flush();
             
             // Have child1 update the parent entity
             child1.updateEntity(parentEntityId, "Parent updated by child1");
@@ -161,6 +170,11 @@ public class NestedEntityManagerTest {
     @Transactional
     public boolean verifyUpdates() {
         try {
+            System.out.println("Starting verifyUpdates...");
+            System.out.println("Parent entity ID: " + parentEntityId);
+            System.out.println("Child1 entity ID: " + child1.getEntityId());
+            System.out.println("Child2 entity ID: " + child2.getEntityId());
+            
             // Clear the persistence context to ensure we get fresh data from the database
             parentEM.clear();
             
@@ -187,6 +201,10 @@ public class NestedEntityManagerTest {
             boolean parentUpdated = "Parent updated by child1".equals(parentEntity.getName());
             boolean child1Updated = "Child1 updated by child2".equals(child1Entity.getName());
             boolean child2Updated = "Child2 updated by parent".equals(child2Entity.getName());
+            
+            System.out.println("Expected parent name: 'Parent updated by child1', actual: '" + parentEntity.getName() + "'");
+            System.out.println("Expected child1 name: 'Child1 updated by child2', actual: '" + child1Entity.getName() + "'");
+            System.out.println("Expected child2 name: 'Child2 updated by parent', actual: '" + child2Entity.getName() + "'");
             
             System.out.println("Parent correctly updated: " + parentUpdated);
             System.out.println("Child1 correctly updated: " + child1Updated);
@@ -224,7 +242,9 @@ public class NestedEntityManagerTest {
                 System.out.println("After cross-check - Child2 correctly updated: " + child2Updated);
             }
             
-            return parentUpdated && child1Updated && child2Updated;
+            boolean result = parentUpdated && child1Updated && child2Updated;
+            System.out.println("Final verification result: " + result);
+            return result;
         } catch (Exception e) {
             System.out.println("Exception during verifyUpdates: " + e.getMessage());
             e.printStackTrace(System.out);
@@ -262,7 +282,12 @@ public class NestedEntityManagerTest {
         public void createEntity() {
             TestEntity entity = new TestEntity("Created by child1");
             entityManager.persist(entity);
+            if (!entityManager.isJoinedToTransaction()) {
+                entityManager.joinTransaction();
+            }
+            entityManager.flush();
             entityId = entity.getId();
+            System.out.println("Child1 created entity with ID: " + entityId);
         }
         
         public boolean canFindEntity(Long id) {
@@ -270,6 +295,7 @@ public class NestedEntityManagerTest {
         }
         
         public boolean verifyEntityName(Long id, String expectedName) {
+            entityManager.clear(); // Clear cache to get fresh data
             TestEntity entity = entityManager.find(TestEntity.class, id);
             if (entity == null) {
                 System.out.println("ChildBean1: Entity with ID " + id + " not found");
@@ -286,8 +312,13 @@ public class NestedEntityManagerTest {
             TestEntity entity = entityManager.find(TestEntity.class, id);
             if (entity != null) {
                 entity.setName(newName);
-                // Don't call flush() here as it might cause TransactionRequiredException
-                // The transaction commit will automatically flush changes
+                if (!entityManager.isJoinedToTransaction()) {
+                    entityManager.joinTransaction();
+                }
+                entityManager.flush();
+                System.out.println("Child1 updated entity " + id + " to name: " + newName);
+            } else {
+                System.out.println("Child1 could not find entity with ID: " + id);
             }
         }
         
@@ -320,7 +351,12 @@ public class NestedEntityManagerTest {
         public void createEntity() {
             TestEntity entity = new TestEntity("Created by child2");
             entityManager.persist(entity);
+            if (!entityManager.isJoinedToTransaction()) {
+                entityManager.joinTransaction();
+            }
+            entityManager.flush();
             entityId = entity.getId();
+            System.out.println("Child2 created entity with ID: " + entityId);
         }
         
         public boolean canFindEntity(Long id) {
@@ -328,6 +364,7 @@ public class NestedEntityManagerTest {
         }
         
         public boolean verifyEntityName(Long id, String expectedName) {
+            entityManager.clear(); // Clear cache to get fresh data
             TestEntity entity = entityManager.find(TestEntity.class, id);
             if (entity == null) {
                 System.out.println("ChildBean2: Entity with ID " + id + " not found");
@@ -344,8 +381,13 @@ public class NestedEntityManagerTest {
             TestEntity entity = entityManager.find(TestEntity.class, id);
             if (entity != null) {
                 entity.setName(newName);
-                // Don't call flush() here as it might cause TransactionRequiredException
-                // The transaction commit will automatically flush changes
+                if (!entityManager.isJoinedToTransaction()) {
+                    entityManager.joinTransaction();
+                }
+                entityManager.flush();
+                System.out.println("Child2 updated entity " + id + " to name: " + newName);
+            } else {
+                System.out.println("Child2 could not find entity with ID: " + id);
             }
         }
         
