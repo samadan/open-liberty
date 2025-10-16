@@ -1154,7 +1154,7 @@ public class DatasourcePlatform implements Platform {
      * Override this method if the platform needs to use a custom function based on the DatabaseField
      * @return An expression for the given field set equal to a parameter matching the field
      */
-    public Expression createExpressionFor(DatabaseField field, Expression builder, String fieldClassificationClassName) {
+    public Expression createExpressionFor(DatabaseField field, Expression builder) {
         Expression subExp1 = builder.getField(field);
         Expression subExp2 = builder.getParameter(field);
         return subExp1.equal(subExp2);
