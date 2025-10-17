@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package test.jakarta.data.web;
+package test.jakarta.data.web.eclipselink;
 
 import java.util.Collection;
 import java.util.List;
@@ -34,10 +34,12 @@ import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.enterprise.concurrent.Asynchronous;
 
+import test.jakarta.data.web.Receipt;
+
 /**
  * Repository interface for the Receipt entity which is a record
  */
-@Repository
+@Repository(dataStore = "java:module/env/jdbc/DerbyDataSourceRef")
 public interface Receipts extends CrudRepository<Receipt, Long> {
     @Query("UPDATE Receipt SET total = total * (1.0 + :taxRate) WHERE purchaseId = :id")
     boolean addTax(long id, float taxRate);

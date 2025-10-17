@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package test.jakarta.data.web;
+package test.jakarta.data.web.eclipselink;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.Singleton;
