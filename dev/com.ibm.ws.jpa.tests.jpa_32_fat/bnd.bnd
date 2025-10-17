@@ -19,8 +19,8 @@ src:\
     test-applications/jakartadata/src,\
     test-applications/jakartapersistence/src,\
     test-applications/jpabootstrap/src,\
-    test-applications/platformtck/src
-    
+    test-applications/jpacdiintegration/src
+
 fat.project: true
 tested.features:\
     databaseRotation,\

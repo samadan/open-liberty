@@ -3,7 +3,7 @@
         xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_2.xsd"
         version="3.2">
   <persistence-unit name="ApplicationScopedPU">
-    <qualifier>io.openliberty.jpa.platformtck.tests.web.LongScoped</qualifier>
+    <qualifier>io.openliberty.jpa.jpacdiintegration.tests.web.LongScoped</qualifier>
     <scope>jakarta.enterprise.context.ApplicationScoped</scope>
 
     <properties>
@@ -20,7 +20,7 @@
   </persistence-unit>
 
   <persistence-unit name="DependentScopedPU">
-    <qualifier>io.openliberty.jpa.platformtck.tests.web.ShortScoped</qualifier>
+    <qualifier>io.openliberty.jpa.jpacdiintegration.tests.web.ShortScoped</qualifier>
     <scope>jakarta.enterprise.context.Dependent</scope>
 
     <properties>

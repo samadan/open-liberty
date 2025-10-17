@@ -31,8 +31,8 @@ import componenttest.topology.database.container.DatabaseContainerType;
 import componenttest.topology.database.container.DatabaseContainerUtil;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.PrivHelper;
-import io.openliberty.jpa.platformtck.tests.models.TestEntity;
-import io.openliberty.jpa.platformtck.tests.web.PlatformTCKServlet;
+import io.openliberty.jpa.jpacdiintegration.tests.models.TestEntity;
+import io.openliberty.jpa.jpacdiintegration.tests.web.JPACDIIntegrationServlet;
 
 /**
  * Testing latest features of Jakarta Persistence 3.2 ,EclipseLink
@@ -40,13 +40,13 @@ import io.openliberty.jpa.platformtck.tests.web.PlatformTCKServlet;
 
 @RunWith(FATRunner.class)
 @MinimumJavaLevel(javaLevel = 17)
-public class PlatformTCKTest {
-    public static final String APP_NAME = "platformtck";
-    public static final String SERVLET = "PlatformTCK32";
+public class JPACDIIntegrationTest {
+    public static final String APP_NAME = "jpacdiintegration";
+    public static final String SERVLET = "JPACDI32";
     public static final String SPECLEVEL = "3.2";
 
-    @Server("PlatformTCKServer")
-    @TestServlet(servlet = PlatformTCKServlet.class, path = APP_NAME + "_" + SPECLEVEL + "/" + SERVLET)
+    @Server("JPACDIIntegrationServer")
+    @TestServlet(servlet = JPACDIIntegrationServlet.class, path = APP_NAME + "_" + SPECLEVEL + "/" + SERVLET)
     public static LibertyServer server;
 
     public static final JdbcDatabaseContainer<?> testContainer = FATSuite.testContainer;
@@ -70,7 +70,7 @@ public class PlatformTCKTest {
 
         WebArchive app = ShrinkWrap.create(WebArchive.class, APP_NAME + "_" + specLevel + ".war");
         app.addPackage(TestEntity.class.getPackage().getName());
-        app.addPackage(PlatformTCKServlet.class.getPackage().getName());
+        app.addPackage(JPACDIIntegrationServlet.class.getPackage().getName());
         app.merge(
                 ShrinkWrap.create(GenericArchive.class).as(ExplodedImporter.class).importDirectory(resPath)
                         .as(GenericArchive.class),

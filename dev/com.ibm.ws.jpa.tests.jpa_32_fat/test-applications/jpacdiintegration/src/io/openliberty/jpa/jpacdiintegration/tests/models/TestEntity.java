@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.jpa.platformtck.tests.models;
+package io.openliberty.jpa.jpacdiintegration.tests.models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

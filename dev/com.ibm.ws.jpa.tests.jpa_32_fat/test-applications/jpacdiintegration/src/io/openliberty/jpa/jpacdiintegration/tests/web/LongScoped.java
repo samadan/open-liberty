@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.jpa.platformtck.tests.web;
+package io.openliberty.jpa.jpacdiintegration.tests.web;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

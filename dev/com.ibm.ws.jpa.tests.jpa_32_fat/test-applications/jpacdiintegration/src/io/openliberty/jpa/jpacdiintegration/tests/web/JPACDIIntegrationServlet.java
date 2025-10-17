@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.jpa.platformtck.tests.web;
+package io.openliberty.jpa.jpacdiintegration.tests.web;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -22,7 +22,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import componenttest.app.FATServlet;
-import io.openliberty.jpa.platformtck.tests.models.TestEntity;
+import io.openliberty.jpa.jpacdiintegration.tests.models.TestEntity;
 import jakarta.annotation.Resource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ContextNotActiveException;
@@ -42,8 +42,8 @@ import jakarta.transaction.UserTransaction;
  * and usage in various CDI contexts.
  */
 @SuppressWarnings("serial")
-@WebServlet(urlPatterns = "/PlatformTCK32")
-public class PlatformTCKServlet extends FATServlet {
+@WebServlet(urlPatterns = "/JPACDI32")
+public class JPACDIIntegrationServlet extends FATServlet {
     
     @Inject
     private EntityManager defaultEM; // Default TransactionScoped
@@ -131,7 +131,7 @@ public class PlatformTCKServlet extends FATServlet {
 
     @Test
     public void testNestedBeanEntityManagerPropagation() throws Exception {
-        io.openliberty.jpa.platformtck.tests.web.NestedEntityManagerTest nested = nestedEMTestInstance.get();
+        io.openliberty.jpa.jpacdiintegration.tests.web.NestedEntityManagerTest nested = nestedEMTestInstance.get();
         assertNotNull("Nested bean should be available", nested);
         nested.createEntities();
         nested.verifyEntities();

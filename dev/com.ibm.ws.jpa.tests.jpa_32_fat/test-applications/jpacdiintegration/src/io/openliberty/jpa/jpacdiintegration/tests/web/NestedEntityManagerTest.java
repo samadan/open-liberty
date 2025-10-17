@@ -7,14 +7,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.jpa.platformtck.tests.web;
+package io.openliberty.jpa.jpacdiintegration.tests.web;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import io.openliberty.jpa.platformtck.tests.models.TestEntity;
+import io.openliberty.jpa.jpacdiintegration.tests.models.TestEntity;
 
 /**
  * This class demonstrates a hierarchical CDI bean structure where both parent and child beans
