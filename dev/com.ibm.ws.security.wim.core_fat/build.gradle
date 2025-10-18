@@ -23,6 +23,8 @@ dependencies {
     'com.unboundid:unboundid-ldapsdk:5.1.0',
     project(':com.ibm.ws.com.unboundid')
 }
+jar.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
+
 autoFVT.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
 autoFVT.dependsOn ':com.ibm.ws.security.wim.repository_test.custom:assemble'
 addRequiredLibraries.dependsOn addJakartaTransformer

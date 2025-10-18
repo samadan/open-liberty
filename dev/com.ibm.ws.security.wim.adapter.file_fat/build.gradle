@@ -15,6 +15,7 @@ dependencies {
   requiredLibs project(':com.ibm.ws.security.registry'),
     project(':com.ibm.ws.security.registry_test.servlet')
 }
+jar.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
 autoFVT.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
 autoFVT {
   def adapterFileProject = project(':com.ibm.ws.security.wim.adapter.file')

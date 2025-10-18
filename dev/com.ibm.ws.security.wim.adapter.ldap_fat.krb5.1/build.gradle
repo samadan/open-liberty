@@ -26,6 +26,8 @@ dependencies {
 
 addRequiredLibraries.dependsOn copyTestContainers
 
+jar.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
+
 autoFVT.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
 
 autoFVT {

@@ -79,6 +79,8 @@ dependencies {
   requiredLibs project(':io.openliberty.microprofile.health.internal_fat.common')
 }
 
+jar.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
+
 autoFVT {
   def apacheDirectoryProject = project(':com.ibm.ws.org.apache.directory.server')
   def registryTestProject = project(':com.ibm.ws.security.registry_test.servlet')

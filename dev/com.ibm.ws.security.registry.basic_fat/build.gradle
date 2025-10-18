@@ -24,6 +24,8 @@ dependencies {
     project(':com.ibm.ws.security.registry_test.servlet')
 }
 
+jar.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
+
 autoFVT.dependsOn ':com.ibm.ws.security.registry_test.servlet:assemble'
 autoFVT.dependsOn ':com.ibm.ws.webcontainer.security_test.servlets:assemble'
 

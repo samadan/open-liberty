@@ -29,7 +29,6 @@ dependencies {
     'org.apache.directory.server:apacheds-service:2.0.0-M15',
     project(':com.ibm.ws.org.apache.directory.server'),
     project(':com.ibm.ws.security.registry'),
-    project(':com.ibm.ws.security.registry_test.servlet'),
     project(':com.ibm.ws.webcontainer.security_test.servlets')
 }
 
