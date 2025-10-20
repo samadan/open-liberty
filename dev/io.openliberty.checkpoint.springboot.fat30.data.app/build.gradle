@@ -19,6 +19,8 @@ plugins {
   id 'war'
 }
 
+apply from: '../wlp-gradle/subprojects/spring.gradle'
+
 group = 'io.openliberty.example.spring'
 version = '1.0.0'
 java {
@@ -28,10 +30,14 @@ java {
 apply from: '../wlp-gradle/subprojects/maven-central-mirror.gradle'
 
 ext {
-  set('springCloudVersion', "2025.0.0")
+  set('springCloudVersion', "2023.0.1")
 }
 
+// Presently use 3.2.4 here and 2023.0.1 for the springCloudVersion because
+// moving to 3.5.3 Spring Boot version and 2025.0.0 Spring Cloud version does
+// not seem to work for after app start
 dependencies {
+  implementation(enforcedPlatform('org.springframework.boot:spring-boot-dependencies:3.2.4'))
   implementation('org.springframework.boot:spring-boot-starter-data-jpa')
   implementation('org.springframework.boot:spring-boot-starter-web')
   implementation('org.springframework.boot:spring-boot-starter-actuator')
@@ -47,6 +53,17 @@ dependencies {
 dependencyManagement {
   imports {
     mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    mavenBom 'org.springframework.boot:spring-boot-dependencies:3.2.4'
+  }
+}
+
+bootWar {
+
+  // Updates the manifest so that the Spring Boot version is 3.2.4
+  manifest {
+    attributes(
+      'Spring-Boot-Version': '3.2.4'
+    )
   }
 }
 
