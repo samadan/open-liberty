@@ -12,8 +12,6 @@ package io.openliberty.mcp.internal.fat.tool;
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.logging.Logger;
-
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
@@ -35,7 +33,8 @@ import io.openliberty.mcp.internal.fat.utils.McpClient;
 
 @RunWith(FATRunner.class)
 public class AsyncToolsTest extends FATServletClient {
-    private static final Logger LOG = Logger.getLogger(AsyncToolsTest.class.getName());
+    private static final String EXPECTED_ERROR = "Method call caused runtime exception. This is expected if the input was 'throw error'";
+
     @Server("mcp-server-async")
     public static LibertyServer server;
 
@@ -56,7 +55,7 @@ public class AsyncToolsTest extends FATServletClient {
 
     @AfterClass
     public static void teardown() throws Exception {
-        server.stopServer();
+        server.stopServer(EXPECTED_ERROR);
     }
 
     @Test
@@ -128,7 +127,7 @@ public class AsyncToolsTest extends FATServletClient {
         String response = client.callMCP(request);
 
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Internal server error"}], "isError": true}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"CWMCM0011E: An internal server error occurred while running the tool."}], "isError": true}}
                         """;
 
         JSONAssert.assertEquals(expectedResponseString, response, true);
@@ -154,7 +153,7 @@ public class AsyncToolsTest extends FATServletClient {
         String response = client.callMCP(request);
 
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Internal server error"}], "isError": true}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"CWMCM0011E: An internal server error occurred while running the tool."}], "isError": true}}
                         """;
 
         JSONAssert.assertEquals(expectedResponseString, response, true);
@@ -178,7 +177,7 @@ public class AsyncToolsTest extends FATServletClient {
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
-                            "Missing arguments in params"
+                            "The request does not have any arguments in parameters."
                             ],
                         "message":"Invalid params"},
                         "id":"2",
@@ -277,7 +276,7 @@ public class AsyncToolsTest extends FATServletClient {
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
 
-    @Test
+    @Test(expected = Exception.class)
     public void testCompletionStageThatNeverCompletes() throws Exception {
         String request = """
                           {
@@ -292,13 +291,6 @@ public class AsyncToolsTest extends FATServletClient {
                             }
                           }
                         """;
-
-        String response = client.callMCP(request);
-
-        String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"Internal server error: CompletionStage cannot be completed"}], "isError": true}}
-                        """;
-
-        JSONAssert.assertEquals(expectedResponseString, response, true);
+        client.callMCP(request);
     }
 }

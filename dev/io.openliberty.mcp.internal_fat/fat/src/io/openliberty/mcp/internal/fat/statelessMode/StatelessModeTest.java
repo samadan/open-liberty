@@ -40,6 +40,7 @@ import componenttest.topology.utils.FATServletClient;
 import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.basicToolApp.BasicTools;
 import io.openliberty.mcp.internal.fat.tool.cancellationApp.CancellationTools;
+import io.openliberty.mcp.internal.fat.utils.AwaitToolServlet;
 
 /**
  *
@@ -59,7 +60,8 @@ public class StatelessModeTest extends FATServletClient {
     public static void setup() throws Exception {
         WebArchive war = ShrinkWrap.create(WebArchive.class, "statelessModeTest.war")
                                    .addPackage(BasicTools.class.getPackage())
-                                   .addPackage(CancellationTools.class.getPackage());
+                                   .addPackage(CancellationTools.class.getPackage())
+                                   .addPackage(AwaitToolServlet.class.getPackage());
 
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 

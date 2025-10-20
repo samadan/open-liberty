@@ -40,12 +40,10 @@ public class AsyncTools {
 
     @Tool(name = "asyncEcho", title = "Async Echo", description = "Echoes input asynchronously")
     public CompletionStage<String> asyncEcho(@ToolArg(name = "input", description = "input to echo") String input) {
-        return executor.supplyAsync(() -> {
-            if (input.equals("throw error")) {
-                throw new RuntimeException("Method call caused runtime exception. This is expected if the input was 'throw error'");
-            }
-            return input + ": (async)";
-        });
+        if (input.equals("throw error")) {
+            throw new RuntimeException("Method call caused runtime exception. This is expected if the input was 'throw error'");
+        }
+        return CompletableFuture.completedStage(input + ": (async)");
     }
 
     @Tool(name = "asyncDelayedEcho", title = "Async Echo", description = "Echoes input asynchronously")

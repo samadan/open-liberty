@@ -18,7 +18,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-import java.util.logging.Logger;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -64,7 +63,6 @@ public class McpServlet extends HttpServlet {
     private static final ServiceCaller<McpConfiguration> mcpConfigService = new ServiceCaller<>(McpServlet.class, McpConfiguration.class);
 
     private Jsonb jsonb;
-    private static final Logger LOG = Logger.getLogger(McpServlet.class.getName());
 
     @Inject
     BeanManager bm;
@@ -171,40 +169,46 @@ public class McpServlet extends HttpServlet {
         }
     }
 
+    @FFDCIgnore({ IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpTransport transport) {
+
         ExecutionRequestId requestId = createOngoingRequestId(transport);
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
-
-        if (params.getMetadata() == null) {
-            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-                Tr.event(this, tc, "Attempt to call non-existant tool: " + params.getName());
+        try {
+            if (params.getMetadata() == null) {
+                if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                    Tr.event(this, tc, "Attempt to call non-existant tool: " + params.getName());
+                }
+                throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
             }
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
-        }
 
-        McpSession sessionInfo = transport.getSession();
-        if (sessionInfo != null) {
-            sessionInfo.addRequest(requestId);
-        }
+            McpSession sessionInfo = transport.getSession();
+            if (sessionInfo != null) {
+                sessionInfo.addRequest(requestId);
+            }
 
-        CreationalContext<Object> cc = bm.createCreationalContext(null);
-        Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
-        Method method = params.getMethod();
-        boolean returnsCompletionStage = CompletionStage.class.isAssignableFrom(method.getReturnType());
-        if (returnsCompletionStage) {
-            callToolMethodAndSendResponseAsync(transport, requestId, params, cc, bean, method);
-        } else {
-            callToolSynchronously(transport, requestId, params, cc, bean, method);
+            if (params.getMetadata().returnsCompletionStage()) {
+                callToolMethodAndSendResponseAsync(transport, requestId, params, params.getMethod());
+            } else {
+                callToolSynchronously(transport, requestId, params, params.getMethod());
+            }
+        } catch (IllegalAccessException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
+        } catch (IllegalArgumentException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
         }
     }
 
-    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
+    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class })
     private void callToolSynchronously(McpTransport transport,
                                        ExecutionRequestId requestId,
                                        McpToolCallParams params,
-                                       CreationalContext<Object> cc,
-                                       Object bean, Method method) {
+                                       Method method)
+                    throws IllegalAccessException, IllegalArgumentException {
+        CreationalContext<Object> cc = bm.createCreationalContext(null);
         try {
+            Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
+
             Object[] arguments = params.getArguments(jsonb);
             addSpecialArguments(arguments, requestId, params.getMetadata());
 
@@ -229,66 +233,61 @@ public class McpServlet extends HttpServlet {
                          e.getCause());
                 transport.sendResponse(ToolResponse.error(Tr.formatMessage(tc, "CWMCM0011E.internal.server.error")));
             }
-        } catch (IllegalAccessException e) {
-            throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
-        } catch (IllegalArgumentException e) {
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
         } finally {
-            cleanup(requestId, cc);
+            cleanup(requestId, cc, params);
         }
     }
 
-    @FFDCIgnore({ InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
+    @FFDCIgnore({ InvocationTargetException.class })
     private void callToolMethodAndSendResponseAsync(McpTransport transport,
                                                     ExecutionRequestId requestId,
                                                     McpToolCallParams params,
-                                                    CreationalContext<Object> cc,
-                                                    Object bean,
-                                                    Method method) {
+                                                    Method method)
+                    throws IllegalAccessException, IllegalArgumentException {
+        CreationalContext<Object> cc = bm.createCreationalContext(null);
         try {
+            Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
+
             Object[] arguments = params.getArguments(jsonb);
             addSpecialArguments(arguments, requestId, params.getMetadata());
 
             if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
                 Tr.event(this, tc, "Calling tool " + params.getMetadata().name(), arguments);
             }
-            CompletionStage<?> stage = ((CompletionStage<?>) method.invoke(bean, arguments))
-                                                                                            .thenApply(result -> evaluateToolResponse(result, params))
-                                                                                            .exceptionally(throwable -> {
-                                                                                                Tr.error(tc,
-                                                                                                         "The {0} tool method threw an unexpected exception. The exception was {1}",
-                                                                                                         params.getMetadata().name(),
-                                                                                                         throwable.getCause());
-                                                                                                return ToolResponse.error("Internal server error");
-                                                                                            });
+            CompletionStage<?> stage = ((CompletionStage<?>) method.invoke(bean, arguments));
+            stage = stage.thenApply(result -> evaluateToolResponse(result, params))
+                         .exceptionally(throwable -> {
+                             Tr.error(tc,
+                                      "CWMCM0010E.internal.server.error.detailed",
+                                      params.getMetadata().name(),
+                                      throwable.getCause());
+                             return ToolResponse.error(Tr.formatMessage(tc, "CWMCM0011E.internal.server.error"));
+                         });
             transport.sendResultAsync(stage)
-                     .whenComplete((result, throwable) -> cleanup(requestId, cc));
+                     .whenComplete((result, throwable) -> cleanup(requestId, cc, params));
         } catch (InvocationTargetException e) {
             Throwable t = e.getCause();
             if (isBusinessException(t, params)) {
                 transport.sendResponse(toErrorResponse(e.getCause()));
             } else {
-                Tr.error(tc, "The {0} tool method threw an unexpected exception. The exception was {1}",
+                Tr.error(tc, "CWMCM0010E.internal.server.error.detailed",
                          params.getMetadata().name(),
                          e.getCause());
-                transport.sendResponse(ToolResponse.error("Internal server error"));
+                transport.sendResponse(ToolResponse.error(Tr.formatMessage(tc, "CWMCM0011E.internal.server.error")));
             }
-        } catch (IllegalAccessException e) {
-            throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
-        } catch (IllegalArgumentException e) {
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
+            cleanup(requestId, cc, params);
         }
     }
 
-    private void cleanup(ExecutionRequestId requestId, CreationalContext<Object> cc) {
+    private void cleanup(ExecutionRequestId requestId, CreationalContext<Object> cc, McpToolCallParams params) {
         if (connection.isOngoingRequest(requestId)) {
-                connection.deregisterOngoingRequest(requestId);
-            }
-            try {
-                cc.release();
-            } catch (Exception ex) {
-                Tr.warning(tc, "CWMCM0012E.bean.release.fail", ex, params.getName());
-            }
+            connection.deregisterOngoingRequest(requestId);
+        }
+        try {
+            cc.release();
+        } catch (Exception ex) {
+            Tr.warning(tc, "CWMCM0012E.bean.release.fail", ex, params.getName());
+        }
     }
 
     private Object evaluateToolResponse(Object result, McpToolCallParams params) {

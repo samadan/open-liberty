@@ -19,13 +19,10 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
 import jakarta.enterprise.concurrent.ManagedExecutorService;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
-/**
- *
- */
-@ApplicationScoped
+@Dependent
 public class AsyncLifecycleTools {
     private static final Logger LOG = Logger.getLogger(AsyncLifecycleTools.class.getName());
     private String id;
@@ -50,9 +47,12 @@ public class AsyncLifecycleTools {
     @Tool(name = "asyncLifecycleEcho", title = "Async Echo", description = "Echoes input asynchronously")
     public CompletionStage<String> asyncLifecycleEcho(@ToolArg(name = "input", description = "input to echo") String input) {
         LOG.info("[LOGGED] AsyncLifecycleTools.asyncLifecycleEcho Tool logged");
+        if (input.equals("throw error")) {
+            LOG.info("[LOGGED] AsyncLifecycleTools.asyncLifecycleEcho Tool throwing error");
+            throw new RuntimeException("Method call caused runtime exception. This is expected if the input was 'throw error'");
+        }
         return executor.supplyAsync(() -> {
             return input + ": (async)";
         });
     }
-
 }

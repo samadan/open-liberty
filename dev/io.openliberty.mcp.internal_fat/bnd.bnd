@@ -34,4 +34,4 @@ tested.features: \
 	com.ibm.websphere.appserver.spi.logging,\
 	com.ibm.ws.logging.core,\
 	io.openliberty.jakarta.annotation.2.1,\
-	io.openliberty.jakarta.concurrency.3.1
+	io.openliberty.jakarta.concurrency.3.0

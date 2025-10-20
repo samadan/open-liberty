@@ -13,7 +13,6 @@ import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONL
 import static org.junit.Assert.assertNotNull;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -44,6 +43,7 @@ public class AsyncToolCancellationTest extends FATServletClient {
     @Server("mcp-server-async")
     public static LibertyServer server;
     private static ExecutorService executor;
+    private static final String EXPECTED_ERROR = "OperationCancellationException";
 
     @Rule
     public McpClient client = new McpClient(server, "/asyncToolCancellationTest");
@@ -64,13 +64,11 @@ public class AsyncToolCancellationTest extends FATServletClient {
     @AfterClass
     public static void teardown() throws Exception {
         executor.shutdown();
-        server.stopServer();
+        server.stopServer(EXPECTED_ERROR);
     }
 
     @Test
     public void testCancellationToolAsync() throws Exception {
-
-        final CountDownLatch latch = new CountDownLatch(1);
 
         Callable<String> threadCallingTool = () -> {
             try {
@@ -88,7 +86,6 @@ public class AsyncToolCancellationTest extends FATServletClient {
                                 }
                                 """;
 
-                latch.countDown();
                 return client.callMCP(request);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -107,8 +104,7 @@ public class AsyncToolCancellationTest extends FATServletClient {
                           }
                         }
                         """;
-        latch.await();
-        // Call AwaitToolServlet to wait for the tool to start running. Adds path param "strId" to specify which countdown latch to use
+
         new HttpRequest(server, "/asyncToolCancellationTest/awaitTool/testCancellationToolAsync").run(String.class);
 
         client.callMCPNotification(server, "/asyncToolCancellationTest", cancellationRequestNotification);
@@ -116,7 +112,7 @@ public class AsyncToolCancellationTest extends FATServletClient {
         String response = future.get(10, TimeUnit.SECONDS);
 
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"text":"Internal server error", "type":"text"}],"isError":true}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"text":"CWMCM0011E: An internal server error occurred while running the tool.", "type":"text"}],"isError":true}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }

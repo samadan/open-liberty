@@ -120,6 +120,12 @@ CWMCM0015E.unexpected.server.error.exception=CWMCM0015E: Unexpected Server Error
 CWMCM0015E.unexpected.server.error.exception.explanation=An unexpected server error occurred whilst processing the request. The request could not be completed.
 CWMCM0015E.unexpected.server.error.exception.useraction=No action is required.
 
+# Used for server logging
+# {0} = ExceptionMessage
+CWMCM0016E.error.sending.response.exception=CWMCM0016E: Unexpected Server Error. Exception: {0}
+CWMCM0016E.error.sending.response.exception.explanation=An error occurred while trying to send the response
+CWMCM0016E.error.sending.response.exception.useraction=No action is required.
+
 # Used as part of a response to a client
 # do not translate jsonrpc
 # {0} = jsonrpc value
