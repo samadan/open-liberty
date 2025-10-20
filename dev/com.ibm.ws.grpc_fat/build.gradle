@@ -223,4 +223,8 @@ sourceSets {
     }
 }
 
+war {
+  duplicatesStrategy = 'warn'
+}
+
 addRequiredLibraries.dependsOn addJakartaTransformer
