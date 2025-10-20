@@ -56,7 +56,7 @@ public class DataTestCheckpoint extends FATServletClient {
     @TestServlets({ @TestServlet(servlet = DataTestServlet.class,
                                  contextRoot = "DataTestApp"),
                     @TestServlet(servlet = DataEclipseLinkServlet.class,
-                                 contextRoot = "DifferentAppName"),
+                                 contextRoot = "DataTestApp"),
                     @TestServlet(servlet = ProviderTestServlet.class,
                                  contextRoot = "ProviderTestApp") })
     public static LibertyServer server;
