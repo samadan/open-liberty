@@ -169,6 +169,28 @@ public class DataJPATestServlet extends FATServlet {
     @Inject
     Triangles triangles;
 
+    /**
+     * Temporary method to allow skipping tests for tests that
+     * fail due to incompatibilities between our Jakarta Data provider
+     * and Hibernate's Jakarta Persistence provider.
+     *
+     * @param issue - the issue that describes why the test must be skipped on Hibernate
+     *
+     * @return boolean - if we need to skip the test, false otherwise.
+     */
+    public static boolean skipForHibernate(String issue) {
+        boolean testingHibernate = Boolean.valueOf(System.getenv("TEST_HIBERNATE"));
+        if (testingHibernate) {
+            System.out.println("Skipping test because: " + issue);
+
+            // FIXME - this is the proper way to skip a test via junit
+            // however, our FATServlet does not support catching an
+            // AssumptionViolatedException and serializing it back to the client.
+//            assumeTrue(!testingHibernate);
+        }
+        return testingHibernate;
+    }
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         // Some read-only data that is prepopulated for tests:
@@ -1775,6 +1797,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testEntitiesAsParameters() throws Exception {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33176")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
         orders.deleteAll();
 
         PurchaseOrder o1 = new PurchaseOrder();
@@ -2569,6 +2594,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testIdClassDelete() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33176")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         City winona = new City("Winona", "Minnesota", 25948, Set.of(507));
         winona = cities.save(winona); // must use updated copy of entity now that we have added a version to it
         cities.delete(winona);
@@ -3960,6 +3989,10 @@ public class DataJPATestServlet extends FATServlet {
     @SkipIfSysProp(DB_SQLServer) //SQLServer does not sort by case by default, thus ignoreCase=false will produce the same result as ignoreCase=true
     @Test
     public void testSortOf() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33176")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         City eagan = cities.save(new City("eagan", "minnesota", 67_396, Set.of(651)));
 
         // With ignoreCase=true, eagan should be first
@@ -4388,6 +4421,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testUpdateMethodWithEntityParamWithEmbeddedClasses() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33176")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
         Business ibm = businesses.findFirstByName("IBM");
 
         // save these to restore when test completes, so we don't interfere with data used by other tests
@@ -4629,6 +4665,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testVersionedDelete() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33176")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
         orders.deleteAll();
 
         PurchaseOrder o1 = new PurchaseOrder();
@@ -4714,6 +4753,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testVersionedRemoval() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33176")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         City duluth = cities.save(new City("Duluth", "Minnesota", 86697, Set.of(218)));
         long oldVersion = duluth.changeCount;
 
@@ -4740,6 +4783,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testVersionedUpdate() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33176")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
         orders.deleteAll();
 
         PurchaseOrder o1 = new PurchaseOrder();

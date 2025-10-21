@@ -93,6 +93,9 @@ public class DataJPATestHibernate extends FATServletClient {
                                                       "test.jakarta.data.jpa.web.hibernate");
 
         ShrinkHelper.exportAppToServer(server, war);
+
+        server.addEnvVar("TEST_HIBERNATE", "true"); //TODO remove once all incompatibilities are resolved
+
         server.startServer();
     }
 
