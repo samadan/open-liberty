@@ -20,18 +20,7 @@
 
     <persistence-unit name="MyPersistenceUnit">
         <jta-data-source>java:comp/DefaultDataSource</jta-data-source>
-        <class>test.jakarta.data.web.Apartment</class>
-        <class>test.jakarta.data.web.Apartment2</class>
-        <class>test.jakarta.data.web.Apartment3</class>
-        <class>test.jakarta.data.web.House</class>
-        <class>test.jakarta.data.web.Package</class>
-        <class>test.jakarta.data.web.Participant</class>
-        <class>test.jakarta.data.web.Person</class>
-        <class>test.jakarta.data.web.Prime</class>
-        <class>test.jakarta.data.web.Product</class>
-        <class>test.jakarta.data.web.Purchase</class>
-        <class>test.jakarta.data.web.Thing</class>
-        <class>test.jakarta.data.web.Vehicle</class>
+        <mapping-file>META-INF/orm.xml</mapping-file>
         <properties>
             <property name="eclipselink.logging.parameters" value="true"/>
             <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
