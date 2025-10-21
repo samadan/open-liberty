@@ -18,6 +18,7 @@ import org.junit.Test;
 
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.ibm.websphere.simplicity.log.Log;
+import com.ibm.ws.security.fat.common.utils.ConditionalIgnoreRule;
 import com.ibm.ws.security.fat.common.ValidationData.validationData;
 import com.ibm.ws.security.saml20.fat.commonTest.SAMLCommonTest;
 import com.ibm.ws.security.saml20.fat.commonTest.SAMLConstants;
@@ -114,6 +115,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testNoKeyAlias_OneCertInKeystore_CorrectCert_CertMappedToNonDefaultAlias() throws Exception {
 
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_noKeyAlias_singleCertKeyStore_nonDefaultKeyAliasCert.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
@@ -168,6 +170,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      */
     @Mode(TestMode.LITE)
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testNoKeyAlias_DefaultKeyAliasInKeystore_MultipleCertsInKeystore_IncludesCorrectCert() throws Exception {
 
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_noKeyAlias_multiCertKeyStore_includesDefaultKeyAliasCert.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
@@ -219,6 +222,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testNoKeyAlias_DefaultKeyAliasInKeystore_OneCertInKeystore_CorrectCert() throws Exception {
 
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_noKeyAlias_singleCertKeyStore_defaultKeyAliasCert.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
@@ -313,6 +317,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testKeyAlias_MultipleCertsInKeystore_KeyAliasIsCorrectCert() throws Exception {
 
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_multiCertKeyStore_missingDefaultKeyAliasCert.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
@@ -364,6 +369,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testKeyAlias_OneCertInKeystore_CorrectCert() throws Exception {
 
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_singleCertKeyStore_nonDefaultKeyAliasCert.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
@@ -407,6 +413,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testKeyAlias_DefaultKeyAliasInKeystore_MultipleCertsInKeystore_DefaultKeyAlias() throws Exception {
 
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_multiCertKeyStore_defaultKeyAlias.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
@@ -424,6 +431,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testEncryptionAlgorithm_AES128() throws Exception {
 
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_aes128.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
@@ -467,6 +475,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      */
     @Mode(TestMode.LITE)
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testEncryptionAlgorithm_AES256() throws Exception {
 
         if (!cipherMayExceed128) {
