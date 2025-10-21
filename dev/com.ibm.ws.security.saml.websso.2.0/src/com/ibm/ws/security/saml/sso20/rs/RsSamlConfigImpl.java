@@ -332,6 +332,26 @@ public class RsSamlConfigImpl extends PkixTrustEngineConfig implements SsoConfig
                 }
             }
             return SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA256;
+        } else if (CryptoUtils.SIGNATURE_ALGORITHM_ECDSAWITHSHA384.equalsIgnoreCase(signatureMethodAlgorithm)) {
+            if (!ProductInfo.getBetaEdition()) {
+                throw new UnsupportedOperationException("The samlWebSso20 signatureMethodAlgorithm option, SHA384withECDSA, is beta and is not available.");
+            } else {
+                if (!issuedBetaMessage) {
+                    Tr.info(tc, "BETA: A beta option has been invoked for the class " + this.getClass().getName() + " for the first time.");
+                    issuedBetaMessage = !issuedBetaMessage;
+                }
+            }
+            return SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA384;
+        } else if (CryptoUtils.SIGNATURE_ALGORITHM_ECDSAWITHSHA512.equalsIgnoreCase(signatureMethodAlgorithm)) {
+            if (!ProductInfo.getBetaEdition()) {
+                throw new UnsupportedOperationException("The samlWebSso20 signatureMethodAlgorithm option, SHA512withECDSA, is beta and is not available.");
+            } else {
+                if (!issuedBetaMessage) {
+                    Tr.info(tc, "BETA: A beta option has been invoked for the class " + this.getClass().getName() + " for the first time.");
+                    issuedBetaMessage = !issuedBetaMessage;
+                }
+            }
+            return SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA512;
         }
         return SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256;
     }
