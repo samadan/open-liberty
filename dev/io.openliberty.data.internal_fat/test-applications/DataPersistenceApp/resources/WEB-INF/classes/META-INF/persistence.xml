@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+/*******************************************************************************
+ * Copyright (c) 2025 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-2.0/
+ * 
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+-->
+<persistence 
+    xmlns="http://java.sun.com/xml/ns/persistence"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
+    version="1.0">
+
+    <persistence-unit name="MyPersistenceUnit">
+        <jta-data-source>java:comp/DefaultDataSource</jta-data-source>
+        <class>test.jakarta.data.web.Apartment</class>
+        <class>test.jakarta.data.web.Apartment2</class>
+        <class>test.jakarta.data.web.Apartment3</class>
+        <class>test.jakarta.data.web.House</class>
+        <class>test.jakarta.data.web.Package</class>
+        <class>test.jakarta.data.web.Participant</class>
+        <class>test.jakarta.data.web.Person</class>
+        <class>test.jakarta.data.web.Prime</class>
+        <class>test.jakarta.data.web.Product</class>
+        <class>test.jakarta.data.web.Purchase</class>
+        <class>test.jakarta.data.web.Thing</class>
+        <class>test.jakarta.data.web.Vehicle</class>
+        <properties>
+            <property name="eclipselink.logging.parameters" value="true"/>
+            <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>
