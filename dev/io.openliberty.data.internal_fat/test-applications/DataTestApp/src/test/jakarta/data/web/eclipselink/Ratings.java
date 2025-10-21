@@ -10,42 +10,45 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package test.jakarta.data.web;
+package test.jakarta.data.web.eclipselink;
 
-import static jakarta.data.repository.By.ID;
-
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
+import jakarta.data.Sort;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
+import jakarta.data.repository.Insert;
 import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
-import jakarta.data.repository.Save;
 
 /**
- * Repository interface for the DirectedSegement entity, which is
- * a Java record with multiple of the same type of embeddable.
+ * Repository interface for the Rating entity which is a record
+ * with embeddable attributes and a collection attribute.
  */
-@Repository
-public interface Cylinders {
+@Repository(dataStore = "java:module/env/jdbc/DerbyDataSourceRef")
+public interface Ratings {
 
-    @Find
-    @OrderBy("side.b.y")
-    @OrderBy("side_b_x")
-    @OrderBy(ID)
-    Stream<Cylinder> centeredAt(int centerX, int center_y);
-
-    @Query("SELECT COUNT(THIS) " +
-           " WHERE (side.a.y - side.b.y) * (side.a.y + side.b.y - 2 * center.y)" +
-           "     = (side.b.x - side.a.x) * (side.a.x + side.b.x - 2 * center.x)")
-    int countValid();
+    @Insert
+    void add(Rating rating);
 
     @Delete
-    Long eraseAll();
+    long clear();
 
-    Stream<Cylinder> findBySideAXOrSideBXOrderBySideBYDesc(int x1, int x2);
+    @Find
+    Optional<Rating> get(int id);
 
-    @Save
-    void upsert(Cylinder... s);
+    Stream<Rating> findByCommentsContainsOrderByIdDesc(String comment);
+
+    Stream<Rating> findByItemPriceBetween(float min, float max, Sort<?>... sorts);
+
+    @Query("SELECT comments WHERE ID=?1")
+    Set<String> getComments(int id);
+
+    @Find
+    @OrderBy("item.price")
+    @OrderBy("ID")
+    Stream<Rating> search(int numStars);
 }

@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package test.jakarta.data.web;
+package test.jakarta.data.web.eclipselink;
 
 /**
  * Entity that is a Java record with multiple of the same type of embeddable

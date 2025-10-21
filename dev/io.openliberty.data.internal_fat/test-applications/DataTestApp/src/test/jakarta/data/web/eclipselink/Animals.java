@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package test.jakarta.data.web;
+package test.jakarta.data.web.eclipselink;
 
 import java.util.stream.Stream;
 
@@ -19,13 +19,13 @@ import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 
-import test.jakarta.data.web.Animal.ScientificName;
+import test.jakarta.data.web.eclipselink.Animal.ScientificName;
 
 /**
  * Repository interface for the Animal entity which is a record
  * with an embeddable ID that is also a record.
  */
-@Repository
+@Repository(dataStore = "java:module/env/jdbc/DerbyDataSourceRef")
 public interface Animals extends CrudRepository<Animal, ScientificName> {
     long countByIdNotNull();
 
