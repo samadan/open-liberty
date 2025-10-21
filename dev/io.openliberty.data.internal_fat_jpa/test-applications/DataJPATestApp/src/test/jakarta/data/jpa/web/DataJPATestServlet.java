@@ -318,6 +318,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testBigDecimal() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         final ZoneId EASTERN = ZoneId.of("America/New_York");
 
         List<DemographicInfo> list = demographics.findByPublicDebtBetween(BigDecimal.valueOf(5000000000000.00), // 5 trillion
@@ -364,6 +368,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testByteArrayAttributeType() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         // remove all data before test
         triangles.deleteByHypotenuseNot((byte) 0);
 
@@ -473,6 +481,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testCharIgnoreCase() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         // Clear out data before test
         employees.deleteByLastName("TestCharIgnoreCase");
 
@@ -496,6 +508,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testCollectionAttribute() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertEquals(Set.of(507),
                      cities.areaCodes("Rochester", "Minnesota").orElseThrow());
 
@@ -837,6 +853,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testElementCollection() throws Exception {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         ECEntity e1 = new ECEntity();
         e1.setId("EC1");
         e1.setIntArray(new int[] { 14, 12, 1 });
@@ -1352,6 +1372,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testEmbeddableCollection() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         taxpayers.delete();
 
         AccountId a1 = AccountId.of(15561600, 391588);
@@ -1538,6 +1562,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testEmbeddableIntermixNamePatterns() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of("HALCON", "Geotek"),
                              businesses.in("Stewartville", "MN")
                                              .map(b -> b.name)
@@ -1619,6 +1647,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testEmbeddableTypeAsResult() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
         assertIterableEquals(List.of("NW 19th St",
                                      "NW 37th St",
                                      "NW 4th Ave",
@@ -1636,6 +1667,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testEmbeddableTypeAsResultDepth3() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of("N Broadway Ave",
                                      "NE Wellner Dr",
                                      "SE 9th St",
@@ -1653,6 +1688,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testEmbeddedId() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         // Clear out data before test
         accounts.deleteByOwnerEndsWith("TestEmbeddedId");
 
@@ -2190,6 +2229,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testExtractFromDateFunctions1() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         // EXTRACT YEAR
         assertEquals(List.of(4000921041110001L, 4000921042220002L),
                      creditCards.expiringInOrBefore(2024));
@@ -2229,6 +2272,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testExtractFromDateFunction2() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         // EXTRACT YEAR
         assertEquals(List.of(1000921011110001L, 1000921011120002L, 1000921011130003L,
                              4000921041110001L, 4000921042220002L,
@@ -2572,6 +2619,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testIdClass() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of("Minnesota", "New York"),
                              cities.findByName("Rochester")
                                              .map(c -> c.stateName)
@@ -2618,6 +2669,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testIdClassFindByComponentOfIdClass() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of("Rochester Minnesota",
                                      "Rochester New York"),
                              cities.withNameOf("Rochester")
@@ -2664,6 +2719,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testIdClassOrderByAnnotationReverseDirection() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of("Springfield Oregon",
                                      "Springfield Ohio",
                                      "Springfield Missouri",
@@ -2847,6 +2906,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testIdClassOrderBySorts() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of("Springfield Missouri",
                                      "Springfield Massachusetts",
                                      "Springfield Illinois",
@@ -2864,6 +2927,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testIdClassResult() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         // single result
         CityId cityId = cities.findFirstByNameOrderByPopulationDesc("Springfield");
         assertEquals("Springfield", cityId.name);
@@ -2895,6 +2962,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testIdThatIsNotTheUniqueIdentifier() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         // Clear out data before test
         employees.deleteByLastName("testIdThatIsNotTheUniqueIdentifier");
 
@@ -3135,6 +3206,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testManyToManyCustomJoinQuery() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
 
         assertIterableEquals(List.of("4th Ave SE",
                                      "4th Ave SE",
@@ -3162,6 +3236,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testManyToManyIncludedInResults() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
 
         List<String> addresses = customers.findByPhoneIn(List.of(5075552444L,
                                                                  5075550101L))
@@ -3226,6 +3303,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testManyToOneIdClass() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of("Discrooger card #2000921022220002",
                                      "MonsterCard card #3000921032220002",
                                      "Feesa card #4000921042220002",
@@ -3243,6 +3324,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testManyToOneM11M() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of(5000921051110001L, 5000921052220002L,
                                      1000921011110001L, 1000921011120002L, 1000921011130003L,
                                      2000921021110001L, 2000921022220002L),
@@ -3260,6 +3345,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testManyToOneMM11() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertIterableEquals(List.of("MICHELLE@TESTS.OPENLIBERTY.IO",
                                      "Matthew@tests.openliberty.io",
                                      "Maximilian@tests.openliberty.io",
@@ -3297,6 +3386,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testManyToOneSubAttribute() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
 
         Stream<CreditCard> cards = customers//
                         .findCardsByDebtorEmailEndsWith("an@tests.openliberty.io");
@@ -3319,6 +3411,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testMappedSuperclass() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         tariffs.deleteByLeviedBy("USA");
 
         Tariff t1 = new Tariff();
@@ -3478,6 +3574,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testMixedRepository() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
 
         Business[] found = mixed.findByLocationAddressCity("Stewartville");
         assertEquals(List.of("Geotek", "HALCON"),
@@ -3853,6 +3952,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testSelectIdClass() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertEquals(List.of("Illinois:Springfield",
                              "Kansas:Kansas City",
                              "Massachusetts:Springfield",
@@ -4066,6 +4169,9 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testSubqueryInSelect() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
 
         assertEquals(List.of(2002,
                              2003,
@@ -4331,6 +4437,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testUpdateEntityWithIdClass() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         CreditCard original = creditCards
                         .findByIssuedOnWithMonthIn(Set.of(Month.MAY.getValue()))
                         .findFirst()
@@ -4923,6 +5033,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testWildcardStreamReturnType() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertEquals(List.of("Geotek",
                              "HALCON"),
                      businesses.findAsStreamByCity("Stewartville", "MN")
