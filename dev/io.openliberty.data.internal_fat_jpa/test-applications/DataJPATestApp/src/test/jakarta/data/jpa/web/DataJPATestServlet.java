@@ -2219,6 +2219,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testExistsViaQueryLanguage() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertEquals(true, businesses.isLocatedAt(2800, "37th St", "NW", "IBM"));
         assertEquals(false, businesses.isLocatedAt(200, "1st St", "SW", "IBM"));
     }
@@ -4295,6 +4299,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testUnannotatedCollection() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         assertEquals(0, counties.deleteByNameIn(List.of("Olmsted", "Fillmore", "Winona", "Wabasha")));
 
         int[] olmstedZipCodes = new int[] { 55901, 55902, 55903, 55904, 55905, 55906, 55920, 55923, 55929, 55932, 55934, 55940, 55960, 55963, 55964, 55972, 55976 };
@@ -4496,6 +4504,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testUpdateEntityWithIdClassAndVersion() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         CityId mnId = CityId.of("Rochester", "Minnesota");
         CityId nyId = CityId.of("Rochester", "New York");
 
