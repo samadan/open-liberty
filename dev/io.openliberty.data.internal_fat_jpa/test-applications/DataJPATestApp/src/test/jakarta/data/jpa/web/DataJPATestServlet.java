@@ -174,14 +174,14 @@ public class DataJPATestServlet extends FATServlet {
      * fail due to incompatibilities between our Jakarta Data provider
      * and Hibernate's Jakarta Persistence provider.
      *
-     * @param issue - the issue that describes why the test must be skipped on Hibernate
+     * @param issues - the issues that describe why the test must be skipped on Hibernate
      *
      * @return boolean - if we need to skip the test, false otherwise.
      */
-    public static boolean skipForHibernate(String issue) {
+    public static boolean skipForHibernate(String... issues) {
         boolean testingHibernate = Boolean.valueOf(System.getenv("TEST_HIBERNATE"));
         if (testingHibernate) {
-            System.out.println("Skipping test because: " + issue);
+            System.out.println("Skipping test because: " + issues);
 
             // FIXME - this is the proper way to skip a test via junit
             // however, our FATServlet does not support catching an
@@ -2362,6 +2362,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testForeignKey() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177", "https://github.com/OpenLiberty/open-liberty/issues/33178")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         Manufacturer toyota = new Manufacturer();
         toyota.setName("Toyota");
         toyota.setNotes("testForeignKey-1");
@@ -3650,6 +3654,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testOneToOne() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33177")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         drivers.deleteByFullNameEndsWith(" TestOneToOne");
 
         Driver d1 = new Driver("Owen TestOneToOne", 100101000, LocalDate.of(2000, 1, 1), 71, 210, //
