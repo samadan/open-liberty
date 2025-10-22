@@ -691,7 +691,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     private void unsuccessfulFlow(String sp, String failureMessage, String logMessage) throws Exception {
-        unsuccessfulFlow(testSettings, sp, logMessage, failureMessage);
+        unsuccessfulFlow(testSettings, sp, failureMessage, logMessage);
     }
 
     private void unsuccessfulFlow(SAMLTestSettings settings, String sp, String failureMessage, String logMessage) throws Exception {
