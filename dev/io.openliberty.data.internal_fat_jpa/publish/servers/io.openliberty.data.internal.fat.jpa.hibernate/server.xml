@@ -30,6 +30,7 @@
 
   <data>
     <logValues>test.jakarta.data.jpa.web</logValues>
+    <logValues>test.jakarta.data.jpa.web.hibernate</logValues>
   </data>
 
   <application location="DataJPATestApp.war">
