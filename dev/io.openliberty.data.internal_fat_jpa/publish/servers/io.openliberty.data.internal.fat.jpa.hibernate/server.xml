@@ -26,8 +26,6 @@
     <feature>servlet-6.1</feature>
   </featureManager>
   
-<!--   <jpa defaultPersistenceProvider="org.hibernate.jpa.HibernatePersistenceProvider" />
- -->
   <include location="../fatTestPorts.xml"/>
 
   <data>

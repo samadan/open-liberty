@@ -2273,7 +2273,7 @@ public class QueryInfo {
         Object returnValue = em.merge(toEntity(e));
 
         if (trace && tc.isEntryEnabled())
-            Tr.entry(this, tc, "findAndUpdateOne", loggable(returnValue));
+            Tr.exit(this, tc, "findAndUpdateOne", loggable(returnValue));
         return returnValue;
     }
 

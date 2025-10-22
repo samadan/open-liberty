@@ -3990,6 +3990,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testSortByVersionFunction() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         orders.deleteAll();
 
         PurchaseOrder o1 = new PurchaseOrder();
@@ -4204,6 +4208,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testTimeAsVersion() throws Exception {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         /*
          * Reference Issue: https://github.com/eclipse-ee4j/eclipselink/issues/205
          * Without using the Eclipselink Oracle plugin the precision of Timestamp is 1 second
@@ -4630,6 +4638,10 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testUpdateWithEntityResults() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         orders.deleteAll();
 
         PurchaseOrder o1 = new PurchaseOrder();
