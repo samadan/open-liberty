@@ -67,12 +67,7 @@ public class ContextParameterInjector implements ValueInjector {
         }
         constructor = c;
 		// liberty change start
-        myClassLoader = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
-            @Override
-            public ClassLoader run() {
-                return ContextParameterInjector.class.getClassLoader();
-            }
-        });
+        myClassLoader = ContextParameterInjector.class.getClassLoader();
         boolean isOSGi = false;
         try {
             isOSGi = myClassLoader instanceof EquinoxClassLoader;
