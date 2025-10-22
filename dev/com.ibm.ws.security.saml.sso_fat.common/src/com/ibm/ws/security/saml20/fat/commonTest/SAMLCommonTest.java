@@ -321,7 +321,7 @@ public class SAMLCommonTest extends CommonTest {
                 usingExternalLDAPServer = shibbolethHelpers.updateToUseExternalLDaPIfInMemoryIsBad(aTestServer);
                 shibbolethHelpers.setShibbolethPropertiesForTestMachine(aTestServer);
                 aTestServer.getServer().setServerLevelFips(false);
-                fips140_3Enabled = false;
+                fips140_3Enabled = aTestServer.getServer().isFIPS140_3EnabledAndSupported();
 
 
 //                CommonLocalLDAPServerSuite one = new CommonLocalLDAPServerSuite();
@@ -343,8 +343,8 @@ public class SAMLCommonTest extends CommonTest {
 //                shibbolethHelpers.setShibbolethPropertiesForTestMachine(aTestServer);
             } else {
                 //SAML SP Server
-                fips140_3Enabled = true;
                 aTestServer.getServer().setServerLevelFips(true);
+                fips140_3Enabled = aTestServer.getServer().isFIPS140_3EnabledAndSupported();
             }
 
             transformApps(aTestServer);

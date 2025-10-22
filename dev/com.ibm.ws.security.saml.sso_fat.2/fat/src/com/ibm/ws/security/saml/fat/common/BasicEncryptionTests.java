@@ -50,6 +50,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
     private final static Class<?> thisClass = BasicEncryptionTests.class;
 
     private final String CLASS_DEFAULT_SP = "sp_enc_aes128";
+    private final String SP_ENCRYPTION_SHA_1_SIGNATURE = "sp_enc_sha1";
     private final String SP_ENCRYPTION_AES_128 = "sp_enc_aes128";
     private final String SP_ENCRYPTION_AES_192 = "sp_enc_aes192";
     private final String SP_ENCRYPTION_AES_256 = "sp_enc_aes256";
@@ -207,6 +208,61 @@ public class BasicEncryptionTests extends SAMLCommonTest {
         }
 
         unsuccessfulFlow(CLASS_DEFAULT_SP, errorMsg, "Did not find message saying we failed to decrypt the encrypted data.");
+    }
+
+    /**
+     * Test description:
+     * - keyAlias: Not specified
+     * - The configured keystore contains one certificate which is mapped to the default key alias.
+     * - The IDP responds with SAML response signed with SHA1 signature.
+     * 
+     * Expected results:
+     * - On Fips Disabled: 
+     *     - Show cert mismatch failure to decrypt signature.
+     * - On Fips Enabled: 
+     *     - SP should fail with MessageHandlerException("The server is configured with FIPS 140-3 enabled mode, but the received SAML assertion is signed with RSA-SHA1, which is not allowed in FIPS 140-3 mode").
+     * - Access to the protected resource should fail.
+     *
+     * @throws Exception
+     */
+    @Test
+    @AllowedFFDC(value = { "org.opensaml.messaging.handler.MessageHandlerException", "com.ibm.ws.security.saml.error.SamlException" })
+    public void testNoKeyAlias_DefaultKeyAliasInKeystore_OneCertInKeystore_MismatchCert_Fips140_3_Enabled() throws Exception {
+        testSAMLServer.reconfigServer(buildSPServerName("server_enc_noKeyAlias_singleCertKeyStore_defaultKeyAliasCert_sha1Fips140-3Enabled.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
+        SAMLTestSettings updatedTestSettings = getTestSettings(testSettings, SP_ENCRYPTION_SHA_1_SIGNATURE);
+        updatedTestSettings.setSamlTokenValidationData(updatedTestSettings.getSamlTokenValidationData().getNameId(), updatedTestSettings.getSamlTokenValidationData().getIssuer(), updatedTestSettings.getSamlTokenValidationData().getInResponseTo(), SAMLConstants.BAD_TOKEN_EXCHANGE, updatedTestSettings.getSamlTokenValidationData().getEncryptionKeyUser(), updatedTestSettings.getSamlTokenValidationData().getRecipient(), SAMLConstants.AES128);
+        System.out.println("skipIfFips140_3Enabled " + "Should we skip the test: " + fips140_3Enabled);
+        
+        String failureMessage = null;
+        if (!fips140_3Enabled) {
+            failureMessage = SAMLMessageConstants.CWWKS5007E_INTERNAL_SERVER_ERROR + ".+the signature method provided is weaker than the required.*";
+        } else {
+            failureMessage = SAMLMessageConstants.CWWKS5007E_INTERNAL_SERVER_ERROR + ".+server is configured with FIPS 140-3 enabled mode, but the received SAML assertion is signed with RSA-SHA1.*";
+        }
+        String sp = SP_ENCRYPTION_SHA_1_SIGNATURE;
+        String logMessage = "Did not find message: " + failureMessage;
+
+        List<validationData> expectations = vData.addSuccessStatusCodes();
+
+        String[] flow = standardFlow;
+
+        if (flowType.equals(SAMLConstants.IDP_INITIATED)) {
+            expectations = vData.addExpectation(expectations, SAMLConstants.PERFORM_IDP_LOGIN, SAMLConstants.RESPONSE_FULL, SAMLConstants.STRING_CONTAINS, "Did not receive expected SAML response.", null, SAMLConstants.SAML_RESPONSE);
+            // Ensure we validate the SAML token content for an EncryptedAssertion
+            // expectations = vData.addExpectation(expectations, SAMLConstants.PERFORM_IDP_LOGIN, SAMLConstants.SAML_TOKEN_ENCRYPTED, SAMLConstants.STRING_CONTAINS, "Did not receive the expected encrypted SAML token content.", null, null);
+        }
+
+        String errorPageStep = SAMLConstants.INVOKE_ACS_WITH_SAML_RESPONSE;
+
+        if (flowType.equals(SAMLConstants.SOLICITED_SP_INITIATED)) {
+            flow = SAMLConstants.SOLICITED_SP_INITIATED_FLOW_ONLY_SP;
+        }
+
+        // Should reach an error page with the expected message appearing in the logs
+        expectations = msgUtils.addForbiddenExpectation(errorPageStep, expectations);
+        expectations = helpers.addMessageExpectation(testSAMLServer, expectations, errorPageStep, SAMLConstants.SAML_MESSAGES_LOG, SAMLConstants.STRING_MATCHES, logMessage, failureMessage);
+
+        performSamlFlow(testSettings, sp, flow, expectations);
     }
 
     /**
@@ -505,6 +561,29 @@ public class BasicEncryptionTests extends SAMLCommonTest {
 
         // Ensure we validate the SAML token content for an EncryptedAssertion
         expectations = vData.addExpectation(expectations, SAMLConstants.PERFORM_IDP_LOGIN, SAMLConstants.SAML_TOKEN_ENCRYPTED, SAMLConstants.STRING_CONTAINS, "Did not receive the expected encrypted SAML token content.", null, null);
+
+        // Should successfully reach snoop servlet
+        expectations = vData.addExpectation(expectations, SAMLConstants.INVOKE_ACS_WITH_SAML_RESPONSE, SAMLConstants.RESPONSE_MESSAGE, SAMLConstants.STRING_MATCHES, "Did not get expected OK message.", null, SAMLConstants.OK_MESSAGE);
+        expectations = vData.addExpectation(expectations, SAMLConstants.INVOKE_ACS_WITH_SAML_RESPONSE, SAMLConstants.RESPONSE_TITLE, SAMLConstants.STRING_CONTAINS, "Did not see the expected snoop servlet title.", null, SAMLConstants.APP1_TITLE);
+
+        performSamlFlow(sp, standardFlow, updatedTestSettings, expectations);
+    }
+
+    private void successfulFlowWithoutEncryption(SAMLTestSettings settings, String sp) throws Exception {
+        SAMLTestSettings updatedTestSettings = getTestSettings(settings, sp);
+
+        List<validationData> expectations = vData.addSuccessStatusCodes();
+
+        String firstAction = standardFlow[0];
+        if (flowType.equals(SAMLConstants.UNSOLICITED_SP_INITIATED)) {
+            expectations = vData.addExpectation(expectations, firstAction, SAMLConstants.RESPONSE_TITLE, SAMLConstants.STRING_CONTAINS, "Did not land on the IDP client JSP page.", null, SAMLConstants.IDP_CLIENT_JSP_TITLE);
+        } else {
+            expectations = vData.addExpectation(expectations, firstAction, SAMLConstants.RESPONSE_TITLE, SAMLConstants.STRING_CONTAINS, "Did not land on the IDP form login page.", null, cttools.getLoginTitle(updatedTestSettings.getIdpRoot()));
+        }
+        expectations = vData.addExpectation(expectations, SAMLConstants.PERFORM_IDP_LOGIN, SAMLConstants.RESPONSE_FULL, SAMLConstants.STRING_CONTAINS, "Did not receive expected SAML response.", null, SAMLConstants.SAML_RESPONSE);
+
+        // Ensure we validate the SAML token content for an EncryptedAssertion
+        // expectations = vData.addExpectation(expectations, SAMLConstants.PERFORM_IDP_LOGIN, SAMLConstants.SAML_TOKEN_ENCRYPTED, SAMLConstants.STRING_CONTAINS, "Did not receive the expected encrypted SAML token content.", null, null);
 
         // Should successfully reach snoop servlet
         expectations = vData.addExpectation(expectations, SAMLConstants.INVOKE_ACS_WITH_SAML_RESPONSE, SAMLConstants.RESPONSE_MESSAGE, SAMLConstants.STRING_MATCHES, "Did not get expected OK message.", null, SAMLConstants.OK_MESSAGE);
