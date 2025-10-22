@@ -910,7 +910,7 @@ public class QueryInfo {
         TypedQuery<Long> query = em.createQuery(jpql, Long.class);
         setParameters(query, args);
 
-        // TODO why are EntityManager.setCacheRetrieveMode and
+        // TODO #33189 why are EntityManager.setCacheRetrieveMode and
         // Query.setCacheRetrieveMode unable to set this instead?
         query.setHint("jakarta.persistence.cache.retrieveMode",
                       CacheRetrieveMode.BYPASS);
@@ -1698,7 +1698,7 @@ public class QueryInfo {
         query.setMaxResults(1);
         setParameters(query, args);
 
-        // TODO why are EntityManager.setCacheRetrieveMode and
+        // TODO #33189 why are EntityManager.setCacheRetrieveMode and
         // Query.setCacheRetrieveMode unable to set this instead?
         query.setHint("jakarta.persistence.cache.retrieveMode",
                       CacheRetrieveMode.BYPASS);
@@ -1906,7 +1906,7 @@ public class QueryInfo {
             jakarta.persistence.Query query = em.createQuery(jpql);
             setParameters(query, args);
 
-            // TODO why are EntityManager.setCacheRetrieveMode and
+            // TODO #33189 why are EntityManager.setCacheRetrieveMode and
             // Query.setCacheRetrieveMode unable to set this instead?
             query.setHint("jakarta.persistence.cache.retrieveMode",
                           CacheRetrieveMode.BYPASS);
