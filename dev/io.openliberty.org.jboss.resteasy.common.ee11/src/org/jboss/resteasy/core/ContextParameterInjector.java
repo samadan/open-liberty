@@ -17,8 +17,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
-import java.security.AccessController; //Liberty Change
-import java.security.PrivilegedAction; //Liberty Change
 
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Application;
