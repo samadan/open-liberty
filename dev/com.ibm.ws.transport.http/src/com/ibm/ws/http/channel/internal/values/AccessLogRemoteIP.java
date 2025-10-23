@@ -49,7 +49,7 @@ public class AccessLogRemoteIP extends AccessLogData {
             HttpInboundServiceContext serviceContext = request.getServiceContext() instanceof HttpInboundServiceContext ? (HttpInboundServiceContext) request.getServiceContext() : null;
 
             if (Objects.nonNull(serviceContext)) {
-                hostIPAddress = serviceContext.useForwardedHeadersInAccessLog() ? serviceContext.getForwardedRemoteAddress() : null;
+                hostIPAddress = serviceContext.useRemoteIpOptionsInAccessLog() ? serviceContext.getForwardedRemoteAddress() : null;
 
                 if (Objects.isNull(hostIPAddress)) {
                     hostIPAddress = serviceContext.getRemoteAddr().toString();

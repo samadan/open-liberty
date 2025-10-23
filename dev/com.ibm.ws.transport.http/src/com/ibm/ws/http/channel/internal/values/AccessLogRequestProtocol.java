@@ -35,7 +35,7 @@ public class AccessLogRequestProtocol extends AccessLogData {
             HttpInboundServiceContext serviceContext = (request.getServiceContext() instanceof HttpInboundServiceContext) ? (HttpInboundServiceContext) request.getServiceContext() : null;
 
             if (Objects.nonNull(serviceContext)) {
-                protocol = serviceContext.useForwardedHeadersInAccessLog() ? serviceContext.getForwardedRemoteProto() : null;
+                protocol = serviceContext.useRemoteIpOptionsInAccessLog() ? serviceContext.getForwardedRemoteProto() : null;
             }
 
             if (Objects.isNull(protocol)) {

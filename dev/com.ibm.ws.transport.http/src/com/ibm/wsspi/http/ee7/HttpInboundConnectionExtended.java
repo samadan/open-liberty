@@ -71,7 +71,7 @@ public interface HttpInboundConnectionExtended extends HttpInboundConnection {
      *
      * @return
      */
-    boolean useForwardedHeaders();
+    boolean useRemoteIpOptions();
 
     /**
      * Since Servlet 6.0 : support jakarta.servlet.ServletRequest#getProtocolRequestId()

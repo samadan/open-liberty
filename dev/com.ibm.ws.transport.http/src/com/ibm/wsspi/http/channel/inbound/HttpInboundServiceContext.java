@@ -437,7 +437,7 @@ public interface HttpInboundServiceContext extends HttpServiceContext {
     /**
      * @return
      */
-    boolean useForwardedHeadersInAccessLog();
+    boolean useRemoteIpOptionsInAccessLog();
 
     /**
      * @return
