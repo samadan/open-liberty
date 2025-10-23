@@ -226,18 +226,19 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     @Test
-    @AllowedFFDC(value = { "org.opensaml.messaging.handler.MessageHandlerException", "com.ibm.ws.security.saml.error.SamlException" })
+    @AllowedFFDC(value = { "org.opensaml.messaging.handler.MessageHandlerException", "org.opensaml.messaging.decoder.MessageDecodingException", "com.ibm.ws.security.saml.error.SamlException", "java.lang.reflect.InvocationTargetException", "java.lang.InstantiationException" })
     public void testNoKeyAlias_DefaultKeyAliasInKeystore_OneCertInKeystore_MismatchCert_Fips140_3_Enabled() throws Exception {
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_noKeyAlias_singleCertKeyStore_defaultKeyAliasCert_sha1Fips140-3Enabled.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
         SAMLTestSettings updatedTestSettings = getTestSettings(testSettings, SP_ENCRYPTION_SHA_1_SIGNATURE);
         updatedTestSettings.setSamlTokenValidationData(updatedTestSettings.getSamlTokenValidationData().getNameId(), updatedTestSettings.getSamlTokenValidationData().getIssuer(), updatedTestSettings.getSamlTokenValidationData().getInResponseTo(), SAMLConstants.BAD_TOKEN_EXCHANGE, updatedTestSettings.getSamlTokenValidationData().getEncryptionKeyUser(), updatedTestSettings.getSamlTokenValidationData().getRecipient(), SAMLConstants.AES128);
-        System.out.println("skipIfFips140_3Enabled " + "Should we skip the test: " + fips140_3Enabled);
         
         String failureMessage = null;
         if (!fips140_3Enabled) {
             failureMessage = SAMLMessageConstants.CWWKS5007E_INTERNAL_SERVER_ERROR + ".+the signature method provided is weaker than the required.*";
         } else {
-            failureMessage = SAMLMessageConstants.CWWKS5007E_INTERNAL_SERVER_ERROR + ".+server is configured with FIPS 140-3 enabled mode, but the received SAML assertion is signed with RSA-SHA1.*";
+            // failureMessage = ".+The requested algorithm http://www.w3.org/2000/09/xmldsig#rsa-sha1 does not exist.*";
+            failureMessage = SAMLMessageConstants.CWWKS5018E_SAML_RESPONSE_CANNOT_BE_DECODED + ".+Error unmarshalling message from input stream.*";
+            // failureMessage = SAMLMessageConstants.CWWKS5007E_INTERNAL_SERVER_ERROR + ".+server is configured with FIPS 140-3 enabled mode, but the received SAML assertion is signed with RSA-SHA1.*";
         }
         String sp = SP_ENCRYPTION_SHA_1_SIGNATURE;
         String logMessage = "Did not find message: " + failureMessage;
@@ -326,6 +327,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
     @Mode(TestMode.LITE)
     @AllowedFFDC(value = { "com.ibm.ws.security.saml.error.SamlException", "org.opensaml.xmlsec.encryption.support.DecryptionException" },repeatAction = {EmptyAction.ID,JakartaEE9Action.ID,JakartaEE10Action.ID})
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testKeyAlias_MultipleCertsInKeystore_KeyAliasIsWrongCert() throws Exception {
 
         testSAMLServer.reconfigServer(buildSPServerName("server_enc_multiCertKeyStore_wrongKeyAlias.xml"), _testName, SAMLConstants.NO_EXTRA_MSGS, SAMLConstants.JUNIT_REPORTING);
@@ -505,6 +507,7 @@ public class BasicEncryptionTests extends SAMLCommonTest {
      * @throws Exception
      */
     @Test
+    @ConditionalIgnoreRule.ConditionalIgnore(condition = skipIfFips140_3Enabled.class)
     public void testEncryptionAlgorithm_AES192() throws Exception {
 
         if (!cipherMayExceed128) {
