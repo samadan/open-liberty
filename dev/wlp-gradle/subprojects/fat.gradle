@@ -169,7 +169,7 @@ if (!bnd.get('-sub', '').empty) {
 
       def suiteProperties = new Properties()
       suiteProperties.setProperty('suite.bndFile', subBndFile.absolutePath)
-      suiteProperties.setProperty('autoFVT.zipName', "${distsDirectory}/autoFVT__${suiteName}.zip")
+      suiteProperties.setProperty('autoFVT.zipName', layout.buildDirectory.dir("distributions").get().getAsFile().toString() + "/autoFVT__${suiteName}.zip")
 
       // calculate the bundle name
       def bsn = subBndProperties.getProperty('Bundle-SymbolicName')
@@ -217,10 +217,8 @@ task autoFVT {
     return line.substring(fStart, fEnd).trim().toLowerCase()
   }
 
-<<<<<<< HEAD
   def projectName = project.name
   def fattestSimplicityProject = project(':fattest.simplicity')
-=======
   ext.setFatBndProps = { Properties fatBndProps, String prefix, Properties bndFileProps ->
     // By default, load up all properties with certain prefixes from bndWorkspace
     bndFileProps.each { k, v ->
@@ -241,7 +239,6 @@ task autoFVT {
       println printPrefix + ' does not test any features.'
     }
   }
->>>>>>> 12c3f586f08 (Prototype support for multiple FATSuites in a gradle project)
 
   // For now we are just forcing the autoFVT create every time, this will be fixed
   // TODO: Be smart about when to recreate the autoFVT.zip
@@ -288,31 +285,6 @@ task autoFVT {
       into new File(autoFvtDir,"src/ant")
     }
 
-<<<<<<< HEAD
-    // Create a fat.bnd.properties file that contains metadata about the FAT
-    def bndProps = new Properties()
-
-    // By default, load up all properties with certain prefixes from bndWorkspace
-    bndWorkspace.getProject(projectName).getProperties().each { k, v ->
-      if(k.startsWith("test.") || k.startsWith("fat."))
-        bndProps.setProperty(k, v);
-    }
-
-    // Check for minimum java level for test execution:
-    def minJavaLevel = bnd.get('fat.minimum.java.level', bnd.get('javac.source'))
-    bndProps.setProperty('fat.minimum.java.level', minJavaLevel)
-    bndProps.setProperty('micro.version', bnd.get('libertyBundleMicroVersion'))
-
-    File bndPropsFile = new File(autoFvtDir, 'fat.bnd.properties')
-    def bndWriter = new FileWriter(bndPropsFile)
-    try {
-      bndProps.store(bndWriter, null)
-    } finally {
-      bndWriter.close()
-    }
-
-=======
->>>>>>> 12c3f586f08 (Prototype support for multiple FATSuites in a gradle project)
     // Create a fat.sys.properties file that contains metadata about the FAT
     def sysProps = new Properties()
 
@@ -556,21 +528,17 @@ task zipAutoFVT {
   dependsOn tasks.matching { task ->
     task.name.startsWith('autoFvtZip')
   }
-  outputs.files fileTree("${distsDirectory}").matching {
+  outputs.files layout.buildDirectory.dir("distributions").get().getAsFileTree().matching {
    include 'autoFVT*.zip'
   }
 }
 
 task zipProjectFVT {
   dependsOn zipAutoFVT
-<<<<<<< HEAD
-  archiveBaseName = project.name
-  into project.name + '/build/lib', {from zipAutoFVT}
-  into project.name, {from 'build-test.xml'}
-=======
+  def projectName = project.name
   doLast {
     zipAutoFVT.outputs.files.each {
-      def bucketName = project.name
+      def bucketName = projectName
       def autoFVTFileName = it.name
       def suiteSeparator = autoFVTFileName.indexOf('__')
       if (suiteSeparator != -1) {
@@ -582,51 +550,43 @@ task zipProjectFVT {
       // a suite only autoFVT.zip file, then include the build-test.xml.  Otherwise do not include
       // it because the autoFVT.zip doesn't have any FATSuites in it and needs to be known as a non
       // FAT zip file
+      def distributionsDir = layout.buildDirectory.dir("distributions").get().getAsFile().toString()
       if (!hasMultipleSuites || suiteSeparator != -1) {
-        ant.zip(destfile: "${distsDirectory}/${bucketName}.zip") {
+        ant.zip(destfile: "${distributionsDir}/${bucketName}.zip") {
           mappedresources {
-            fileset(dir: "${distsDirectory}", includes: "${autoFVTFileName}")
+            fileset(dir: "${distributionsDir}", includes: "${autoFVTFileName}")
             globmapper(from: 'autoFVT*.zip', to: "${bucketName}/build/lib/autoFVT.zip")
           }
           zipfileset(dir: '.', prefix: "${bucketName}/", includes: 'build-test.xml')
         }
       } else {
-        new File("${distsDirectory}/hasSubBuckets.txt").createNewFile()
-        ant.zip(destfile: "${distsDirectory}/${bucketName}.zip") {
+        new File("${distributionsDir}/hasSubBuckets.txt").createNewFile()
+        ant.zip(destfile: "${distributionsDir}/${bucketName}.zip") {
           mappedresources {
-            fileset(dir: "${distsDirectory}", includes: "${autoFVTFileName}")
+            fileset(dir: "${distributionsDir}", includes: "${autoFVTFileName}")
             globmapper(from: 'autoFVT*.zip', to: "${bucketName}/build/lib/autoFVT.zip")
           }
-          zipfileset(dir: "${distsDirectory}", prefix: "${bucketName}/", includes: 'hasSubBuckets.txt')
+          zipfileset(dir: "${distributionsDir}", prefix: "${bucketName}/", includes: 'hasSubBuckets.txt')
         }
-        file("${distsDirectory}/hasSubBuckets.txt").delete()
+        file("${distributionsDir}/hasSubBuckets.txt").delete()
       }
     }
   }
->>>>>>> 12c3f586f08 (Prototype support for multiple FATSuites in a gradle project)
 }
 
 if (isAutomatedBuild || rootProject.projectNames.contains(project.name)) {
   publishing {
     publications {
-<<<<<<< HEAD
-      maven(MavenPublication) {
-        artifactId = project.name + '_autoFVT'
-        groupId = 'test'
-        version = project.version
-        artifact zipProjectFVT
-=======
       publishedArtifacts.each {
         String fileName = it
         "autoFVT-${fileName}" (MavenPublication) {
           artifactId "${fileName}_autoFVT"
           groupId 'test'
           version project.version
-          artifact(new File("${distsDirectory}/${fileName}.zip")) {
+          artifact(new File(layout.buildDirectory.dir("distributions").get().getAsFile(), "${fileName}.zip")) {
             builtBy zipProjectFVT
           }
         }
->>>>>>> 12c3f586f08 (Prototype support for multiple FATSuites in a gradle project)
       }
     }
   }
@@ -872,6 +832,7 @@ buildfat {
 
 task uploadfat {
   dependsOn buildfat
+  def projectName = project.name
   doLast {
     // Ensure that async upload doesn't occur when adding a file to upload.
     while(new File("${rootDir}/upload.lock").exists()) {
@@ -880,8 +841,8 @@ task uploadfat {
     new FileWriter("${rootDir}/upload.lock", true).withWriter { }
 
     def uploadLogFile = new FileWriter("${rootDir}/upload.log", true)
-    distsDirectory.eachFile {
-      if (it.name.startsWith(project.name)) {
+    layout.buildDirectory.dir("distributions").get().getAsFile().eachFile {
+      if (it.name.startsWith(projectName)) {
 
         def sourceFile = it.absolutePath
         def targetFile = uploadRemotePath + it.name
