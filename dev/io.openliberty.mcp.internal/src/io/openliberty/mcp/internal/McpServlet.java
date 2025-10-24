@@ -11,11 +11,13 @@ package io.openliberty.mcp.internal;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -64,9 +66,6 @@ public class McpServlet extends HttpServlet {
 
     @Inject
     BeanManager bm;
-
-    @Inject
-    McpConnectionTracker connectionTracker;
 
     @Inject
     McpSessionStore sessionStore;
@@ -162,7 +161,7 @@ public class McpServlet extends HttpServlet {
             McpSession session = sessionStore.getSession(sessionId);
 
             if (session != null) {
-                connectionTracker.cancelSessionRequests(session);
+                connection.cancelSessionRequests(session);
             }
             resp.setStatus(HttpServletResponse.SC_OK);
         } else {
@@ -170,26 +169,46 @@ public class McpServlet extends HttpServlet {
         }
     }
 
-    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class, IllegalAccessException.class, IllegalArgumentException.class })
+    @FFDCIgnore({ IllegalAccessException.class, IllegalArgumentException.class })
     private void callTool(McpTransport transport) {
+
         ExecutionRequestId requestId = createOngoingRequestId(transport);
         McpToolCallParams params = transport.getParams(McpToolCallParams.class);
-
-        if (params.getMetadata() == null) {
-            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-                Tr.event(this, tc, "Attempt to call non-existant tool: " + params.getName());
-            }
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
-        }
-
-        McpSession sessionInfo = transport.getSession();
-        if (sessionInfo != null) {
-            sessionInfo.addRequest(requestId);
-        }
-
-        CreationalContext<Object> cc = bm.createCreationalContext(null);
-        Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
         try {
+            if (params.getMetadata() == null) {
+                if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                    Tr.event(this, tc, "Attempt to call non-existant tool: " + params.getName());
+                }
+                throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Method " + params.getName() + " not found"));
+            }
+
+            McpSession sessionInfo = transport.getSession();
+            if (sessionInfo != null) {
+                sessionInfo.addRequest(requestId);
+            }
+
+            if (params.getMetadata().returnsCompletionStage()) {
+                callToolMethodAndSendResponseAsync(transport, requestId, params, params.getMethod());
+            } else {
+                callToolSynchronously(transport, requestId, params, params.getMethod());
+            }
+        } catch (IllegalAccessException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
+        } catch (IllegalArgumentException e) {
+            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
+        }
+    }
+
+    @FFDCIgnore({ JSONRPCException.class, InvocationTargetException.class })
+    private void callToolSynchronously(McpTransport transport,
+                                       ExecutionRequestId requestId,
+                                       McpToolCallParams params,
+                                       Method method)
+                    throws IllegalAccessException, IllegalArgumentException {
+        CreationalContext<Object> cc = bm.createCreationalContext(null);
+        try {
+            Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
+
             Object[] arguments = params.getArguments(jsonb);
             addSpecialArguments(arguments, requestId, params.getMetadata());
 
@@ -197,27 +216,11 @@ public class McpServlet extends HttpServlet {
                 Tr.event(this, tc, "Calling tool " + params.getMetadata().name(), arguments);
             }
 
-            // Call the tool method
-            Object result = params.getMethod().invoke(bean, arguments);
+            // Call the tool method synchronously
+            Object result = method.invoke(bean, arguments);
 
-            boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
+            transport.sendResponse(evaluateToolResponse(result, params));
 
-            // Map method response to a ToolResponse
-            if (result instanceof ToolResponse response) {
-                transport.sendResponse(response);
-            } else if (result instanceof List<?> list && !list.isEmpty() && list.stream().allMatch(item -> item instanceof Content)) {
-                @SuppressWarnings("unchecked")
-                List<Content> contents = (List<Content>) list;
-                transport.sendResponse(ToolResponse.success(contents));
-            } else if (result instanceof Content content) {
-                transport.sendResponse(ToolResponse.success(content));
-            } else if (result instanceof String s) {
-                transport.sendResponse(ToolResponse.success(s));
-            } else if (includeStructuredContent) {
-                transport.sendResponse(ToolResponse.structuredSuccess(jsonb.toJson(result), result));
-            } else {
-                transport.sendResponse(ToolResponse.success(Objects.toString(result)));
-            }
         } catch (JSONRPCException e) {
             throw e;
         } catch (InvocationTargetException e) {
@@ -230,19 +233,81 @@ public class McpServlet extends HttpServlet {
                          e.getCause());
                 transport.sendResponse(ToolResponse.error(Tr.formatMessage(tc, "CWMCM0011E.internal.server.error")));
             }
-        } catch (IllegalAccessException e) {
-            throw new JSONRPCException(JSONRPCErrorCode.INTERNAL_ERROR, List.of("Could not call " + params.getName()));
-        } catch (IllegalArgumentException e) {
-            throw new JSONRPCException(JSONRPCErrorCode.INVALID_PARAMS, List.of("Incorrect arguments in params"));
         } finally {
-            if (connection.isOngoingRequest(requestId)) {
-                connection.deregisterOngoingRequest(requestId);
+            cleanup(requestId, cc, params);
+        }
+    }
+
+    @FFDCIgnore({ InvocationTargetException.class })
+    private void callToolMethodAndSendResponseAsync(McpTransport transport,
+                                                    ExecutionRequestId requestId,
+                                                    McpToolCallParams params,
+                                                    Method method)
+                    throws IllegalAccessException, IllegalArgumentException {
+        CreationalContext<Object> cc = bm.createCreationalContext(null);
+        try {
+            Object bean = bm.getReference(params.getBean(), params.getBean().getBeanClass(), cc);
+
+            Object[] arguments = params.getArguments(jsonb);
+            addSpecialArguments(arguments, requestId, params.getMetadata());
+
+            if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
+                Tr.event(this, tc, "Calling tool " + params.getMetadata().name(), arguments);
             }
-            try {
-                cc.release();
-            } catch (Exception ex) {
-                Tr.warning(tc, "CWMCM0012E.bean.release.fail", ex, params.getName());
+            CompletionStage<?> stage = ((CompletionStage<?>) method.invoke(bean, arguments));
+            stage = stage.thenApply(result -> evaluateToolResponse(result, params))
+                         .exceptionally(throwable -> {
+                             Tr.error(tc,
+                                      "CWMCM0010E.internal.server.error.detailed",
+                                      params.getMetadata().name(),
+                                      throwable.getCause());
+                             return ToolResponse.error(Tr.formatMessage(tc, "CWMCM0011E.internal.server.error"));
+                         });
+            transport.sendResultAsync(stage)
+                     .whenComplete((result, throwable) -> cleanup(requestId, cc, params));
+        } catch (InvocationTargetException e) {
+            Throwable t = e.getCause();
+            if (isBusinessException(t, params)) {
+                transport.sendResponse(toErrorResponse(e.getCause()));
+            } else {
+                Tr.error(tc, "CWMCM0010E.internal.server.error.detailed",
+                         params.getMetadata().name(),
+                         e.getCause());
+                transport.sendResponse(ToolResponse.error(Tr.formatMessage(tc, "CWMCM0011E.internal.server.error")));
             }
+            cleanup(requestId, cc, params);
+        }
+    }
+
+    private void cleanup(ExecutionRequestId requestId, CreationalContext<Object> cc, McpToolCallParams params) {
+        if (connection.isOngoingRequest(requestId)) {
+            connection.deregisterOngoingRequest(requestId);
+        }
+        try {
+            cc.release();
+        } catch (Exception ex) {
+            Tr.warning(tc, "CWMCM0012E.bean.release.fail", ex, params.getName());
+        }
+    }
+
+    private Object evaluateToolResponse(Object result, McpToolCallParams params) {
+        boolean includeStructuredContent = params.getMetadata().annotation().structuredContent();
+
+        // Map method response to a ToolResponse
+        if (result instanceof ToolResponse response) {
+            return response;
+        } else if (result instanceof List<?> list && !list.isEmpty() && list.stream().allMatch(item -> item instanceof Content)) {
+            @SuppressWarnings("unchecked")
+            List<Content> contents = (List<Content>) list;
+            return ToolResponse.success(contents);
+        } else if (result instanceof Content content) {
+            return ToolResponse.success(content);
+        } else if (result instanceof String s) {
+            return ToolResponse.success(s);
+        } else if (includeStructuredContent) {
+            return ToolResponse.structuredSuccess(jsonb.toJson(result), result);
+        } else {
+            return ToolResponse.success(Objects.toString(result));
         }
     }
 

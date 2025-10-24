@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
@@ -27,7 +28,8 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
                            Map<String, ArgumentMetadata> arguments,
                            List<SpecialArgumentMetadata> specialArguments,
                            String name, String title, String description,
-                           List<Class<? extends Throwable>> businessExceptions) {
+                           List<Class<? extends Throwable>> businessExceptions,
+                           boolean returnsCompletionStage) {
 
     public static final String MISSING_TOOL_ARG_NAME = "<<<MISSING TOOL_ARG NAME>>>";
 
@@ -47,8 +49,18 @@ public record ToolMetadata(Tool annotation, Bean<?> bean, AnnotatedMethod<?> met
 
         WrapBusinessError wrapAnnotation = method.getAnnotation(WrapBusinessError.class);
         List<Class<? extends Throwable>> businessExceptions = (wrapAnnotation != null) ? List.of(wrapAnnotation.value()) : Collections.emptyList();
+        boolean returnsCompletionStage = CompletionStage.class.isAssignableFrom(method.getJavaMember().getReturnType());
 
-        return new ToolMetadata(annotation, bean, method, getArgumentMap(method), getSpecialArgumentList(method), name, title, description, businessExceptions);
+        return new ToolMetadata(annotation,
+                                bean,
+                                method,
+                                getArgumentMap(method),
+                                getSpecialArgumentList(method),
+                                name,
+                                title,
+                                description,
+                                businessExceptions,
+                                returnsCompletionStage);
     }
 
     private static Map<String, ArgumentMetadata> getArgumentMap(AnnotatedMethod<?> method) {
