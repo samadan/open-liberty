@@ -97,6 +97,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Status;
 
 /**
  * Query information.
@@ -1728,14 +1729,15 @@ public class QueryInfo {
      * Execute a repository find query, and possibly also a delete operation
      * if find-and-delete.
      *
-     * @param em   entity manager.
-     * @param args method parameters.
+     * @param em       entity manager.
+     * @param txStatus transaction status.
+     * @param args     method parameters.
      * @return results, after wrapping in an Optional or CompletionStage if required
      *         by the repository method signature.
      * @throws Exception if an error occurs.
      */
-    @Trivial // em and method args have already been logged if loggable
-    Object find(EntityManager em, Object... args) throws Exception {
+    @Trivial // em, txStatus, and method args have already been logged if loggable
+    Object find(EntityManager em, int txStatus, Object... args) throws Exception {
         final boolean trace = TraceComponent.isAnyTracingEnabled();
         if (trace && tc.isEntryEnabled())
             Tr.entry(this, tc, "find", type);
@@ -1830,7 +1832,13 @@ public class QueryInfo {
             }
         }
 
-        Object returnValue = queryInfo.find(limit, max, pageReq, sortList, em, args);
+        Object returnValue = queryInfo.find(limit,
+                                            max,
+                                            pageReq,
+                                            sortList,
+                                            em,
+                                            txStatus,
+                                            args);
 
         if (isOptional) {
             returnValue = returnValue == null
@@ -1862,16 +1870,18 @@ public class QueryInfo {
      * @param pageReq  PageRequest, if specified as a repository method parameter
      * @param sortList combined list of Sorts
      * @param em       entity manager.
+     * @param txStatus transaction status.
      * @param args     method parameters.
      * @return results, before wrapping in an Optional or CompletionStage.
      * @throws Exception if an error occurs.
      */
-    @Trivial // method args have already been logged if loggable
+    @Trivial // em, txStatus, and method args have already been logged if loggable
     private Object find(Limit limit,
                         int max,
                         PageRequest pageReq,
                         List<Sort<Object>> sortList,
                         EntityManager em,
+                        int txStatus,
                         Object... args) throws Exception {
         final boolean trace = TraceComponent.isAnyTracingEnabled();
         if (trace && tc.isEntryEnabled())
@@ -1932,7 +1942,11 @@ public class QueryInfo {
             }
 
             if (multiType != null && BaseStream.class.isAssignableFrom(multiType)) {
-                Stream<?> stream = query.getResultStream();
+                Stream<?> stream;
+                if (txStatus == Status.STATUS_NO_TRANSACTION)
+                    stream = query.getResultList().stream();
+                else
+                    stream = query.getResultStream();
                 if (Stream.class.equals(multiType))
                     returnValue = stream;
                 else if (IntStream.class.equals(multiType))
