@@ -17,6 +17,8 @@ app-resources= \
   META-INF/validation-configuration-1.1.xsd | \
   META-INF/validation-mapping-2.0.xsd | \
   META-INF/validation-configuration-2.0.xsd | \
+  META-INF/validation-mapping-3.0.xsd | \
+  META-INF/validation-configuration-3.0.xsd
   META-INF/validation-mapping-3.1.xsd | \
   META-INF/validation-configuration-3.1.xsd
 
