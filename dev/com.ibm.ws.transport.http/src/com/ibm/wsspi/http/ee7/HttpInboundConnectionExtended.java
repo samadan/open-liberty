@@ -18,7 +18,7 @@ import com.ibm.wsspi.http.HttpInboundConnection;
 import com.ibm.wsspi.tcpchannel.TCPConnectionContext;
 
 /**
- *
+ * This package is not SPI even though it is in wsspi.
  */
 public interface HttpInboundConnectionExtended extends HttpInboundConnection {
 
