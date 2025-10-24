@@ -1222,7 +1222,7 @@ public class QueryInfo {
             && jpql != this.jpql)
             Tr.debug(this, tc, "JPQL adjusted for NULL id or version", jpql);
 
-        TypedQuery<?> delete = em.createQuery(jpql, entityInfo.entityClass);
+        jakarta.persistence.Query delete = em.createQuery(jpql);
 
         if (entityInfo.idClassAttributeAccessors == null) {
             int p = 1;
@@ -2229,11 +2229,7 @@ public class QueryInfo {
         if (TraceComponent.isAnyTracingEnabled() && jpql != this.jpql)
             Tr.debug(this, tc, "JPQL adjusted for NULL id or version", jpql);
 
-        Class<?> entityClass = singleType.equals(entityInfo.recordClass) //
-                        ? entityInfo.entityClass //
-                        : singleType;
-
-        TypedQuery<?> query = em.createQuery(jpql, entityClass);
+        jakarta.persistence.Query query = em.createQuery(jpql);
         query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
 
         if (entityInfo.idClassAttributeAccessors == null) {
@@ -5798,7 +5794,7 @@ public class QueryInfo {
         if (TraceComponent.isAnyTracingEnabled() && jpql != this.jpql)
             Tr.debug(this, tc, "JPQL adjusted for NULL id or version", jpql);
 
-        TypedQuery<?> update = em.createQuery(jpql, entityInfo.entityClass);
+        jakarta.persistence.Query update = em.createQuery(jpql);
 
         // parameters for entity attributes to update:
         int p = 1;
