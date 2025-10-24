@@ -491,9 +491,10 @@ public class DataJPATestServlet extends FATServlet {
 
     /**
      * Comparison ignoring case on an entity attribute of type char.
+     * Also tests usage of a stream within a transaction.
      */
     @Test
-    public void testCharIgnoreCase() {
+    public void testCharIgnoreCase() throws Exception {
 
         // Clear out data before test
         employees.deleteByLastName("TestCharIgnoreCase");
@@ -504,10 +505,18 @@ public class DataJPATestServlet extends FATServlet {
                         new Employee(54, "Cecilia", "TestCharIgnoreCase", (short) 1073, 'D'),
                         new Employee(73, "Cindy", "TestCharIgnoreCase", (short) 1054, 'c'));
 
-        assertEquals(List.of(14, 33, 73, 54),
-                     employees.findByBadgeAccessLevelIgnoreCaseGreaterThan("B")
-                                     .map(e -> e.empNum)
-                                     .collect(Collectors.toList()));
+        tran.begin();
+        try {
+            assertEquals(List.of(14, 33, 73, 54),
+                         employees.findByBadgeAccessLevelIgnoreCaseGreaterThan("B")
+                                         .map(e -> e.empNum)
+                                         .collect(Collectors.toList()));
+        } finally {
+            if (tran.getStatus() == Status.STATUS_ACTIVE)
+                tran.commit();
+            else
+                tran.rollback();
+        }
 
         employees.deleteByLastName("TestCharIgnoreCase");
     }
@@ -1644,21 +1653,31 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
-     * Repository method where the result type is the embeddable class of one of the entity attributes.
+     * Repository method where the result type is the embeddable class of one of
+     * the entity attributes. Also tests stream operations within a transaction.
      */
     @Test
-    public void testEmbeddableTypeAsResult() {
+    public void testEmbeddableTypeAsResult() throws Exception {
 
-        assertIterableEquals(List.of("NW 19th St",
-                                     "NW 37th St",
-                                     "NW 4th Ave",
-                                     "NW Civic Center Dr",
-                                     "NW Lakeridge Pl",
-                                     "NW Members Parkway",
-                                     "W Highway 14"),
-                             businesses.findByLocationAddressZip(ZipCode.of(55901))
-                                             .map(loc -> loc.address.street.direction + " " + loc.address.street.name)
-                                             .collect(Collectors.toList()));
+        tran.begin();
+        try {
+            assertIterableEquals(List.of("NW 19th St",
+                                         "NW 37th St",
+                                         "NW 4th Ave",
+                                         "NW Civic Center Dr",
+                                         "NW Lakeridge Pl",
+                                         "NW Members Parkway",
+                                         "W Highway 14"),
+                                 businesses.findByLocationAddressZip(ZipCode.of(55901))
+                                                 .map(loc -> loc.address.street.direction +
+                                                             " " + loc.address.street.name)
+                                                 .collect(Collectors.toList()));
+        } finally {
+            if (tran.getStatus() == Status.STATUS_ACTIVE)
+                tran.commit();
+            else
+                tran.rollback();
+        }
     }
 
     /**
@@ -4154,23 +4173,31 @@ public class DataJPATestServlet extends FATServlet {
      * but lacking all other clauses, such that the only FROM clause is found
      * within the ORDER BY clause. The Jakarta Data implementation should
      * insert a FROM clause prior to the ORDER BY clause to form a valid
-     * query.
+     * query. Also tests use of a stream within a transaction.
      */
     @Test
-    public void testSubqueryInSelect() {
+    public void testSubqueryInSelect() throws Exception {
 
-        assertEquals(List.of(2002,
-                             2003,
-                             2004,
-                             2005,
-                             2006,
-                             2007,
-                             2008,
-                             2009,
-                             2010),
-                     demographics.yearsUpTo(2010)
-                                     .sorted()
-                                     .collect(Collectors.toList()));
+        tran.begin();
+        try {
+            assertEquals(List.of(2002,
+                                 2003,
+                                 2004,
+                                 2005,
+                                 2006,
+                                 2007,
+                                 2008,
+                                 2009,
+                                 2010),
+                         demographics.yearsUpTo(2010)
+                                         .sorted()
+                                         .collect(Collectors.toList()));
+        } finally {
+            if (tran.getStatus() == Status.STATUS_ACTIVE)
+                tran.commit();
+            else
+                tran.rollback();
+        }
     }
 
     /**
