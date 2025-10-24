@@ -2386,7 +2386,7 @@ public class HttpInboundServiceContextImpl extends HttpServiceContextImpl implem
     }
 
     @Override
-    public boolean useRemoteIpOptionsInAccessLog() {
+    public boolean useRemoteIpInAccessLog() {
         return getHttpConfig().useForwardingHeadersInAccessLog();
     }
 
