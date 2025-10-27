@@ -38,6 +38,7 @@ import com.ibm.ws.genericbnf.PasswordNullifier;
 import com.ibm.ws.security.common.crypto.HashUtils;
 import com.ibm.ws.security.common.http.HttpUtils;
 import com.ibm.ws.security.openidconnect.token.IDToken;
+import com.ibm.ws.webcontainer.security.CookieHelper;
 import com.ibm.ws.webcontainer.security.ReferrerURLCookieHandler;
 import com.ibm.ws.webcontainer.security.WebAppSecurityCollaboratorImpl;
 import com.ibm.ws.webcontainer.security.WebAppSecurityConfig;
@@ -46,11 +47,13 @@ import io.openliberty.security.oidcclientcore.http.OidcClientHttpUtil;
 import io.openliberty.security.oidcclientcore.storage.CookieBasedStorage;
 import io.openliberty.security.oidcclientcore.storage.CookieStorageProperties;
 
-@SuppressWarnings("restriction")
 public class OidcClientUtil {
     @SuppressWarnings("unused")
     private static final long serialVersionUID = 1L;
     private static final TraceComponent tc = Tr.register(OidcClientUtil.class);
+
+    public static final int SPLIT_COOKIES_AT_VALUE_LENGTH = 3900;
+
     OidcClientHttpUtil oidcHttpUtil = null;
     public HttpUtils httpUtils;
 
@@ -182,6 +185,7 @@ public class OidcClientUtil {
         }
         CookieBasedStorage store = new CookieBasedStorage(req, res, getReferrerURLCookieHandler());
         for (String name : cookieNames) {
+            // TODO - check for cookies broken into multiples
             store.remove(name);
         }
     }
@@ -266,7 +270,7 @@ public class OidcClientUtil {
         if (clientCfg.isHttpsRequired() && isHttpsRequest) {
             cookieProps.setSecure(true);
         }
-        store.store(ClientConstants.WAS_OIDC_CODE, encodedHash, cookieProps);
+        storeCookieValue(store, cookieProps, encodedHash);
     }
 
     public static String addSignatureToStringValue(String encoded, ConvergedClientConfig clientCfg) {
@@ -282,4 +286,22 @@ public class OidcClientUtil {
 
         return retVal;
     }
+
+    protected static void storeCookieValue(CookieBasedStorage store, CookieStorageProperties cookieProps, String cookieValue) {
+        // Split the value into multiple cookies if the value approaches the 4 KB limit for cookies
+        String[] cookieValues = CookieHelper.splitValueIntoMaximumLengthChunks(cookieValue, SPLIT_COOKIES_AT_VALUE_LENGTH);
+        if (cookieValues != null) {
+            for (int i = 0; i < cookieValues.length; i++) {
+                String cookieName = ClientConstants.WAS_OIDC_CODE;
+                if (cookieValues.length > 1) {
+                    cookieName += "_" + i;
+                }
+                store.store(cookieName, cookieValues[i], cookieProps);
+            }
+            if (cookieValues.length > 1) {
+                store.store(ClientConstants.WAS_OIDC_CODE_COOKIES, Integer.toString(cookieValues.length), cookieProps);
+            }
+        }
+    }
+
 }
