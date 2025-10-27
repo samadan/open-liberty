@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- *
+ * 
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -38,8 +38,6 @@ public class Logging extends ConfigElement {
     private String rolloverStartTime;
     private String rolloverInterval;
     private String maxFfdcAge;
-    private Integer throttleMaxMessagesPerWindow;
-    private String throttleType;
 
     /**
      * @return the configured log directory
@@ -291,24 +289,6 @@ public class Logging extends ConfigElement {
     public String getMaxFfdcAge() {
         return this.maxFfdcAge;
     }
-
-//    @XmlAttribute(name = "throttleMaxMessagesPerWindow")
-//    public void setThrottleMaxMessagesPerWindow(int throttleMaxMessagesPerWindow) {
-//        this.throttleMaxMessagesPerWindow = throttleMaxMessagesPerWindow;
-//    }
-//
-//    public int getThrottleMaxMessagesPerWindow() {
-//        return this.throttleMaxMessagesPerWindow;
-//    }
-//
-//    @XmlAttribute(name = "throttleType")
-//    public void setThrottleType(String maxFfdcAge) {
-//        this.maxFfdcAge = ConfigElement.getValue(maxFfdcAge);
-//    }
-//
-//    public String getThrottleType() {
-//        return this.throttleType;
-//    }
 
     @Override
     public String toString() {

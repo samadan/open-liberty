@@ -9,7 +9,9 @@
  *******************************************************************************/
 package com.ibm.ws.logging.internal.impl;
 
-class ThrottleState {
+import java.util.function.Supplier;
+
+public class ThrottleState {
 
     public final long[] buckets;
     private int currentBucket = 0;
@@ -18,27 +20,28 @@ class ThrottleState {
     private long runningTotal = 0;
     private long weightedRunningTotal = 0;
 
-    private final double weightedBuckets = 5;
-    private final double weightMultiplier = 2;
+    private final double weightedBuckets = 5; //The most recent 5 buckets will be weighed higher during garbage collection
+    private final double weightMultiplier = 2; //Weight the most recent 5 buckets twice as high as other buckets.
 
     private final int windowIntervals = 20;
 
     private final double bucketDurationMs;
 
-    private final double throttleMaxMessagesPerWindow;
-
-    private long lastThrottledLogTime = 0; // For THROTTLED message
-    private final long throttleMessageIntervalMs = 60000; // “THROTTLED” line every 60s per key
     private long lastAccessTime;
 
-    public ThrottleState(int throttleWindowDuration, double throttleMaxMessagesPerWindow) {
-        this.throttleMaxMessagesPerWindow = throttleMaxMessagesPerWindow;
+    private final Supplier<Integer> maxMessagesSupplier;
+
+    public ThrottleState(int throttleWindowDuration, Supplier<Integer> maxMessagesSupplier) {
+        this.maxMessagesSupplier = maxMessagesSupplier;
         this.bucketDurationMs = throttleWindowDuration / windowIntervals;
         this.buckets = new long[windowIntervals];
         this.lastBucketTime = System.currentTimeMillis();
         this.lastAccessTime = System.currentTimeMillis();
     }
 
+    /*
+     * Ensure buckets are appropriately rotated, increment the runningTotal variables, and determine if logs should be throttled.
+     */
     public synchronized boolean increment() {
         rotateBuckets();
         buckets[currentBucket]++;
@@ -48,18 +51,12 @@ class ThrottleState {
         double weight = getBucketWeight(0);
         weightedRunningTotal += weight;
 
-        return runningTotal > throttleMaxMessagesPerWindow;
+        return runningTotal > maxMessagesSupplier.get();
     }
 
-    public synchronized boolean canLogThrottledMessage(long now) {
-        if (now - lastThrottledLogTime >= throttleMessageIntervalMs) {
-            lastThrottledLogTime = now;
-            return true;
-        }
-
-        return false;
-    }
-
+    /*
+     * Determine if bucket should be rotated and update the runningTotal variables accordingly.
+     */
     private void rotateBuckets() {
         long now = System.currentTimeMillis();
         int elapsed = (int) ((now - lastBucketTime) / bucketDurationMs);
@@ -79,6 +76,9 @@ class ThrottleState {
         }
     }
 
+    /*
+     * Give the most recent 5 buckets a higher weight for the runningTotal to be used when running garbage collection
+     */
     public double getBucketWeight(int offset) {
         return (offset < weightedBuckets) ? weightMultiplier : 1.0;
     }
