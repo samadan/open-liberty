@@ -38,7 +38,6 @@ import componenttest.rules.repeater.RepeatTests;
 
 @RunWith(Suite.class)
 @SuiteClasses({ AlwaysPassesTest.class,
-                
                 JAXRS21ClientSSLTest.class,
                 JAXRS21ClientLTPATest.class,
                 JAXRS21ClientCallbackTest.class,
