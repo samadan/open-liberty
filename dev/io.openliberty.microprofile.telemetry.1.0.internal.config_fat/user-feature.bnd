@@ -14,12 +14,6 @@ Bundle-Name:  User Feature To Test Open Telemetry SPI
 Bundle-SymbolicName: telemetry.user.feature
 Bundle-Description: This bundle tests the telemetry spi; version=${bVersion}
 
-# Do not release this test bundle to the bnd repository.
-# It is only needed internally and is not needed for other projects.
-# If another project has a bundle with the same SymbolicName, you can get
-# a build error that the bundle is already published.
--releaserepo:
-
 Import-Package: \
   javax.ws.rs.ext;version="[2.0,3)",\
   *
