@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.mcp.internal.test.schema;
+package io.openliberty.mcp.internal.testutils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;

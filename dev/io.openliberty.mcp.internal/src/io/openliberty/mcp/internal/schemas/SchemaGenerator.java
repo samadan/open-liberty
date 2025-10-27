@@ -24,6 +24,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -38,6 +39,7 @@ import io.openliberty.mcp.internal.schemas.blueprints.OptionalSchemaCreationBlue
 import io.openliberty.mcp.internal.schemas.blueprints.SchemaCreationBlueprint;
 import io.openliberty.mcp.internal.schemas.blueprints.TypeVariableSchemaCreationBlueprint;
 import io.openliberty.mcp.internal.schemas.blueprints.WildcardSchemaCreationBlueprint;
+import jakarta.enterprise.inject.spi.AnnotatedMethod;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
@@ -81,20 +83,20 @@ public class SchemaGenerator {
      * @param blueprintRegistry the blueprint registry to use
      * @return the schema as a json object
      */
-    public static JsonObject generateToolInputSchema(ToolMetadata tool, SchemaCreationBlueprintRegistry blueprintRegistry) {
+    public static JsonObject generateToolInputSchema(AnnotatedMethod<?> toolMethod, SchemaCreationBlueprintRegistry blueprintRegistry) {
         // create base schema components
         JsonObjectBuilder properties = Json.createObjectBuilder();
         JsonArrayBuilder required = Json.createArrayBuilder();
-        Parameter[] parameters = tool.method().getJavaMember().getParameters();
+        Parameter[] parameters = toolMethod.getJavaMember().getParameters();
         SchemaGenerationContext ctx = new SchemaGenerationContext(blueprintRegistry, INPUT);
-
+        Map<String, ArgumentMetadata> arguments = ToolMetadata.getArgumentMap(toolMethod);
         // for each parameter
-        for (ArgumentMetadata argument : tool.arguments().values()) {
+        for (ArgumentMetadata argument : arguments.values()) {
             Parameter parameter = parameters[argument.index()];
             calculateClassFrequency(parameter.getParameterizedType(), SchemaDirection.INPUT, ctx);
         }
 
-        for (var entry : tool.arguments().entrySet()) {
+        for (var entry : arguments.entrySet()) {
             String argumentName = entry.getKey();
             ArgumentMetadata argument = entry.getValue();
             Parameter parameter = parameters[argument.index()];
@@ -102,7 +104,7 @@ public class SchemaGenerator {
 
             JsonObjectBuilder parameterSchemaBuilder = generateSubSchema(parameter.getParameterizedType(), ctx, annotation);
 
-            if (argument.description() != null) {
+            if (argument.description() != null && argument.description() != "") {
                 parameterSchemaBuilder.add(DESCRIPTION, argument.description());
             }
             // - add it as a property
@@ -128,9 +130,10 @@ public class SchemaGenerator {
      * @param blueprintRegistry the blueprint registry to use
      * @return the schema as a json object
      */
-    public static JsonObject generateToolOutputSchema(ToolMetadata tool, SchemaCreationBlueprintRegistry blueprintRegistry) {
+    public static JsonObject generateToolOutputSchema(AnnotatedMethod<?> toolMethod, SchemaCreationBlueprintRegistry blueprintRegistry) {
 
-        Type returnType = tool.method().getJavaMember().getGenericReturnType();
+        Type returnType = toolMethod.getJavaMember().getGenericReturnType();
+
         SchemaGenerationContext ctx = new SchemaGenerationContext(blueprintRegistry, OUTPUT);
         calculateClassFrequency(returnType, SchemaDirection.OUTPUT, ctx);
 
@@ -273,7 +276,6 @@ public class SchemaGenerator {
     private static final JsonObject GENERATION_IN_PROGRESS = Json.createObjectBuilder().build();
 
     public static JsonObjectBuilder generateSubSchema(Type type, SchemaGenerationContext ctx, SchemaAnnotation annotation) {
-
         // Allow a schema to be overridden from the point that it's used
         var schemaFromAnnotation = annotation.asJsonSchema();
         if (schemaFromAnnotation.isPresent()) {

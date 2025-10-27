@@ -10,7 +10,10 @@
 package io.openliberty.mcp.internal.fat.tool.basicToolApp;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import io.openliberty.mcp.annotations.Schema;
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.Tool.Annotations;
 import io.openliberty.mcp.annotations.ToolArg;
@@ -21,6 +24,12 @@ import io.openliberty.mcp.content.TextContent;
 import io.openliberty.mcp.tools.ToolResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.bind.adapter.JsonbAdapter;
+import jakarta.json.bind.annotation.JsonbProperty;
+import jakarta.json.bind.annotation.JsonbTransient;
+import jakarta.json.bind.annotation.JsonbTypeAdapter;
 
 /**
  *
@@ -347,5 +356,58 @@ public class BasicTools {
     public String reservedNamesInToolArgNameVariant(@ToolArg(name = "class", description = "reservedNamesInToolArgName") String arg1,
                                                     @ToolArg(name = "void", description = "reservedNamesInToolArgName") String arg2) {
         return arg1;
+    }
+
+    // Complex Schema
+
+    @Schema(description = "A person object contains address, company objects")
+    public static record Person(@JsonbProperty("fullname") String name, Address address, Company company) {};
+
+    public static record Address(int number, @Schema(description = "A street object to represent complex streets") Street street, String postcode,
+                                 @JsonbTransient String directions) {};
+
+    @JsonbTypeAdapter(StreetAdapter.class)
+    @Schema("{\"properties\": {  \"streetName\": { \"type\": \"string\" }, \"roadType\": { \"type\": \"string\" } }, \"required\": [ \"streetName\" ], \"type\": \"object\"}")
+    public static record Street(String streetname, String roadtype) {}
+
+    public static record Company(String name, Address address, @Schema(description = "A list of shareholder (person object)") List<Person> shareholders,
+                                 @Schema(value = "{\"properties\": {\"key\":{ \"type\": \"integer\" }, \"value\":{ \"$ref\": \"#/$defs/person\" }},\"required\": [ ], \"type\": \"object\"}") Optional<Map<String, Person>> shareholderRegistry) {};
+
+    public static class StreetAdapter implements JsonbAdapter<Street, JsonObject> {
+
+        /** {@inheritDoc} */
+        @Override
+        public Street adaptFromJson(JsonObject arg0) throws Exception {
+            return new Street(arg0.getString("streetName"), arg0.getString("roadType"));
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public JsonObject adaptToJson(Street arg0) throws Exception {
+            return Json.createObjectBuilder().add("streetName", arg0.streetname()).add("roadType", arg0.roadtype()).build();
+        }
+    }
+
+    public static interface NumberRestrictor {
+        public Number getMax();
+
+        public Number getMin();
+
+        public void setMax(Number number);
+
+        public void setMin(Number number);
+    }
+
+    @Tool(name = "checkPerson", title = "checks if person is shareholder", description = "Returns boolean", structuredContent = false)
+    public boolean checkPerson(@ToolArg(name = "person", description = "Person object") Person person, @ToolArg(name = "company", description = "Company object") Company company) {
+        return true;
+    }
+
+    @Tool(name = "addPersonToList", title = "adds person to people list", description = "adds person to people list", structuredContent = true)
+    public @Schema(description = "Returns list of person object") List<Person> addPersonToList(@ToolArg(name = "employeeList",
+                                                                                                        description = "List of people") List<Person> employeeList,
+                                                                                               @ToolArg(name = "person", description = "Person object") Optional<Person> person) {
+        employeeList.add(person.get());
+        return employeeList;
     }
 }
