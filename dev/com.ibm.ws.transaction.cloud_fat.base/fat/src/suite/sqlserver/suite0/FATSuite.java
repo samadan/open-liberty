@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package suite;
+package suite.sqlserver.suite0;
 
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
