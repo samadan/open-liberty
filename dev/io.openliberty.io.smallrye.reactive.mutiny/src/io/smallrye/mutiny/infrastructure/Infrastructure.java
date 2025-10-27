@@ -1,8 +1,34 @@
+/*******************************************************************************
+ * Copyright (c) contributors to https://github.com/smallrye/smallrye-mutiny
+ * Copyright (c) 2025 IBM Corporation and others
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Original version: https://github.com/smallrye/smallrye-mutiny/blob/2.7.0/implementation/src/main/java/io/smallrye/mutiny/infrastructure/Infrastructure.java
+ *
+ * Modified for Liberty to support SecurityManager
+ * See "Liberty changes start/end" sections below for changes
+ *******************************************************************************/
+
 package io.smallrye.mutiny.infrastructure;
 
 import static io.smallrye.mutiny.helpers.ParameterValidation.nonNull;
 import static io.smallrye.mutiny.helpers.ParameterValidation.positive;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -36,7 +62,9 @@ import io.smallrye.mutiny.tuples.Functions;
 public class Infrastructure {
 
     private static final String DISABLE_CALLBACK_DECORATORS_PROP_NAME = "mutiny.disableCallBackDecorators";
-    private static final boolean DISABLE_CALLBACK_DECORATORS = Boolean.getBoolean(DISABLE_CALLBACK_DECORATORS_PROP_NAME);
+    // Liberty changes start
+    private static final boolean DISABLE_CALLBACK_DECORATORS = AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> Boolean.getBoolean(DISABLE_CALLBACK_DECORATORS_PROP_NAME));
+    // Liberty changes end
 
     static {
         ServiceLoader<ExecutorConfiguration> executorLoader = ServiceLoader.load(ExecutorConfiguration.class);
@@ -435,13 +463,29 @@ public class Infrastructure {
         multiOverflowDefaultBufferSize = positive(size, "size");
     }
 
+    // Liberty changes start
+    private static final PrivilegedAction<String> GET_BUFFER_SIZE_XS = new PrivilegedAction<String>() {
+        @Override
+        public String run() {
+            return System.getProperty("mutiny.buffer-size.xs");
+        }
+    };
+    // Liberty changes end
+
     /**
      * Get the xs buffer size (for internal usage).
      *
      * @return the buffer size
      */
     public static int getBufferSizeXs() {
-        String propVal = System.getProperty("mutiny.buffer-size.xs");
+        // Liberty changes start
+        String propVal;
+        if (System.getSecurityManager() != null) {
+            propVal = AccessController.doPrivileged(GET_BUFFER_SIZE_XS);
+        } else {
+            propVal = GET_BUFFER_SIZE_XS.run();
+        }
+        // Liberty changes end
         if (propVal != null) {
             return Math.max(8, Integer.parseInt(propVal));
         } else {
@@ -458,13 +502,29 @@ public class Infrastructure {
         bufferSizeXs = positive(size, "size");
     }
 
+    // Liberty changes start
+    private static final PrivilegedAction<String> GET_BUFFER_SIZE_S = new PrivilegedAction<String>() {
+        @Override
+        public String run() {
+            return System.getProperty("mutiny.buffer-size.s");
+        }
+    };
+    // Liberty changes end
+
     /**
      * Get the s buffer size (for internal usage).
      *
      * @return the buffer size
      */
     public static int getBufferSizeS() {
-        String propVal = System.getProperty("mutiny.buffer-size.s");
+        // Liberty changes start
+        String propVal;
+        if (System.getSecurityManager() != null) {
+            propVal = AccessController.doPrivileged(GET_BUFFER_SIZE_S);
+        } else {
+            propVal = GET_BUFFER_SIZE_S.run();
+        }
+        // Liberty changes end
         if (propVal != null) {
             return Math.max(16, Integer.parseInt(propVal));
         } else {
