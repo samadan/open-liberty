@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package suite;
+package suite.db2.suite1;
 
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
