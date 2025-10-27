@@ -12,10 +12,9 @@
 plugins {
   id 'org.springframework.boot' version '4.0.0-M3'
   id 'war'
+  id 'io.spring.dependency-management' version '1.1.7'
 }
 apply from: '../wlp-gradle/subprojects/spring.gradle'
-
-apply plugin: 'io.spring.dependency-management'
 
 group = 'com.ibm.ws.example.spring'
 version = '0.0.1-SNAPSHOT'
@@ -38,11 +37,4 @@ dependencies {
   providedRuntime('org.apache.tomcat.embed:tomcat-embed-core')
   providedRuntime('org.apache.tomcat.embed:tomcat-embed-el')
   providedRuntime('org.apache.tomcat.embed:tomcat-embed-websocket')
-}
-bootJar {
-  duplicatesStrategy = 'warn'
-}
-
-jar {
-  enabled = false
 }
