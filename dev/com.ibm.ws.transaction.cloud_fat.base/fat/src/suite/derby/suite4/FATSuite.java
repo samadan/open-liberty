@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package suite;
+package suite.derby.suite4;
 
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
