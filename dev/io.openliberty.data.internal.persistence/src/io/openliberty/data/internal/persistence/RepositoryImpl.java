@@ -560,7 +560,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
                     case QM_UPDATE, QM_DELETE -> queryInfo.execute(em, args);
                     case LC_DELETE -> queryInfo.delete(args[0], em);
                     case LC_UPDATE -> queryInfo.update(args[0], em);
-                    case LC_UPDATE_RET_ENTITY -> queryInfo.findAndUpdate(args[0], em);
+                    case LC_UPDATE_MERGE -> queryInfo.findAndUpdate(args[0], em);
                     case RESOURCE_ACCESS -> getResource(method);
                 };
 
