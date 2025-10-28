@@ -290,7 +290,7 @@ public class SharedSubscriptionWithMsgSelTest_129626 {
         // A potential improvement here would be to issue a warning in these cases instead of a failure.
         long receiveStartMilliseconds = System.currentTimeMillis();
         int count = clientServer.waitForMultipleStringsInLogUsingMark(20, "Received in MDB[1-2]: testBasicMDBTopic:");
-        assertEquals("Incorrect number of messages:"+count, 20, count);
+        assertEquals("Incorrect number of messages:", 20, count);
         long receiveMilliseconds = System.currentTimeMillis()-receiveStartMilliseconds;
         assertTrue("Test infrastructure failure, excessive time to receive:"+receiveMilliseconds, receiveMilliseconds<30*1000);
         
@@ -298,7 +298,7 @@ public class SharedSubscriptionWithMsgSelTest_129626 {
         runInServlet("testBasicMDBTopic_TCP");
         receiveStartMilliseconds = System.currentTimeMillis();
         count = clientServer.waitForMultipleStringsInLogUsingMark(20, "Received in MDB[1-2]: testBasicMDBTopic_TCP:");
-        assertEquals("Incorrect number of messages:"+count, 20, count);
+        assertEquals("Incorrect number of messages:", 20, count);
         receiveMilliseconds = System.currentTimeMillis()-receiveStartMilliseconds;
         assertTrue("Test infrastructure failure, excessive time to receive:"+receiveMilliseconds, receiveMilliseconds<30*1000);
     }
