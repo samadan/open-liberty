@@ -24,7 +24,7 @@ After we obtain the signed CLA, you are welcome to open a pull request, and the 
 
 ### Signing your commits
 
-All commits pushed to the open-liberty repo's will require gpg/ssh signing.   Setup is explained here: https://github.com/OpenLiberty/open-liberty/wiki/Signing-commits
+All commits pushed to the open-liberty repo's will require gpg/ssh signing.   Setup is explained here (Non IBMr's - ignore the requirement around using the ibm email id...): https://github.com/OpenLiberty/open-liberty/wiki/Signing-commits
 
 ## Coding Standards
 Please ensure you follow the coding standards used throughout the existing code base. Some basic rules include:
