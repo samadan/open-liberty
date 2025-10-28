@@ -151,7 +151,6 @@ public class JSPTests {
      */
     @Mode(TestMode.FULL)
     @Test
-
     public void testPI44611() throws Exception {
         this.verifyStringInResponse(PI44611_APP_NAME, "PI44611.jsp", "Test passed!");
     }
@@ -164,7 +163,6 @@ public class JSPTests {
      */
     @Mode(TestMode.FULL)
     @Test
-
     public void testPI59436() throws Exception {
         this.verifyStringInResponse(PI59436_APP_NAME, "PI59436.jsp", "Test passed.");
     }

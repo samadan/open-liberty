@@ -535,18 +535,24 @@ public class RepositoryImpl<R> implements InvocationHandler {
                 if (queryInfo.validateParams)
                     validator.validateParameters(proxy, method, args);
 
+                int txStatus = provider.tranMgr.getStatus();
                 if ((queryType = queryInfo.type).requiresTransaction &&
-                    Status.STATUS_NO_TRANSACTION == provider.tranMgr.getStatus()) {
+                    txStatus == Status.STATUS_NO_TRANSACTION) {
                     suspendedLTC = provider.localTranCurrent.suspend();
                     provider.tranMgr.begin();
                     startedTransaction = true;
+                    if (trace && tc.isDebugEnabled())
+                        Tr.debug(this, tc, "started global tran",
+                                 "suspended LTC: " + suspendedLTC);
+                } else if (trace && tc.isDebugEnabled()) {
+                    Tr.debug(this, tc, Util.txStatusToString(txStatus));
                 }
 
                 if (queryType != RESOURCE_ACCESS)
                     em = entityInfo.builder.createEntityManager();
 
                 returnValue = switch (queryType) {
-                    case FIND, FIND_AND_DELETE -> queryInfo.find(em, args);
+                    case FIND, FIND_AND_DELETE -> queryInfo.find(em, txStatus, args);
                     case COUNT -> queryInfo.count(em, args);
                     case EXISTS -> queryInfo.exists(em, args);
                     case INSERT -> queryInfo.insert(args[0], em);
@@ -569,17 +575,30 @@ public class RepositoryImpl<R> implements InvocationHandler {
                 try {
                     if (startedTransaction) {
                         int status = provider.tranMgr.getStatus();
-                        if (status == Status.STATUS_MARKED_ROLLBACK || failed)
+                        if (status == Status.STATUS_MARKED_ROLLBACK || failed) {
+                            if (trace && tc.isDebugEnabled())
+                                Tr.debug(this, tc, "roll back global tran",
+                                         Util.txStatusToString(status));
                             provider.tranMgr.rollback();
-                        else if (status != Status.STATUS_NO_TRANSACTION)
+                        } else if (status != Status.STATUS_NO_TRANSACTION) {
+                            if (trace && tc.isDebugEnabled())
+                                Tr.debug(this, tc, "commit global tran",
+                                         Util.txStatusToString(status));
                             provider.tranMgr.commit();
+                        }
                     } else {
-                        if (failed && Status.STATUS_ACTIVE == provider.tranMgr.getStatus())
+                        if (failed && Status.STATUS_ACTIVE == provider.tranMgr.getStatus()) {
+                            if (trace && tc.isDebugEnabled())
+                                Tr.debug(this, tc, "set rollback only");
                             provider.tranMgr.setRollbackOnly();
+                        }
                     }
                 } finally {
-                    if (suspendedLTC != null)
+                    if (suspendedLTC != null) {
+                        if (trace && tc.isDebugEnabled())
+                            Tr.debug(this, tc, "resume LTC: " + suspendedLTC);
                         provider.localTranCurrent.resume(suspendedLTC);
+                    }
                 }
             }
 
