@@ -155,7 +155,7 @@ public class CreateSSLCertificateTask extends BaseCommandTask {
             if (!fileUtility.exists(clientDir)) {
                 usrClients = fileUtility.resolvePath(usrClients);
                 stdout.println(getMessage("sslCert.abort"));
-                stdout.println(getMessage("sslCert.clientNotFound", clientName, usrClients));
+                stdout.println(getMessage("clientNotFound", clientName, usrClients));
                 return SecurityUtilityReturnCodes.ERR_CLIENT_NOT_FOUND;
             }
             dir = clientDir;
