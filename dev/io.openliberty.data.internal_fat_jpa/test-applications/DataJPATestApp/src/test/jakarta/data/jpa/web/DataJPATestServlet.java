@@ -171,6 +171,16 @@ public class DataJPATestServlet extends FATServlet {
     Triangles triangles;
 
     /**
+     * Indicates if testing with the Hibernate Persistence provider
+     * rather than EclipseLink.
+     *
+     * @return true if testing with the Hibernate Persistence provider.
+     */
+    public static final boolean isHibernate() {
+        return Boolean.valueOf(System.getenv("TEST_HIBERNATE"));
+    }
+
+    /**
      * Temporary method to allow skipping tests for tests that
      * fail due to incompatibilities between our Jakarta Data provider
      * and Hibernate's Jakarta Persistence provider.
@@ -180,16 +190,15 @@ public class DataJPATestServlet extends FATServlet {
      * @return boolean - if we need to skip the test, false otherwise.
      */
     public static boolean skipForHibernate(String... issues) {
-        boolean testingHibernate = Boolean.valueOf(System.getenv("TEST_HIBERNATE"));
-        if (testingHibernate) {
-            System.out.println("Skipping test because: " + issues);
+        if (isHibernate()) {
+            System.out.println("Skipping test because: " + Arrays.asList(issues));
 
             // FIXME - this is the proper way to skip a test via junit
             // however, our FATServlet does not support catching an
             // AssumptionViolatedException and serializing it back to the client.
-//            assumeTrue(!testingHibernate);
+//            assumeTrue(!isHibernate());
         }
-        return testingHibernate;
+        return isHibernate();
     }
 
     @Override
@@ -287,16 +296,6 @@ public class DataJPATestServlet extends FATServlet {
         testLiteralDouble();
         // To quickly try reproducing the issue, remove the above line and add the following line to tearDown,
         // runTest(server, "DataJPATestApp", "testLiteralDouble");
-    }
-
-    /**
-     * Indicates if testing with the Hibernate Persistence provider
-     * rather than EclipseLink.
-     *
-     * @return true if testing with the Hibernate Persistence provider.
-     */
-    public static final boolean isHibernate() {
-        return Boolean.valueOf(System.getenv("TEST_HIBERNATE"));
     }
 
     /**
