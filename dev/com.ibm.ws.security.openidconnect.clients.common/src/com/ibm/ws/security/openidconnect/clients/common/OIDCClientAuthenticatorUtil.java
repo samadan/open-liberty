@@ -50,7 +50,7 @@ public class OIDCClientAuthenticatorUtil {
     private Jose4jUtil jose4jUtil = null;
     private static int badStateCount = 0;
     public static final String[] OIDC_COOKIES = { OidcClientStorageConstants.WAS_OIDC_STATE_KEY, OidcClientStorageConstants.WAS_REQ_URL_OIDC,
-            ClientConstants.WAS_OIDC_CODE, OidcClientStorageConstants.WAS_OIDC_NONCE };
+            ClientConstants.WAS_OIDC_CODE, OidcClientStorageConstants.WAS_OIDC_NONCE, ClientConstants.WAS_OIDC_CODE_COOKIES };
 
     public OIDCClientAuthenticatorUtil() {
     }
@@ -115,10 +115,8 @@ public class OIDCClientAuthenticatorUtil {
     String getWasOidcCodeCookieValue(HttpServletRequest req, HttpServletResponse res) {
         Cookie[] cookies = req.getCookies();
         String encodedReqParams = CookieHelper.getCookieValue(cookies, ClientConstants.WAS_OIDC_CODE);
-        if (encodedReqParams != null) {
-            // Only found a single cookie; no need to search for multiple
-            OidcClientUtil.invalidateReferrerURLCookie(req, res, ClientConstants.WAS_OIDC_CODE);
-        } else {
+        OidcClientUtil.invalidateReferrerURLCookie(req, res, ClientConstants.WAS_OIDC_CODE);
+        if (encodedReqParams == null) {
             // Did not find single code cookie; will check for a single, large value that was split
             encodedReqParams = buildWasOidcCodeCookieValueFromMultipleCookies(cookies, req, res);
         }
@@ -134,6 +132,7 @@ public class OIDCClientAuthenticatorUtil {
             }
             return null;
         }
+        OidcClientUtil.invalidateReferrerURLCookie(req, res, ClientConstants.WAS_OIDC_CODE_COOKIES);
         int numberOfCookies = 0;
         try {
             numberOfCookies = Integer.parseInt(expectedNumberOfCookies);
@@ -149,14 +148,13 @@ public class OIDCClientAuthenticatorUtil {
             String cookieFragment = CookieHelper.getCookieValue(cookies, cookieFragmentName);
             if (cookieFragment != null) {
                 codeCookieValue.append(cookieFragment);
-                OidcClientUtil.invalidateReferrerURLCookie(req, res, cookieFragment);
+                OidcClientUtil.invalidateReferrerURLCookie(req, res, cookieFragmentName);
             } else {
                 if (tc.isDebugEnabled()) {
                     Tr.debug(tc, "Expected to find a " + cookieFragmentName + " cookie but did not.");
                 }
             }
         }
-        OidcClientUtil.invalidateReferrerURLCookie(req, res, ClientConstants.WAS_OIDC_CODE_COOKIES);
         return codeCookieValue.toString();
     }
 
