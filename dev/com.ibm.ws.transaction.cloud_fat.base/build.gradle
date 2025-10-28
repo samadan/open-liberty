@@ -53,6 +53,15 @@ autoFVT.doLast {
   }
 }
 
+tasks.withType(Zip).matching { task ->
+  task.name.startsWith('autoFvtZip-suite.oracle')
+}.configureEach {
+  from (new File(projectDir, 'oracle')) {
+    include 'semeruFips140_3CustomProfile.properties'
+  }
+  into 'autoFVT'
+}
+
 addRequiredLibraries.dependsOn addDerbyToSharedDir
 addRequiredLibraries.dependsOn addDerbyToSharedDir2
 addRequiredLibraries.dependsOn copyJdbcDrivers
