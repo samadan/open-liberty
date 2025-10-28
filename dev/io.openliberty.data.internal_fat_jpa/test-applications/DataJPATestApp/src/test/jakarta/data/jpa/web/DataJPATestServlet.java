@@ -100,6 +100,7 @@ import test.jakarta.data.jpa.web.Residence.Occupant;
 @SuppressWarnings("serial")
 @WebServlet("/*")
 public class DataJPATestServlet extends FATServlet {
+    static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
 
     @Inject
     Accounts accounts;
@@ -3590,6 +3591,54 @@ public class DataJPATestServlet extends FATServlet {
     }
 
     /**
+     * Tests a versioned updated where multiple threads attempt to update at the
+     * same version. The first attempt must succeed and the second attempt must
+     * raise OptimisticLockingFailureException.
+     */
+    @Test
+    public void testMultipleThreadsVersionedUpdate() throws Exception {
+        orders.deleteAll();
+
+        PurchaseOrder o = new PurchaseOrder();
+        o.purchasedBy = "testMultipleThreadsVersionedUpdate";
+        o.purchasedOn = OffsetDateTime.now();
+        o.total = 0.00f;
+        o = orders.create(o);
+
+        final UUID id = o.id;
+        final int versionAfterCreate = o.versionNum;
+        final float totalAfterCreate = o.total;
+
+        // update only if at the initial version (on another thread)
+        CompletableFuture.supplyAsync(() -> {
+            PurchaseOrder o1 = new PurchaseOrder();
+            o1.id = id;
+            o1.purchasedBy = "testMultipleThreadsVersionedUpdate";
+            o1.purchasedOn = OffsetDateTime.now();
+            o1.total = 1.00f;
+            o1.versionNum = versionAfterCreate;
+
+            orders.modify(o1);
+            return true;
+        }).get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        // again attempt to update only if at the initial version (from same thread)
+        PurchaseOrder o2 = new PurchaseOrder();
+        o2.id = id;
+        o2.purchasedBy = "testMultipleThreadsVersionedUpdate";
+        o2.purchasedOn = OffsetDateTime.now();
+        o2.total = totalAfterCreate + 2.00f;
+        o2.versionNum = versionAfterCreate;
+        try {
+            orders.modify(o2);
+            fail("Updated same version " + versionAfterCreate + " of entity " + o +
+                 " twice. Total is: " + orders.findById(id).orElseThrow().total);
+        } catch (OptimisticLockingFailureException x) {
+            ; // pass
+        }
+    }
+
+    /**
      * Use a custom join query so that a OneToMany association can query by attributes of the many side of the relationship.
      */
     @Test
@@ -4960,6 +5009,10 @@ public class DataJPATestServlet extends FATServlet {
         orders.modify(o1);
 
         o1 = orders.findById(o1.id).orElseThrow();
+        // Hibernate merge was ignored, and old value remains in database
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33232")) {
+            return; //TODO remove skip when fixed in Hibernate or worked around in Liberty
+        }
         assertEquals(10.19f, o1.total, 0.001f);
         int newVersion = o1.versionNum;
         UUID id = o1.id;
