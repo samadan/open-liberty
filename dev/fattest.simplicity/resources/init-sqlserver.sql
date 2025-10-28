@@ -20,3 +20,7 @@ GRANT EXECUTE ON xp_sqljdbc_xa_init_ex to public
 
 -- Allow snapshot isolation
 ALTER DATABASE TEST SET ALLOW_SNAPSHOT_ISOLATION ON
+
+-- Enable case sensitive collation based on binary representation of
+-- data to replicate default behavior of other databases
+ALTER DATABASE TEST COLLATE Latin1_General_bin;
