@@ -79,14 +79,14 @@ public class DeploymentProblemTest extends FATServletClient {
 
     @Test
     public void testDuplicateSpecialArgsTestCase() throws Exception {
-        String expectedErrorHeader = "The (.+?) MCP Tool has more than one parameter with type (.+?). There may only be one (.+?) parameter for each Tool method.";
+        String expectedErrorHeader = "The (.+?) MCP Tool has more than one parameter with the (.+?) type. Use only one (.+?) parameter in each Tool method.";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.DuplicateSpecialArgsErrorTest.duplicateCancellation");
         ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Duplicate Special Args: ", expectedErrorHeader, expectedErrorList, server);
     }
 
     @Test
     public void testInvalidSpecialArgsTestCase() throws Exception {
-        String expectedErrorHeader = "The (.+?) MCP Tool has a parameter of type (.+?) which is not a recognised special argument type and does not have a `@ToolArg` annotation.";
+        String expectedErrorHeader = "The (.+?) MCP Tool has a parameter of type (.+?) which is not a recognized special argument type and does not have a `@ToolArg` annotation.";
         List<String> expectedErrorList = List.of("io.openliberty.mcp.internal.fat.tool.deploymentErrorApps.InvalidSpecialArgsErrorTest.invalidSpecialArgumentTool");
         ExpectedAppFailureValidator.findAndAssertExpectedErrorsInLogs("Invalid Special Args: ", expectedErrorHeader, expectedErrorList, server);
     }

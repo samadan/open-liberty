@@ -171,7 +171,7 @@ public class ToolTest extends FATServletClient {
                         "data":[
                             "The jsonrpc field must be present. Only JSONRPC 2.0 is currently supported.",
                             "The method field is empty.",
-                            "The id type is not an acceptable type.The id must be a string or integer."
+                            "The id type is not an acceptable type. The id must be a string or integer."
                             ],
                         "message":"Invalid request"},
                         "id":null,
@@ -247,8 +247,8 @@ public class ToolTest extends FATServletClient {
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
-                            "The arguments [other] were passed but were not found in method.",
-                            "The arguments [input] were expected by the method but were not provided."
+                            "The [other] arguments were passed but were not found in the method.",
+                            "The [input] arguments were expected by the method but were not provided."
                             ],
                         "message": "Invalid params"},
                         "id":"2",
