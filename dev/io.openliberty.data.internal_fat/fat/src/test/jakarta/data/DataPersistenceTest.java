@@ -38,6 +38,7 @@ import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import test.jakarta.data.inmemory.web.ProviderTestServlet;
 import test.jakarta.data.web.DataTestServlet;
+import test.jakarta.data.web.hibernate.DataHibernateServlet;
 
 /**
  * Runs the tests with a third-party Persistence provider (Hibernate)
@@ -86,7 +87,9 @@ public class DataPersistenceTest extends FATServletClient {
     @TestServlets({ @TestServlet(servlet = DataTestServlet.class,
                                  contextRoot = "DataPersistenceApp"),
                     @TestServlet(servlet = ProviderTestServlet.class,
-                                 contextRoot = "ProviderTestApp") })
+                                 contextRoot = "ProviderTestApp"),
+                    @TestServlet(servlet = DataHibernateServlet.class,
+                                 contextRoot = "DataHibernateServlet") })
     public static LibertyServer server;
 
     @BeforeClass
@@ -97,7 +100,8 @@ public class DataPersistenceTest extends FATServletClient {
                         .modify();
 
         WebArchive war = ShrinkHelper.buildDefaultApp("DataPersistenceApp",
-                                                      "test.jakarta.data.web");
+                                                      "test.jakarta.data.web",
+                                                      "test.jakarta.data.web.hibernate");
         ShrinkHelper.exportAppToServer(server, war);
 
         JavaArchive providerJar = ShrinkWrap.create(JavaArchive.class,
