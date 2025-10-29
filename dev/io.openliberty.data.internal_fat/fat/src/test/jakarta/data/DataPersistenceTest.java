@@ -75,8 +75,12 @@ public class DataPersistenceTest extends FATServletClient {
                                    "CWWJP9991W.*Receipt"
                     };
 
+    //TODO enable database rotation
+//    @ClassRule
+//    public static final JdbcDatabaseContainer<?> testContainer = DatabaseContainerFactory.create();
+
     @ClassRule
-    public static final JdbcDatabaseContainer<?> testContainer = DatabaseContainerFactory.create();
+    public static final JdbcDatabaseContainer<?> testContainer = DatabaseContainerFactory.createType(DatabaseContainerType.Derby);
 
     @Server("io.openliberty.data.internal.fat.persistence")
     @TestServlets({ @TestServlet(servlet = DataTestServlet.class,
@@ -87,12 +91,10 @@ public class DataPersistenceTest extends FATServletClient {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        // Get driver type
-        DatabaseContainerType type = DatabaseContainerType.valueOf(testContainer);
-        server.addEnvVar("DB_DRIVER", type.getDriverName());
-
-        // Set up server DataSource properties
-        DatabaseContainerUtil.setupDataSourceDatabaseProperties(server, testContainer);
+        DatabaseContainerUtil.build(server, testContainer) //
+                        .withDriverVariable() //
+                        .withDatabaseProperties() //
+                        .modify();
 
         WebArchive war = ShrinkHelper.buildDefaultApp("DataPersistenceApp",
                                                       "test.jakarta.data.web");
