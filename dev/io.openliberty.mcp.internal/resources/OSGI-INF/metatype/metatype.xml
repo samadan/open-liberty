@@ -8,7 +8,7 @@
     <Object ocdref="io.openliberty.mcp.internal.config.McpConfiguration" />
 </Designate>
 
-<OCD name="MCP Server Configuration" description="Configuration for the MCP Server feature" 
+<OCD name="%mcpServer.name" description="%mcpServer.description" 
         id="io.openliberty.mcp.internal.config.McpConfiguration" ibm:alias="mcpServer">
     <AD name="%stateless.name" 
     description="%stateless.description"
