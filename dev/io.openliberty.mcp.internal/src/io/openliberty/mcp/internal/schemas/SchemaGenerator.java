@@ -104,7 +104,7 @@ public class SchemaGenerator {
 
             JsonObjectBuilder parameterSchemaBuilder = generateSubSchema(parameter.getParameterizedType(), ctx, annotation);
 
-            if (argument.description() != null && argument.description() != "") {
+            if (argument.description() != null && !argument.description().equals("")) {
                 parameterSchemaBuilder.add(DESCRIPTION, argument.description());
             }
             // - add it as a property
