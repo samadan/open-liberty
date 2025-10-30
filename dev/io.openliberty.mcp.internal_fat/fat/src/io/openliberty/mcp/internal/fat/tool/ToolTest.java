@@ -247,8 +247,8 @@ public class ToolTest extends FATServletClient {
         String expectedResponseString = """
                         {"error":{"code":-32602,
                         "data":[
-                            "The [other] arguments were passed but were not found in the method.",
-                            "The [input] arguments were expected by the method but were not provided."
+                            "The following arguments were passed but were not found in the method: [other].",
+                            "The following arguments were expected by the method but were not provided: [input]."
                             ],
                         "message": "Invalid params"},
                         "id":"2",
