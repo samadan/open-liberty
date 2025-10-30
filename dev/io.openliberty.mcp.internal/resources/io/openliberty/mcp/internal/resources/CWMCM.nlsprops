@@ -146,8 +146,8 @@ jsonrpc.missing.params=The request does not have any arguments in parameters.
 
 # Used as part of a response to a client
 # {0} = list of arguments
-jsonrpc.extra.arguments=The {0} arguments were passed but were not found in the method.
+jsonrpc.extra.arguments=The following arguments were passed but were not found in the method: {0}.
 
 # Used as part of a response to a client
 # {0} = list of arguments
-jsonrpc.missing.arguments=The {0} arguments were expected by the method but were not provided.
+jsonrpc.missing.arguments=The following arguments were expected by the method but were not provided: {0}.
