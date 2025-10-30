@@ -117,6 +117,8 @@ public class DataPersistenceTest extends FATServletClient {
                         .addAsLibrary(providerJar);
         ShrinkHelper.exportAppToServer(server, providerWar);
 
+        server.addEnvVar("TEST_HIBERNATE", "true"); //TODO remove once all incompatibilities are resolved
+
         server.startServerAndValidate(LibertyServer.DEFAULT_PRE_CLEAN,
                                       LibertyServer.DEFAULT_CLEANSTART,
                                       true);
