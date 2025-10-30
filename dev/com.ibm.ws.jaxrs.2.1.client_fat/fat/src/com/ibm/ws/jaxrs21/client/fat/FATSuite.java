@@ -25,6 +25,7 @@ import com.ibm.ws.jaxrs21.client.fat.test.JAXRS21ClientLTPATest;
 //import com.ibm.ws.jaxrs21.client.fat.test.JAXRS21ClientRestEasyRxInvokerTest;
 import com.ibm.ws.jaxrs21.client.fat.test.JAXRS21ClientSSLProxyAuthTest;
 import com.ibm.ws.jaxrs21.client.fat.test.JAXRS21ClientSSLTest;
+import com.ibm.ws.jaxrs21.client.fat.test.InjectionTest;
 import com.ibm.ws.jaxrs21.client.fat.test.JAXRS21ComplexClientTest;
 import com.ibm.ws.jaxrs21.client.fat.test.JAXRS21ExecutorsTest;
 import com.ibm.ws.jaxrs21.client.fat.test.JAXRS21ReactiveSampleTest;
@@ -38,13 +39,13 @@ import componenttest.rules.repeater.RepeatTests;
 
 @RunWith(Suite.class)
 @SuiteClasses({ AlwaysPassesTest.class,
-                JAXRS21ClientSSLTest.class,
-                JAXRS21ClientLTPATest.class,
                 JAXRS21ClientCallbackTest.class,
                 JAXRS21ClientCompletionStageRxInvokerTest.class,
                 JAXRS21ClientCXFRxInvokerTest.class,
-                JAXRS21ClientJerseyRxInvokerTest.class,  
+                JAXRS21ClientJerseyRxInvokerTest.class,
+                JAXRS21ClientLTPATest.class,
                 JAXRS21ClientSSLProxyAuthTest.class,
+                JAXRS21ClientSSLTest.class,
                 JAXRS21ComplexClientTest.class,
                 JAXRS21ExecutorsTest.class,
                 JAXRS21ReactiveSampleTest.class,
