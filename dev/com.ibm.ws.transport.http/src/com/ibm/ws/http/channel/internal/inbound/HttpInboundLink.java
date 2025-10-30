@@ -86,6 +86,7 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
     private boolean alreadyH2Upgraded = false;
     /** Flag on whether grpc is being used for this link */
     private boolean isGrpc = false;
+    private boolean isDestroyed = false;
 
     /**
      * Constructor for an HTTP inbound link object.
@@ -143,10 +144,13 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
      * @see com.ibm.wsspi.channelfw.base.InboundProtocolLink#destroy(java.lang.Exception)
      */
     @Override
-    public void destroy(Exception e) {
+    public synchronized void destroy(Exception e) {
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "Destroying inbound link: " + this + " " + getVirtualConnection());
         }
+        isDestroyed = true;
+        System.out.println("Destroying link: " + this);
+        new Exception("From destroy!").printStackTrace();
         // if this object is not active, then just return out
         synchronized (this) {
             if (!this.bIsActive) {
@@ -654,7 +658,9 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
      * @see com.ibm.wsspi.channelfw.base.InboundProtocolLink#close(com.ibm.wsspi.channelfw.VirtualConnection, java.lang.Exception)
      */
     @Override
-    public void close(VirtualConnection inVC, Exception e) {
+    public synchronized void close(VirtualConnection inVC, Exception e) {
+        System.out.println("Calling close httpinboundlink " + this);
+        new Exception("From close!").printStackTrace();
         final boolean bTrace = TraceComponent.isAnyTracingEnabled();
         if (bTrace && tc.isDebugEnabled()) {
             Tr.debug(tc, "close() called: " + this + " " + inVC);
@@ -675,6 +681,7 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
 
         // We are in an H2 connection so we need to do that close instead
         if (this.myInterface.getLink() instanceof H2HttpInboundLinkWrap) {
+            System.out.println("Calling H2 close!!");
             if (bTrace && tc.isDebugEnabled()) {
                 Tr.debug(tc, "we're H2, calling that close");
             }
