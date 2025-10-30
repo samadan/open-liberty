@@ -39,7 +39,7 @@
  </persistence-unit-metadata>
  
  <!-- 
-   Hibernate requires explicitally defining the mapped-superclasses
+   Hibernate requires explicitly defining the mapped-superclasses
    
    TODO when generating the orm.xml using our persistence we should
    detect and generate mapped-superclass elements to make the 

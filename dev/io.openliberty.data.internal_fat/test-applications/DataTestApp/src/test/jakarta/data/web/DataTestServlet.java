@@ -5852,6 +5852,10 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testUpdateMultiple() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33277")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         products.clear();
 
         assertEquals(0, products.putOnSale("TestUpdateMultiple-match", .10f));
@@ -6026,6 +6030,10 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testVersionedUpdateViaQuery() {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33277")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         Product prod1 = new Product();
         prod1.pk = UUID.nameUUIDFromBytes("Q6008-U8-21001".getBytes());
         prod1.name = "testVersionedUpdateViaQuery Product 1";
