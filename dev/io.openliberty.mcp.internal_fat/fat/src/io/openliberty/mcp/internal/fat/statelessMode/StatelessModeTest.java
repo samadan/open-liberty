@@ -10,6 +10,7 @@
 package io.openliberty.mcp.internal.fat.statelessMode;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
+import static io.openliberty.mcp.internal.fat.utils.TestConstants.NEGATIVE_TIMEOUT_MILIS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -17,7 +18,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -147,7 +147,6 @@ public class StatelessModeTest extends FATServletClient {
 
     @Test
     public void testCancellationToolWithCancellableParameterAndCancellationRequestWithStringId_inStatelessMode() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
         final String LATCH_NAME = "strId";
 
         Callable<String> threadCallingTool = () -> {
@@ -159,14 +158,13 @@ public class StatelessModeTest extends FATServletClient {
                                       "id": "1",
                                       "method": "tools/call",
                                       "params": {
-                                        "name": "cancellationTool",
+                                        "name": "cancellationToolForStatelessMinimalWait",
                                         "arguments": {
                                           "latchName": "strId"
                                         }
                                       }
                                     }
                                 """;
-                latch.countDown();
                 return new HttpRequest(server, ENDPOINT)
                                                         .requestProp("Accept", ACCEPT_HEADER)
                                                         .requestProp(MCP_PROTOCOL_HEADER, MCP_PROTOCOL_VERSION)
@@ -181,7 +179,8 @@ public class StatelessModeTest extends FATServletClient {
 
         Future<String> future = executor.submit(threadCallingTool);
 
-        latch.await();
+        // Short delay to allow the server time to process/ignore cancellation
+        Thread.sleep(NEGATIVE_TIMEOUT_MILIS);
         toolStatus.awaitStarted(LATCH_NAME);
 
         new HttpRequest(server, ENDPOINT)
@@ -200,9 +199,6 @@ public class StatelessModeTest extends FATServletClient {
                                          .method("POST")
                                          .expectCode(202)
                                          .run(String.class);
-
-        // Short delay to allow the server time to process/ignore cancellation
-        Thread.sleep(200);
 
         // Manually release the tool latch — since cancellation won't do it in stateless mode
         toolStatus.signalShouldEnd(LATCH_NAME);
@@ -219,7 +215,6 @@ public class StatelessModeTest extends FATServletClient {
 
     @Test
     public void testCancellationNotificationAcceptedButIgnored_inStatelessMode() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
         final String LATCH_NAME = "strId";
 
         Callable<String> toolCall = () -> {
@@ -230,14 +225,13 @@ public class StatelessModeTest extends FATServletClient {
                                   "id": "1",
                                   "method": "tools/call",
                                   "params": {
-                                    "name": "cancellationTool",
+                                    "name": "cancellationToolForStatelessMinimalWait",
                                     "arguments": {
                                       "latchName": "strId"
                                     }
                                   }
                                 }
                                 """;
-                latch.countDown();
                 return new HttpRequest(server, ENDPOINT)
                                                         .requestProp("Accept", ACCEPT_HEADER)
                                                         .requestProp(MCP_PROTOCOL_HEADER, MCP_PROTOCOL_VERSION)
@@ -251,8 +245,6 @@ public class StatelessModeTest extends FATServletClient {
         };
 
         Future<String> future = executor.submit(toolCall);
-
-        latch.await();
 
         toolStatus.awaitStarted(LATCH_NAME);
 
@@ -274,7 +266,7 @@ public class StatelessModeTest extends FATServletClient {
                                          .run(String.class);
 
         // Short delay to allow the server time to process/ignore cancellation
-        Thread.sleep(200);
+        Thread.sleep(NEGATIVE_TIMEOUT_MILIS);
 
         // Now release the tool manually
         toolStatus.signalShouldEnd(LATCH_NAME);

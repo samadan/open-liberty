@@ -25,6 +25,8 @@ import com.ibm.websphere.simplicity.ShrinkHelper;
 
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.custom.junit.runner.Mode;
+import componenttest.custom.junit.runner.Mode.TestMode;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import io.openliberty.mcp.internal.fat.tool.asyncToolApp.AsyncTools;
@@ -282,6 +284,7 @@ public class AsyncToolsTest extends FATServletClient {
     }
 
     @Test(expected = Exception.class)
+    @Mode(TestMode.FULL)
     public void testCompletionStageThatNeverCompletes() throws Exception {
         String request = """
                           {
