@@ -58,7 +58,7 @@ public class JAXRS21ClientSSLTest extends JAXRS21AbstractTest {
         // already started server
         try {
             server.startServer(true);
-             server.waitForSSLStart();
+            server.waitForSSLStart();
         } catch (Exception e) {
             System.out.println(e.toString());
         }
