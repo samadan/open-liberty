@@ -1,27 +1,22 @@
+
 /*******************************************************************************
- * Copyright (c) 2023 IBM Corporation and others.
+ * Copyright (c) 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package test.jakarta.data.jpa.web;
+package io.openliberty.jpa.data.tests.models;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
-import jakarta.persistence.ManyToOne;
 
-/**
- * Entity that has many-to-one mapping with the Customer entity.
- */
 @Entity
 @IdClass(CreditCard.CardId.class)
 public class CreditCard {
@@ -36,9 +31,6 @@ public class CreditCard {
         }
     }
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    public Customer debtor;
-
     @Column
     public LocalDate expiresOn;
 
@@ -49,7 +41,6 @@ public class CreditCard {
     public Issuer issuer;
 
     @Id
-    @Column(name = "ccnumber") //Avoid reserved keyword on oracle: https://github.com/OpenLiberty/open-liberty/issues/33246
     public long number;
 
     @Column
@@ -58,19 +49,21 @@ public class CreditCard {
     public CreditCard() {
     }
 
-    public CreditCard(Customer debtor, long number, int securityCode, LocalDate issuedOn, LocalDate expiresOn, Issuer issuer) {
-        this.issuer = issuer;
-        this.number = number;
-        this.securityCode = securityCode;
-        this.issuedOn = issuedOn;
-        this.expiresOn = expiresOn;
-        this.debtor = debtor;
-        debtor.addCard(this);
+    public static CreditCard of(long number, int securityCode, LocalDate issuedOn, LocalDate expiresOn, Issuer issuer) {
+        CreditCard inst = new CreditCard();
+
+        inst.issuer = issuer;
+        inst.number = number;
+        inst.securityCode = securityCode;
+        inst.issuedOn = issuedOn;
+        inst.expiresOn = expiresOn;
+
+        return inst;
     }
 
     @Override
     public String toString() {
-        return issuer + " card #" + number + " (" + securityCode + ") for " + (debtor == null ? null : debtor.email) +
+        return issuer + " card #" + number + " (" + securityCode + ") " +
                " valid from " + issuedOn + " to " + expiresOn;
     }
 }
