@@ -19,12 +19,34 @@
     xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_2.xsd"
     version="3.2">
 
- <entity class="test.jakarta.data.web.Apartment">
-  <table name="Apartment"/>
+ <!-- 
+   Without the access type set to FIELD
+   Hibernate will default to access type PROPERTY.
+   
+   - FIELD    expect entity attributes to be public fields.
+   - PROPERTY expect entity attributes to be private fields with getters/setters.
+   
+   TODO when generating the orm.xml using our persistence service we should
+   determine the access type of the entity class based on the id field and reflect
+   that in the entity element to make the orm.xml more portable between provides, for example: 
+   
+   <entity class="test.jakarta.data.web.Apartment" access="FIELD"> //Because: public long APTID;
+ -->
+ <persistence-unit-metadata>
+   <persistence-unit-defaults>
+     <access>FIELD</access>
+   </persistence-unit-defaults>
+ </persistence-unit-metadata>
+ 
+ <!-- 
+   Hibernate requires explicitally defining the mapped-superclasses
+   
+   TODO when generating the orm.xml using our persistence we should
+   detect and generate mapped-superclass elements to make the 
+   orm.xml more portable between provides
+ -->
+ <mapped-superclass class="test.jakarta.data.web.Residence">
   <attributes>
-   <id name="APTID">
-    <column nullable="false"/>
-   </id>
    <basic name="isOccupied">
     <column nullable="false"/>
    </basic>
@@ -36,6 +58,18 @@
      <column name="OCCUPANT_LASTNAME"/>
     </attribute-override>
    </embedded>
+  </attributes>
+ </mapped-superclass>
+ 
+ <entity class="test.jakarta.data.web.Apartment">
+  <table name="Apartment"/>
+  <attributes>
+   <id name="APTID">
+    <column nullable="false"/>
+   </id>
+   <basic name="quartersWidth">
+    <column nullable="false"/>
+   </basic>
    <embedded name="quarters">
     <attribute-override name="length">
      <column name="QUARTERS_LENGTH"/>
@@ -44,9 +78,6 @@
      <column name="QUARTERS_WIDTH"/>
     </attribute-override>
    </embedded>
-   <basic name="quartersWidth">
-    <column nullable="false"/>
-   </basic>
   </attributes>
  </entity>
 
@@ -56,17 +87,9 @@
    <id name="aptId">
     <column nullable="false"/>
    </id>
-   <basic name="isOccupied">
+   <basic name="quarters_width">
     <column nullable="false"/>
    </basic>
-   <embedded name="occupant">
-    <attribute-override name="firstName">
-     <column name="OCCUPANT_FIRSTNAME"/>
-    </attribute-override>
-    <attribute-override name="lastName">
-     <column name="OCCUPANT_LASTNAME"/>
-    </attribute-override>
-   </embedded>
    <embedded name="quarters">
     <attribute-override name="length">
      <column name="QUARTERS_LENGTH"/>
@@ -75,9 +98,6 @@
      <column name="QUARTERS_WIDTH"/>
     </attribute-override>
    </embedded>
-   <basic name="quarters_width">
-    <column nullable="false"/>
-   </basic>
   </attributes>
  </entity>
 
@@ -87,17 +107,6 @@
    <id name="aptId">
     <column nullable="false"/>
    </id>
-   <basic name="isOccupied">
-    <column nullable="false"/>
-   </basic>
-   <embedded name="occupant">
-    <attribute-override name="firstName">
-     <column name="OCCUPANT_FIRSTNAME"/>
-    </attribute-override>
-    <attribute-override name="lastName">
-     <column name="OCCUPANT_LASTNAME"/>
-    </attribute-override>
-   </embedded>
    <basic name="occupant_firstName">
     <column nullable="false"/>
    </basic>
