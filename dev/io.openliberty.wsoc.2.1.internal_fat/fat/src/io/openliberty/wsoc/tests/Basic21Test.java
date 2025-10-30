@@ -34,6 +34,7 @@ import componenttest.custom.junit.runner.Mode.TestMode;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.HttpUtils;
 import io.openliberty.wsoc.tests.all.MiscTest;
+import io.openliberty.wsoc.tests.all.SSLTest;
 import io.openliberty.wsoc.tests.all.TimeOutTest;
 import io.openliberty.wsoc.tests.all.UpgradeTest;
 import io.openliberty.wsoc.tests.all.UserPropertiesTest;
@@ -41,7 +42,6 @@ import io.openliberty.wsoc.util.OnlyRunNotOnZRule;
 import io.openliberty.wsoc.util.WebServerControl;
 import io.openliberty.wsoc.util.WebServerSetup;
 import io.openliberty.wsoc.util.wsoc.WsocTest;
-import io.openliberty.wsoc.tests.all.SSLTest;
 
 /**
  *  WebSocket 2.1 Tests
