@@ -21,7 +21,7 @@ import static io.openliberty.data.internal.QueryType.FIND_AND_DELETE;
 import static io.openliberty.data.internal.QueryType.INSERT;
 import static io.openliberty.data.internal.QueryType.LC_DELETE;
 import static io.openliberty.data.internal.QueryType.LC_UPDATE;
-import static io.openliberty.data.internal.QueryType.LC_UPDATE_RET_ENTITY;
+import static io.openliberty.data.internal.QueryType.LC_UPDATE_MERGE;
 import static io.openliberty.data.internal.QueryType.QM_DELETE;
 import static io.openliberty.data.internal.QueryType.QM_UPDATE;
 import static io.openliberty.data.internal.QueryType.SAVE;
@@ -42,6 +42,8 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.RecordComponent;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2128,60 +2130,72 @@ public class QueryInfo {
             }
         }
 
-        if (results.isEmpty())
+        if (!results.isEmpty())
+            em.flush();
+
+        Object returnValue;
+        Class<?> returnType = method.getReturnType();
+        if (boolean.class.equals(singleType) || Boolean.class.equals(singleType)) {
+            returnValue = !results.isEmpty();
+        } else if (Util.PRIMITIVE_NUMERIC_TYPES.contains(singleType) ||
+                   Number.class.isAssignableFrom(singleType)) {
+            returnValue = convert(results.size(), singleType, true);
+        } else if (results.isEmpty()) {
             throw exc(IllegalArgumentException.class,
                       "CWWKD1092.lifecycle.arg.empty",
                       method.getName(),
                       repositoryInterface.getName(),
                       method.getGenericParameterTypes()[0].getTypeName());
-
-        em.flush();
-
-        Class<?> returnType = method.getReturnType();
-        if (void.class.equals(returnType) || Void.class.equals(returnType))
-            return null;
-
-        if (entityInfo.recordClass != null)
-            for (int i = 0; i < results.size(); i++)
-                results.set(i, entityInfo.toRecord(results.get(i)));
-
-        Object returnValue;
-        if (returnArrayType != null) {
-            Object[] newArray = (Object[]) Array.newInstance(returnArrayType, results.size());
-            returnValue = results.toArray(newArray);
+        } else if (void.class.equals(returnType) || Void.class.equals(returnType)) {
+            returnValue = null;
         } else {
-            if (multiType == null)
-                if (results.size() == 1)
-                    returnValue = results.get(0);
-                else if (results.isEmpty())
-                    returnValue = null;
+            if (entityInfo.recordClass != null)
+                for (int i = 0; i < results.size(); i++)
+                    results.set(i, entityInfo.toRecord(results.get(i)));
+
+            if (returnArrayType != null) {
+                Object[] newArray = (Object[]) Array.newInstance(returnArrayType, results.size());
+                returnValue = results.toArray(newArray);
+            } else {
+                if (multiType == null)
+                    if (results.size() == 1)
+                        returnValue = results.get(0);
+                    else if (results.isEmpty())
+                        returnValue = null;
+                    else
+                        throw excNonUniqueResult(results.size());
+                else if (multiType.isInstance(results))
+                    returnValue = results;
+                else if (Stream.class.equals(multiType))
+                    returnValue = results.stream();
+                else if (Iterable.class.isAssignableFrom(multiType))
+                    returnValue = convertToIterable(results, multiType, null, null);
+                else if (Iterator.class.equals(multiType))
+                    returnValue = results.iterator();
                 else
-                    throw excNonUniqueResult(results.size());
-            else if (multiType.isInstance(results))
-                returnValue = results;
-            else if (Stream.class.equals(multiType))
-                returnValue = results.stream();
-            else if (Iterable.class.isAssignableFrom(multiType))
-                returnValue = convertToIterable(results, multiType, null, null);
-            else if (Iterator.class.equals(multiType))
-                returnValue = results.iterator();
-            else
-                throw exc(MappingException.class,
-                          "CWWKD1003.rtrn.err",
-                          method.getGenericReturnType().getTypeName(),
-                          method.getName(),
-                          repositoryInterface.getName(),
-                          "Update",
-                          lifeCycleReturnTypes(results.get(0).getClass().getSimpleName(),
-                                               hasSingularEntityParam,
-                                               false));
+                    throw exc(MappingException.class,
+                              "CWWKD1003.rtrn.err",
+                              method.getGenericReturnType().getTypeName(),
+                              method.getName(),
+                              repositoryInterface.getName(),
+                              "Update",
+                              lifeCycleReturnTypes(results.get(0).getClass().getSimpleName(),
+                                                   hasSingularEntityParam,
+                                                   false));
+            }
         }
 
         if (Optional.class.equals(returnType)) {
-            returnValue = returnValue == null ? Optional.empty() : Optional.of(returnValue);
-        } else if (CompletableFuture.class.equals(returnType) || CompletionStage.class.equals(returnType)) {
-            returnValue = CompletableFuture.completedFuture(returnValue); // useful for @Asynchronous
-        } else if (returnValue != null && !returnType.isInstance(returnValue)) {
+            returnValue = returnValue == null //
+                            ? Optional.empty() //
+                            : Optional.of(returnValue);
+        } else if (CompletableFuture.class.equals(returnType) ||
+                   CompletionStage.class.equals(returnType)) {
+            // useful for @Asynchronous
+            returnValue = CompletableFuture.completedFuture(returnValue);
+        } else if (returnValue != null &&
+                   !Util.wrapperClassIfPrimitive(returnType) //
+                                   .isAssignableFrom(returnValue.getClass())) {
             throw exc(MappingException.class,
                       "CWWKD1003.rtrn.err",
                       method.getGenericReturnType().getTypeName(),
@@ -2280,7 +2294,15 @@ public class QueryInfo {
                       Util.LIFE_CYCLE_METHODS_THAT_RETURN_ENTITIES_STATELESS);
         }
 
-        Object returnValue = em.merge(toEntity(e));
+        if (trace && tc.isDebugEnabled())
+            Tr.debug(this, tc, "found", loggable(results.get(0)));
+
+        e = toEntity(e);
+
+        if (trace && tc.isDebugEnabled())
+            Tr.debug(this, tc, "merge", loggable(e));
+
+        Object returnValue = em.merge(e);
 
         if (trace && tc.isEntryEnabled())
             Tr.exit(this, tc, "findAndUpdateOne", loggable(returnValue));
@@ -2822,6 +2844,7 @@ public class QueryInfo {
                             .append(entityInfo.name).append(' ').append(o) //
                             .append(" SET");
 
+            boolean needsVersionUpdate = entityInfo.versionAttributeName != null;
             boolean first = true;
             // p is the repository method parameter position (0-based)
             for (int p = 0; p < numAttributeParams; p++) {
@@ -2846,6 +2869,10 @@ public class QueryInfo {
                                                    " repository when the Id is an IdClass.");
                     } else {
                         String name = attrNames[p];
+
+                        if (needsVersionUpdate &&
+                            name.equals(entityInfo.versionAttributeName))
+                            needsVersionUpdate = false;
 
                         q.append(first ? " " : ", ");
                         appendAttributeName(name, q);
@@ -2875,6 +2902,23 @@ public class QueryInfo {
                             q.append(')');
                     }
                 }
+            }
+
+            if (needsVersionUpdate) {
+                Class<?> versionType = entityInfo.attributeTypes //
+                                .get(entityInfo.versionAttributeName);
+
+                q.append(first ? " " : ", ");
+                appendAttributeName(entityInfo.versionAttributeName, q);
+                q.append("=");
+                if (LocalDateTime.class.equals(versionType) ||
+                    Instant.class.equals(versionType)) {
+                    q.append("LOCAL DATETIME");
+                } else {
+                    appendAttributeName(entityInfo.versionAttributeName, q);
+                    q.append(" + 1");
+                }
+                first = false;
             }
 
             if (first)
@@ -3177,10 +3221,10 @@ public class QueryInfo {
                 q.append(o_).append(name).append("=?").append(++jpqlParamCount);
             }
         } else {
-            // Update that returns an entity. And also used when an entity
-            // has relation attributes that require using em.merge.
+            // Update that returns an entity. And also used when an entity has a
+            // version attribute or relation attribute that requires using em.merge.
             // Perform a find operation first so that em.merge can be used.
-            setType(Update.class, LC_UPDATE_RET_ENTITY);
+            setType(Update.class, LC_UPDATE_MERGE);
 
             q = new StringBuilder(100) //
                             .append("SELECT ").append(o) //
@@ -5716,6 +5760,8 @@ public class QueryInfo {
             updateCount = updateOne(arg, em);
         }
 
+        em.flush();
+
         if (numExpected == 0)
             throw exc(IllegalArgumentException.class,
                       "CWWKD1092.lifecycle.arg.empty",
@@ -5782,31 +5828,23 @@ public class QueryInfo {
         String jpql = this.jpql;
         Set<String> attrsToUpdate = entityInfo.attributeNamesForEntityUpdate;
 
-        int versionParamIndex = entityInfo.idClassAttributeAccessors == null //
-                        ? (attrsToUpdate.size() + 2) //
-                        : (attrsToUpdate.size() +
-                           entityInfo.idClassAttributeAccessors.size() + 1);
-        Object version = null;
-        if (entityInfo.versionAttributeName != null) {
-            version = getAttribute(e, entityInfo.versionAttributeName);
-            if (version == null)
-                jpql = jpql.replace("=?" + versionParamIndex, " IS NULL");
-        }
-
         Object id = null;
         String idAttributeName = null;
         if (entityInfo.idClassAttributeAccessors == null) {
             idAttributeName = entityInfo.attributeNames.get(ID);
             id = getAttribute(e, idAttributeName);
             if (id == null) {
-                jpql = jpql.replace("=?" + (versionParamIndex - 1), " IS NULL");
-                if (version != null)
-                    jpql = jpql.replace("=?" + versionParamIndex, "=?" + (versionParamIndex - 1));
+                int idParamIndex = entityInfo.idClassAttributeAccessors == null //
+                                ? (attrsToUpdate.size() + 1) //
+                                : (attrsToUpdate.size() +
+                                   entityInfo.idClassAttributeAccessors.size());
+
+                jpql = jpql.replace("=?" + (idParamIndex - 1), " IS NULL");
             }
         }
 
         if (TraceComponent.isAnyTracingEnabled() && jpql != this.jpql)
-            Tr.debug(this, tc, "JPQL adjusted for NULL id or version", jpql);
+            Tr.debug(this, tc, "JPQL adjusted for NULL id", jpql);
 
         jakarta.persistence.Query update = em.createQuery(jpql);
 
@@ -5822,14 +5860,8 @@ public class QueryInfo {
                     Tr.debug(tc, "set ?" + p + ' ' + loggable(id));
                 update.setParameter(p++, id);
             }
-
-            if (entityInfo.versionAttributeName != null && version != null) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
-                    Tr.debug(tc, "set ?" + p + ' ' + loggable(version));
-                update.setParameter(p++, version);
-            }
         } else { // has IdClass
-            setParametersFromIdClassAndVersion(p, update, e, version);
+            setParametersFromIdClassAndVersion(p, update, e, null);
         }
 
         int numUpdated = update.executeUpdate();
@@ -5855,7 +5887,7 @@ public class QueryInfo {
             methodParamCount < jpqlParamCount &&
             type != LC_DELETE &&
             type != LC_UPDATE &&
-            type != LC_UPDATE_RET_ENTITY)
+            type != LC_UPDATE_MERGE)
             throw exc(UnsupportedOperationException.class,
                       "CWWKD1021.insufficient.params",
                       method.getName(),
