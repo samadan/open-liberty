@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2025 IBM Corporation and others.
+ * Copyright (c) 2017, 2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -11,13 +11,13 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-task requireCapabilities{
-  dependsOn autoFVT
-  doLast {
-    File configProps = new File(autoFvtDir, "configuration.properties")
-    configProps.append("\nrequire.capabilities=use-Yum\n")
-    configProps.append("\nrequire.capabilities=use-Apt\n")
-  }
+dependencies {
+  //if there is a existing project, reference it directly
+  //requiredLibs project(':io.openliberty.org.apache.commons.logging')
+  
+  //if not, Define G:A:V coordinates of each dependency
+  //requiredLibs 'commons-logging:commons-logging:1.1.3'
+  
 }
 
-customizeAutoFVT.dependsOn requireCapabilities
+addRequiredLibraries.dependsOn addJakartaTransformer
