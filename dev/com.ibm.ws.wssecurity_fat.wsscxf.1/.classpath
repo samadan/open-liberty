@@ -1,23 +1,612 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="fat/src"/>
-	<classpathentry kind="src" path="test-applications/callerclient/src"/>
-	<classpathentry kind="src" path="test-applications/callertoken/src"/>
-	<classpathentry kind="src" path="test-applications/cxfclient/src"/>
-	<classpathentry kind="src" path="test-applications/nowssec/src"/>
-	<classpathentry kind="src" path="test-applications/untclient/src"/>
-	<classpathentry kind="src" path="test-applications/untoken/src"/>
-	<classpathentry kind="src" path="test-applications/derivekey/src"/>
-	<classpathentry kind="src" path="test-applications/derivekeyclient/src"/>
-	<classpathentry kind="src" path="test-applications/mustunderstand/src"/>
-	<classpathentry kind="src" path="test-applications/mustunderstandclient/src"/>
-	<classpathentry kind="src" path="test-applications/nopassclient/src"/>
-	<classpathentry kind="src" path="test-applications/nopassunt/src"/>
-	<classpathentry kind="src" path="test-applications/pwdigest/src"/>
-	<classpathentry kind="src" path="test-applications/pwdigestclient/src"/>
-	<classpathentry kind="src" path="test-applications/WSSampleSei/src"/>
-	<classpathentry kind="src" path="test-applications/webcontentprovider/src"/>
-	<classpathentry kind="con" path="aQute.bnd.classpath.container"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/webcontentprovider/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/untoken/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/untclient/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/pwdigestclient/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/pwdigest/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/nowssec/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/nopassunt/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/nopassclient/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/mustunderstandclient/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/mustunderstand/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/derivekeyclient/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/derivekey/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/cxfclient/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/callertoken/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/callerclient/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="test-applications/WSSampleSei/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/test" path="test">
+		<attributes>
+			<attribute name="test" value="true"/>
+			<attribute name="optional" value="true"/>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="fat/src">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="build/libs/src/globalize/java">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/test" path="build/libs/generated/sources/annotationProcessor/java/test">
+		<attributes>
+			<attribute name="test" value="true"/>
+			<attribute name="optional" value="true"/>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="build/classes/java/main" path="build/libs/generated/sources/annotationProcessor/java/main">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/IBM Semeru Runtime Open Edition 8 [8.0.442]">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.appserver.spi.kernel.service/build/libs/com.ibm.websphere.appserver.spi.kernel.service.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.appserver.spi.kernel.service.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/fattest.simplicity/build/libs/fattest.simplicity.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="fattest.simplicity.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.wss4j.ws.security.common/build/libs/com.ibm.ws.org.apache.wss4j.ws.security.common.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.wss4j.ws.security.common.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.componenttest/build/libs/com.ibm.ws.componenttest.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.componenttest.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/io.openliberty.org.apache.commons.logging/build/libs/io.openliberty.org.apache.commons.logging.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="io.openliberty.org.apache.commons.logging.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/.m2/repository/httpunit/httpunit/1.5.4/httpunit-1.5.4.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="httpunit-1.5.4.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.cxf.cxf.core.3.2/build/libs/com.ibm.ws.org.apache.cxf.cxf.core.3.2.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.cxf.cxf.core.3.2.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.javaee.jaxws.2.2/build/libs/com.ibm.websphere.javaee.jaxws.2.2.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.javaee.jaxws.2.2.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.wssecurity.example.cbhwss4j/build/libs/com.ibm.ws.wssecurity.example.cbhwss4j.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.wssecurity.example.cbhwss4j.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.security.fat.common/build/libs/com.ibm.ws.security.fat.common.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.security.fat.common.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.security/build/libs/com.ibm.websphere.security.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.security.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.wss4j.ws.security.web/build/libs/com.ibm.ws.org.apache.wss4j.ws.security.web.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.wss4j.ws.security.web.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/io.openliberty.org.apache.commons.codec/build/libs/io.openliberty.org.apache.commons.codec.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="io.openliberty.org.apache.commons.codec.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/.m2/repository/org/jboss/shrinkwrap/shrinkwrap-api/1.2.3/shrinkwrap-api-1.2.3.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="shrinkwrap-api-1.2.3.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.slf4j.api/build/libs/com.ibm.ws.org.slf4j.api.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.slf4j.api.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.cxf.cxf.rt.bindings.soap.3.2/build/libs/com.ibm.ws.org.apache.cxf.cxf.rt.bindings.soap.3.2.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.cxf.cxf.rt.bindings.soap.3.2.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/build.sharedResources/lib/junit/old/junit.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="junit.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.javaee.jsp.2.2/build/libs/com.ibm.websphere.javaee.jsp.2.2.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.javaee.jsp.2.2.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.cxf.cxf.rt.ws.policy.3.2/build/libs/com.ibm.ws.org.apache.cxf.cxf.rt.ws.policy.3.2.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.cxf.cxf.rt.ws.policy.3.2.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.appserver.spi.logging/build/libs/com.ibm.websphere.appserver.spi.logging.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.appserver.spi.logging.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.javaee.jws.1.0/build/libs/com.ibm.websphere.javaee.jws.1.0.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.javaee.jws.1.0.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.wss4j.bindings/build/libs/com.ibm.ws.org.apache.wss4j.bindings.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.wss4j.bindings.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.commons.lang3/build/libs/com.ibm.ws.org.apache.commons.lang3.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.commons.lang3.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.wssecurity.example.cbh/build/libs/com.ibm.ws.wssecurity.example.cbh.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.wssecurity.example.cbh.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.santuario.xmlsec.2.2.0/build/libs/com.ibm.ws.org.apache.santuario.xmlsec.2.2.0.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.santuario.xmlsec.2.2.0.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.wssecurity.3.4.1/build/libs/com.ibm.ws.wssecurity.3.4.1.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.wssecurity.3.4.1.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.cxf.rt.ws.security.3.4.1/build/libs/com.ibm.ws.org.apache.cxf.rt.ws.security.3.4.1.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.cxf.rt.ws.security.3.4.1.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.junit.extensions/build/libs/com.ibm.ws.junit.extensions.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.junit.extensions.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.javaee.jaxb.2.2/build/libs/com.ibm.websphere.javaee.jaxb.2.2.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.javaee.jaxb.2.2.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.wssecurity.fat.utils.common/build/libs/com.ibm.ws.wssecurity.fat.utils.common.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.wssecurity.fat.utils.common.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.org.osgi.service.component/build/libs/com.ibm.websphere.org.osgi.service.component.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.org.osgi.service.component.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.cxf.rt.security.3.4.1/build/libs/com.ibm.ws.org.apache.cxf.rt.security.3.4.1.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.cxf.rt.security.3.4.1.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.org.osgi.core/build/libs/com.ibm.websphere.org.osgi.core.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.org.osgi.core.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.javaee.servlet.3.0/build/libs/com.ibm.websphere.javaee.servlet.3.0.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.javaee.servlet.3.0.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.wss4j.ws.security.policy.stax/build/libs/com.ibm.ws.org.apache.wss4j.ws.security.policy.stax.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.wss4j.ws.security.policy.stax.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.wss4j.policy/build/libs/com.ibm.ws.org.apache.wss4j.policy.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.wss4j.policy.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.websphere.javaee.wsdl4j.1.2/build/libs/com.ibm.websphere.javaee.wsdl4j.1.2.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.websphere.javaee.wsdl4j.1.2.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.wss4j.ws.security.stax/build/libs/com.ibm.ws.org.apache.wss4j.ws.security.stax.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.wss4j.ws.security.stax.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/thomasjohnson/libertyGit/open-liberty3/dev/com.ibm.ws.org.apache.wss4j.ws.security.dom/build/libs/com.ibm.ws.org.apache.wss4j.ws.security.dom.jar">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+			<attribute name="groupId" value="unknown"/>
+			<attribute name="artifactId" value="com.ibm.ws.org.apache.wss4j.ws.security.dom.jar"/>
+			<attribute name="version" value="unknown"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.cxf.cxf.core.3.2">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.cxf.rt.security.3.4.1">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.wssecurity.fat.utils.common">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.javaee.jws.1.0">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.security.fat.common">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.commons.lang3">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.javaee.jsp.2.2">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/io.openliberty.org.apache.commons.codec">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/fattest.simplicity">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.componenttest">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.security">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.cxf.cxf.rt.bindings.soap.3.2">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.wssecurity.example.cbh">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.wss4j.ws.security.policy.stax">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.javaee.jaxb.2.2">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.slf4j.api">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.wssecurity.3.4.1">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.org.osgi.service.component">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.wss4j.ws.security.common">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.wss4j.bindings">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.wss4j.ws.security.web">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.org.osgi.core">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.wss4j.ws.security.stax">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.javaee.servlet.3.0">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.junit.extensions">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.appserver.spi.logging">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/io.openliberty.org.apache.commons.logging">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.appserver.spi.kernel.service">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.javaee.wsdl4j.1.2">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.cxf.rt.ws.security.3.4.1">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.websphere.javaee.jaxws.2.2">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.wssecurity.example.cbhwss4j">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.wss4j.policy">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.wss4j.ws.security.dom">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.santuario.xmlsec.2.2.0">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="/com.ibm.ws.org.apache.cxf.cxf.rt.ws.policy.3.2">
+		<attributes>
+			<attribute name="gradle.buildServer" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
