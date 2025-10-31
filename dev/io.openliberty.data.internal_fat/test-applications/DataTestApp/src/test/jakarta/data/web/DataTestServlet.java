@@ -796,6 +796,10 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testCountPagesWithDistinctValues() {
+        if (skipForHibernateByDatabase("derby", "https://github.com/OpenLiberty/open-liberty/issues/33289")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         Page<String> page1 = primes.romanNumeralsDistinct(30L, 49L,
                                                           4000L, 4009L,
                                                           PageRequest.ofSize(3));
