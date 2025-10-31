@@ -142,6 +142,9 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
 
     /*
      * @see com.ibm.wsspi.channelfw.base.InboundProtocolLink#destroy(java.lang.Exception)
+     * This method is synchronized mostly for HTTP 2.0 since the H2StreamProcessor on a
+     * received GO_AWAY frame calls destroy for the link while a stream in process could
+     * call close and so create a race condition.
      */
     @Override
     public synchronized void destroy(Exception e) {
@@ -149,8 +152,6 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
             Tr.debug(tc, "Destroying inbound link: " + this + " " + getVirtualConnection());
         }
         isDestroyed = true;
-        System.out.println("Destroying link: " + this);
-        new Exception("From destroy!").printStackTrace();
         // if this object is not active, then just return out
         synchronized (this) {
             if (!this.bIsActive) {
@@ -656,14 +657,23 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
 
     /*
      * @see com.ibm.wsspi.channelfw.base.InboundProtocolLink#close(com.ibm.wsspi.channelfw.VirtualConnection, java.lang.Exception)
+     * This method is synchronized mostly for HTTP 2.0 since the H2StreamProcessor on a
+     * received GO_AWAY frame calls destroy for the link while a stream in process could
+     * call close and so create a race condition.
      */
     @Override
     public synchronized void close(VirtualConnection inVC, Exception e) {
-        System.out.println("Calling close httpinboundlink " + this);
-        new Exception("From close!").printStackTrace();
         final boolean bTrace = TraceComponent.isAnyTracingEnabled();
         if (bTrace && tc.isDebugEnabled()) {
             Tr.debug(tc, "close() called: " + this + " " + inVC);
+        }
+
+        // We assume that if the link is destroyed, no further operations on close should be called for the link
+        if (isDestroyed) {
+            if (bTrace && tc.isDebugEnabled()) {
+                Tr.debug(tc, "close() called but link was already destroyed! Returning without doing anything... " + this + " " + inVC);
+            }
+            return;
         }
 
         boolean errorState = (null != e);
@@ -681,7 +691,6 @@ public class HttpInboundLink extends InboundProtocolLink implements InterChannel
 
         // We are in an H2 connection so we need to do that close instead
         if (this.myInterface.getLink() instanceof H2HttpInboundLinkWrap) {
-            System.out.println("Calling H2 close!!");
             if (bTrace && tc.isDebugEnabled()) {
                 Tr.debug(tc, "we're H2, calling that close");
             }
