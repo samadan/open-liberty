@@ -163,8 +163,7 @@ public class DataTestServlet extends FATServlet {
      * and Hibernate's Jakarta Persistence provider.
      *
      * @param issues - the issues that describe why the test must be skipped on Hibernate
-     *
-     * @return boolean - if we need to skip the test, false otherwise.
+     * @return boolean - true if we need to skip the test, false otherwise.
      */
     public static boolean skipForHibernate(String... issues) {
         if (isHibernate()) {
@@ -176,6 +175,26 @@ public class DataTestServlet extends FATServlet {
 //            assumeTrue(!isHibernate());
         }
         return isHibernate();
+    }
+
+    /**
+     * Temporary method to allow skipping tests for tests that
+     * fail due to incompatibilities between our Jakarta Data provider
+     * and Hibernate's Jakarta Persistence provider on a specific database.
+     *
+     * @param driver - driver name prefix (i.e. derby)
+     * @param issues - the issues that describe why the test must be skipped on Hibernate
+     * @return boolean - true if we need to skip the test, false otherwise.
+     */
+    public static boolean skipForHibernateByDatabase(String driver, String... issues) {
+        boolean isHibernateAndDatabase = isHibernate() && System.getenv("DB_DRIVER").contains(driver);
+
+        if (isHibernateAndDatabase) {
+            System.out.println("Skipping test because database is " + System.getenv("DB_DRIVER") + " and " + Arrays.asList(issues));
+        }
+
+        return isHibernateAndDatabase;
+
     }
 
     @Override
@@ -1938,6 +1957,10 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testFindAndDeleteWithOrderBy() {
+        if (skipForHibernateByDatabase("derby", "https://github.com/OpenLiberty/open-liberty/issues/33287")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         String testName = "TestFindAndDeleteWithOrderByKeyword";
         //                        id   length   width   height  description
         packages.save(new Package(517, 1165.0f, 1044.0f, 517.0f, testName));
@@ -4212,6 +4235,10 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testQueryByMethodNameWithoutBy() {
+        if (skipForHibernateByDatabase("derby", "https://github.com/OpenLiberty/open-liberty/issues/33287")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         vehicles.delete();
 
         Vehicle v1 = new Vehicle();
