@@ -120,6 +120,18 @@ public class GenerateAesKeyTest {
     }
 
     @Test
+    public void testEmptyConfigFile() throws Exception {
+
+        try (MockedStatic<PasswordEncryptionConfigBuilder> xmlBuilder = Mockito.mockStatic(PasswordEncryptionConfigBuilder.class, Mockito.CALLS_REAL_METHODS)) {
+            generate.handleTask(stdin, stdout, stderr, new String[] { GenerateAesKeyTask.TASK_NAME, "--createConfigFile=" });
+            fail("task should throw an exception if config file isn't specified");
+        } catch (IllegalArgumentException iae) {
+            assertEquals("Wrong message returned when specifying an empty value for --createConfigFile.", BaseCommandTask.getMessage("missingValue", "--createConfigFile"),
+                         iae.getMessage());
+        }
+    }
+
+    @Test
     public void testUnknownArg() {
         String unknownArg = "testarg=abc";
 

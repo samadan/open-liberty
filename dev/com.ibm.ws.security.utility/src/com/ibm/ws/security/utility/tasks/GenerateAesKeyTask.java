@@ -150,6 +150,9 @@ public class GenerateAesKeyTask extends BaseCommandTask {
                 }
                 keyPhrase = value;
             } else if (ARG_FILE.equals(option)) {
+                if (value == null) {
+                    throw new IllegalArgumentException(getMessage("missingValue", option));
+                }
                 File file = new File(value);
                 if (fileUtil.isDirectory(file)) {
                     throw new IllegalArgumentException(getMessage("generateaeskey.failFileIsDirectory", value));
