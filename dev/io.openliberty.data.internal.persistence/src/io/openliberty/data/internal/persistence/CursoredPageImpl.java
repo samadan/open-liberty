@@ -123,6 +123,9 @@ public class CursoredPageImpl<T> implements CursoredPage<T> {
             if (cursor.isPresent())
                 queryInfo.setParametersFromCursor(query, cursor.get());
 
+            if (queryInfo.entityInfo.loadGraph != null)
+                query.setHint(Util.LOADGRAPH, queryInfo.entityInfo.loadGraph);
+
             // TODO #33189 why are EntityManager.setCacheRetrieveMode and
             // Query.setCacheRetrieveMode unable to set this instead?
             query.setHint("jakarta.persistence.cache.retrieveMode",

@@ -102,6 +102,9 @@ public class PageImpl<T> implements Page<T> {
             jakarta.persistence.Query query = em.createQuery(queryInfo.jpql);
             queryInfo.setParameters(query, args);
 
+            if (queryInfo.entityInfo.loadGraph != null)
+                query.setHint(Util.LOADGRAPH, queryInfo.entityInfo.loadGraph);
+
             // TODO #33189 why are EntityManager.setCacheRetrieveMode and
             // Query.setCacheRetrieveMode unable to set this instead?
             query.setHint("jakarta.persistence.cache.retrieveMode",
