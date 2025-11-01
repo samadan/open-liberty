@@ -98,14 +98,19 @@ instrument.classesIncludes: \
   io.openliberty.org.apache.cxf:cxf-rt-ws-security;strategy=exact;version=${cxfVersion}, \
   com.ibm.ws.org.apache.cxf.cxf.core.3.2;version=latest, \
   com.ibm.ws.org.apache.cxf.cxf.rt.bindings.soap.3.2;version=latest, \
+  com.ibm.ws.org.apache.cxf.cxf.rt.frontend.jaxws.3.2;version=latest, \
+  com.ibm.ws.org.apache.cxf.cxf.rt.transports.http.3.2;version=latest, \
   com.ibm.ws.org.apache.cxf.cxf.rt.ws.policy.3.2;version=latest, \
+  com.ibm.ws.org.apache.cxf.rt.ws.mex.3.4.1;version=latest, \
   com.ibm.ws.org.apache.cxf.cxf.rt.wsdl.3.2;version=latest, \
   com.ibm.ws.org.apache.cxf.rt.security.3.4.1;version=latest, \
   com.ibm.ws.org.apache.cxf.rt.security.saml.3.4.1;version=latest, \
   com.ibm.ws.org.apache.neethi.3.1.1;version=latest, \
+  com.ibm.ws.org.apache.wss4j.bindings;version=latest, \
   com.ibm.ws.org.apache.wss4j.policy;version=latest, \
   com.ibm.ws.org.apache.wss4j.ws.security.common;version=latest, \
   com.ibm.ws.org.apache.wss4j.ws.security.dom;version=latest, \
+  com.ibm.ws.org.apache.wss4j.ws.security.policy.stax;version=latest, \
   com.ibm.ws.org.apache.wss4j.ws.security.stax;version=latest, \
   com.ibm.ws.org.apache.santuario.xmlsec.2.2.0;version=latest, \
   com.ibm.ws.org.ehcache.ehcache.107.3.8.1;version=latest, \
@@ -113,5 +118,7 @@ instrument.classesIncludes: \
   com.ibm.ws.org.slf4j.api;version=latest, \
   com.ibm.websphere.appserver.spi.logging, \
   com.ibm.websphere.javaee.jws.1.0;version=latest, \
+  com.ibm.websphere.javaee.wsdl4j.1.2;version=latest, \
   org.codehaus.woodstox:stax2-api;version='4.2', \
-  org.codehaus.woodstox:woodstox-core-asl;version='4.2.0'
+  org.codehaus.woodstox:woodstox-core-asl;version='4.2.0', \
+  com.ibm.websphere.javaee.jcache.1.1.core;version=latest
