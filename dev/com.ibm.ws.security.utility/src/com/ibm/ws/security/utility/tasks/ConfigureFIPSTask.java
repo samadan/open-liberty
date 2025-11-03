@@ -68,7 +68,7 @@ public class ConfigureFIPSTask extends BaseCommandTask {
                                            "# RestrictedSecurity.OpenJCEPlusFIPS.FIPS140-3-Liberty-Application.extends = RestrictedSecurity.OpenJCEPlusFIPS.FIPS140-3-Liberty",
                                            "# RestrictedSecurity.OpenJCEPlusFIPS.FIPS140-3-Liberty-Application.jce.provider.1 = com.ibm.crypto.plus.provider.OpenJCEPlusFIPS [+ \\",
                                            "#     {MessageDigest, SHA-1, *, FullClassName:io.openliberty.myClass}]",
-                                           "# RestrictedSecurity.OpenJCEPlusFIPS.FIPS140-3-Liberty-Application.jce.provider.16 = io.openliberty.myProvider",
+                                           "# RestrictedSecurity.OpenJCEPlusFIPS.FIPS140-3-Liberty-Application.jce.provider.51 = io.openliberty.myProvider",
                                            "#",
                                            "RestrictedSecurity.OpenJCEPlusFIPS." + PROFILE_NAME_HOLDER
                                                 + ".desc.name = OpenJCEPlusFIPS Cryptographic Module FIPS 140-3 for Liberty Application",
