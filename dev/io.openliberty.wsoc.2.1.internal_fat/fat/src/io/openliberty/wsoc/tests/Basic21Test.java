@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2024 IBM Corporation and others.
+ * Copyright (c) 2022, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -71,7 +71,6 @@ public class Basic21Test {
 
     @BeforeClass
     public static void setUp() throws Exception {
-
         // Build the war app and add the dependencies
         WebArchive BasicApp = ShrinkHelper.buildDefaultApp(BASIC_WAR_NAME + ".war",
                                                            "basic.war",
@@ -86,7 +85,10 @@ public class Basic21Test {
         ShrinkHelper.exportDropinAppToServer(LS, BasicApp);
 
         LS.startServer();
-        LS.waitForStringInLog("CWWKZ0001I.* " + BASIC_WAR_NAME);
+        //  CWWKZ0001I: Application basic21 started in ...
+        assertNotNull("Application did not start up!", LS.waitForStringInLog("CWWKZ0001I.* " + BASIC_WAR_NAME));
+        // CWWKF0011I: The basic21TestServer server is ready to run a smarter planet. The basic21TestServer server started in ...
+        assertNotNull("Server may not have started!", LS.waitForStringInLog("CWWKF0011I.*server started"));
         bwst = new WebServerSetup(LS);
         wt = new WsocTest(LS, false);
         timeout = new TimeOutTest(wt);
@@ -96,6 +98,8 @@ public class Basic21Test {
         wt_secure = new WsocTest(LS, true);
         ssl = new SSLTest(wt_secure);
         bwst.setUp();
+
+        Thread.sleep(500); // extra wait to allow server finish starting
     }
 
     @AfterClass
