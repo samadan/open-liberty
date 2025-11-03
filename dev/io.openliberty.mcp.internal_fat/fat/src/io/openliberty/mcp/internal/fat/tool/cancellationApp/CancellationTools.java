@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import io.openliberty.mcp.annotations.Tool;
 import io.openliberty.mcp.annotations.ToolArg;
+import io.openliberty.mcp.internal.fat.utils.ToolStatus;
 import io.openliberty.mcp.messaging.Cancellation;
 import io.openliberty.mcp.messaging.Cancellation.OperationCancellationException;
 import jakarta.enterprise.context.ApplicationScoped;

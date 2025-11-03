@@ -35,6 +35,7 @@ import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.cancellationApp.CancellationTools;
+import io.openliberty.mcp.internal.fat.utils.AwaitToolServlet;
 import io.openliberty.mcp.internal.fat.utils.McpClient;
 
 @RunWith(FATRunner.class)
@@ -49,7 +50,9 @@ public class CancellationTest extends FATServletClient {
 
     @BeforeClass
     public static void setup() throws Exception {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, "cancellationTest.war").addPackage(CancellationTools.class.getPackage());
+        WebArchive war = ShrinkWrap.create(WebArchive.class, "cancellationTest.war")
+                                   .addPackage(CancellationTools.class.getPackage())
+                                   .addPackage(AwaitToolServlet.class.getPackage());
 
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
@@ -60,7 +63,10 @@ public class CancellationTest extends FATServletClient {
 
     @AfterClass
     public static void teardown() throws Exception {
-        server.stopServer();
+        server.stopServer(
+                          "CWMCM0010E", //  Tool method threw an unexpected exception
+                          "CWMCM0011E" // An internal server error occurred
+        );
     }
 
     @AfterClass
@@ -119,7 +125,7 @@ public class CancellationTest extends FATServletClient {
         String response = future.get(10, TimeUnit.SECONDS);
 
         String expectedResponseString = """
-                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"text":"Internal server error", "type":"text"}],"isError":true}}
+                        {"id":"2","jsonrpc":"2.0","result":{"content":[{"text":"CWMCM0011E: An internal server error occurred while running the tool.", "type":"text"}],"isError":true}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
@@ -175,7 +181,7 @@ public class CancellationTest extends FATServletClient {
         String response = future.get(10, TimeUnit.SECONDS);
 
         String expectedResponseString = """
-                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"text":"Internal server error", "type":"text"}],"isError":true}}
+                        {"id":2,"jsonrpc":"2.0","result":{"content":[{"text":"CWMCM0011E: An internal server error occurred while running the tool.", "type":"text"}],"isError":true}}
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }

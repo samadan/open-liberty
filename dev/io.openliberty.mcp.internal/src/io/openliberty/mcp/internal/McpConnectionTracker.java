@@ -15,6 +15,12 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+import com.ibm.ws.kernel.service.util.ServiceCaller;
+
+import io.openliberty.mcp.internal.config.McpConfiguration;
+
 import io.openliberty.mcp.internal.exceptions.jsonrpc.JSONRPCException;
 import io.openliberty.mcp.internal.requests.CancellationImpl;
 import io.openliberty.mcp.internal.requests.ExecutionRequestId;
@@ -28,7 +34,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class McpConnectionTracker {
 
+    private static final TraceComponent tc = Tr.register(McpConnectionTracker.class);
     private final ConcurrentMap<String, Cancellation> ongoingRequests;
+    private static final ServiceCaller<McpConfiguration> mcpConfigService = new ServiceCaller<>(McpConnectionTracker.class, McpConfiguration.class);
 
     public McpConnectionTracker() {
         this.ongoingRequests = new ConcurrentHashMap<>();
@@ -41,7 +49,7 @@ public class McpConnectionTracker {
     public void registerOngoingRequest(ExecutionRequestId id, Cancellation cancellation) {
         Cancellation previous = ongoingRequests.putIfAbsent(id.toString(), cancellation);
         if (previous != null) {
-            throw new JSONRPCException(INVALID_PARAMS, "A request with id " + id.toString() + " is already in progress");
+            throw new JSONRPCException(INVALID_PARAMS, Tr.formatMessage(tc, "CWMCM0008E.invalid.request.params", id.id()));
         }
     }
 
@@ -56,9 +64,16 @@ public class McpConnectionTracker {
     /**
      * Cancels all ongoing requests associated with the given session.
      * <p>
+     * Will skip cancellation if the server is in stateless mode.
      * request is cancelled with a fixed reason: {@code "Session cancelled"}
      */
     public void cancelSessionRequests(McpSession session) {
+
+        Boolean stateless = mcpConfigService.run(config -> config.isStateless()).orElse(false);
+        if (Boolean.TRUE.equals(stateless)) {
+            return;
+        }
+
         for (ExecutionRequestId id : session.getActiveRequests()) {
             Cancellation cancellation = ongoingRequests.remove(id.toString());
             if (cancellation instanceof CancellationImpl) {
