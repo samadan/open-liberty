@@ -148,7 +148,7 @@ public abstract class EntityManagerBuilder {
             // To temporarily reproduce the issue, set it to true below, then
             // build this project and run the test bucket:
             // ./gradlew io.openliberty.data.internal_fat_jpa:buildandrun
-            boolean loadSubgraphs = !em.getClass().getName().startsWith("org.eclipse.persistence");
+            boolean eagerlyFetchAll = false;
             Set<Class<?>> missingEntityTypes = new HashSet<>(entityTypes);
             Metamodel model = em.getMetamodel();
             for (EntityType<?> entityType : model.getEntities()) {
@@ -178,7 +178,9 @@ public abstract class EntityManagerBuilder {
                 Set<Class<?>> loadGraphPopulated = new HashSet<>();
                 loadGraphPopulated.add(jpaEntityClass);
                 try {
-                    EntityGraph<?> loadGraph = em.createEntityGraph(jpaEntityClass);
+                    EntityGraph<?> loadGraph = eagerlyFetchAll //
+                                    ? em.createEntityGraph(jpaEntityClass) //
+                                    : null;
 
                     for (Attribute<?, ?> attr : entityType.getAttributes()) {
                         String attributeName = attr.getName();
@@ -220,7 +222,7 @@ public abstract class EntityManagerBuilder {
                                 collectionElementTypes.put(attributeName,
                                                            elementType.getJavaType());
                                 if (elementType.getPersistenceType() == PersistenceType.ENTITY) {
-                                    if (loadSubgraphs &&
+                                    if (eagerlyFetchAll &&
                                         loadGraphPopulated.add(elementClass)) {
                                         populateSubgraph(loadGraph.addElementSubgraph(attributeName),
                                                          elementClass,
@@ -228,7 +230,7 @@ public abstract class EntityManagerBuilder {
                                                          loadGraphPopulated);
                                         loadGraphPopulated.remove(elementClass);
                                     }
-                                } else {
+                                } else if (eagerlyFetchAll) {
                                     loadGraph.addAttributeNodes(attributeName);
                                 }
                             }
@@ -245,7 +247,7 @@ public abstract class EntityManagerBuilder {
                             } else if (Collection.class.isAssignableFrom(attr.getJavaType())) {
                                 // collection attribute that is not annotated with ElementCollection
                                 collectionElementTypes.put(attributeName, Object.class);
-                            } else if (loadSubgraphs &&
+                            } else if (eagerlyFetchAll &&
                                        singleAttr.isAssociation() &&
                                        loadGraphPopulated.add(singleAttr.getJavaType())) {
                                 populateSubgraph(loadGraph.addSubgraph(attributeName),
@@ -351,7 +353,7 @@ public abstract class EntityManagerBuilder {
                                                                elementType.getJavaType());
                                     if (isEmbeddablesOnly)
                                         if (elementType.getPersistenceType() == PersistenceType.ENTITY) {
-                                            if (loadSubgraphs &&
+                                            if (eagerlyFetchAll &&
                                                 loadGraphPopulated.add(elementClass)) {
                                                 populateSubgraph(loadGraph.addElementSubgraph(relationAttributeName),
                                                                  elementClass,
@@ -359,7 +361,7 @@ public abstract class EntityManagerBuilder {
                                                                  loadGraphPopulated);
                                                 loadGraphPopulated.remove(elementClass);
                                             }
-                                        } else {
+                                        } else if (eagerlyFetchAll) {
                                             loadGraph.addAttributeNodes(relationAttributeName);
                                         }
                                 }
@@ -370,7 +372,7 @@ public abstract class EntityManagerBuilder {
                                 } else if (singleAttr.isVersion()) {
                                     versionAttrName = relationAttributeName_; // to be suitable for query-by-method
                                     attributeNamesForUpdate = null;
-                                } else if (loadSubgraphs &&
+                                } else if (eagerlyFetchAll &&
                                            isEmbeddablesOnly &&
                                            singleAttr.isAssociation() &&
                                            loadGraphPopulated.add(singleAttr.getJavaType())) {
@@ -408,11 +410,13 @@ public abstract class EntityManagerBuilder {
                         }
                     }
 
-                    List<AttributeNode<?>> nodes = loadGraph.getAttributeNodes();
-                    if (trace && tc.isDebugEnabled())
-                        Tr.debug(this, tc, "load graph for " + entityType.getName(), nodes);
-                    if (nodes.isEmpty())
-                        loadGraph = null; // avoid using a load graph
+                    if (eagerlyFetchAll) {
+                        List<AttributeNode<?>> nodes = loadGraph.getAttributeNodes();
+                        if (trace && tc.isDebugEnabled())
+                            Tr.debug(this, tc, "load graph for " + entityType.getName(), nodes);
+                        if (nodes.isEmpty())
+                            loadGraph = null; // avoid using a load graph
+                    }
 
                     EntityInfo entityInfo = new EntityInfo( //
                                     entityType.getName(), //
