@@ -212,7 +212,7 @@ class SipResolverUdpTransport implements SipResolverTransport {
 
             /** open the listener socket */
             try {
-                _framework.startOutbound(bootstrap, "*", 0, f -> {
+                _framework.startOutbound(bootstrap, _currentSocketAddress.getHostString(), _currentSocketAddress.getPort(), f -> {
                     if (f.isCancelled() || !f.isSuccess()) {
                         if (c_logger.isWarnEnabled()) {
                             c_logger.warn("Resolver channel exception during connect: " + f.cause().getMessage());
