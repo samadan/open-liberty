@@ -1423,7 +1423,12 @@ public class DataJPATestServlet extends FATServlet {
                                      .map(t -> t.ssn)
                                      .collect(Collectors.toList()));
 
-        assertIterableEquals(List.of("AccountId:66320100:410224", "AccountId:77512000:705030", "AccountId:88191200:410224"),
+        if (!isHibernate())
+            return; // TODO enable once EclipseLink #33293 is fixed
+
+        assertIterableEquals(List.of("AccountId:66320100:410224",
+                                     "AccountId:77512000:705030",
+                                     "AccountId:88191200:410224"),
                              taxpayers.findAccountsBySSN(234002340L)
                                              .stream()
                                              .map(AccountId::toString)
@@ -1809,6 +1814,10 @@ public class DataJPATestServlet extends FATServlet {
                                                   List.of("email1@openliberty.io",
                                                           "email2@openliberty.io",
                                                           "email3@openliberty.io")));
+
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33290")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
 
         List<Mobile> list = mobilePhones.findByEmailsEmpty();
         assertEquals(list.toString(), 1, list.size());
@@ -2373,6 +2382,10 @@ public class DataJPATestServlet extends FATServlet {
         // Populate database
         UUID id = mobilePhones.insert(Mobile.of(OS.ANDROID, apps, emails)).deviceId;
 
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33290")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         // Outside of transaction, returned entity should be detached
         Mobile johnsMobile = mobilePhones.findById(id).orElseThrow();
 
@@ -2391,9 +2404,6 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testForeignKey() {
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33178")) {
-            return; //TODO remove skip when fixed in Hibernate or Liberty
-        }
 
         Manufacturer toyota = new Manufacturer();
         toyota.setName("Toyota");
@@ -2427,6 +2437,7 @@ public class DataJPATestServlet extends FATServlet {
 
         Instant corollaLastMod;
         corollaLastMod = models.lastModified(corollaId).orElseThrow();
+
         List<Model> found = models.modifiedAt(corollaLastMod);
         assertEquals(false, found.isEmpty());
         corolla = null;
@@ -3245,9 +3256,6 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testManyToManyIncludedInResults() {
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33178")) {
-            return; //TODO remove skip when fixed in Hibernate or Liberty
-        }
 
         List<String> addresses = customers.findByPhoneIn(List.of(5075552444L,
                                                                  5075550101L))
@@ -3357,10 +3365,6 @@ public class DataJPATestServlet extends FATServlet {
                                              .map(cc -> cc.debtor)
                                              .map(c -> c.email)
                                              .collect(Collectors.toList()));
-
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33178")) {
-            return; //TODO remove skip when fixed in Hibernate or Liberty
-        }
 
         assertIterableEquals(List.of("MICHELLE@TESTS.OPENLIBERTY.IO",
                                      "Matthew@tests.openliberty.io",
@@ -4522,9 +4526,6 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Ignore("See comments ")
     public void testUpdateEntityWithIdClass() {
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33178")) {
-            return; //TODO remove skip when fixed in Hibernate or Liberty
-        }
 
         CreditCard original = creditCards
                         .findByIssuedOnWithMonthIn(Set.of(Month.MAY.getValue()))
@@ -4592,7 +4593,7 @@ public class DataJPATestServlet extends FATServlet {
         // for the following subsequent tests:
         // testCollectionAttribute, testIdClassOrderBySorts, testIdClassOrderByAnnotationWithCursorPagination,
         // testIdClassOrderByNamePatternWithCursorPagination, testIdClassOrderByAnnotationReverseDirection
-        if (true)
+        if (!isHibernate())
             return;
 
         City[] updated = cities.modifyData(City.of(mnId, 122413, Set.of(507, 924), mnVer),
