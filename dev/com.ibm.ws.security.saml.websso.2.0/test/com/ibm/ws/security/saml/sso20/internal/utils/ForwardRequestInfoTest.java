@@ -101,7 +101,7 @@ public class ForwardRequestInfoTest {
     }
 
     @Test
-    public void testHandleFragmentCookiesAndNoncez_MaxAgeNotSet() {
+    public void testHandleFragmentCookiesAndNonce_MaxAgeNotSet() {
         String methodName = "testHandleFragmentCookiesAndNoncez_MaxAgeNotSet";
 
         String js = forwardRequest.handleFragmentCookiesAndNonce(response);
@@ -111,7 +111,7 @@ public class ForwardRequestInfoTest {
     }
 
     @Test
-    public void testHandleFragmentCookiesAndNoncez_MaxAgeSet() {
+    public void testHandleFragmentCookiesAndNonce_MaxAgeSet() {
         String methodName = "testHandleFragmentCookiesAndNoncez_MaxAgeSet";
 
         long maxAgeSec = 300;   //5 minutes
