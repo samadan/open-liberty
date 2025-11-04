@@ -68,7 +68,7 @@ public class AsyncTools {
     public CompletionStage<String> asyncCancellationTool(Cancellation cancellation,
                                                          @ToolArg(name = "latchName", description = "name of countdown latch to use for test") String latchName) {
         LOG.info("[asyncCancellationTool] Starting");
-        toolStatus.setRunning(latchName);
+        toolStatus.signalStarted(latchName);
         return executor.supplyAsync(() -> {
             int counter = 0;
             while (counter++ < 20) {

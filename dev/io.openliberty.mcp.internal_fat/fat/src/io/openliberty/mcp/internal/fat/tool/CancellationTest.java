@@ -33,10 +33,10 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
-import componenttest.topology.utils.HttpRequest;
 import io.openliberty.mcp.internal.fat.tool.cancellationApp.CancellationTools;
-import io.openliberty.mcp.internal.fat.utils.AwaitToolServlet;
 import io.openliberty.mcp.internal.fat.utils.McpClient;
+import io.openliberty.mcp.internal.fat.utils.ToolStatus;
+import io.openliberty.mcp.internal.fat.utils.ToolStatusClient;
 
 @RunWith(FATRunner.class)
 public class CancellationTest extends FATServletClient {
@@ -48,11 +48,14 @@ public class CancellationTest extends FATServletClient {
     @Rule
     public McpClient client = new McpClient(server, "/cancellationTest");
 
+    @Rule
+    public ToolStatusClient toolStatus = new ToolStatusClient(server, "/cancellationTest");
+
     @BeforeClass
     public static void setup() throws Exception {
         WebArchive war = ShrinkWrap.create(WebArchive.class, "cancellationTest.war")
                                    .addPackage(CancellationTools.class.getPackage())
-                                   .addPackage(AwaitToolServlet.class.getPackage());
+                                   .addPackage(ToolStatus.class.getPackage());
 
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
@@ -78,6 +81,7 @@ public class CancellationTest extends FATServletClient {
     public void testCancellationToolWithCancellableParameterAndCancellationRequestWithStringId() throws Exception {
 
         final CountDownLatch latch = new CountDownLatch(1);
+        final String LATCH_NAME = "strId";
 
         Callable<String> threadCallingTool = () -> {
             try {
@@ -116,9 +120,7 @@ public class CancellationTest extends FATServletClient {
                         """;
         //make sure the tool call request has started
         latch.await();
-
-        // Call AwaitToolServlet to wait for the tool to start running. Adds path param "strId" to specify which countdown latch to use
-        new HttpRequest(server, "/cancellationTest/awaitTool/strId").run(String.class);
+        toolStatus.awaitStarted(LATCH_NAME);
 
         client.callMCPNotification(server, "/cancellationTest", cancellationRequestNotification);
 
@@ -134,6 +136,7 @@ public class CancellationTest extends FATServletClient {
     public void testCancellationToolWithCancellableParameterAndCancellationRequestWithNumbericId() throws Exception {
 
         final CountDownLatch latch = new CountDownLatch(1);
+        final String LATCH_NAME = "numId";
 
         Callable<String> threadCallingTool = () -> {
             try {
@@ -170,11 +173,10 @@ public class CancellationTest extends FATServletClient {
                           }
                         }
                         """;
-        //make sure the tool call request has started
-        latch.await();
 
         // Call AwaitToolServlet to wait for the tool to start running. Adds path param "numId" to specify which countdown latch to use
-        new HttpRequest(server, "/cancellationTest/awaitTool/numId").run(String.class);
+        latch.await();
+        toolStatus.awaitStarted(LATCH_NAME);
 
         client.callMCPNotification(server, "/cancellationTest", cancellationRequestNotification);
 
@@ -208,5 +210,4 @@ public class CancellationTest extends FATServletClient {
                         """;
         JSONAssert.assertEquals(expectedResponseString, response, true);
     }
-
 }

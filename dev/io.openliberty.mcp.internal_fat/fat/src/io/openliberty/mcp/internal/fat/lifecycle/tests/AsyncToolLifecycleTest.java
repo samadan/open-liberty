@@ -34,8 +34,9 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.topology.impl.LibertyServer;
 import io.openliberty.mcp.internal.fat.tool.asyncToolApp.AsyncLifecycleTools;
-import io.openliberty.mcp.internal.fat.utils.AwaitToolServlet;
 import io.openliberty.mcp.internal.fat.utils.McpClient;
+import io.openliberty.mcp.internal.fat.utils.ToolStatus;
+import io.openliberty.mcp.internal.fat.utils.ToolStatusClient;
 
 @SuppressWarnings("unchecked")
 @RunWith(FATRunner.class)
@@ -46,13 +47,16 @@ public class AsyncToolLifecycleTest {
     public static LibertyServer server;
 
     @Rule
+    public ToolStatusClient toolStatus = new ToolStatusClient(server, "/asyncToolLifecycleTest");
+
+    @Rule
     public McpClient client = new McpClient(server, "/asyncToolLifecycleTest");
 
     @BeforeClass
     public static void setup() throws Exception {
         WebArchive war = ShrinkWrap.create(WebArchive.class, "asyncToolLifecycleTest.war")
                                    .addPackage(AsyncLifecycleTools.class.getPackage())
-                                   .addPackage(AwaitToolServlet.class.getPackage());
+                                   .addPackage(ToolStatus.class.getPackage());
 
         ShrinkHelper.exportDropinAppToServer(server, war, SERVER_ONLY);
 
