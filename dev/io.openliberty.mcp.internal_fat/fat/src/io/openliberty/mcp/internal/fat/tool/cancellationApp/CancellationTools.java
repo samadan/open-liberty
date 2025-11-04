@@ -9,8 +9,8 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat.tool.cancellationApp;
 
-import static io.openliberty.mcp.internal.fat.utils.TestConstants.NEGATIVE_TIMEOUT_MILIS;
-import static io.openliberty.mcp.internal.fat.utils.TestConstants.POSITIVE_TIMEOUT_MILIS;
+import static io.openliberty.mcp.internal.fat.utils.TestConstants.NEGATIVE_TIMEOUT;
+import static io.openliberty.mcp.internal.fat.utils.TestConstants.POSITIVE_TIMEOUT;
 
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -39,8 +39,8 @@ public class CancellationTools {
                     throws InterruptedException {
         LOG.info("[cancellationTool] Starting");
         toolStatus.signalStarted(latchName);
-        long startTime = System.currentTimeMillis();
-        while ((System.currentTimeMillis() - startTime) < POSITIVE_TIMEOUT_MILIS) {
+        long startTime = System.nanoTime();
+        while ((System.nanoTime() - startTime) < POSITIVE_TIMEOUT.toNanos()) {
             TimeUnit.MILLISECONDS.sleep(100);
             LOG.info("[cancellationTool] Checking if tool is cancelled");
             if (cancellation.check().isRequested()) {
@@ -55,8 +55,8 @@ public class CancellationTools {
     @Tool(name = "cancellationToolMinimalWait", title = "Cancellable tool MinimalWait", description = "A tool that does not waits to be cancelled")
     public String cancellationToolMinimalWait(Cancellation cancellation) throws InterruptedException {
         LOG.info("[cancellationToolMinimalWait] Starting");
-        long startTime = System.currentTimeMillis();
-        while ((System.currentTimeMillis() - startTime) < NEGATIVE_TIMEOUT_MILIS) {
+        long startTime = System.nanoTime();
+        while ((System.nanoTime() - startTime) < NEGATIVE_TIMEOUT.toNanos()) {
             TimeUnit.MILLISECONDS.sleep(100);
             LOG.info("[cancellationToolMinimalWait] Checking if tool is cancelled");
             if (cancellation.check().isRequested()) {
@@ -64,7 +64,7 @@ public class CancellationTools {
                 throw new OperationCancellationException();
             }
         }
-        LOG.info("[cancellationToolNoWait] the tool was not cancelled");
+        LOG.info("[cancellationToolMinimalWait] the tool was not cancelled");
         return "If this String is returned, then the tool was not cancelled";
     }
 
@@ -73,9 +73,9 @@ public class CancellationTools {
                                                           @ToolArg(name = "latchName", description = "name of countdown latch to use for test") String latchName)
                     throws InterruptedException {
         LOG.info("[cancellationToolForStatelessMinimalWait] Starting");
-        toolStatus.setRunning(latchName);
-        long startTime = System.currentTimeMillis();
-        while ((System.currentTimeMillis() - startTime) < NEGATIVE_TIMEOUT_MILIS) {
+        toolStatus.signalStarted(latchName);
+        long startTime = System.nanoTime();
+        while ((System.nanoTime() - startTime) < NEGATIVE_TIMEOUT.toNanos()) {
             TimeUnit.MILLISECONDS.sleep(100);
             LOG.info("[cancellationToolForStatelessMinimalWait] Checking if tool is cancelled");
             if (cancellation.check().isRequested()) {

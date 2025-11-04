@@ -10,7 +10,7 @@
 package io.openliberty.mcp.internal.fat.statelessMode;
 
 import static com.ibm.websphere.simplicity.ShrinkHelper.DeployOptions.SERVER_ONLY;
-import static io.openliberty.mcp.internal.fat.utils.TestConstants.NEGATIVE_TIMEOUT_MILIS;
+import static io.openliberty.mcp.internal.fat.utils.TestConstants.NEGATIVE_TIMEOUT;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -179,8 +179,6 @@ public class StatelessModeTest extends FATServletClient {
 
         Future<String> future = executor.submit(threadCallingTool);
 
-        // Short delay to allow the server time to process/ignore cancellation
-        Thread.sleep(NEGATIVE_TIMEOUT_MILIS);
         toolStatus.awaitStarted(LATCH_NAME);
 
         new HttpRequest(server, ENDPOINT)
@@ -199,6 +197,9 @@ public class StatelessModeTest extends FATServletClient {
                                          .method("POST")
                                          .expectCode(202)
                                          .run(String.class);
+
+        // Short delay to allow the server time to process/ignore cancellation
+        TimeUnit.NANOSECONDS.sleep(NEGATIVE_TIMEOUT.toNanos());
 
         // Manually release the tool latch — since cancellation won't do it in stateless mode
         toolStatus.signalShouldEnd(LATCH_NAME);
@@ -266,7 +267,7 @@ public class StatelessModeTest extends FATServletClient {
                                          .run(String.class);
 
         // Short delay to allow the server time to process/ignore cancellation
-        Thread.sleep(NEGATIVE_TIMEOUT_MILIS);
+        TimeUnit.NANOSECONDS.sleep(NEGATIVE_TIMEOUT.toNanos());
 
         // Now release the tool manually
         toolStatus.signalShouldEnd(LATCH_NAME);

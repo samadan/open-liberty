@@ -9,8 +9,10 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat.utils;
 
+import java.time.Duration;
+
 public class TestConstants {
 
-    public static final int POSITIVE_TIMEOUT_MILIS = 10_000;
-    public static final int NEGATIVE_TIMEOUT_MILIS = 500;
+    public static final Duration POSITIVE_TIMEOUT = Duration.ofMillis(10_000);
+    public static final Duration NEGATIVE_TIMEOUT = Duration.ofMillis(500);
 }

@@ -9,7 +9,7 @@
  *******************************************************************************/
 package io.openliberty.mcp.internal.fat.tool.asyncToolApp;
 
-import static io.openliberty.mcp.internal.fat.utils.TestConstants.POSITIVE_TIMEOUT_MILIS;
+import static io.openliberty.mcp.internal.fat.utils.TestConstants.POSITIVE_TIMEOUT;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -72,8 +72,8 @@ public class AsyncTools {
         LOG.info("[asyncCancellationTool] Starting");
         toolStatus.signalStarted(latchName);
         return executor.supplyAsync(() -> {
-            long startTime = System.currentTimeMillis();
-            while ((System.currentTimeMillis() - startTime) < POSITIVE_TIMEOUT_MILIS) {
+            long startTime = System.nanoTime();
+            while ((System.nanoTime() - startTime) < POSITIVE_TIMEOUT.toNanos()) {
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException e) {
