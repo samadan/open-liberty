@@ -97,8 +97,6 @@ public @interface Tool {
      * rules), then the return value is converted to JSON and used as a {@code structuredContent} of the result.
      * <p>
      * Also the output schema is generated automatically from the return type.
-     *
-     * @see #outputSchema()
      */
     boolean structuredContent() default false;
 
