@@ -35,7 +35,7 @@ public class CancellationTools {
     public String cancellationTool(Cancellation cancellation, @ToolArg(name = "latchName", description = "name of countdown latch to use for test") String latchName)
                     throws InterruptedException {
         LOG.info("[cancellationTool] Starting");
-        toolStatus.setRunning(latchName);
+        toolStatus.signalStarted(latchName);
         int counter = 0;
         while (counter++ < 20) {
             TimeUnit.MILLISECONDS.sleep(500);
