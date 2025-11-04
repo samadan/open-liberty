@@ -79,8 +79,6 @@ public class CancellationTest extends FATServletClient {
 
     @Test
     public void testCancellationToolWithCancellableParameterAndCancellationRequestWithStringId() throws Exception {
-
-        final CountDownLatch latch = new CountDownLatch(1);
         final String LATCH_NAME = "strId";
 
         Callable<String> threadCallingTool = () -> {
@@ -98,8 +96,7 @@ public class CancellationTest extends FATServletClient {
                                   }
                                 }
                                 """;
-                //make sure this tread executes first
-                latch.countDown();
+
                 return client.callMCP(request);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -118,8 +115,6 @@ public class CancellationTest extends FATServletClient {
                           }
                         }
                         """;
-        //make sure the tool call request has started
-        latch.await();
         toolStatus.awaitStarted(LATCH_NAME);
 
         client.callMCPNotification(server, "/cancellationTest", cancellationRequestNotification);
@@ -197,7 +192,7 @@ public class CancellationTest extends FATServletClient {
                           "id": "3",
                           "method": "tools/call",
                           "params": {
-                            "name": "cancellationToolNoWait",
+                            "name": "cancellationToolMinimalWait",
                             "arguments": {}
                           }
                         }

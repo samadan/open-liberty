@@ -28,7 +28,6 @@ import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import com.ibm.websphere.simplicity.ShrinkHelper;
-import com.ibm.websphere.simplicity.log.Log;
 
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
@@ -69,7 +68,7 @@ public class AsyncToolLifecycleTest {
     }
 
     @Test
-    public void testAsyncDependentBeanLifecycle() throws Exception {
+    public void testAsyncDependentBeanLifecycleForCompleteCompletionStage() throws Exception {
         server.setMarkToEndOfLog();
         String request = """
                         {
@@ -78,7 +77,7 @@ public class AsyncToolLifecycleTest {
                           "method": "tools/call",
                           "params": {
                             "beanClass": "io.openliberty.mcp.internal_fat.tool.asyncToolApp.AsyncLifecycleTools",
-                            "name": "asyncLifecycleEcho",
+                            "name": "asyncLifecycleCompleteCompletionStage",
                             "arguments": {
                               "input": "Hello, World"
                             }
@@ -87,8 +86,6 @@ public class AsyncToolLifecycleTest {
                         """;
 
         String response = client.callMCP(request);
-
-        Log.info(getClass(), "testAsyncDependentBeanLifecycle", "Raw MCP response: " + response);
 
         String expectedResponseString = """
                         {
@@ -114,7 +111,56 @@ public class AsyncToolLifecycleTest {
         assertThat("Unexpected lifecycle sequence:\n" + String.join("\n", lifecycleMessages),
                    lifecycleMessages,
                    contains(containsString("@PostConstruct AsyncLifecycleTools"),
-                            containsString("[LOGGED] AsyncLifecycleTools.asyncLifecycleEcho Tool logged"),
+                            containsString("[LOGGED] AsyncLifecycleTools.asyncLifecycleCompleteCompletionStage Tool logged"),
+                            containsString("@PreDestroy AsyncLifecycleTools")));
+    }
+
+    @Test
+    public void testAsyncDependentBeanLifecycleForAsyncStage() throws Exception {
+        server.setMarkToEndOfLog();
+        String request = """
+                        {
+                          "jsonrpc": "2.0",
+                          "id": "2",
+                          "method": "tools/call",
+                          "params": {
+                            "beanClass": "io.openliberty.mcp.internal_fat.tool.asyncToolApp.AsyncLifecycleTools",
+                            "name": "asyncLifecycleAsyncStage",
+                            "arguments": {
+                              "input": "Hello, World"
+                            }
+                          }
+                        }
+                        """;
+
+        String response = client.callMCP(request);
+
+        String expectedResponseString = """
+                        {
+                          "id": "2",
+                          "jsonrpc": "2.0",
+                          "result": {
+                            "content": [
+                              { "type": "text", "text": "Hello, World: (async)" }
+                            ],
+                            "isError": false
+                          }
+                        }
+                        """;
+
+        JSONAssert.assertEquals(expectedResponseString, response, true);
+
+        assertNotNull(server.waitForStringInLogUsingMark("\\[LIFECYCLE] @PreDestroy AsyncLifecycleTools"));
+
+        // Fetch all lifecycle-related log messages
+        List<String> lifecycleMessages = server.findStringsInLogsUsingMark(".*\\[(LIFECYCLE|LOGGED)].*", server.getDefaultLogFile());
+        assertFalse("No [LIFECYCLE] lines found in logs since mark", lifecycleMessages.isEmpty());
+
+        assertThat("Unexpected lifecycle sequence:\n" + String.join("\n", lifecycleMessages),
+                   lifecycleMessages,
+                   contains(containsString("@PostConstruct AsyncLifecycleTools"),
+                            containsString("[LOGGED] AsyncLifecycleTools.asyncLifecycleAsyncStage Tool logged"),
+                            containsString("[LOGGED] AsyncLifecycleTools.asyncLifecycleAsyncStage Tool running process async"),
                             containsString("@PreDestroy AsyncLifecycleTools")));
     }
 
@@ -128,7 +174,7 @@ public class AsyncToolLifecycleTest {
                           "method": "tools/call",
                           "params": {
                             "beanClass": "io.openliberty.mcp.internal_fat.tool.asyncToolApp.AsyncLifecycleTools",
-                            "name": "asyncLifecycleEcho",
+                            "name": "asyncLifecycleCompleteCompletionStage",
                             "arguments": {
                               "input": "throw error"
                             }
@@ -137,8 +183,6 @@ public class AsyncToolLifecycleTest {
                         """;
 
         String response = client.callMCP(request);
-
-        Log.info(getClass(), "testAsyncDependentBeanLifecycle", "Raw MCP response: " + response);
 
         String expectedResponseString = """
                         {"id":"2","jsonrpc":"2.0","result":{"content":[{"type":"text","text":"CWMCM0011E: An internal server error occurred while running the tool."}], "isError": true}}
@@ -154,8 +198,8 @@ public class AsyncToolLifecycleTest {
         assertThat("Unexpected lifecycle sequence:\n" + String.join("\n", lifecycleMessages),
                    lifecycleMessages,
                    contains(containsString("@PostConstruct AsyncLifecycleTools"),
-                            containsString("[LOGGED] AsyncLifecycleTools.asyncLifecycleEcho Tool logged"),
-                            containsString("[LOGGED] AsyncLifecycleTools.asyncLifecycleEcho Tool throwing error"),
+                            containsString("[LOGGED] AsyncLifecycleTools.asyncLifecycleCompleteCompletionStage Tool logged"),
+                            containsString("[LOGGED] AsyncLifecycleTools.asyncLifecycleCompleteCompletionStage Tool throwing error"),
                             containsString("@PreDestroy AsyncLifecycleTools")));
     }
 }
