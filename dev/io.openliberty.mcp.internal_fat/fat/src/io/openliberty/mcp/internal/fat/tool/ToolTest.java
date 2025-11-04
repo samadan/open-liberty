@@ -1663,7 +1663,8 @@ public class ToolTest extends FATServletClient {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/$defs/Person"
-                                            }
+                                            },
+                                            "description": "Returns list of person object"
                                         },
                                         "inputSchema": {
                                             "$defs": {
