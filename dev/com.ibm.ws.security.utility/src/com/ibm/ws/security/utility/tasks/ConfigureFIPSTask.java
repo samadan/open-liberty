@@ -59,7 +59,7 @@ public class ConfigureFIPSTask extends BaseCommandTask {
                                            "# Visit the link for more information about configuring this file:",
                                            "# https://ibm.biz/BdeU7c",
                                            "#",
-                                           "# To find the FIPS140-3-Liberty profile configuration, see wlp/lib/security/FIPS140-3-Liberty.properties",
+                                           "# To find the FIPS140-3-Liberty profile configuration, see wlp/lib/security/fips140_3/FIPS140-3-Liberty.properties",
                                            "#",
                                            "# Example configuration for allowing SHA-1 for the io.openliberty.myClass class in the existing OpenJCEPlusFIPS provider",
                                            "# and adding a new io.openliberty.myProvider provider:",
