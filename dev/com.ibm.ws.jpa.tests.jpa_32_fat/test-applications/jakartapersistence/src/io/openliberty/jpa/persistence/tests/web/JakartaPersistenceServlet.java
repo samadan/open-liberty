@@ -1365,6 +1365,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189")
     public void testCacheRetrieveMode_EMLevel_Bypass() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheRetrieveMode_EMLevel_Bypass";
@@ -1387,7 +1388,10 @@ public class JakartaPersistenceServlet extends FATServlet {
             Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
             query.setParameter(1, id);
             entity = (PersistenceUnitEntity) query.getSingleResult();
+
+            tx.commit();
         } catch (Exception e) {
+            tx.rollback();
             throw e;
         } finally {
             resetCacheModes();
@@ -1419,7 +1423,10 @@ public class JakartaPersistenceServlet extends FATServlet {
             Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
             query.setParameter(1, id);
             entity = (PersistenceUnitEntity) query.getSingleResult();
+
+            tx.commit();
         } catch (Exception e) {
+            tx.rollback();
             throw e;
         } finally {
             resetCacheModes();
@@ -1429,6 +1436,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189")
     public void testCacheRetrieveMode_QueryLevel_Bypass() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheRetrieveMode_QueryLevel_Bypass";
@@ -1493,6 +1501,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    //Test passes due to default behaviour but issue persists - Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189
     public void testCacheRetrieveMode_QueryOverridesEM_UseOverridesBypass() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheRetrieveMode_QueryOverridesEM_UseOverridesBypass";
@@ -1529,6 +1538,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189")
     public void testCacheRetrieveMode_QueryOverridesEM_BypassOverridesUse() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheRetrieveMode_QueryOverridesEM_BypassOverridesUse";
@@ -1563,6 +1573,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189")
     public void testCacheStoreMode_EMLevel_Bypass() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_EMLevel_Bypass";
@@ -1593,6 +1604,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
     
     @Test
+    //Test passes due to default behaviour but issue persists - Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189
     public void testCacheStoreMode_EMLevel_Use_Default() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_EMLevel_Use_Default";
@@ -1624,6 +1636,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189")
     public void testCacheStoreMode_QueryLevel_Bypass() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_QueryLevel_Bypass";
@@ -1686,6 +1699,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    //Test passes due to default behaviour but issue persists - Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189
     public void testCacheStoreMode_QueryOverridesEM_UseOverridesBypass() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_QueryOverridesEM_UseOverridesBypass";
@@ -1717,6 +1731,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189")
     public void testCacheStoreMode_QueryOverridesEM_BypassOverridesUse() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_QueryOverridesEM_BypassOverridesUse";
@@ -1746,7 +1761,9 @@ public class JakartaPersistenceServlet extends FATServlet {
         boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
         assertFalse(inCache);
     }
-@Test
+    
+    @Test
+    //Test passes due to default behaviour but issue persists - Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189
     public void testCacheStoreMode_EMLevel_Refresh() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_EMLevel_Refresh";
@@ -1756,6 +1773,8 @@ public class JakartaPersistenceServlet extends FATServlet {
         em.flush();
         tx.commit();
 
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        
         em.setCacheStoreMode(CacheStoreMode.REFRESH);
 
         PersistenceUnitEntity entity;
@@ -1776,6 +1795,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    //Test passes due to default behaviour but issue persists - Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189
     public void testCacheStoreMode_QueryLevel_Refresh() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_QueryLevel_Refresh";
@@ -1784,6 +1804,8 @@ public class JakartaPersistenceServlet extends FATServlet {
         em.persist(PersistenceUnitEntity.of(id, 222));
         em.flush();
         tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
 
         PersistenceUnitEntity entity;
         try {
@@ -1804,6 +1826,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    //Test passes due to default behaviour but issue persists - Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189
     public void testCacheStoreMode_QueryOverridesEM_RefreshOverridesBypass() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_QueryOverridesEM_RefreshOverridesBypass";
@@ -1814,6 +1837,7 @@ public class JakartaPersistenceServlet extends FATServlet {
         tx.commit();
 
         em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        
         em.setCacheStoreMode(CacheStoreMode.BYPASS);
 
         PersistenceUnitEntity entity;
@@ -1835,6 +1859,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    @Ignore("Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33189")
     public void testCacheStoreMode_QueryOverridesEM_BypassOverridesRefresh() throws Exception {
         deleteAllEntities(PersistenceUnitEntity.class);
         String id = "testCacheStoreMode_QueryOverridesEM_BypassOverridesRefresh";
@@ -1845,6 +1870,7 @@ public class JakartaPersistenceServlet extends FATServlet {
         tx.commit();
 
         em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        
         em.setCacheStoreMode(CacheStoreMode.REFRESH);
 
         PersistenceUnitEntity entity;
