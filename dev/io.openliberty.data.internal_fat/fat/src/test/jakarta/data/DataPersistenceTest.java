@@ -26,6 +26,7 @@ import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import com.ibm.websphere.simplicity.ShrinkHelper;
 
+import componenttest.annotation.MaximumJavaLevel;
 import componenttest.annotation.MinimumJavaLevel;
 import componenttest.annotation.Server;
 import componenttest.annotation.TestServlet;
@@ -43,10 +44,10 @@ import test.jakarta.data.web.hibernate.DataHibernateServlet;
 /**
  * Runs the tests with a third-party Persistence provider (Hibernate)
  * instead of the built-in Persistence provider (EclipseLink).
- * TODO actually use Hibernate instead of EclipseLink
  */
 @RunWith(FATRunner.class)
 @MinimumJavaLevel(javaLevel = 17)
+@MaximumJavaLevel(javaLevel = 25) // TODO remove once Hibernate upgrades their ByteBuddy dependency to a version that supports java 26+
 public class DataPersistenceTest extends FATServletClient {
     /**
      * Error messages, typically for invalid repository methods, that are
