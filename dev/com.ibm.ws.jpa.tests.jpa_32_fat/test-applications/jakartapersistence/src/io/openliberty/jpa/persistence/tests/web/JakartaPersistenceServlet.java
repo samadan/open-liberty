@@ -54,6 +54,7 @@ import io.openliberty.jpa.persistence.tests.models.ConcatEntity;
 import io.openliberty.jpa.persistence.tests.models.PersistenceUnitEntity;
 import jakarta.annotation.Resource;
 import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
@@ -1559,6 +1560,191 @@ public class JakartaPersistenceServlet extends FATServlet {
         }
         
         assertEquals(Integer.valueOf(444), entity.value);
+    }
+
+    @Test
+    public void testCacheStoreMode_EMLevel_Bypass() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_EMLevel_Bypass";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        em.setCacheStoreMode(CacheStoreMode.BYPASS);
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertFalse(inCache);
+    }
+    
+    @Test
+    public void testCacheStoreMode_EMLevel_Use_Default() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_EMLevel_Use_Default";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        
+        //Default cache store mode is USE — no  need to set explicitly
+        
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertTrue(inCache);
+    }
+
+    @Test
+    public void testCacheStoreMode_QueryLevel_Bypass() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_QueryLevel_Bypass";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            query.setCacheStoreMode(CacheStoreMode.BYPASS);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertFalse(inCache);
+    }
+    
+    @Test
+    public void testCacheStoreMode_QueryLevel_Use_default() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_QueryLevel_Use_default";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            
+            //Default cache store mode is USE — no  need to set explicitly
+            
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertTrue(inCache);
+    }
+
+    @Test
+    public void testCacheStoreMode_QueryOverridesEM_UseOverridesBypass() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_QueryOverridesEM_UseOverridesBypass";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        em.setCacheStoreMode(CacheStoreMode.BYPASS);
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            query.setCacheStoreMode(CacheStoreMode.USE);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertTrue(inCache);
+    }
+
+    @Test
+    public void testCacheStoreMode_QueryOverridesEM_BypassOverridesUse() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_QueryOverridesEM_BypassOverridesUse";
+        
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        em.setCacheStoreMode(CacheStoreMode.USE);
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            query.setCacheStoreMode(CacheStoreMode.BYPASS);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertFalse(inCache);
     }
 
 
