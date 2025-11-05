@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1998, 2025 Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 1998, 2025 IBM Corporation. All rights reserved.
+ * Copyright (c) 2025 IBM Corporation. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0 which is available at
@@ -383,6 +383,7 @@ public class EJBQueryImpl<X> extends QueryImpl implements JpaQuery<X> {
 
     @Override
     public TypedQuery<X> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+        FindOptionUtils.setCacheRetrieveMode(getDatabaseQuery().getProperties(), cacheRetrieveMode);
         setHint(QueryHints.CACHE_RETRIEVE_MODE, cacheRetrieveMode);
         return this;
     }
@@ -394,6 +395,7 @@ public class EJBQueryImpl<X> extends QueryImpl implements JpaQuery<X> {
 
     @Override
     public TypedQuery<X> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+        FindOptionUtils.setCacheStoreMode(getDatabaseQuery().getProperties(), cacheStoreMode);
         setHint(QueryHints.CACHE_STORE_MODE, cacheStoreMode);
         return this;
     }
@@ -405,6 +407,7 @@ public class EJBQueryImpl<X> extends QueryImpl implements JpaQuery<X> {
 
     @Override
     public TypedQuery<X> setTimeout(Integer timeout) {
+        FindOptionUtils.setTimeout(getDatabaseQuery().getProperties(), timeout);
         setHint(QueryHints.QUERY_TIMEOUT, timeout);
         return this;
     }
@@ -426,19 +429,19 @@ public class EJBQueryImpl<X> extends QueryImpl implements JpaQuery<X> {
         if (entityManager == null || entityManager.properties == null) {
             return;
         }
-        
+
         DatabaseQuery dbQuery = getDatabaseQuery();
         if (dbQuery == null) {
             return;
         }
-        
+
         Map<String, Object> emProperties = entityManager.properties;
-        
+
         // CACHE_RETRIEVE_MODE only applies to ObjectLevelReadQuery (SELECT queries)
         if (dbQuery.isObjectLevelReadQuery() && emProperties.containsKey(QueryHints.CACHE_RETRIEVE_MODE)) {
             setHint(QueryHints.CACHE_RETRIEVE_MODE, emProperties.get(QueryHints.CACHE_RETRIEVE_MODE));
         }
-        
+
         // CACHE_STORE_MODE applies to all query types:
         // - For ObjectLevelReadQuery: controls whether results are stored in cache after reading
         // - For ModifyQuery: controls whether cache is invalidated after UPDATE/DELETE
