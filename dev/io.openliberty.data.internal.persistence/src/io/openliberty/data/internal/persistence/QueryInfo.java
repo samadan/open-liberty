@@ -99,7 +99,6 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.TypedQuery;
-import jakarta.transaction.Status;
 
 /**
  * Query information.
@@ -1896,10 +1895,10 @@ public class QueryInfo {
         Object returnValue;
 
         if (CursoredPage.class.equals(multiType)) {
-            returnValue = new CursoredPageImpl<>(this, pageReq, args);
+            returnValue = new CursoredPageImpl<>(this, em, pageReq, args);
         } else if (Page.class.equals(multiType)) {
             PageRequest req = limit == null ? pageReq : toPageRequest(limit);
-            returnValue = new PageImpl<>(this, req, args);
+            returnValue = new PageImpl<>(this, em, req, args);
         } else if (pageReq != null &&
                    !PageRequest.Mode.OFFSET.equals(pageReq.mode())) {
             throw exc(IllegalArgumentException.class,
@@ -1948,10 +1947,11 @@ public class QueryInfo {
 
             if (multiType != null && BaseStream.class.isAssignableFrom(multiType)) {
                 Stream<?> stream;
-                if (txStatus == Status.STATUS_NO_TRANSACTION)
-                    stream = query.getResultList().stream();
-                else
-                    stream = query.getResultStream();
+                // TODO 1.1 getResultStream can be used for stateful repositories
+                //if (txStatus == Status.STATUS_NO_TRANSACTION)
+                stream = query.getResultList().stream();
+                //else
+                //    stream = query.getResultStream();
                 if (Stream.class.equals(multiType))
                     returnValue = stream;
                 else if (IntStream.class.equals(multiType))
@@ -4143,7 +4143,6 @@ public class QueryInfo {
                 if (results != null)
                     results.add(entity);
             }
-            em.flush();
         } else if (arg instanceof Iterable) {
             results = resultVoid ? null : new ArrayList<>();
             for (Object e : ((Iterable<?>) arg)) {
@@ -4153,14 +4152,12 @@ public class QueryInfo {
                 if (results != null)
                     results.add(entity);
             }
-            em.flush();
         } else {
             entityCount = 1;
             hasSingularEntityParam = true;
             results = resultVoid ? null : new ArrayList<>(1);
             Object entity = toEntity(arg);
             em.persist(entity);
-            em.flush();
             if (results != null)
                 results.add(entity);
         }
@@ -4171,6 +4168,8 @@ public class QueryInfo {
                       method.getName(),
                       repositoryInterface.getName(),
                       method.getGenericParameterTypes()[0].getTypeName());
+
+        em.flush();
 
         Class<?> returnType = method.getReturnType();
         Object returnValue;
@@ -5148,14 +5147,12 @@ public class QueryInfo {
             int length = Array.getLength(arg);
             for (; entityCount < length; entityCount++)
                 results.add(em.merge(toEntity(Array.get(arg, entityCount))));
-            em.flush();
         } else if (Iterable.class.isAssignableFrom(entityParamType)) {
             results = new ArrayList<>();
             for (Object e : ((Iterable<?>) arg)) {
                 entityCount++;
                 results.add(em.merge(toEntity(e)));
             }
-            em.flush();
         } else {
             entityCount = 1;
             hasSingularEntityParam = true;
@@ -5163,7 +5160,6 @@ public class QueryInfo {
             Object entity = em.merge(toEntity(arg));
             if (results != null)
                 results.add(entity);
-            em.flush();
         }
 
         if (entityCount == 0)
@@ -5172,6 +5168,8 @@ public class QueryInfo {
                       method.getName(),
                       repositoryInterface.getName(),
                       method.getGenericParameterTypes()[0].getTypeName());
+
+        em.flush();
 
         Class<?> returnType = method.getReturnType();
         Object returnValue;
@@ -5367,10 +5365,9 @@ public class QueryInfo {
      *
      * @param query the query
      * @param args  repository method arguments
-     * @throws Exception if an error occurs
      */
     @Trivial // avoid logging customer data
-    void setParameters(jakarta.persistence.Query query, Object... args) throws Exception {
+    void setParameters(jakarta.persistence.Query query, Object... args) {
         final boolean trace = TraceComponent.isAnyTracingEnabled();
 
         DataVersionCompatibility compat = producer.compat();
