@@ -12,6 +12,7 @@ package io.openliberty.wsoc.tests;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -222,7 +223,13 @@ public class Basic21Test {
     @Mode(TestMode.LITE)
     @Test
     public void testUserPropertiesOnServer() throws Exception {
-        userprop.testUserPropertiesOnServer();
+        try { 
+            userprop.testUserPropertiesOnServer();
+        } catch(IOException ioe) {
+            // For defect 292475 -- java.io.IOException: Connection future timeout 5000 ms for ws://localhost:8010/basic21/userproperties
+             LOG.info(" Trying test again because IOException was caught: " + ioe.getMessage());
+             userprop.testUserPropertiesOnServer();
+        }
     }
 
     @Mode(TestMode.LITE)
