@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2024 IBM Corporation and others.
+ * Copyright (c) 2009, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -58,6 +58,8 @@ import com.ibm.wsspi.channelfw.ChannelFrameworkFactory;
 import com.ibm.wsspi.channelfw.HttpProtocolBehavior;
 import com.ibm.wsspi.kernel.service.utils.ServerQuiesceListener;
 
+import io.openliberty.channel.config.ChannelFrameworkConfig;
+
 /**
  * OSGi public bundle API for the channel framework. This allows cross bundle
  * dependency to be defined against the framework and provides proper access to
@@ -65,8 +67,7 @@ import com.ibm.wsspi.kernel.service.utils.ServerQuiesceListener;
  */
 @Component(service = { CHFWBundle.class, ServerQuiesceListener.class },
            name = "com.ibm.ws.channelfw",
-           configurationPid = "com.ibm.ws.channelfw",
-           configurationPolicy = ConfigurationPolicy.OPTIONAL,
+           configurationPolicy = ConfigurationPolicy.REQUIRE,
            immediate = true,
            property = { "service.vendor=IBM" })
 public class CHFWBundle implements ServerQuiesceListener {
@@ -184,12 +185,6 @@ public class CHFWBundle implements ServerQuiesceListener {
         if (null == cfwConfiguration) {
             return;
         }
-
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-            Tr.event(this, tc, "Processing config", cfwConfiguration);
-        }
-
-        this.chfw.updateConfig(cfwConfiguration);
     }
 
     @Reference(service = AsyncIOHelper.class, cardinality = ReferenceCardinality.OPTIONAL)
@@ -197,8 +192,13 @@ public class CHFWBundle implements ServerQuiesceListener {
         chfw.setAsyncIOHelper(asyncIOHelper);
     }
 
-    protected void unsetAsyncIOHelper(AsyncIOHelper asyncIOHelper) {
-        chfw.setAsyncIOHelper(null);
+    protected void modifiedAsyncIOHelper(AsyncIOHelper asyncIOHelper) {
+        chfw.setAsyncIOHelper(asyncIOHelper);
+    }
+
+    @Reference(service = ChannelFrameworkConfig.class, cardinality = ReferenceCardinality.MANDATORY)
+    protected void updateChannelFWConfig(ChannelFrameworkConfig config) {
+        chfw.setChannelFrameworkConfig(config);
     }
 
     /**
