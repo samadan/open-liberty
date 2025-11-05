@@ -1746,6 +1746,124 @@ public class JakartaPersistenceServlet extends FATServlet {
         boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
         assertFalse(inCache);
     }
+@Test
+    public void testCacheStoreMode_EMLevel_Refresh() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_EMLevel_Refresh";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.setCacheStoreMode(CacheStoreMode.REFRESH);
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertTrue(inCache);
+    }
+
+    @Test
+    public void testCacheStoreMode_QueryLevel_Refresh() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_QueryLevel_Refresh";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            query.setCacheStoreMode(CacheStoreMode.REFRESH);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertTrue(inCache);
+    }
+
+    @Test
+    public void testCacheStoreMode_QueryOverridesEM_RefreshOverridesBypass() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_QueryOverridesEM_RefreshOverridesBypass";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        em.setCacheStoreMode(CacheStoreMode.BYPASS);
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            query.setCacheStoreMode(CacheStoreMode.REFRESH);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertTrue(inCache);
+    }
+
+    @Test
+    public void testCacheStoreMode_QueryOverridesEM_BypassOverridesRefresh() throws Exception {
+        deleteAllEntities(PersistenceUnitEntity.class);
+        String id = "testCacheStoreMode_QueryOverridesEM_BypassOverridesRefresh";
+
+        tx.begin();
+        em.persist(PersistenceUnitEntity.of(id, 222));
+        em.flush();
+        tx.commit();
+
+        em.getEntityManagerFactory().getCache().evict(PersistenceUnitEntity.class, id);
+        em.setCacheStoreMode(CacheStoreMode.REFRESH);
+
+        PersistenceUnitEntity entity;
+        try {
+            Query query = em.createQuery("FROM PersistenceUnitEntity WHERE id = ?1");
+            query.setParameter(1, id);
+            query.setCacheStoreMode(CacheStoreMode.BYPASS);
+            entity = (PersistenceUnitEntity) query.getSingleResult();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            resetCacheModes();
+        }
+
+        assertEquals(Integer.valueOf(222), entity.value);
+
+        boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
+        assertFalse(inCache);
+    }
 
 
     /**
