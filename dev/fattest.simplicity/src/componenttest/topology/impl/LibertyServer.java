@@ -8174,7 +8174,6 @@ public class LibertyServer implements LogMonitorClient {
             }
             if (includeGlobalArgs) {
                 opts.put("-Dglobal.fips_140-3", "true");
-                opts.put("-Dcom.ibm.ws.beta.edition", "true");
             }
         } else if (isFIPS140_2EnabledAndSupported(info, false)) {
             if (info.majorVersion() == 8) {
