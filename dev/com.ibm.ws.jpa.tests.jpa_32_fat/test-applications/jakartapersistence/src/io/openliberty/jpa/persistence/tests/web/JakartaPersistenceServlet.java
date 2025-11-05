@@ -1428,8 +1428,6 @@ public class JakartaPersistenceServlet extends FATServlet {
         } catch (Exception e) {
             tx.rollback();
             throw e;
-        } finally {
-            resetCacheModes();
         }
 
         assertEquals(Integer.valueOf(222), entity.value);
@@ -1625,8 +1623,6 @@ public class JakartaPersistenceServlet extends FATServlet {
             entity = (PersistenceUnitEntity) query.getSingleResult();
         } catch (Exception e) {
             throw e;
-        } finally {
-            resetCacheModes();
         }
 
         assertEquals(Integer.valueOf(222), entity.value);
@@ -1656,8 +1652,6 @@ public class JakartaPersistenceServlet extends FATServlet {
             entity = (PersistenceUnitEntity) query.getSingleResult();
         } catch (Exception e) {
             throw e;
-        } finally {
-            resetCacheModes();
         }
 
         assertEquals(Integer.valueOf(222), entity.value);
@@ -1688,8 +1682,6 @@ public class JakartaPersistenceServlet extends FATServlet {
             entity = (PersistenceUnitEntity) query.getSingleResult();
         } catch (Exception e) {
             throw e;
-        } finally {
-            resetCacheModes();
         }
 
         assertEquals(Integer.valueOf(222), entity.value);
@@ -1752,8 +1744,6 @@ public class JakartaPersistenceServlet extends FATServlet {
             entity = (PersistenceUnitEntity) query.getSingleResult();
         } catch (Exception e) {
             throw e;
-        } finally {
-            resetCacheModes();
         }
 
         assertEquals(Integer.valueOf(222), entity.value);
@@ -1815,8 +1805,6 @@ public class JakartaPersistenceServlet extends FATServlet {
             entity = (PersistenceUnitEntity) query.getSingleResult();
         } catch (Exception e) {
             throw e;
-        } finally {
-            resetCacheModes();
         }
 
         assertEquals(Integer.valueOf(222), entity.value);
