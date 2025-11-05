@@ -308,7 +308,8 @@ public class AdminCenterRouterTest {
                 one(restResponse).setResponseHeader("X-Content-Type-Options", "nosniff");
                 one(restResponse).setResponseHeader("X-Frame-Options", "SAMEORIGIN");
                 one(restResponse).setResponseHeader("Content-Security-Policy", "default-src 'self'");
-
+                one(restResponse).setResponseHeader("Strict-Transport-Security", "max-age=99999999");
+                
                 // Test assertion
                 one(baseHandler).handleRequest(restRequest, restResponse);
             }
@@ -334,6 +335,7 @@ public class AdminCenterRouterTest {
                 one(restResponse).setResponseHeader("X-Content-Type-Options", "nosniff");
                 one(restResponse).setResponseHeader("X-Frame-Options", "SAMEORIGIN");
                 one(restResponse).setResponseHeader("Content-Security-Policy", "default-src 'self'");
+                one(restResponse).setResponseHeader("Strict-Transport-Security", "max-age=99999999");
 
                 // Test assertion
                 one(baseHandler).handleRequest(restRequest, restResponse);
@@ -360,6 +362,7 @@ public class AdminCenterRouterTest {
                 one(restResponse).setResponseHeader("X-Content-Type-Options", "nosniff");
                 one(restResponse).setResponseHeader("X-Frame-Options", "SAMEORIGIN");
                 one(restResponse).setResponseHeader("Content-Security-Policy", "default-src 'self'");
+                one(restResponse).setResponseHeader("Strict-Transport-Security", "max-age=99999999");
 
                 // Test assertion
                 one(handler1).handleRequest(restRequest, restResponse);
@@ -386,6 +389,7 @@ public class AdminCenterRouterTest {
                 one(restResponse).setResponseHeader("X-Content-Type-Options", "nosniff");
                 one(restResponse).setResponseHeader("X-Frame-Options", "SAMEORIGIN");
                 one(restResponse).setResponseHeader("Content-Security-Policy", "default-src 'self'");
+                one(restResponse).setResponseHeader("Strict-Transport-Security", "max-age=99999999");
 
                 // Test assertion
                 one(handler1).handleRequest(restRequest, restResponse);
@@ -412,6 +416,7 @@ public class AdminCenterRouterTest {
                 one(restResponse).setResponseHeader("X-Content-Type-Options", "nosniff");
                 one(restResponse).setResponseHeader("X-Frame-Options", "SAMEORIGIN");
                 one(restResponse).setResponseHeader("Content-Security-Policy", "default-src 'self'");
+                one(restResponse).setResponseHeader("Strict-Transport-Security", "max-age=99999999");
 
                 // Test assertion
                 one(handler1).handleRequest(restRequest, restResponse);
@@ -438,6 +443,7 @@ public class AdminCenterRouterTest {
                 one(restResponse).setResponseHeader("X-Content-Type-Options", "nosniff");
                 one(restResponse).setResponseHeader("X-Frame-Options", "SAMEORIGIN");
                 one(restResponse).setResponseHeader("Content-Security-Policy", "default-src 'self'");
+                one(restResponse).setResponseHeader("Strict-Transport-Security", "max-age=99999999");
 
                 // Test assertion
                 one(handler1).handleRequest(restRequest, restResponse);
@@ -548,6 +554,7 @@ public class AdminCenterRouterTest {
                 one(restResponse).setResponseHeader("X-Content-Type-Options", "nosniff");
                 one(restResponse).setResponseHeader("X-Frame-Options", "SAMEORIGIN");
                 one(restResponse).setResponseHeader("Content-Security-Policy", "default-src 'self'");
+                one(restResponse).setResponseHeader("Strict-Transport-Security", "max-age=99999999");
 
                 // Test assertion
                 one(handler1).handleRequest(restRequest, restResponse);
@@ -574,6 +581,7 @@ public class AdminCenterRouterTest {
                 one(restResponse).setResponseHeader("X-Content-Type-Options", "nosniff");
                 one(restResponse).setResponseHeader("X-Frame-Options", "SAMEORIGIN");
                 one(restResponse).setResponseHeader("Content-Security-Policy", "default-src 'self'");
+                one(restResponse).setResponseHeader("Strict-Transport-Security", "max-age=99999999");
 
                 // Test assertion
                 one(handler1).handleRequest(restRequest, restResponse);
