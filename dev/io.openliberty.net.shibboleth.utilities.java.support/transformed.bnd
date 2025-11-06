@@ -10,8 +10,8 @@
 # Contributors:
 #     IBM Corporation - initial API and implementation
 #*******************************************************************************
+-include= ~../cnf/resources/bnd/transform.props
 
-Bundle-Name: org.opensaml.messaging.impl
-Bundle-SymbolicName: com.ibm.ws.org.opensaml.opensaml.messaging.impl.3.4.5
-Bundle-Description: org.opensaml opensaml messaging implementations; version=3.4.5
-
+Bundle-Name: java-support Jakarta
+Bundle-SymbolicName: io.openliberty.net.shibboleth.utilities.java.support.jakarta
+Bundle-Description: shibboleth java-support utilities; version=8.4.2; Jakarta Enabled
