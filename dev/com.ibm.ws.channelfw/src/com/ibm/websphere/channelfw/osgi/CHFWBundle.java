@@ -14,7 +14,6 @@ package com.ibm.websphere.channelfw.osgi;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -29,7 +28,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -66,8 +64,7 @@ import io.openliberty.channel.config.ChannelFrameworkConfig;
  * the framework itself.
  */
 @Component(service = { CHFWBundle.class, ServerQuiesceListener.class },
-           name = "com.ibm.ws.channelfw",
-           configurationPolicy = ConfigurationPolicy.REQUIRE,
+           configurationPolicy = ConfigurationPolicy.IGNORE,
            immediate = true,
            property = { "service.vendor=IBM" })
 public class CHFWBundle implements ServerQuiesceListener {
@@ -126,15 +123,10 @@ public class CHFWBundle implements ServerQuiesceListener {
      * @param context
      */
     @Activate
-    protected void activate(ComponentContext context, Map<String, Object> config) {
+    protected void activate(ComponentContext context) {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-            Tr.event(this, tc, "Activating ", config);
+            Tr.event(this, tc, "Activating ", context.getProperties());
         }
-
-        // handle config (such as TCP factory info) before registering
-        // factories, as the register will trigger an automatic load of any
-        // delayed configuration, and we need the config before that happens
-        modified(config);
 
         this.chfw.registerFactory("TCPChannel", TCPChannelFactory.class);
         this.chfw.registerFactory("UDPChannel", UDPChannelFactory.class);
@@ -171,33 +163,21 @@ public class CHFWBundle implements ServerQuiesceListener {
         this.chfw.deregisterFactory("UDPChannel");
     }
 
-    /**
-     * Modified method. This method is called when the
-     * service properties associated with the service are updated through a
-     * configuration change.
-     *
-     * @param cfwConfiguration
-     *                             the configuration data
-     */
-    @Modified
-    protected synchronized void modified(Map<String, Object> cfwConfiguration) {
-
-        if (null == cfwConfiguration) {
-            return;
-        }
-    }
-
     @Reference(service = AsyncIOHelper.class, cardinality = ReferenceCardinality.OPTIONAL)
     protected void setAsyncIOHelper(AsyncIOHelper asyncIOHelper) {
         chfw.setAsyncIOHelper(asyncIOHelper);
     }
 
-    protected void modifiedAsyncIOHelper(AsyncIOHelper asyncIOHelper) {
+    protected void updatedAsyncIOHelper(AsyncIOHelper asyncIOHelper) {
         chfw.setAsyncIOHelper(asyncIOHelper);
     }
 
     @Reference(service = ChannelFrameworkConfig.class, cardinality = ReferenceCardinality.MANDATORY)
-    protected void updateChannelFWConfig(ChannelFrameworkConfig config) {
+    protected void setChannelFWConfig(ChannelFrameworkConfig config) {
+        chfw.setChannelFrameworkConfig(config);
+    }
+
+    protected void updatedChannelFWConfig(ChannelFrameworkConfig config) {
         chfw.setChannelFrameworkConfig(config);
     }
 

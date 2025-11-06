@@ -28,8 +28,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -57,6 +57,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import io.openliberty.channel.config.ChannelFrameworkConfig;
 import io.openliberty.netty.internal.BootstrapConfiguration;
 import io.openliberty.netty.internal.BootstrapExtended;
 import io.openliberty.netty.internal.ConfigConstants;
@@ -67,12 +68,11 @@ import io.openliberty.netty.internal.tcp.TCPConfigurationImpl;
 import io.openliberty.netty.internal.tcp.TCPUtils;
 import io.openliberty.netty.internal.udp.UDPUtils;
 
-import io.openliberty.channel.config.ChannelFrameworkConfig;
 /**
  * Liberty NettyFramework implementation bundle
  */
-@Component(configurationPid = "io.openliberty.netty.internal", immediate = true, service = { NettyFramework.class,
-                                                                                             ServerQuiesceListener.class },
+@Component(immediate = true, service = { NettyFramework.class, ServerQuiesceListener.class },
+           configurationPolicy = ConfigurationPolicy.IGNORE,
            property = { "service.vendor=IBM" })
 public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework {
 
@@ -105,7 +105,7 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
     private ChannelFrameworkConfig channelConfig;
 
     @Activate
-    protected void activate(ComponentContext context, Map<String, Object> config) {
+    protected void activate(ComponentContext context) {
         if (!ProductInfo.getBetaEdition()) {
             // Do nothing if beta isn't enabled
             return;
@@ -149,15 +149,6 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
         }
         EndPointMgrImpl.destroyEndpoints();
         stopEventLoops();
-        channelConfig = null;
-    }
-
-    @Modified
-    protected void modified(ComponentContext context, Map<String, Object> config) {
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-            Tr.event(this, tc, "Processing config", config);
-        }
-        // update any framework-specific config
     }
 
     /**
@@ -172,14 +163,19 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
     }
 
     /*
-     * Used for share config between legacy channel framework and the netty framework. 
+     * Used for share config between legacy channel framework and the netty framework.
      */
     @Reference(service = ChannelFrameworkConfig.class, cardinality = ReferenceCardinality.MANDATORY)
-    protected void updateChannelFWConfig(ChannelFrameworkConfig config) {
+    protected void setChannelFWConfig(ChannelFrameworkConfig config) {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
             Tr.event(this, tc, "Updating ChannelFrameworkConfig: " + config);
         }
         this.channelConfig = config;
+    }
+
+    protected void updatedChannelFWConfig(ChannelFrameworkConfig config) {
+        this.channelConfig = config;
+        // TODO need to do anything so others dynamically react to updates in config?
     }
 
     public ChannelFrameworkConfig getChannelFWConfig() {
