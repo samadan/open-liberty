@@ -289,9 +289,7 @@ public final class DatabaseContainerUtil {
      * @return this
      */
     public DatabaseContainerUtil withDriverVariable() {
-        this.server.addEnvVar(DRIVER_KEY, Stream
-                        .concat(Stream.of(databaseType.getDriverName()), databaseType.getSupportLibraries().stream())
-                        .collect(Collectors.joining(", ")));
+        this.server.addEnvVar(DRIVER_KEY, databaseType.streamAllArtifacts().collect(Collectors.joining(", ")));
 
         /**
          * It is inadequate to just add the driver key, we must also add additional

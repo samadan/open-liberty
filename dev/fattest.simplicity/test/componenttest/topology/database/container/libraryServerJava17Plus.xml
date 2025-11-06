@@ -11,17 +11,17 @@
         IBM Corporation - initial API and implementation
  -->
 <server>
-	<library id="JDBCLibrary">
-		<fileset dir="${shared.resource.dir}/jdbcJava17Plus" includes="${env.DB_DRIVER}" />
-	</library>
-	
-	<dataSource id="DefaultDataSource" fat.modify="true">
-		<jdbcDriver libraryRef="JDBCLibrary" />
-		<properties.derby.embedded createDatabase="create" databaseName="memory:testdb"/>
-	</dataSource>
-	
-	<!-- NOTE: this is what we see in many buckets, but the DB_DRIVER variable can now be a list
-	           as a result this permission will be removed and replaced
-	-->
-	<javaPermission codeBase="${shared.resource.dir}/jdbcJava17Plus/${env.DB_DRIVER}" className="java.security.AllPermission" />
+    <library id="JDBCLibrary">
+        <fileset dir="${shared.resource.dir}/jdbcJava17Plus" includes="${env.DB_DRIVER}" />
+    </library>
+    
+    <dataSource id="DefaultDataSource" fat.modify="true">
+        <jdbcDriver libraryRef="JDBCLibrary" />
+        <properties.derby.embedded createDatabase="create" databaseName="memory:testdb"/>
+    </dataSource>
+    
+    <!-- NOTE: this is what we see in many buckets, but the DB_DRIVER variable can now be a list
+               as a result this permission will be removed and replaced
+    -->
+    <javaPermission codeBase="${shared.resource.dir}/jdbcJava17Plus/${env.DB_DRIVER}" className="java.security.AllPermission" />
 </server>

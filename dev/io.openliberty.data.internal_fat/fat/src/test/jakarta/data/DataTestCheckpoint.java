@@ -86,7 +86,7 @@ public class DataTestCheckpoint extends FATServletClient {
                         .addAsLibrary(providerJar);
         ShrinkHelper.exportAppToServer(server, providerWar);
 
-        // Add DB_DRIVER env var because servlet uses this variable in test logic based
+        // Add DB_DRIVER env var because servlet uses this variable in test logic
         // where different databases have varied behavior
         Map<String, String> envVars = new HashMap<>();
         envVars.put("DB_DRIVER", DatabaseContainerType.valueOf(testContainer).getDriverName());

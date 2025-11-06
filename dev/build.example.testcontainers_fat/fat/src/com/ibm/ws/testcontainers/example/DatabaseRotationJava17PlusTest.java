@@ -16,7 +16,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testcontainers.containers.JdbcDatabaseContainer;
@@ -45,8 +44,26 @@ public class DatabaseRotationJava17PlusTest {
     @TestServlet(servlet = DbRotationServlet.class, contextRoot = APP_NAME)
     public static LibertyServer server;
 
-    @ClassRule
-    public static JdbcDatabaseContainer<?> jdbcContainer = DatabaseContainerFactory.create();
+    @Test
+    public void containerAcceptedAtOrAboveJava17() {
+        assumeTrue(JavaInfo.majorVersion() >= 17);
+
+        try {
+            JdbcDatabaseContainer<?> jdbcContainer = DatabaseContainerFactory.create(DatabaseContainerType.DerbyClientJava17Plus);
+        } catch (Exception e) {
+            fail("Should not have failed to create a default container for DerbyClient "
+                 + "by calling create() post-java17 but did: " + e.getMessage());
+        }
+
+        assumeTrue(System.getProperty("fat.bucket.db.type").equals("derby"));
+
+        try {
+            JdbcDatabaseContainer<?> jdbcContainer = DatabaseContainerFactory.createLatest();
+        } catch (Exception e) {
+            fail("Should not have failed to create a default container for Derby "
+                 + "by calling createLatest() post-java17 but did: " + e.getMessage());
+        }
+    }
 
     @Test
     public void containerRejectedBelowJava17() {
