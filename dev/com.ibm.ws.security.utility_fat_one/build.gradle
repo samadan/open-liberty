@@ -82,7 +82,7 @@ task addEarFile {
     dependsOn ':com.ibm.ws.security.client_fat:assemble'
     doLast {
         def earSource = file("${projectDir}/../com.ibm.ws.security.client_fat/build/libs/test-application/earDD.ear")
-        def destDir   = file("${buildDir}/autoFVT/publish/client/mySSLCmdClient")
+        def destDir   = file("${buildDir}/autoFVT/publish/clients/mySSLCmdClient/apps")
 
         if (!earSource.exists()) {
             throw new GradleException("EAR file not found: ${earSource}")

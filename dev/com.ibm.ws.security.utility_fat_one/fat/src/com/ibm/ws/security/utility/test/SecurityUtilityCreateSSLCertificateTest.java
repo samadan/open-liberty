@@ -151,7 +151,6 @@ public class SecurityUtilityCreateSSLCertificateTest {
         deleteFileIfExists(sslTestServer.pathToAutoFVTTestFiles + "sslCertTestServer.xml");
         deleteFileIfExists(sslTestServer.pathToAutoFVTTestFiles + "serverks.xml");
         deleteFileIfExists(sslTestServer.pathToAutoFVTTestFiles + "overrides.xml");
-        deleteFileIfExists(sslTestServer.pathToAutoFVTTestFiles + "overrides.xml");
         deleteFileIfExists(sslTestServer.pathToAutoFVTTestFiles + "temp_aes.xml");
         
         // Stop servers defensively
