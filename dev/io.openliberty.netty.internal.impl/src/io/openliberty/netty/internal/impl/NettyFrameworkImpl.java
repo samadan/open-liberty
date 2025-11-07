@@ -175,7 +175,6 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
 
     protected void updatedChannelFWConfig(ChannelFrameworkConfig config) {
         this.channelConfig = config;
-        // TODO need to do anything so others dynamically react to updates in config?
     }
 
     public ChannelFrameworkConfig getChannelFWConfig() {
