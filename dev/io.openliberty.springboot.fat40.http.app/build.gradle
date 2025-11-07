@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2025 IBM Corporation and others.
+ * Copyright (c) 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -11,15 +11,13 @@
  *     IBM Corporation - initial API and implementation
  ********************************************************************************/
 
-// https://plugins.gradle.org/plugin/org.springframework.boot
 plugins {
   id 'org.springframework.boot' version '4.0.0-RC1'
   id 'war'
   id 'io.spring.dependency-management' version '1.1.7'
 }
-apply from: '../wlp-gradle/subprojects/spring.gradle'
 
-group = 'io.openliberty.example.spring'
+group = 'com.ibm.ws.example.spring'
 version = '0.0.1-SNAPSHOT'
 java {
   sourceCompatibility = 17
@@ -27,12 +25,8 @@ java {
 
 apply from: '../wlp-gradle/subprojects/maven-central-mirror.gradle'
 
+
 dependencies {
   implementation('org.springframework.boot:spring-boot-starter-web')
- // Should use spring-boot-starter-tomcat as provideCompile, but gradle plugin
-  // is putting too much in lib-provided: see https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/409
-  // providedCompile('org.springframework.boot:spring-boot-starter-tomcat')
-  providedRuntime('org.apache.tomcat.embed:tomcat-embed-core')
-  providedRuntime('org.apache.tomcat.embed:tomcat-embed-el')
-  providedRuntime('org.apache.tomcat.embed:tomcat-embed-websocket')
+  providedCompile('org.springframework.boot:spring-boot-starter-tomcat')
 }
