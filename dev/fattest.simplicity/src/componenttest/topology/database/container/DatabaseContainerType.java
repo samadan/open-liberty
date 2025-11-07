@@ -56,7 +56,7 @@ public enum DatabaseContainerType {
            OracleContainer.class.getCanonicalName(), //
            Properties_oracle.class, //
            // NOTE: avoid using 23-full-faststart due to breaking changes
-		   //       https://github.com/gvenzl/oci-oracle-free/issues/122
+           //       https://github.com/gvenzl/oci-oracle-free/issues/122
            DockerImageName.parse("ghcr.io/gvenzl/oracle-free:23.9-full-faststart")//
                            .asCompatibleSubstituteFor("gvenzl/oracle-free"), //
            "OracleDB"),
