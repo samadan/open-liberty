@@ -104,7 +104,7 @@ public class FATSuite extends TestContainerSuite {
                     .andWith(FeatureReplacementAction.EE11_FEATURES());
 
     
-    public static DockerImageName getChromeImage() {
+    private static DockerImageName getChromeImage() {
         if (FATRunner.ARM_ARCHITECTURE) {
             return DockerImageName.parse("seleniarm/standalone-chromium:4.8.3").asCompatibleSubstituteFor("selenium/standalone-chrome");
         } else {
