@@ -9,7 +9,6 @@
  *******************************************************************************/
 package com.ibm.ws.jsf22.fat;
 
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -21,6 +20,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testcontainers.containers.BrowserWebDriverContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import com.ibm.websphere.simplicity.log.Log;
 import com.ibm.ws.fat.util.FatLogHandler;
 import com.ibm.ws.jsf22.fat.tests.JSF22AppConfigPopTests;
 import com.ibm.ws.jsf22.fat.tests.JSF22ClientWindowTests;
@@ -47,11 +47,6 @@ import componenttest.rules.repeater.FeatureReplacementAction;
 import componenttest.rules.repeater.RepeatTests;
 import io.openliberty.faces.fat.selenium.util.internal.CustomDriver;
 import io.openliberty.faces.fat.selenium.util.internal.ExtendedWebDriver;
-
-import com.ibm.websphere.simplicity.log.Log;
-
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.testcontainers.containers.BrowserWebDriverContainer;
 /**
  * JSF 2.2 Tests
  *
