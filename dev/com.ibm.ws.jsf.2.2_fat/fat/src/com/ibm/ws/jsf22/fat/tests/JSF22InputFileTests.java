@@ -55,9 +55,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.LocalFileDetector;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.BrowserWebDriverContainer;
 
-import com.ibm.ws.jsf22.fat.JSFUtils;
 import io.openliberty.faces.fat.selenium.util.internal.CustomDriver;
 import io.openliberty.faces.fat.selenium.util.internal.ExtendedWebDriver;
 import io.openliberty.faces.fat.selenium.util.internal.WebPage;
@@ -77,15 +75,10 @@ public class JSF22InputFileTests {
 
     protected static final Class<?> c = JSF22InputFileTests.class;
 
-    private static ExtendedWebDriver driver;
-
-    @ClassRule
-    public static BrowserWebDriverContainer<?> chrome = new BrowserWebDriverContainer<>(FATSuite.getChromeImage()).withCapabilities(new ChromeOptions())
-                    .withAccessToHost(true)
-                    .withSharedMemorySize(2147483648L); // avoids "message":"Duplicate mount point: /dev/shm"
-
     @Server("jsfTestServer2")
     public static LibertyServer jsfTestServer2;
+
+    private static ExtendedWebDriver driver;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -98,9 +91,9 @@ public class JSF22InputFileTests {
 
         Testcontainers.exposeHostPorts(jsfTestServer2.getHttpDefaultPort(), jsfTestServer2.getHttpDefaultSecurePort());
 
-        driver = new CustomDriver(new RemoteWebDriver(chrome.getSeleniumAddress(), new ChromeOptions().setAcceptInsecureCerts(true)));
+        driver = FATSuite.getWebDriver();
 
-        driver.getRemoteWebDriver().setFileDetector(new LocalFileDetector());
+        driver.getRemoteWebDriver().setFileDetector(new LocalFileDetector()); // could be reset during the tear down, but not necessary
     }
 
     @AfterClass
@@ -109,8 +102,6 @@ public class JSF22InputFileTests {
         if (jsfTestServer2 != null && jsfTestServer2.isStarted()) {
             jsfTestServer2.stopServer();
         }
-
-        driver.quit(); // closes all sessions and terminutes the webdriver
     }
 
     @After

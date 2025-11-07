@@ -65,11 +65,7 @@ public class JSF22ComponentTesterTests {
     @Server("jsfTestServer2")
     public static LibertyServer jsfTestServer2;
 
-    @ClassRule
-    public static BrowserWebDriverContainer<?> chrome = new BrowserWebDriverContainer<>(FATSuite.getChromeImage()).withCapabilities(new ChromeOptions())
-                    .withAccessToHost(true)
-                    .withSharedMemorySize(2147483648L); // avoids "message":"Duplicate mount point: /dev/shm"
-
+    private static ExtendedWebDriver driver;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -82,6 +78,8 @@ public class JSF22ComponentTesterTests {
         jsfTestServer2.startServer(c.getSimpleName() + ".log");
 
         Testcontainers.exposeHostPorts(jsfTestServer2.getHttpDefaultPort(), jsfTestServer2.getHttpDefaultSecurePort());
+
+        driver = FATSuite.getWebDriver();
     }
 
     @AfterClass
@@ -243,9 +241,6 @@ public class JSF22ComponentTesterTests {
      */
     @Test
     public void JSF22ComponentTester_TestCommandLinkOrder() throws Exception {
-
-        ExtendedWebDriver driver = new CustomDriver(new RemoteWebDriver(chrome.getSeleniumAddress(), new ChromeOptions().setAcceptInsecureCerts(true)));
-
         String url = JSFUtils.createSeleniumURLString(jsfTestServer2, contextRoot, "testActionListenerOrder.xhtml");
         WebPage page = new WebPage(driver);
         page.get(url);

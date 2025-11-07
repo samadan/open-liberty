@@ -17,7 +17,6 @@ import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -25,7 +24,6 @@ import org.junit.runner.RunWith;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.BrowserWebDriverContainer;
 
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -62,11 +60,6 @@ public class JSFCompELTests {
 
     @Server("jsfTestServer2")
     public static LibertyServer jsfTestServer2;
-
-    @ClassRule
-    public static BrowserWebDriverContainer<?> chrome = new BrowserWebDriverContainer<>(FATSuite.getChromeImage()).withCapabilities(new ChromeOptions())
-                    .withAccessToHost(true)
-                    .withSharedMemorySize(2147483648L); // avoids "message":"Duplicate mount point: /dev/shm"
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -263,16 +256,12 @@ public class JSFCompELTests {
     @Test
     public void testAjaxEvent() throws Exception {
         // Fix the response once RTC is fixed
-
-        ExtendedWebDriver driver = new CustomDriver(new RemoteWebDriver(chrome.getSeleniumAddress(), new ChromeOptions().setAcceptInsecureCerts(true)));
-
+        ExtendedWebDriver driver = FATSuite.getWebDriver();
         String url = JSFUtils.createSeleniumURLString(jsfTestServer2, contextRoot, "AjaxEvent.xhtml");
         WebPage page = new WebPage(driver);
         page.get(url);
         page.waitForPageToLoad();
-
         assertTrue("true not found in page", page.isInPage("true"));
-
     }
 
 }
