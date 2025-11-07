@@ -27,15 +27,21 @@ class DerbyClientJava17PlusContainer extends DerbyClientContainer {
 
     public static final List<String> supportLibraries = Arrays.asList("derbytools.jar", "derbyshared.jar");
 
+    // Calling super constructor like this since super("") doesn't compile with
+    // Java 25 due to stricter annotation checking rules
     public DerbyClientJava17PlusContainer(DockerImageName image) {
-        super("");
+        super(DockerImageName.parse(""));
     }
 
+    // Calling super constructor like this since super("") doesn't compile with
+    // Java 25 due to stricter annotation checking rules
     public DerbyClientJava17PlusContainer(String image) {
-        super("");
+        super(DockerImageName.parse(""));
     }
 
+    // Calling super constructor like this since super("") doesn't compile with
+    // Java 25 due to stricter annotation checking rules
     public DerbyClientJava17PlusContainer() {
-        super("");
+        super(DockerImageName.parse(""));
     }
 }
