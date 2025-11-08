@@ -1,7 +1,7 @@
 # Base image used by external users is overwritten at runtime
 # by a mirrored version from Artifactory for internal users.
 
-ARG BASE_IMAGE="ghcr.io/gvenzl/oracle-free:23-full-faststart"
+ARG BASE_IMAGE="ghcr.io/gvenzl/oracle-free:23.9-full-faststart"
 
 FROM ${BASE_IMAGE}
 
