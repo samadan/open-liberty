@@ -3,10 +3,6 @@
 	<name>com.ibm.ws.security.utility_fat</name>
 	<comment></comment>
 	<projects>
-                <project>com.ibm.ws.security.client_fat</project>
-	</projects>
-	<projects>
-                <project>com.ibm.ws.crypto.sample.customencryption</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -14,8 +10,14 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
+		<buildCommand>
+			<name>bndtools.core.bndbuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
+		<nature>bndtools.core.bndnature</nature>
 	</natures>
 </projectDescription>
