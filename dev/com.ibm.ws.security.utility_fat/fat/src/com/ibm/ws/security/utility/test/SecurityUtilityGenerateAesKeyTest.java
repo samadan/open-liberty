@@ -17,11 +17,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
@@ -33,6 +36,7 @@ import java.nio.file.StandardOpenOption;
 import java.security.SecureRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -126,6 +130,10 @@ public class SecurityUtilityGenerateAesKeyTest {
      */
     @After
     public void tearDown() throws Exception {
+        // Stop servers defensively
+        if (testServer.isStarted()) {
+            testServer.stopServer();
+        }
         // Delete all XML files in the output directory
         File outputDirFile = new File(testOutputDir);
         if (outputDirFile.exists()) {
@@ -155,10 +163,7 @@ public class SecurityUtilityGenerateAesKeyTest {
             }
         }
 
-        // Stop servers defensively
-        if (testServer.isStarted()) {
-            testServer.stopServer();
-        }
+
     }
 
     /**
@@ -374,75 +379,84 @@ public class SecurityUtilityGenerateAesKeyTest {
      * Uses a V2 (AES) password for LTPA, a V1 password for SSL keystore,
      * and dynamically generates the wlp.aes.encryption.key variable.
      */
-    @Test
-    public void testV1V2PasswordsCoexistInServerXml() throws Exception {
-        testEnvironment = new Properties();
+	@Test
+	public void testV1V2PasswordsCoexistInServerXml() throws Exception {
+		testEnvironment = new Properties();
 
-        String aesConfigFile = testOutputDir + "/temp_aes.xml";
+		String aesConfigFile = testOutputDir + "/temp_aes.xml";
 
-        // Generate AES base64 key for wlp.aes.encryption.key
-        ProgramOutput aesKeyOutput = testMachine.execute(
-            securityUtilityPath,
-            new String[] { "generateAESKey", "--createConfigFile=" + aesConfigFile },
-            libertyInstallRoot, testEnvironment);
-        assertEquals("AES key generation should succeed", SUCCESS_RC, aesKeyOutput.getReturnCode());
-        
+		// Generate AES base64 key for wlp.aes.encryption.key
+		ProgramOutput aesKeyOutput = testMachine.execute(securityUtilityPath,
+				new String[] { "generateAESKey", "--createConfigFile=" + aesConfigFile }, libertyInstallRoot,
+				testEnvironment);
+		assertEquals("AES key generation should succeed", SUCCESS_RC, aesKeyOutput.getReturnCode());
 
-        Log.info(thisClass, testName.getMethodName(), "Generate command - stderr:\n" + aesKeyOutput.getStderr());
-        Log.info(thisClass, testName.getMethodName(), "Generate command - stdout:\n" + aesKeyOutput.getStdout());
-        Log.info(thisClass, testName.getMethodName(), "Generate command - Return code: " + aesKeyOutput.getReturnCode());
+		Log.info(thisClass, testName.getMethodName(),
+				"aesConfigFile contents: " + readStringUsingBufferedReader(new File(aesConfigFile).toPath()));
 
-        // Generate V2 LTPA password
-        ProgramOutput v2Output = testMachine.execute(
-            securityUtilityPath,
-            new String[] { "createLTPAKeys", "--server=SecurityUtilityGenerateServer","--aesConfigFile=" + aesConfigFile, "--passwordEncoding=aes", "--password=passw0rd"},
-            libertyInstallRoot, testEnvironment);
-        assertEquals("V2 encode should succeed", SUCCESS_RC, v2Output.getReturnCode());
+		Log.info(thisClass, testName.getMethodName(), "Generate command - stderr:\n" + aesKeyOutput.getStderr());
+		Log.info(thisClass, testName.getMethodName(), "Generate command - stdout:\n" + aesKeyOutput.getStdout());
+		Log.info(thisClass, testName.getMethodName(),
+				"Generate command - Return code: " + aesKeyOutput.getReturnCode());
 
-        Log.info(thisClass, testName.getMethodName(), "Generate command - stderr:\n" + v2Output.getStderr());
-        Log.info(thisClass, testName.getMethodName(), "Generate command - stdout:\n" + v2Output.getStdout());
-        Log.info(thisClass, testName.getMethodName(), "Generate command - Return code: " + v2Output.getReturnCode());
+		// Generate V2 LTPA password
+		ProgramOutput v2Output = testMachine.execute(securityUtilityPath,
+				new String[] { "createLTPAKeys", "--server=SecurityUtilityGenerateServer",
+						"--aesConfigFile=" + aesConfigFile, "--passwordEncoding=aes", "--password=passw0rd" },
+				libertyInstallRoot, testEnvironment);
+		assertEquals("V2 encode should succeed", SUCCESS_RC, v2Output.getReturnCode());
 
-        // Generate V1 SSL keystore password
-        ProgramOutput v1Output = testMachine.execute(
-            securityUtilityPath,
-            new String[] { "createSSLCertificate", "--server=SecurityUtilityGenerateServer", "--password=passw0rd2", "--passwordEncoding=aes" },
-            libertyInstallRoot, testEnvironment);
-        assertEquals("V1 encode should succeed", SUCCESS_RC, v1Output.getReturnCode());
+		Log.info(thisClass, testName.getMethodName(), "Generate command - stderr:\n" + v2Output.getStderr());
+		Log.info(thisClass, testName.getMethodName(), "Generate command - stdout:\n" + v2Output.getStdout());
+		Log.info(thisClass, testName.getMethodName(), "Generate command - Return code: " + v2Output.getReturnCode());
 
-        Log.info(thisClass, testName.getMethodName(), "createSSLCertificate command - stderr:\n" + v1Output.getStderr());
-        Log.info(thisClass, testName.getMethodName(), "createSSLCertificate command - stdout:\n" + v1Output.getStdout());
-        Log.info(thisClass, testName.getMethodName(), "createSSLCertificate command - Return code: " + v1Output.getReturnCode());
+		// Generate V1 SSL keystore password
+		ProgramOutput v1Output = testMachine
+				.execute(securityUtilityPath,
+						new String[] { "createSSLCertificate", "--server=SecurityUtilityGenerateServer",
+								"--password=passw0rd2", "--passwordEncoding=aes" },
+						libertyInstallRoot, testEnvironment);
+		assertEquals("V1 encode should succeed", SUCCESS_RC, v1Output.getReturnCode());
 
-        Pattern ltpaPattern = Pattern.compile("<ltpa\\s+keysPassword=\"[^\"]+\"\\s*/>");
-        Matcher ltpaMatcher = ltpaPattern.matcher(v2Output.getStdout());
-        assertTrue("Could not find ltpa snippet in stdout", ltpaMatcher.find());
-        String ltpaSnippet = ltpaMatcher.group();
+		Log.info(thisClass, testName.getMethodName(),
+				"createSSLCertificate command - stderr:\n" + v1Output.getStderr());
+		Log.info(thisClass, testName.getMethodName(),
+				"createSSLCertificate command - stdout:\n" + v1Output.getStdout());
+		Log.info(thisClass, testName.getMethodName(),
+				"createSSLCertificate command - Return code: " + v1Output.getReturnCode());
 
-        // Extract <keyStore> snippet from stdout
-        Pattern ksPattern = Pattern.compile("<keyStore\\s+id=\"[^\"]+\"\\s+password=\"[^\"]+\"\\s*/>");
-        Matcher matcher = ksPattern.matcher(v1Output.getStdout());
-        assertTrue("Could not find keyStore snippet in stdout", matcher.find());
-        String keystoreSnippet = matcher.group();
+		Pattern ltpaPattern = Pattern.compile("<ltpa\\s+keysPassword=\"[^\"]+\"\\s*/>");
+		Matcher ltpaMatcher = ltpaPattern.matcher(v2Output.getStdout());
+		assertTrue("Could not find ltpa snippet in stdout", ltpaMatcher.find());
+		String ltpaSnippet = ltpaMatcher.group();
 
-        String passwordsnippet = getPasswordOverride(keystoreSnippet,ltpaSnippet, aesConfigFile);
-        writeStringToServerOverride(passwordsnippet, testServer);
+		// Extract <keyStore> snippet from stdout
+		Pattern ksPattern = Pattern.compile("<keyStore\\s+id=\"[^\"]+\"\\s+password=\"[^\"]+\"\\s*/>");
+		Matcher matcher = ksPattern.matcher(v1Output.getStdout());
+		assertTrue("Could not find keyStore snippet in stdout", matcher.find());
+		String keystoreSnippet = matcher.group();
 
+		String passwordsnippet = getPasswordOverride(keystoreSnippet, ltpaSnippet, aesConfigFile);
+		writeStringToServerOverride(passwordsnippet, testServer);
 
-         // setup
-        testServer.startServer(testName.getMethodName());
-        
-        // Verify startup log contains LTPA initialization
-        assertNotNull("Expected LTPA configuration ready message not found in the log.",
-                      testServer.waitForStringInLogUsingMark("CWWKS4105I", 5000));
+		// setup
+		testServer.startServer(testName.getMethodName());
 
-        // Verify startup log contains the keystore loaded successfully message
-        assertNotNull("Expected Keystore loaded message not found in the log.",
-                      testServer.waitForStringInLogUsingMark("Successfully loaded default keystore", 5000));
+		// Verify startup log contains LTPA initialization
+		String logOutput = testServer.waitForStringInLogUsingMark("CWWKS4105I", 5000);
+		if (logOutput == null) {
+			Log.info(thisClass, testName.getMethodName(), "LTPA ready not found, aesConfigFile contents: "
+					+ readStringUsingBufferedReader(new File(aesConfigFile).toPath()));
+		}
 
+		assertNotNull("Expected LTPA configuration ready message not found in the log.", logOutput);
 
-        testServer.stopServer();
-    }
+		// Verify startup log contains the keystore loaded successfully message
+		assertNotNull("Expected Keystore loaded message not found in the log.",
+				testServer.waitForStringInLogUsingMark("Successfully loaded default keystore", 5000));
+
+		testServer.stopServer();
+	}
 
     /**
      * Test that verifies the generated XML file is properly included in the Liberty server
@@ -524,22 +538,25 @@ public class SecurityUtilityGenerateAesKeyTest {
 
     }
 
+	/**
+	 * Writes a configuration snippet to a server override file.
+	 * 
+	 * @param configSnippet The XML configuration snippet
+	 * @param server        The Liberty server to apply the override to
+	 * @throws Exception If an error occurs writing the file
+	 */
+	private void writeStringToServerOverride(String configSnippet, LibertyServer server) throws Exception {
+		File overrideFile = new File(server.pathToAutoFVTTestFiles + "overrides.xml");
+		overrideFile.delete();
+		Files.write(overrideFile.toPath(), configSnippet.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE,
+				StandardOpenOption.WRITE);
+		server.addDropinOverrideConfiguration(overrideFile.getName());
+	}
 
+	private static String readStringUsingBufferedReader(Path filePath) throws IOException {
+ 		try (BufferedReader reader = new BufferedReader(new FileReader(filePath.toFile()))) {
+			return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+		}
+	}
 
-    /**
-     * Writes a configuration snippet to a server override file.
-     * 
-     * @param configSnippet The XML configuration snippet
-     * @param server The Liberty server to apply the override to
-     * @throws Exception If an error occurs writing the file
-     */
-    private void writeStringToServerOverride(String configSnippet, LibertyServer server) throws Exception {
-        File overrideFile = new File(server.pathToAutoFVTTestFiles + "overrides.xml");
-        overrideFile.delete();
-        Files.write(overrideFile.toPath(), configSnippet.getBytes(StandardCharsets.UTF_8), 
-                    StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-        server.addDropinOverrideConfiguration(overrideFile.getName());
-    }
-
-    
 }
