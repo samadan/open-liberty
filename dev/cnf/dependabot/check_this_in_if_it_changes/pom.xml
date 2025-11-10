@@ -319,7 +319,12 @@
     <dependency>
       <groupId>com.sun.mail</groupId>
       <artifactId>jakarta.mail</artifactId>
-      <version>2.0.1</version>
+      <version>1.6.8</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.mail</groupId>
+      <artifactId>jakarta.mail</artifactId>
+      <version>2.0.2</version>
     </dependency>
     <dependency>
       <groupId>com.sun.xml.bind.external</groupId>
@@ -1624,7 +1629,12 @@
     <dependency>
       <groupId>jakarta.mail</groupId>
       <artifactId>jakarta.mail-api</artifactId>
-      <version>2.0.1</version>
+      <version>1.6.8</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.mail</groupId>
+      <artifactId>jakarta.mail-api</artifactId>
+      <version>2.0.2</version>
     </dependency>
     <dependency>
       <groupId>jakarta.mail</groupId>
@@ -1850,11 +1860,6 @@
       <groupId>javax.mail</groupId>
       <artifactId>javax.mail-api</artifactId>
       <version>1.5.6</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.mail</groupId>
-      <artifactId>javax.mail-api</artifactId>
-      <version>1.6.2</version>
     </dependency>
     <dependency>
       <groupId>javax.persistence</groupId>
@@ -2789,7 +2794,7 @@
     <dependency>
       <groupId>org.eclipse.angus</groupId>
       <artifactId>angus-mail</artifactId>
-      <version>2.0.1</version>
+      <version>2.0.5</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.birt.runtime.3_7_1</groupId>
@@ -5230,11 +5235,6 @@
       <groupId>com.sun.mail</groupId>
       <artifactId>javax.mail</artifactId>
       <version>1.5.6</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.mail</groupId>
-      <artifactId>javax.mail</artifactId>
-      <version>1.6.2</version>
     </dependency>
     <dependency>
       <groupId>com.sun.org.apache.xml.internal</groupId>
