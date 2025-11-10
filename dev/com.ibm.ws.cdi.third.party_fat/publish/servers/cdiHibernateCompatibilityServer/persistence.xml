@@ -4,6 +4,8 @@
     xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
     <persistence-unit name="TestPU" transaction-type="JTA">
         <jta-data-source>jdbc/jpaDataSource</jta-data-source>  
+        <!-- Declare managed entity classes here -->
+        <class>com.ibm.ws.cdi.thirdparty.apps.hibernateCompatibilityWar.model.TestEntity</class>
         <properties>
                     <property name="hibernate.dialect" value="org.hibernate.community.dialect.DerbyDialect"/>
 
