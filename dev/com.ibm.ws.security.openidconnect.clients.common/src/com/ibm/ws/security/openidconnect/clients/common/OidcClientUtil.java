@@ -52,7 +52,31 @@ public class OidcClientUtil {
     private static final long serialVersionUID = 1L;
     private static final TraceComponent tc = Tr.register(OidcClientUtil.class);
 
+    /**
+     * The maximum recommended cookie size per RFC 6265 is 4096 bytes, including things such as the cookie name and attributes.
+     * The value of this variable seems like a reasonable maximum length for a cookie value while also leaving room for overhead.
+     */
     public static final int SPLIT_COOKIES_AT_VALUE_LENGTH = 3900;
+
+    /**
+     * The maximum number of split cookies to create for a value that would otherwise be too large for a single cookie.
+     */
+    public static final int MAX_NUMBER_OF_SPLIT_COOKIES = 10;
+
+    /**
+     * If a cookie needs to be split, an additional cookie will be created to store the number of cookies that the value was split
+     * into. The additional cookie will be named by adding this suffix to the end of the original cookie name. For example, a
+     * cookie called "Foo" that gets split into four cookies would have an additional cookie created called "Foo_Count", whose
+     * value would be "4".
+     */
+    public static final String NUMBER_OF_SPLIT_COOKIES_NAME_SUFFIX = "_Count";
+
+    /**
+     * If a cookie needs to be split, each cookie holding one portion of the split value will be named by adding this suffix onto
+     * the end of the original cookie name. For example, a cookie called "Foo" that gets split into four cookies would have each
+     * split cookie be named "Foo_" plus an identifier (e.g. "Foo_0", "Foo_1", "Foo_2", and "Foo_3").
+     */
+    public static final String SPLIT_COOKIE_SUFFIX = "_";
 
     OidcClientHttpUtil oidcHttpUtil = null;
     public HttpUtils httpUtils;
@@ -293,13 +317,19 @@ public class OidcClientUtil {
         if (cookieValues != null) {
             for (int i = 0; i < cookieValues.length; i++) {
                 String cookieName = ClientConstants.WAS_OIDC_CODE;
+                if (cookieValues.length > MAX_NUMBER_OF_SPLIT_COOKIES) {
+                    if (tc.isDebugEnabled()) {
+                        Tr.debug(tc, "The " + cookieName + " cookie cannot be created because its value is too large (" + cookieValue.getBytes(StandardCharsets.UTF_8).length + " bytes and would have been split into " + cookieValues.length + " cookies");
+                    }
+                    return;
+                }
                 if (cookieValues.length > 1) {
-                    cookieName += "_" + i;
+                    cookieName += SPLIT_COOKIE_SUFFIX + i;
                 }
                 store.store(cookieName, cookieValues[i], cookieProps);
             }
             if (cookieValues.length > 1) {
-                store.store(ClientConstants.WAS_OIDC_CODE_COOKIES, Integer.toString(cookieValues.length), cookieProps);
+                store.store(ClientConstants.WAS_OIDC_CODE + OidcClientUtil.NUMBER_OF_SPLIT_COOKIES_NAME_SUFFIX, Integer.toString(cookieValues.length), cookieProps);
             }
         }
     }

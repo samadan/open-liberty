@@ -308,9 +308,9 @@ public class OidcClientUtilTest extends CommonTestClass {
             }
             mock.checking(new Expectations() {
                 {
-                    one(cookieBasedStorage).store(ClientConstants.WAS_OIDC_CODE + "_0", expectedFirstCookieValue.toString(), cookieStorageProperties);
-                    one(cookieBasedStorage).store(ClientConstants.WAS_OIDC_CODE + "_1", expectedSecondCookieValue.toString(), cookieStorageProperties);
-                    one(cookieBasedStorage).store(ClientConstants.WAS_OIDC_CODE_COOKIES, "2", cookieStorageProperties);
+                    one(cookieBasedStorage).store(ClientConstants.WAS_OIDC_CODE + OidcClientUtil.SPLIT_COOKIE_SUFFIX + "0", expectedFirstCookieValue.toString(), cookieStorageProperties);
+                    one(cookieBasedStorage).store(ClientConstants.WAS_OIDC_CODE + OidcClientUtil.SPLIT_COOKIE_SUFFIX + "1", expectedSecondCookieValue.toString(), cookieStorageProperties);
+                    one(cookieBasedStorage).store(ClientConstants.WAS_OIDC_CODE + OidcClientUtil.NUMBER_OF_SPLIT_COOKIES_NAME_SUFFIX, "2", cookieStorageProperties);
                 }
             });
             OidcClientUtil.storeCookieValue(cookieBasedStorage, cookieStorageProperties, cookieValue);

@@ -1,14 +1,11 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2024 IBM Corporation and others.
+ * Copyright (c) 2018, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- *
- * Contributors:
- * IBM Corporation - initial API and implementation
  *******************************************************************************/
 package com.ibm.ws.security.openidconnect.clients.common;
 
@@ -50,7 +47,7 @@ public class OIDCClientAuthenticatorUtil {
     private Jose4jUtil jose4jUtil = null;
     private static int badStateCount = 0;
     public static final String[] OIDC_COOKIES = { OidcClientStorageConstants.WAS_OIDC_STATE_KEY, OidcClientStorageConstants.WAS_REQ_URL_OIDC,
-            ClientConstants.WAS_OIDC_CODE, OidcClientStorageConstants.WAS_OIDC_NONCE, ClientConstants.WAS_OIDC_CODE_COOKIES };
+            ClientConstants.WAS_OIDC_CODE, OidcClientStorageConstants.WAS_OIDC_NONCE };
 
     public OIDCClientAuthenticatorUtil() {
     }
@@ -125,26 +122,27 @@ public class OIDCClientAuthenticatorUtil {
 
     @FFDCIgnore(NumberFormatException.class)
     String buildWasOidcCodeCookieValueFromMultipleCookies(Cookie[] cookies, HttpServletRequest req, HttpServletResponse res) {
-        String expectedNumberOfCookies = CookieHelper.getCookieValue(cookies, ClientConstants.WAS_OIDC_CODE_COOKIES);
+        String nameOfCountCookie = ClientConstants.WAS_OIDC_CODE + OidcClientUtil.NUMBER_OF_SPLIT_COOKIES_NAME_SUFFIX;
+        String expectedNumberOfCookies = CookieHelper.getCookieValue(cookies, nameOfCountCookie);
         if (expectedNumberOfCookies == null) {
             if (tc.isDebugEnabled()) {
-                Tr.debug(tc, "Did not find a " + ClientConstants.WAS_OIDC_CODE_COOKIES + " cookie to specify the number of split cookies to expect");
+                Tr.debug(tc, "Did not find a " + nameOfCountCookie + " cookie to specify the number of split cookies to expect");
             }
             return null;
         }
-        OidcClientUtil.invalidateReferrerURLCookie(req, res, ClientConstants.WAS_OIDC_CODE_COOKIES);
+        OidcClientUtil.invalidateReferrerURLCookie(req, res, nameOfCountCookie);
         int numberOfCookies = 0;
         try {
             numberOfCookies = Integer.parseInt(expectedNumberOfCookies);
         } catch (NumberFormatException e) {
             if (tc.isDebugEnabled()) {
-                Tr.debug(tc, ClientConstants.WAS_OIDC_CODE_COOKIES + " cookie value was not a number. Cookie value was: [" + expectedNumberOfCookies + "]");
+                Tr.debug(tc, nameOfCountCookie + " cookie value was not a number. Cookie value was: [" + expectedNumberOfCookies + "]");
             }
             return null;
         }
         StringBuilder codeCookieValue = new StringBuilder();
         for (int i = 0; i < numberOfCookies; i++) {
-            String cookieFragmentName = ClientConstants.WAS_OIDC_CODE + "_" + i;
+            String cookieFragmentName = ClientConstants.WAS_OIDC_CODE + OidcClientUtil.SPLIT_COOKIE_SUFFIX + i;
             String cookieFragment = CookieHelper.getCookieValue(cookies, cookieFragmentName);
             if (cookieFragment != null) {
                 codeCookieValue.append(cookieFragment);

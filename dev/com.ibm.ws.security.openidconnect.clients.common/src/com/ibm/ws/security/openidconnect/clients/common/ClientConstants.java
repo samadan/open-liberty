@@ -52,7 +52,6 @@ public class ClientConstants {
     public final static String AUTHORIZATION_CODE = "authorization_code";
     public static final String STATE = Constants.STATE; // "state";
     public static final String WAS_OIDC_CODE = "WASOidcCode";
-    public static final String WAS_OIDC_CODE_COOKIES = "WASOidcCodeCookies";
     public static final String WAS_OIDC_SESSION = "WASOidcSession";
 
     public final static String RESPONSEMAP_CODE = "RESPONSEMAP_CODE";
