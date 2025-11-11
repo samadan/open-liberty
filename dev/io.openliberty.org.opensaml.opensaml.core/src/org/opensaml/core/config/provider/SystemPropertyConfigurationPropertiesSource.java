@@ -17,6 +17,8 @@
 
 package org.opensaml.core.config.provider;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Properties;
 
 import org.opensaml.core.config.ConfigurationPropertiesSource;
@@ -26,9 +28,16 @@ import org.opensaml.core.config.ConfigurationPropertiesSource;
  */
 public class SystemPropertyConfigurationPropertiesSource implements ConfigurationPropertiesSource {
 
-    /** {@inheritDoc} */
+    // Liberty Change Start: Add doPriv
+    @Override
     public Properties getProperties() {
-        return System.getProperties();
+        return AccessController.doPrivileged(new PrivilegedAction<Properties>() {
+            @Override
+            public Properties run() {
+                return System.getProperties();
+            }
+        });
     }
+    // Liberty Change End
 
 }
