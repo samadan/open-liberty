@@ -123,6 +123,7 @@ public final class DatabaseContainerUtil {
 
         this.hasDriverPermissionVariable = serverClone.getJavaPermissions()
                         .stream()
+                        .filter(p -> Objects.nonNull(p.getCodeBase()))
                         .filter(p -> p.getCodeBase().contains(toReplacementString(DRIVER_KEY)))
                         .findAny()
                         .isPresent();
@@ -250,6 +251,7 @@ public final class DatabaseContainerUtil {
         if (server.isJava2SecurityEnabled()) {
             this.permissions = serverClone.getJavaPermissions()
                             .stream()
+                            .filter(p -> Objects.nonNull(p.getCodeBase()))
                             .filter(p -> p.getCodeBase().contains(toReplacementString(DRIVER_KEY)))
                             .collect(Collectors.toSet());
 
@@ -308,6 +310,7 @@ public final class DatabaseContainerUtil {
 
             this.removePermissions = serverClone.getJavaPermissions()
                             .stream()
+                            .filter(p -> Objects.nonNull(p.getCodeBase()))
                             .filter(p -> p.getCodeBase().contains(toReplacementString(DRIVER_KEY)))
                             .collect(Collectors.toSet());
 

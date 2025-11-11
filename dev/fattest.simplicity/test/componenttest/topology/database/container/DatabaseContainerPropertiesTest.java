@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -300,7 +301,9 @@ public class DatabaseContainerPropertiesTest {
     public void withDriverVariableTest() throws Exception {
         assumeTrue(!System.getProperty("os.name").equalsIgnoreCase("OS/400"));
 
-        when(server.getServerConfiguration()).thenReturn(getServerConfigFor("libraryServer.xml"));
+        // Use null permission server to verify that we are able to correctly parse permissions
+        // that lack a codeBase attribute.
+        when(server.getServerConfiguration()).thenReturn(getServerConfigFor("NullPermissionServer.xml"));
 
         DatabaseContainerUtil inst = DatabaseContainerUtil.build(server, cont)
                         .withDriverVariable();
@@ -321,11 +324,17 @@ public class DatabaseContainerPropertiesTest {
         assertEquals("${shared.resource.dir}/jdbc", jdbcFs.getDir());
         assertEquals("${env.DB_DRIVER}", jdbcFs.getIncludes());
 
-        assertEquals(1, result.getJavaPermissions().size());
+        assertEquals(2, result.getJavaPermissions().size());
 
-        JavaPermission permission = result.getJavaPermissions().get(0);
-        assertEquals("java.security.AllPermission", permission.getClassName());
-        assertEquals("${shared.resource.dir}/jdbc/${env.DB_DRIVER}", permission.getCodeBase());
+        List<String> expectedCodeBases = new ArrayList<>();
+        expectedCodeBases.add(null);
+        expectedCodeBases.add("${shared.resource.dir}/jdbc/${env.DB_DRIVER}");
+
+        for (JavaPermission permission : result.getJavaPermissions()) {
+            assertTrue("Expected codebases did not contain: " + permission.getCodeBase(), expectedCodeBases.remove(permission.getCodeBase()));
+        }
+
+        assertTrue("Expected codebases were not present in server.xml: " + expectedCodeBases, expectedCodeBases.isEmpty());
     }
 
     @Test
