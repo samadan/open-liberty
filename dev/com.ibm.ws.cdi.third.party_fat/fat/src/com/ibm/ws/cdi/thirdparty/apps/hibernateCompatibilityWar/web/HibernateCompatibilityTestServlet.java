@@ -215,8 +215,4 @@ public class HibernateCompatibilityTestServlet extends FATServlet {
         Assert.assertTrue("Handler should be a BeanManagerInvocationHandler",
                           handler.getClass().getName().contains("BeanManagerInvocationHandler"));
     }
-
-    //public static void registerFieldBridgeCalled() {
-
-    // }
 }
