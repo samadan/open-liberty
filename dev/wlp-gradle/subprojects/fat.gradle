@@ -25,13 +25,12 @@ task cleanFat(type: Delete) {
 }
 
 if (isAutomatedBuild && project.file('fat').exists()) {
-  task cleanupAfterRelease {
+  release {
     doLast {
       delete autoFvtDir
       delete layout.buildDirectory.dir("distributions")
     }
   }
-  release.finalizedBy(cleanupAfterRelease)
 }
 
 task cleanBeforeRun(type: Delete) {
