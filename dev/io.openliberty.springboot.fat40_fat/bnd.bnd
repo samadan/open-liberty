@@ -84,5 +84,6 @@ tested.features: \
   io.openliberty.springboot.fat40.data.app;version=latest, \
   io.openliberty.springboot.fat40.validation.app;version=latest, \
   io.openliberty.springboot.fat40.http.app;version=latest, \
-  io.openliberty.springboot.fat40.http.contextroot.app;version=latest
+  io.openliberty.springboot.fat40.http.contextroot.app;version=latest, \
+  io.openliberty.springboot.fat40.aop.app;version=latest
 
