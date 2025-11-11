@@ -109,7 +109,7 @@ public class NettyChain extends HttpChain {
                 if (Objects.isNull(serverChannel)) {
                     // Found null channel while started/starting which shouldn't be the case!
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                        Tr.debug(this, tc, "Server Channel found to be null for a state where it should be assigned an object! Buggy implementation!!");
+                        Tr.debug(this, tc, "Server Channel found to be null for a state where it should be assigned an object!");
                     }
                     throw new IllegalStateException("Invalid chain state for stop: " + state.get());
                 }
@@ -163,7 +163,7 @@ public class NettyChain extends HttpChain {
             synchronized (stopLock) {
                 while (state.get() == ChainState.STOPPING) {
                     if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                        Tr.debug(this, tc, "Waiting for chain on state: " + state.get() + " to be stopped..." + this);
+                        Tr.debug(this, tc, "Waiting for chain on state: " + state.get() + " to be stopped. " + this);
                     }
                     try {
                         stopLock.wait();
