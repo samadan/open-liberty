@@ -14,6 +14,52 @@ package io.openliberty.data.internal.persistence;
 
 /**
  * Instructions for editing a query that is written in query language.
+ * Each instruction applies to a position within the query.
+ * For example,
+ *
+ * <pre>
+ * SELECT o.attribute1, o.attribute2 WHERE o.attribute1 < o.attribute2 ORDER BY ...
+ *       ^ REPLACE_SELECT_IN_COUNT_BEGIN
+ *                                  ^ REPLACE_SELECT_IN_COUNT_END (negative)
+ *        ^ ADD_CONSTRUCTOR_BEGIN  ^ ADD_CONSTRUCTOR_END
+ *                                   ^ ADD_FROM
+ *                                         ^ ADD_PARENTHESIS_BEGIN   ^ ADD_PARENTHESIS_END
+ *                                                                          ^ OMIT_ORDER_IN_COUNT (negative)
+ * </pre>
+ *
+ * <pre>
+ * WHERE o.attribute1 < o.attribute2 ORDER BY ...
+ * ^ ADD_FROM
+ *       ^ ADD_PARENTHESIS_BEGIN   ^ ADD_PARENTHESIS_END
+ *                                        ^ OMIT_ORDER_IN_COUNT (negative)
+ * </pre>
+ *
+ * <pre>
+ * ORDER BY ...
+ * ^ ADD_FROM
+ *      ^ OMIT_ORDER_IN_COUNT (negative)
+ * </pre>
+ *
+ * <pre>
+ * SELECT o.attribute1, o.attribute2 ORDER BY ...
+ *                                  ^ REPLACE_SELECT_IN_COUNT_END (negative - avoids collision)
+ *        ^ ADD_CONSTRUCTOR_BEGIN  ^ ADD_CONSTRUCTOR_END
+ *                                  ^ ADD_FROM
+ *                                        ^ OMIT_ORDER_IN_COUNT (negative)
+ * </pre>
+ *
+ * <pre>
+ * SELECT o.attribute1, o.attribute2
+ *       ^ REPLACE_SELECT_IN_COUNT_BEGIN
+ *                                  ^ REPLACE_SELECT_IN_COUNT_END (negative - avoids collision)
+ *        ^ ADD_CONSTRUCTOR_BEGIN  ^ ADD_CONSTRUCTOR_END
+ *                                  ^ ADD_FROM
+ * </pre>
+ *
+ * <pre>
+ *      (empty / blank query)
+ * ^ ADD_FROM
+ * </pre>
  */
 enum QueryEdit {
     /**
