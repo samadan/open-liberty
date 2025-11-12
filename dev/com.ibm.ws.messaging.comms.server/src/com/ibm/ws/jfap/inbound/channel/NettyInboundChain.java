@@ -382,7 +382,7 @@ public class NettyInboundChain implements InboundChain{
         public int getActivePort() {
             if (configPort < 0)
                 return -1;
-            //TODO Check this
+
             return configPort;
         }
 

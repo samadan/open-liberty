@@ -95,7 +95,6 @@ import jakarta.data.repository.Param;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
-import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.TypedQuery;
@@ -912,11 +911,6 @@ public class QueryInfo {
         TypedQuery<Long> query = em.createQuery(jpql, Long.class);
         setParameters(query, args);
 
-        // TODO #33189 why are EntityManager.setCacheRetrieveMode and
-        // Query.setCacheRetrieveMode unable to set this instead?
-        query.setHint("jakarta.persistence.cache.retrieveMode",
-                      CacheRetrieveMode.BYPASS);
-
         Long count = query.getSingleResult();
 
         Object returnValue;
@@ -1700,11 +1694,6 @@ public class QueryInfo {
         query.setMaxResults(1);
         setParameters(query, args);
 
-        // TODO #33189 why are EntityManager.setCacheRetrieveMode and
-        // Query.setCacheRetrieveMode unable to set this instead?
-        query.setHint("jakarta.persistence.cache.retrieveMode",
-                      CacheRetrieveMode.BYPASS);
-
         List<?> results = query.getResultList();
         boolean found = !results.isEmpty();
 
@@ -1919,11 +1908,6 @@ public class QueryInfo {
 
             if (entityInfo.loadGraph != null)
                 query.setHint(Util.LOADGRAPH, entityInfo.loadGraph);
-
-            // TODO #33189 why are EntityManager.setCacheRetrieveMode and
-            // Query.setCacheRetrieveMode unable to set this instead?
-            query.setHint("jakarta.persistence.cache.retrieveMode",
-                          CacheRetrieveMode.BYPASS);
 
             if (type == FIND_AND_DELETE)
                 query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
