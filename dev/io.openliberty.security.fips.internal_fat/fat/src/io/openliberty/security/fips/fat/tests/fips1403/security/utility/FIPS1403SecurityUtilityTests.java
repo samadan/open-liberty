@@ -57,7 +57,6 @@ public class FIPS1403SecurityUtilityTests {
     private static Machine machine;
     private static Properties env;
     private static String installRoot;
-    private static String libertyBaseProfileLoc;
     private static final String SEC_UTILITY_COMMAND = "/bin/securityUtility";
     private static final String SEC_CONF_FIPS_COMMAND = "configureFIPS";
     private static final String DEFAULT_ENV_BACKUP_FILE = "default.env.bkp";
@@ -85,7 +84,6 @@ public class FIPS1403SecurityUtilityTests {
         ji = JavaInfo.forServer(server);
         assumeThat(FIPSTestUtils.validFIPS140_3Environment(ji), is(true));
         if (Boolean.parseBoolean(PrivHelper.getProperty("global.fips_140-3", "false"))) {
-            Log.info(FIPS1403ServerTest.class,"setup","global.fips_140-3 is set, letting LibertyServer configure FIPS");
             GLOBAL_FIPS=true;
         }
         if (ji.majorVersion() > 8) {
@@ -97,7 +95,6 @@ public class FIPS1403SecurityUtilityTests {
         }
 
         installRoot = server.getInstallRoot();
-        libertyBaseProfileLoc = installRoot + "/lib/security/fips140_3/FIPS140-3-Liberty.properties";
         env = new Properties();
         env.put("JVM_ARGS","-Dcom.ibm.ws.beta.edition=true");
         machine = server.getMachine();
@@ -127,19 +124,28 @@ public class FIPS1403SecurityUtilityTests {
 
     @Test
     public void defaultEnvFipsTest() throws Exception {
+        // assumeThat(GLOBAL_FIPS, is(false));
         ProgramOutput po = runSecurityUtilityCommand( new String[] {SEC_CONF_FIPS_COMMAND});
         assertEquals("securityUtility configureFIPS did not result in expected return code.",0, po.getReturnCode());
 
         File defaultEnv = new File(installRoot + "/etc/" + DEFAULT_ENV_FILE);
         assertTrue(defaultEnv.exists());
-        File fipsProfileFile = new File(installRoot +"/etc/" + FIPS_PROFILE_FILE_NAME);
-        assertTrue(fipsProfileFile.exists());
-        checkFileExpectedValue(defaultEnv, ENABLE_FIPS140_3_ENV_VAR + "=" +fipsProfileFile.getPath());
+        if(SEMERU_FIPS_PROVIDER.equals(expectedProvider)) {
+            File fipsProfileFile = new File(installRoot + "/etc/" + FIPS_PROFILE_FILE_NAME);
+            assertTrue(fipsProfileFile.exists());
+            checkFileExpectedValue(defaultEnv, ENABLE_FIPS140_3_ENV_VAR + "=" + fipsProfileFile.getPath());
+        } else {
+            checkFileExpectedValue(defaultEnv, ENABLE_FIPS140_3_ENV_VAR + "=true");
+        }
         server.startServer();
         checkServerLogForFipsEnablementMessage(server, expectedProvider);
         disableFIPS(FIPS_TARGET.INSTALL, null);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test
     public void multipleEnablementsFIPSTest() throws Exception {
         ProgramOutput po = runSecurityUtilityCommand( new String[] {SEC_CONF_FIPS_COMMAND});
@@ -164,13 +170,18 @@ public class FIPS1403SecurityUtilityTests {
 
     @Test
     public void serverEnvFipsTest() throws Exception {
+        // assumeThat(GLOBAL_FIPS, is(false));
         ProgramOutput po = runSecurityUtilityCommand( new String[] {SEC_CONF_FIPS_COMMAND,OPT_SERVER+ "=" + SERVER_NAME});
         assertEquals("securityUtility configureFIPS did not result in expected return code.",0, po.getReturnCode());
         File serverEnv = new File(server.getServerRoot() + "/"+ SERVER_ENV_FILE);
         assertTrue(serverEnv.exists());
-        File fipsProfileFile = new File(server.getServerRoot() + "/resources/security/" + FIPS_PROFILE_FILE_NAME);
-        assertTrue(fipsProfileFile.exists());
-        checkFileExpectedValue(serverEnv, ENABLE_FIPS140_3_ENV_VAR + "=" +fipsProfileFile.getPath());
+        if(SEMERU_FIPS_PROVIDER.equals(expectedProvider)) {
+            File fipsProfileFile = new File(server.getServerRoot() + "/resources/security/" + FIPS_PROFILE_FILE_NAME);
+            assertTrue("FIPS Profile file does not exist", fipsProfileFile.exists());
+            checkFileExpectedValue(serverEnv, ENABLE_FIPS140_3_ENV_VAR + "=" + fipsProfileFile.getPath());
+        } else {
+            checkFileExpectedValue(serverEnv, ENABLE_FIPS140_3_ENV_VAR + "=true");
+        }
         server.startServer();
         checkServerLogForFipsEnablementMessage(server, expectedProvider);
         disableFIPS(FIPS_TARGET.SERVER, SERVER_NAME);
@@ -178,13 +189,17 @@ public class FIPS1403SecurityUtilityTests {
 
     @Test
     public void clientEnvFIPSTest() throws Exception {
-        ProgramOutput po = runSecurityUtilityCommand( new String[] {SEC_CONF_FIPS_COMMAND,OPT_CLIENT+ "=" + CLIENT_NAME});
+        ProgramOutput po = runSecurityUtilityCommand( new String[] {SEC_CONF_FIPS_COMMAND, OPT_CLIENT+ "=" + CLIENT_NAME});
         assertEquals("securityUtility configureFIPS did not result in expected return code.",0, po.getReturnCode());
         File clientEnv = new File(client.getClientRoot() + "/"+ CLIENT_ENV_FILE);
         assertTrue(clientEnv.exists());
-        File fipsProfileFile = new File(client.getClientRoot() + "/resources/security/" + FIPS_PROFILE_FILE_NAME);
-        assertTrue(fipsProfileFile.exists());
-        checkFileExpectedValue(clientEnv, ENABLE_FIPS140_3_ENV_VAR + "=" +fipsProfileFile.getPath());
+        if(SEMERU_FIPS_PROVIDER.equals(expectedProvider)) {
+            File fipsProfileFile = new File(client.getClientRoot() + "/resources/security/" + FIPS_PROFILE_FILE_NAME);
+            assertTrue("FIPS Profile file does not exist", fipsProfileFile.exists());
+            checkFileExpectedValue(clientEnv, ENABLE_FIPS140_3_ENV_VAR + "=" + fipsProfileFile.getPath());
+        } else {
+            checkFileExpectedValue(clientEnv, ENABLE_FIPS140_3_ENV_VAR + "=true");
+        }
         client.startClient();
         checkClientLogForFipsEnablementMessage(client, expectedProvider);
         disableFIPS(FIPS_TARGET.CLIENT, CLIENT_NAME);
@@ -192,16 +207,20 @@ public class FIPS1403SecurityUtilityTests {
 
     @Test
     public void customProfileSingleFileTest() throws Exception {
+        // Does not apply to IBM SDK 8
+        // assumeThat(GLOBAL_FIPS, is(false));
+        assumeThat(expectedProvider, is(SEMERU_FIPS_PROVIDER));
         String customProfileName = "Custom-FIPS-Profile";
         // Create Custom Profile under default enablement
         ProgramOutput po = runSecurityUtilityCommand( new String[] {SEC_CONF_FIPS_COMMAND, OPT_CUSTOM_PROFILE_FILE_NAME + "="+ customProfileName + PROPS_FILE_EXTENSION});
         assertEquals("securityUtility configureFIPS did not result in expected return code.",0, po.getReturnCode());
         File defaultEnv = new File(installRoot + "/etc/" + DEFAULT_ENV_FILE);
         assertTrue(defaultEnv.exists());
-        File fipsProfileFile = new File(installRoot +"/" + customProfileName + PROPS_FILE_EXTENSION);
-        assertTrue(fipsProfileFile.exists());
-        checkFileExpectedValue(defaultEnv, ENABLE_FIPS140_3_ENV_VAR + "=" +fipsProfileFile.getPath());
-
+        if(SEMERU_FIPS_PROVIDER.equals(expectedProvider)) {
+            File fipsProfileFile = new File(installRoot + "/" + customProfileName + PROPS_FILE_EXTENSION);
+            assertTrue(fipsProfileFile.exists());
+            checkFileExpectedValue(defaultEnv, ENABLE_FIPS140_3_ENV_VAR + "=" + fipsProfileFile.getPath());
+        }
         server.startServer();
         checkServerLogForFipsEnablementMessage(server, expectedProvider);
         disableFIPS(FIPS_TARGET.INSTALL, null);
@@ -209,6 +228,9 @@ public class FIPS1403SecurityUtilityTests {
 
     @Test
     public void multipleCustomProfileMultipleFileTest() throws Exception {
+        // Does not apply to IBM SDK 8
+        // assumeThat(GLOBAL_FIPS, is(false));
+        assumeThat(expectedProvider, is(SEMERU_FIPS_PROVIDER));
         String customProfile1 = "customFIPSProfile1";
         String customProfile2 = "customFIPSProfile2";
         String customProfile3 = "customFIPSProfile3";
@@ -246,11 +268,12 @@ public class FIPS1403SecurityUtilityTests {
     @Test
     public void fips140_3CreateLTPAKeysTest() throws Exception {
         // Tests that the tools script it operating as expected when the environment is set
-        assumeThat(GLOBAL_FIPS, is(false));
+        // Enable FIPS at install level
         ProgramOutput po = runSecurityUtilityCommand( new String[] {SEC_CONF_FIPS_COMMAND});
         assertEquals("securityUtility configureFIPS did not result in expected return code.",0, po.getReturnCode());
-
+        // recreate the LTPA keys and they should be v2.
         ProgramOutput ltpaPO = runSecurityUtilityCommand( new String[] {"createLTPAKeys", "--server=" + SERVER_NAME, "--password=passw0rd"});
+        assertEquals("securityUtility configureFIPS did not result in expected return code.",0, ltpaPO.getReturnCode());
         File ltpaKeysFile = new File(server.getServerRoot() + "/resources/security/ltpa.keys");
         assertTrue("LTPA.keys file should exist", ltpaKeysFile.exists());
         checkFileExpectedValue(ltpaKeysFile, "com.ibm.websphere.ltpa.version=2.0");
@@ -330,7 +353,7 @@ public class FIPS1403SecurityUtilityTests {
     public void checkFileExpectedValue(File file, String expectedValue) throws IOException {
         byte[] contentsB = Files.readAllBytes(file.toPath());
         String contentsS = new String(contentsB);
-        assertTrue(contentsS.contains(expectedValue));
+        assertTrue("Contents "+ contentsS +" did not contain expected string: " + expectedValue, contentsS.contains(expectedValue));
     }
 
     /**

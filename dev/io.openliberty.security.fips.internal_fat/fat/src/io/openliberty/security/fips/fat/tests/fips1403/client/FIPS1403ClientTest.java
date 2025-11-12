@@ -35,7 +35,7 @@ public class FIPS1403ClientTest {
     public static String expectedProvider="InvalidProvider";
     public static EnterpriseArchive earHAC;
     public static LibertyClient client;
-    public static boolean GLOBAL_FIPS = false;
+    public static boolean GLOBAL_CLIENT_FIPS = false;
     public static String baseLibertySecurityProfileLocation;
 
     @BeforeClass
@@ -51,9 +51,9 @@ public class FIPS1403ClientTest {
                 .addAsManifestResource(new File("test-applications/" + APP_NAME + ".ear/resources/META-INF/application.xml"));
 
         ShrinkHelper.exportAppToClient(client, earHAC);
-        if (Boolean.parseBoolean(PrivHelper.getProperty("global.fips_140-3", "false"))) {
+        if (Boolean.parseBoolean(PrivHelper.getProperty("global.client.fips_140-3", "false"))) {
             Log.info(FIPS1403ServerTest.class,"setup","global.fips_140-3 is set, letting LibertyServer configure FIPS");
-            GLOBAL_FIPS=true;
+            GLOBAL_CLIENT_FIPS = true;
         }
         if (ji.majorVersion() > 8) {
             expectedProvider = "OpenJCEPlusFIPS";
@@ -68,7 +68,7 @@ public class FIPS1403ClientTest {
 
     @Test
     public void clientJFIPS140_3JVMArgsTest() throws Exception {
-        if (!Boolean.parseBoolean(PrivHelper.getProperty("global.fips_140-3", "false"))) {
+        if (!GLOBAL_CLIENT_FIPS) {
             Log.info(FIPS1403ClientTest.class,"setup","Setting FIPS140-3 JVM Options");
             HashMap<String, String> opts = new HashMap<>();
             //Semeru >=11
@@ -88,15 +88,14 @@ public class FIPS1403ClientTest {
         } else {
             Log.info(FIPS1403ClientTest.class,"setup","global.fips_140-3 is set, letting LibertyServer configure FIPS");
         }
-        // client.addIgnoreErrors("CWWKS9702W");
         client.startClient();
         checkClientLogForFipsEnablementMessage(client, expectedProvider);
     }
     
     @Test
     public void clientFIPS140_3EnvTest() throws Exception {
-        assumeThat(GLOBAL_FIPS, is(false));
-        if(!GLOBAL_FIPS) {
+        assumeThat(GLOBAL_CLIENT_FIPS, is(false));
+        if(!GLOBAL_CLIENT_FIPS) {
             client.copyFileToLibertyClientRoot("publish/resources", "resources" , STANDALONE_FIPS_PROFILE_FILENAME);
             client.addEnvVar(ENABLE_FIPS140_3_ENV_VAR, client.getClientRoot()+"/resources/" + STANDALONE_FIPS_PROFILE_FILENAME);
         }

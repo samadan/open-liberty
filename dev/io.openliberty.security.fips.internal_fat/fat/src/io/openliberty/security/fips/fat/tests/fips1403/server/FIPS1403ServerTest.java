@@ -71,7 +71,6 @@ public class FIPS1403ServerTest {
 
     @Test
     public void serverFIPS140_3JVMArgsTest() throws Exception {
-        assumeThat(GLOBAL_FIPS, is(false));
         Log.info(FIPS1403ServerTest.class,"setup","Setting FIPS140-3 JVM Options");
         HashMap<String, String> opts = new HashMap<>();
         //Semeru >=11
@@ -94,9 +93,11 @@ public class FIPS1403ServerTest {
 
     @Test
     public void serverFIPS140_3EnvVarTest() throws Exception {
-        if(!GLOBAL_FIPS) {
-            server.copyFileToLibertyServerRoot("publish/resources", "resources" , LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME);
-            server.addEnvVar(ENABLE_FIPS140_3_ENV_VAR, server.getServerRoot()+"/resources/" + LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME);
+        if(isIBMJava8) {
+            server.addEnvVar(ENABLE_FIPS140_3_ENV_VAR, "true");
+        }else {
+            server.copyFileToLibertyServerRoot("publish/resources", "resources", LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME);
+            server.addEnvVar(ENABLE_FIPS140_3_ENV_VAR, server.getServerRoot() + "/resources/" + LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME);
         }
         server.startServer();
         checkServerLogForFipsEnablementMessage(server, expectedProvider);
@@ -108,7 +109,6 @@ public class FIPS1403ServerTest {
      */
     @Test
     public void serverFIPS140_3EmptyEnvVarTest() throws Exception {
-        assumeThat(GLOBAL_FIPS, is(false));
         Path path = Paths.get(server.getServerRoot() + "/"+ SERVER_ENV_FILE);
         String serverEnv = VAR_EXPANSION_ENV + System.lineSeparator() + ENABLE_FIPS140_3_ENV_VAR + "=\"\"";
         Files.write(path, serverEnv.getBytes(StandardCharsets.UTF_8));
@@ -118,7 +118,6 @@ public class FIPS1403ServerTest {
 
     @Test
     public void serverFIPS140_3DirectoryQuotedTest() throws Exception {
-        assumeThat(GLOBAL_FIPS, is(false));
         server.copyFileToLibertyServerRoot("publish/resources", "resources" , LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME);
         Path path = Paths.get(server.getServerRoot() + "/"+ SERVER_ENV_FILE);
         String serverEnv = VAR_EXPANSION_ENV + System.lineSeparator() + ENABLE_FIPS140_3_ENV_VAR + "=\"" + server.getServerRoot() + "/resources/" + LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME + "\"";
@@ -134,7 +133,6 @@ public class FIPS1403ServerTest {
      */
     @Test
     public void serverFIPS140_3DirectorySpaceNoQuotesTest() throws Exception {
-        assumeThat(GLOBAL_FIPS, is(false));
         assumeThat(server.getMachine().getOperatingSystem(), is(OperatingSystem.WINDOWS));
         String testDir = "resources/test dir";
         server.copyFileToLibertyServerRoot("publish/resources", testDir , LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME);
@@ -146,7 +144,6 @@ public class FIPS1403ServerTest {
 
     @Test
     public void serverFIPS140_3DirectorySpaceQuotesTest() throws Exception {
-        assumeThat(GLOBAL_FIPS, is(false));
         assumeThat(server.getMachine().getOperatingSystem(), not(OperatingSystem.WINDOWS));
         String testDir = "resources/test dir";
         server.copyFileToLibertyServerRoot("publish/resources", testDir , LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME);
@@ -159,7 +156,6 @@ public class FIPS1403ServerTest {
 
     @Test
     public void serverFIPS140_3DirectorySpaceSlashTest() throws Exception {
-        assumeThat(GLOBAL_FIPS, is(false));
         assumeThat(server.getMachine().getOperatingSystem(), not(OperatingSystem.WINDOWS));
         String testDir = "resources/test\\ dir";
         server.copyFileToLibertyServerRoot("publish/resources", testDir , LIBERTY_APPLICATION_FIPS_PROFILE_FILENAME);
