@@ -36,8 +36,8 @@ enum QueryEdit {
 
     /**
      * Instruction to add a FROM clause to the query. The FROM clause is added
-     * after the first SELECT clause, or, if there is no SELECT clause, then
-     * at the beginning of the query.
+     * after a SELECT clause that begins the query, or, if there is no SELECT
+     * clause there, then at the beginning of the query.
      */
     ADD_FROM,
 
@@ -70,18 +70,25 @@ enum QueryEdit {
     OMIT_ORDER_IN_COUNT,
 
     /**
-     * Instruction to omit the SELECT clause when generating a count query.
-     * The key for this instruction is a negative value (to avoid collision)
-     * of which the absolute value points to the position after the end of the
-     * SELECT clause.
-     */
-    OMIT_SELECT_IN_COUNT,
-
-    /**
      * Instruction to replace record names with the generated entity class name
      * when the record name appears after the FROM keyword.
      */
-    REPLACE_RECORD_ENTITY;
+    REPLACE_RECORD_ENTITY,
+
+    /**
+     * Instruction to omit the SELECT clause when generating a count query.
+     * The key for this instruction is the position after the SELECT keyword.
+     * This instruction is always paired with REPLACE_SELECT_IN_COUNT_END.
+     */
+    REPLACE_SELECT_IN_COUNT_BEGIN,
+
+    /**
+     * Second instruction to omit the SELECT clause when generating a count query.
+     * The key for this instruction is a negative value (to avoid collision), of
+     * which the absolute value points to the ending position of the SELECT clause.
+     * This instruction is always paired with REPLACE_SELECT_IN_COUNT_BEGIN.
+     */
+    REPLACE_SELECT_IN_COUNT_END;
 
     /**
      * Indicates the position before the beginning of the query, which applies
