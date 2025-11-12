@@ -37,6 +37,9 @@ import com.ibm.websphere.simplicity.log.Log;
 
 /**
  * This is a current list of database testcontainers that are in the database rotation.
+ *
+ * NOTE: the order of the elements in this enum matter because {@link #getAnonymousDriverName()}
+ * uses the enum ordinal system to construct the name of the anonymous driver programmatically.
  */
 @SuppressWarnings("rawtypes")
 public enum DatabaseContainerType {
@@ -52,22 +55,11 @@ public enum DatabaseContainerType {
           Properties_derby_embedded.class, //
           DockerImageName.parse(""), //
           "DerbyEmbedded"),
-    DerbyJava17Plus("derby.jar", 17, //
-                    DerbyJava17PlusContainer.supportLibraries, //
-                    DerbyJava17PlusContainer.class.getCanonicalName(), //
-                    Properties_derby_embedded.class, //
-                    DockerImageName.parse(""), //
-                    "DerbyEmbeddedJava17Plus"),
     DerbyClient("derbyclient.jar", 8, //
                 Collections.emptyList(), //
                 DerbyClientContainer.class.getCanonicalName(), //
                 Properties_derby_client.class, //
                 DockerImageName.parse("")),
-    DerbyClientJava17Plus("derbyclient.jar", 17, //
-                          DerbyClientJava17PlusContainer.supportLibraries, //
-                          DerbyClientJava17PlusContainer.class.getCanonicalName(), //
-                          Properties_derby_client.class, //
-                          DockerImageName.parse("")),
     Oracle("ojdbc8.jar", 8, //
            Collections.emptyList(), //
            OracleContainer.class.getCanonicalName(), //
@@ -90,7 +82,18 @@ public enum DatabaseContainerType {
               Properties_microsoft_sqlserver.class, //
               DockerImageName.parse("mcr.microsoft.com/mssql/server:2022-latest")//
                               .asCompatibleSubstituteFor("mcr.microsoft.com/mssql/server"), //
-              "MSSQLServer");
+              "MSSQLServer"),
+    DerbyJava17Plus("derby.jar", 17, //
+                    DerbyJava17PlusContainer.supportLibraries, //
+                    DerbyJava17PlusContainer.class.getCanonicalName(), //
+                    Properties_derby_embedded.class, //
+                    DockerImageName.parse(""), //
+                    "DerbyEmbeddedJava17Plus"),
+    DerbyClientJava17Plus("derbyclient.jar", 17, //
+                          DerbyClientJava17PlusContainer.supportLibraries, //
+                          DerbyClientJava17PlusContainer.class.getCanonicalName(), //
+                          Properties_derby_client.class, //
+                          DockerImageName.parse(""));
 
     private final String driverName;
     private final int minJavaLevel;
