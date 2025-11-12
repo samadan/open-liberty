@@ -32,6 +32,9 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+import com.ibm.ws.kernel.feature.ServerStarted;
 import com.ibm.wsspi.kernel.service.utils.AtomicServiceReference;
 import com.ibm.wsspi.persistence.DDLGenerationParticipant;
 import com.ibm.wsspi.persistence.InMemoryMappingFile;
@@ -52,6 +55,7 @@ import persistence_fat.consumer.internal.model.Person;
            immediate = true)
 public class ConsumerService implements ResourceFactory, DDLGenerationParticipant {
     private static final String PERSISTENCE_SERVICE = "persistenceService";
+    private static final TraceComponent tc = Tr.register(ConsumerService.class);
 
     private final AtomicServiceReference<PersistenceService> ps = new AtomicServiceReference<PersistenceService>(PERSISTENCE_SERVICE);
 
@@ -189,6 +193,15 @@ public class ConsumerService implements ResourceFactory, DDLGenerationParticipan
     protected void unsetPersistenceService(ServiceReference<PersistenceService> reference) {
         ps.unsetReference(reference);
     }
+
+    @Reference
+    protected synchronized void setServerStarted(ServerStarted serverStarted) {
+        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+            Tr.debug(tc, "ServerStarted bound. kernel indicates server is ready");
+        }
+    }
+
+    protected synchronized void unsetServerStarted(ServerStarted serverStarted) { }
 
     @Override
     public String getDDLFileName() {
