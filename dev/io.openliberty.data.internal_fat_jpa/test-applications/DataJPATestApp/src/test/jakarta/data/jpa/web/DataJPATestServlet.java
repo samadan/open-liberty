@@ -2259,9 +2259,6 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testExistsViaQueryLanguage() {
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
-            return; //TODO remove skip when fixed in Hibernate or Liberty
-        }
 
         assertEquals(true, businesses.isLocatedAt(2800, "37th St", "NW", "IBM"));
         assertEquals(false, businesses.isLocatedAt(200, "1st St", "SW", "IBM"));
@@ -4772,27 +4769,32 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testUpdateEntityWithIdClassAndVersion() {
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
-            return; //TODO remove skip when fixed in Hibernate or Liberty
-        }
 
         CityId mnId = CityId.of("Rochester", "Minnesota");
         CityId nyId = CityId.of("Rochester", "New York");
 
-        long mnVer = cities.currentVersion(mnId.name, mnId.getStateName());
-        long nyVer = cities.currentVersion(nyId.name, nyId.getStateName());
+        long mnVer;
+        long nyVer;
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
+            // TODO once fixed in Hibernate, update the JPQL query to use VERSION(THIS)
+            // instead of lower case VERSION(this)
+            mnVer = cities.currentVersion(mnId);
+            nyVer = cities.currentVersion(nyId);
+        } else {
+            mnVer = cities.currentVersion(mnId.name, mnId.getStateName());
+            nyVer = cities.currentVersion(nyId.name, nyId.getStateName());
 
-        // TODO enable once EclipseLink #29073 is fixed, and maybe remove the above
-        //long mnVer = cities.currentVersion(mnId);
-        //long nyVer = cities.currentVersion(nyId);
+            // TODO enable once EclipseLink #29073 is fixed, and maybe remove the above
+            //mnVer = cities.currentVersion(mnId);
+            //nyVer = cities.currentVersion(nyId);
 
-        // TODO allow this test to run once 28589 is fixed
-        // and verify that EclipseLink does not corrupt the area code value
-        // for the following subsequent tests:
-        // testCollectionAttribute, testIdClassOrderBySorts, testIdClassOrderByAnnotationWithCursorPagination,
-        // testIdClassOrderByNamePatternWithCursorPagination, testIdClassOrderByAnnotationReverseDirection
-        if (!isHibernate())
+            // TODO allow this test to run once 28589 is fixed
+            // and verify that EclipseLink does not corrupt the area code value
+            // for the following subsequent tests:
+            // testCollectionAttribute, testIdClassOrderBySorts, testIdClassOrderByAnnotationWithCursorPagination,
+            // testIdClassOrderByNamePatternWithCursorPagination, testIdClassOrderByAnnotationReverseDirection
             return;
+        }
 
         City[] updated = cities.modifyData(City.of(mnId, 122413, Set.of(507, 924), mnVer),
                                            City.of(nyId, 208546, Set.of(585), nyVer));
