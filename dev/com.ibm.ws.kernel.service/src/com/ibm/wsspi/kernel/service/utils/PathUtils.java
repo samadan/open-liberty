@@ -120,7 +120,9 @@ public class PathUtils {
                     } catch (IOException ioe) {
                         // auto FFDC
                     } finally {
-                        caseSensitiveFile.delete();
+                        if (caseSensitiveFile != null && caseSensitiveFile.exists()) {
+                            caseSensitiveFile.delete();
+                        }
                     }
                 }
             }
@@ -137,9 +139,19 @@ public class PathUtils {
         } catch (Exception e) {
             // We can't tell if this OS is case sensitive or not.
             // Assume we might not be case sensitive.
+            // Log the exception to help diagnose issues (e.g., temp directory permissions on z/OS)
+            // Include diagnostic information about the temp directory configuration
+            String tmpDir = System.getProperty("java.io.tmpdir", "unknown");
+            String osName = System.getProperty("os.name", "unknown");
+            String userName = System.getProperty("user.name", "unknown");
+            FFDCFilter.processException(e, PathUtils.class.getName(), "isOsCaseSensitive",
+                new Object[] { "java.io.tmpdir=" + tmpDir, "os.name=" + osName, "user.name=" + userName });
             return false;
         } finally {
-            caseSensitiveFile.delete();
+            // Only delete if the file was successfully created
+            if (caseSensitiveFile != null && caseSensitiveFile.exists()) {
+                caseSensitiveFile.delete();
+            }
         }
         // Something went wrong. Assume we might be not be case sensitive.
         return false;
