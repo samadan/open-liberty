@@ -20,7 +20,7 @@ libertyBetaVersion=2026.1.0.0
 libertyRelease=${if;${releaseTypeGA};${libertyServiceVersion};${libertyBetaVersion}}
 
 libertyBundleMicroVersion=109
-copyrightBuildYear=2025
+copyrightBuildYear=2026
 buildID=${libertyRelease}-${def;buildLabel}
 productEdition=BASE_ILAN
 productLicenseType=ILAN
