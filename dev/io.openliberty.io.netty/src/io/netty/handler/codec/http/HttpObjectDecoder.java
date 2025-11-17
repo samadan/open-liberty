@@ -153,7 +153,7 @@ public abstract class HttpObjectDecoder extends ByteToMessageDecoder {
     public static final int DEFAULT_INITIAL_BUFFER_SIZE = 128;
     public static final boolean DEFAULT_ALLOW_DUPLICATE_CONTENT_LENGTHS = false;
     public static final boolean DEFAULT_STRICT_LINE_PARSING =
-            SystemPropertyUtil.getBoolean("io.netty.handler.codec.http.defaultStrictLineParsing", true);
+            SystemPropertyUtil.getBoolean("io.netty.handler.codec.http.defaultStrictLineParsing", false);
 
     private static final Runnable THROW_INVALID_CHUNK_EXTENSION = new Runnable() {
         @Override
