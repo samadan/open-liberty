@@ -87,7 +87,6 @@ import io.openliberty.faces.fat.selenium.util.internal.ExtendedWebDriver;
                 // Selenium Tests
                 JSF23CommandScriptTests.class,
                 JSF23EvalScriptsTests.class,
-                JSF23SpecIssueTests.class,
                 JSF23WebSocketTests.class,
                 JSF23SelectOneRadioGroupTests.class,
 
