@@ -1912,10 +1912,10 @@ public class DataJPATestServlet extends FATServlet {
         CompletableFuture.supplyAsync(() -> {
             PurchaseOrder o1updated = orders.findById(o1id).orElseThrow();
             o1updated.total = 11.99f;
-            return orders.save(o1updated);
+            return orders.save(o1updated); // Hibernate does SELECT, but no UPDATE, so the version remains the same
         }).get(2, TimeUnit.MINUTES);
 
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33232")) {
             ; //TODO remove skip when fixed in Hibernate or Liberty
         } else {
             tran.begin();
@@ -2051,7 +2051,7 @@ public class DataJPATestServlet extends FATServlet {
         assertEquals(o7_v1, o7.versionNum);
         assertEquals(o8_v1, o8.versionNum);
 
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33232")) {
             return; //TODO remove skip when fixed in Hibernate or Liberty
         }
 
@@ -2090,7 +2090,7 @@ public class DataJPATestServlet extends FATServlet {
         assertEquals(77.99f, totals.get(1), 0.001f);
         assertEquals(11.99f, totals.get(2), 0.001f); // not updated due to version mismatch
 
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33232")) {
             ; //TODO remove skip when fixed in Hibernate or Liberty
         } else {
             try {
@@ -4231,7 +4231,7 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testSortByVersionFunction() {
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33232")) {
             return; //TODO remove skip when fixed in Hibernate or Liberty
         }
 
@@ -4449,9 +4449,6 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testTimeAsVersion() throws Exception {
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
-            return; //TODO remove skip when fixed in Hibernate or Liberty
-        }
 
         /*
          * Reference Issue: https://github.com/eclipse-ee4j/eclipselink/issues/205
@@ -4942,7 +4939,7 @@ public class DataJPATestServlet extends FATServlet {
      */
     @Test
     public void testUpdateWithEntityResults() {
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33232")) {
             return; //TODO remove skip when fixed in Hibernate or Liberty
         }
 
@@ -5135,7 +5132,7 @@ public class DataJPATestServlet extends FATServlet {
         int newVersion = o1.versionNum;
         UUID id = o1.id;
 
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33232")) {
             return; //TODO remove skip when fixed in Hibernate or Liberty
         }
 
@@ -5212,7 +5209,7 @@ public class DataJPATestServlet extends FATServlet {
         duluth.changeCount = oldVersion;
         try {
             cities.remove(duluth);
-            if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
+            if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33232")) {
                 return; //TODO remove skip when fixed in Hibernate or Liberty
             }
             fail("Attempt to delete with an outdated version must raise OptimisticLockingFailureException.");
@@ -5262,9 +5259,6 @@ public class DataJPATestServlet extends FATServlet {
         // Hibernate has o1.versionNum still being 0 here, breaking the test
         // that intends to force an error by attempting an update at the
         // old version
-        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33191")) {
-            return; //TODO remove skip when fixed in Hibernate or Liberty
-        }
 
         o1 = new PurchaseOrder();
         o1.id = id;
