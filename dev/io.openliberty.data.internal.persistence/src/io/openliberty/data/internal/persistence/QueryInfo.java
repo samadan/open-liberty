@@ -21,7 +21,7 @@ import static io.openliberty.data.internal.QueryType.FIND_AND_DELETE;
 import static io.openliberty.data.internal.QueryType.INSERT;
 import static io.openliberty.data.internal.QueryType.LC_DELETE;
 import static io.openliberty.data.internal.QueryType.LC_UPDATE;
-import static io.openliberty.data.internal.QueryType.LC_UPDATE_RET_ENTITY;
+import static io.openliberty.data.internal.QueryType.LC_UPDATE_MERGE;
 import static io.openliberty.data.internal.QueryType.QM_DELETE;
 import static io.openliberty.data.internal.QueryType.QM_UPDATE;
 import static io.openliberty.data.internal.QueryType.SAVE;
@@ -42,6 +42,8 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.RecordComponent;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,11 +95,9 @@ import jakarta.data.repository.Param;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
-import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.TypedQuery;
-import jakarta.transaction.Status;
 
 /**
  * Query information.
@@ -911,11 +911,6 @@ public class QueryInfo {
         TypedQuery<Long> query = em.createQuery(jpql, Long.class);
         setParameters(query, args);
 
-        // TODO #33189 why are EntityManager.setCacheRetrieveMode and
-        // Query.setCacheRetrieveMode unable to set this instead?
-        query.setHint("jakarta.persistence.cache.retrieveMode",
-                      CacheRetrieveMode.BYPASS);
-
         Long count = query.getSingleResult();
 
         Object returnValue;
@@ -1699,11 +1694,6 @@ public class QueryInfo {
         query.setMaxResults(1);
         setParameters(query, args);
 
-        // TODO #33189 why are EntityManager.setCacheRetrieveMode and
-        // Query.setCacheRetrieveMode unable to set this instead?
-        query.setHint("jakarta.persistence.cache.retrieveMode",
-                      CacheRetrieveMode.BYPASS);
-
         List<?> results = query.getResultList();
         boolean found = !results.isEmpty();
 
@@ -1894,10 +1884,10 @@ public class QueryInfo {
         Object returnValue;
 
         if (CursoredPage.class.equals(multiType)) {
-            returnValue = new CursoredPageImpl<>(this, pageReq, args);
+            returnValue = new CursoredPageImpl<>(this, em, pageReq, args);
         } else if (Page.class.equals(multiType)) {
             PageRequest req = limit == null ? pageReq : toPageRequest(limit);
-            returnValue = new PageImpl<>(this, req, args);
+            returnValue = new PageImpl<>(this, em, req, args);
         } else if (pageReq != null &&
                    !PageRequest.Mode.OFFSET.equals(pageReq.mode())) {
             throw exc(IllegalArgumentException.class,
@@ -1916,10 +1906,8 @@ public class QueryInfo {
             jakarta.persistence.Query query = em.createQuery(jpql);
             setParameters(query, args);
 
-            // TODO #33189 why are EntityManager.setCacheRetrieveMode and
-            // Query.setCacheRetrieveMode unable to set this instead?
-            query.setHint("jakarta.persistence.cache.retrieveMode",
-                          CacheRetrieveMode.BYPASS);
+            if (entityInfo.loadGraph != null)
+                query.setHint(Util.LOADGRAPH, entityInfo.loadGraph);
 
             if (type == FIND_AND_DELETE)
                 query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
@@ -1943,10 +1931,11 @@ public class QueryInfo {
 
             if (multiType != null && BaseStream.class.isAssignableFrom(multiType)) {
                 Stream<?> stream;
-                if (txStatus == Status.STATUS_NO_TRANSACTION)
-                    stream = query.getResultList().stream();
-                else
-                    stream = query.getResultStream();
+                // TODO 1.1 getResultStream can be used for stateful repositories
+                //if (txStatus == Status.STATUS_NO_TRANSACTION)
+                stream = query.getResultList().stream();
+                //else
+                //    stream = query.getResultStream();
                 if (Stream.class.equals(multiType))
                     returnValue = stream;
                 else if (IntStream.class.equals(multiType))
@@ -2128,60 +2117,85 @@ public class QueryInfo {
             }
         }
 
-        if (results.isEmpty())
+        if (!results.isEmpty()) {
+            if (trace && tc.isDebugEnabled())
+                Tr.debug(this, tc, "flush");
+            em.flush();
+        }
+
+        Object returnValue;
+        Class<?> returnType = method.getReturnType();
+        if (boolean.class.equals(singleType) || Boolean.class.equals(singleType)) {
+            returnValue = !results.isEmpty();
+        } else if (Util.PRIMITIVE_NUMERIC_TYPES.contains(singleType) ||
+                   Number.class.isAssignableFrom(singleType)) {
+            returnValue = convert(results.size(), singleType, true);
+        } else if (results.isEmpty()) {
             throw exc(IllegalArgumentException.class,
                       "CWWKD1092.lifecycle.arg.empty",
                       method.getName(),
                       repositoryInterface.getName(),
                       method.getGenericParameterTypes()[0].getTypeName());
-
-        em.flush();
-
-        Class<?> returnType = method.getReturnType();
-        if (void.class.equals(returnType) || Void.class.equals(returnType))
-            return null;
-
-        if (entityInfo.recordClass != null)
-            for (int i = 0; i < results.size(); i++)
-                results.set(i, entityInfo.toRecord(results.get(i)));
-
-        Object returnValue;
-        if (returnArrayType != null) {
-            Object[] newArray = (Object[]) Array.newInstance(returnArrayType, results.size());
-            returnValue = results.toArray(newArray);
+        } else if (void.class.equals(returnType) || Void.class.equals(returnType)) {
+            returnValue = null;
         } else {
-            if (multiType == null)
-                if (results.size() == 1)
-                    returnValue = results.get(0);
-                else if (results.isEmpty())
-                    returnValue = null;
+            for (Object e : results) {
+                if (entityInfo.loadGraphMap == null)
+                    em.refresh(e);
                 else
-                    throw excNonUniqueResult(results.size());
-            else if (multiType.isInstance(results))
-                returnValue = results;
-            else if (Stream.class.equals(multiType))
-                returnValue = results.stream();
-            else if (Iterable.class.isAssignableFrom(multiType))
-                returnValue = convertToIterable(results, multiType, null, null);
-            else if (Iterator.class.equals(multiType))
-                returnValue = results.iterator();
-            else
-                throw exc(MappingException.class,
-                          "CWWKD1003.rtrn.err",
-                          method.getGenericReturnType().getTypeName(),
-                          method.getName(),
-                          repositoryInterface.getName(),
-                          "Update",
-                          lifeCycleReturnTypes(results.get(0).getClass().getSimpleName(),
-                                               hasSingularEntityParam,
-                                               false));
+                    em.refresh(e, entityInfo.loadGraphMap);
+
+                if (trace && tc.isDebugEnabled())
+                    Tr.debug(this, tc, "refreshed", loggable(e));
+            }
+
+            if (entityInfo.recordClass != null)
+                for (int i = 0; i < results.size(); i++)
+                    results.set(i, entityInfo.toRecord(results.get(i)));
+
+            if (returnArrayType != null) {
+                Object[] newArray = (Object[]) Array.newInstance(returnArrayType, results.size());
+                returnValue = results.toArray(newArray);
+            } else {
+                if (multiType == null)
+                    if (results.size() == 1)
+                        returnValue = results.get(0);
+                    else if (results.isEmpty())
+                        returnValue = null;
+                    else
+                        throw excNonUniqueResult(results.size());
+                else if (multiType.isInstance(results))
+                    returnValue = results;
+                else if (Stream.class.equals(multiType))
+                    returnValue = results.stream();
+                else if (Iterable.class.isAssignableFrom(multiType))
+                    returnValue = convertToIterable(results, multiType, null, null);
+                else if (Iterator.class.equals(multiType))
+                    returnValue = results.iterator();
+                else
+                    throw exc(MappingException.class,
+                              "CWWKD1003.rtrn.err",
+                              method.getGenericReturnType().getTypeName(),
+                              method.getName(),
+                              repositoryInterface.getName(),
+                              "Update",
+                              lifeCycleReturnTypes(results.get(0).getClass().getSimpleName(),
+                                                   hasSingularEntityParam,
+                                                   false));
+            }
         }
 
         if (Optional.class.equals(returnType)) {
-            returnValue = returnValue == null ? Optional.empty() : Optional.of(returnValue);
-        } else if (CompletableFuture.class.equals(returnType) || CompletionStage.class.equals(returnType)) {
-            returnValue = CompletableFuture.completedFuture(returnValue); // useful for @Asynchronous
-        } else if (returnValue != null && !returnType.isInstance(returnValue)) {
+            returnValue = returnValue == null //
+                            ? Optional.empty() //
+                            : Optional.of(returnValue);
+        } else if (CompletableFuture.class.equals(returnType) ||
+                   CompletionStage.class.equals(returnType)) {
+            // useful for @Asynchronous
+            returnValue = CompletableFuture.completedFuture(returnValue);
+        } else if (returnValue != null &&
+                   !Util.wrapperClassIfPrimitive(returnType) //
+                                   .isAssignableFrom(returnValue.getClass())) {
             throw exc(MappingException.class,
                       "CWWKD1003.rtrn.err",
                       method.getGenericReturnType().getTypeName(),
@@ -2280,7 +2294,15 @@ public class QueryInfo {
                       Util.LIFE_CYCLE_METHODS_THAT_RETURN_ENTITIES_STATELESS);
         }
 
-        Object returnValue = em.merge(toEntity(e));
+        if (trace && tc.isDebugEnabled())
+            Tr.debug(this, tc, "found", loggable(results.get(0)));
+
+        e = toEntity(e);
+
+        if (trace && tc.isDebugEnabled())
+            Tr.debug(this, tc, "merge", loggable(e));
+
+        Object returnValue = em.merge(e);
 
         if (trace && tc.isEntryEnabled())
             Tr.exit(this, tc, "findAndUpdateOne", loggable(returnValue));
@@ -2822,6 +2844,7 @@ public class QueryInfo {
                             .append(entityInfo.name).append(' ').append(o) //
                             .append(" SET");
 
+            boolean needsVersionUpdate = entityInfo.versionAttributeName != null;
             boolean first = true;
             // p is the repository method parameter position (0-based)
             for (int p = 0; p < numAttributeParams; p++) {
@@ -2846,6 +2869,10 @@ public class QueryInfo {
                                                    " repository when the Id is an IdClass.");
                     } else {
                         String name = attrNames[p];
+
+                        if (needsVersionUpdate &&
+                            name.equals(entityInfo.versionAttributeName))
+                            needsVersionUpdate = false;
 
                         q.append(first ? " " : ", ");
                         appendAttributeName(name, q);
@@ -2875,6 +2902,23 @@ public class QueryInfo {
                             q.append(')');
                     }
                 }
+            }
+
+            if (needsVersionUpdate) {
+                Class<?> versionType = entityInfo.attributeTypes //
+                                .get(entityInfo.versionAttributeName);
+
+                q.append(first ? " " : ", ");
+                appendAttributeName(entityInfo.versionAttributeName, q);
+                q.append("=");
+                if (LocalDateTime.class.equals(versionType) ||
+                    Instant.class.equals(versionType)) {
+                    q.append("LOCAL DATETIME");
+                } else {
+                    appendAttributeName(entityInfo.versionAttributeName, q);
+                    q.append(" + 1");
+                }
+                first = false;
             }
 
             if (first)
@@ -3177,10 +3221,10 @@ public class QueryInfo {
                 q.append(o_).append(name).append("=?").append(++jpqlParamCount);
             }
         } else {
-            // Update that returns an entity. And also used when an entity
-            // has relation attributes that require using em.merge.
+            // Update that returns an entity. And also used when an entity has a
+            // version attribute or relation attribute that requires using em.merge.
             // Perform a find operation first so that em.merge can be used.
-            setType(Update.class, LC_UPDATE_RET_ENTITY);
+            setType(Update.class, LC_UPDATE_MERGE);
 
             q = new StringBuilder(100) //
                             .append("SELECT ").append(o) //
@@ -3775,7 +3819,7 @@ public class QueryInfo {
             if (modifyAt.isEmpty() || entityInfo.recordClass == null)
                 jpql = ql;
             else
-                jpql = replaceQuery(ql, -1, modifyAt);
+                jpql = replaceQuery(ql, modifyAt);
         } else if (firstChar == 'U' || firstChar == 'u') {
             // UPDATE EntityName[ SET ... WHERE ...]
             int entityNameStartAt = -1;
@@ -3814,7 +3858,7 @@ public class QueryInfo {
             if (entityInfo.recordClass == null)
                 jpql = ql;
             else
-                jpql = replaceQuery(ql, -1, modifyAt);
+                jpql = replaceQuery(ql, modifyAt);
         } else { // SELECT ... or FROM ... or WHERE ... or ORDER BY ...
             type = FIND;
 
@@ -3832,7 +3876,7 @@ public class QueryInfo {
             if (entityInfo == null)
                 setEntityInfo(entityInfos, primaryEntityInfoFuture);
 
-            jpql = replaceQuery(ql, select0, modifyAt);
+            jpql = replaceQuery(ql, modifyAt);
         }
 
         // Find out how many parameters the method supplies to the query
@@ -4083,7 +4127,6 @@ public class QueryInfo {
                 if (results != null)
                     results.add(entity);
             }
-            em.flush();
         } else if (arg instanceof Iterable) {
             results = resultVoid ? null : new ArrayList<>();
             for (Object e : ((Iterable<?>) arg)) {
@@ -4093,14 +4136,12 @@ public class QueryInfo {
                 if (results != null)
                     results.add(entity);
             }
-            em.flush();
         } else {
             entityCount = 1;
             hasSingularEntityParam = true;
             results = resultVoid ? null : new ArrayList<>(1);
             Object entity = toEntity(arg);
             em.persist(entity);
-            em.flush();
             if (results != null)
                 results.add(entity);
         }
@@ -4111,6 +4152,8 @@ public class QueryInfo {
                       method.getName(),
                       repositoryInterface.getName(),
                       method.getGenericParameterTypes()[0].getTypeName());
+
+        em.flush();
 
         Class<?> returnType = method.getReturnType();
         Object returnValue;
@@ -4616,43 +4659,20 @@ public class QueryInfo {
         TreeMap<Integer, QueryEdit> modifyAt = new TreeMap<>();
 
         int length = ql.length();
-        int i = startAt;
-        boolean isCursoredPage;
-        boolean countPages;
-        boolean countMustOmitSelect;
-        boolean needsConstructorEnd = false;
+        boolean hasTopLevelSelectClause = findQueryStartsWithSelect == Boolean.TRUE;
+        boolean isCursoredPage = CursoredPage.class.equals(multiType);
+        boolean countPages = isCursoredPage || Page.class.equals(multiType);
+        int countReplacesFirstSelectAt = hasTopLevelSelectClause && countPages //
+                        ? startAt // position after SELECT
+                        : -1; // SELECT clause is not present
+        int countReplacesFirstSelectEndingAt = -1;
+        int numTopLevelFromClauses = 0;
+        boolean insertRecordConstructors = producer.compat().atLeast(1, 1) &&
+                                           singleType.isRecord();
         boolean needsParenthesesEnd = false;
-
-        if (findQueryStartsWithSelect == null) {
-            // not a SELECT statement
-            isCursoredPage = false;
-            countPages = false;
-            countMustOmitSelect = false;
-        } else {
-            isCursoredPage = CursoredPage.class.equals(multiType);
-            countPages = isCursoredPage || Page.class.equals(multiType);
-
-            if (findQueryStartsWithSelect == Boolean.TRUE) {
-                countMustOmitSelect = countPages;
-                if (producer.compat().atLeast(1, 1) &&
-                    singleType.isRecord()) {
-                    while (i < length && Character.isWhitespace(ql.charAt(i)))
-                        i++;
-                    if (i + 3 < length &&
-                        !Character.isJavaIdentifierPart(ql.charAt(i + 3)) &&
-                        ql.regionMatches(true, i, "NEW", 0, 3)) {
-                        // already has constructor syntax
-                        i += 3;
-                    } else {
-                        modifyAt.put(i, QueryEdit.ADD_CONSTRUCTOR_BEGIN);
-                        needsConstructorEnd = true;
-                    }
-                }
-            } else { // findQueryStartsWithSelect == Boolean.FALSE
-                countMustOmitSelect = false;
-                modifyAt.put(QueryEdit.BEFORE_QUERY, QueryEdit.ADD_SELECT_IF_NEEDED);
-            }
-        }
+        boolean needsConstructorEnd = hasTopLevelSelectClause &&
+                                      insertRecordConstructors &&
+                                      parseSelectForConstructor(ql, startAt, modifyAt);
 
         Integer addFromAt = findQueryStartsWithSelect == null //
                         ? -1 // never, it's a DELETE or UPDATE so it always has FROM
@@ -4661,7 +4681,7 @@ public class QueryInfo {
         boolean isLiteral = false;
         StringBuilder paramName = null;
 
-        for (; i < length; i++) {
+        for (int i = startAt; i < length; i++) {
             char ch = ql.charAt(i);
             if (!isLiteral && ch == ':') {
                 paramName = new StringBuilder(30);
@@ -4688,20 +4708,20 @@ public class QueryInfo {
                         !Character.isJavaIdentifierPart(ql.charAt(i + 4)) &&
                         ql.regionMatches(true, i, "FROM", 0, 4)) {
 
-                        if (depth == 0 && // avoids SELECT EXTRACT(YEAR FROM d) WHERE ...
-                            addFromAt == null)
-                            addFromAt = -1;
-                        if (depth == 0 &&
-                            countMustOmitSelect) {
-                            countMustOmitSelect = false;
-                            modifyAt.put(-i, // avoid possible collision
-                                         QueryEdit.OMIT_SELECT_IN_COUNT);
-                        }
-                        if (depth == 0 &&
-                            needsConstructorEnd) {
-                            needsConstructorEnd = false;
-                            modifyAt.put(i - 1,
-                                         QueryEdit.ADD_CONSTRUCTOR_END);
+                        if (depth == 0) { // avoids EXTRACT(YEAR FROM d)
+                            numTopLevelFromClauses++;
+                            if (addFromAt == null) {
+                                addFromAt = -1;
+                            }
+                            if (hasTopLevelSelectClause &&
+                                countReplacesFirstSelectEndingAt < 0) {
+                                countReplacesFirstSelectEndingAt = i;
+                            }
+                            if (needsConstructorEnd) {
+                                needsConstructorEnd = false;
+                                modifyAt.put(i - 1,
+                                             QueryEdit.ADD_CONSTRUCTOR_END);
+                            }
                         }
 
                         i += 4;
@@ -4733,7 +4753,7 @@ public class QueryInfo {
                         }
                         i--; // balances loop increment when already positioned correctly
                     } else if (depth == 0) {
-                        boolean isWhere = false, isOrder = false;
+                        boolean isSelect = false, isWhere = false, isOrder = false;
                         int l; // keyword length
                         if (i + (l = 5) < length &&
                             !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
@@ -4744,28 +4764,28 @@ public class QueryInfo {
                             ||
                             (i + (l = 6) < length &&
                              !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
-                             (ql.regionMatches(true, i, "HAVING", 0, l) ||
+                             ((isSelect = ql.regionMatches(true, i, "SELECT", 0, l)) ||
+                              ql.regionMatches(true, i, "HAVING", 0, l) ||
                               ql.regionMatches(true, i, "EXCEPT", 0, l)))
                             ||
                             (i + (l = 9) < length &&
                              !Character.isJavaIdentifierPart(ql.charAt(i + l)) &&
                              ql.regionMatches(true, i, "INTERSECT", 0, l))) {
 
-                            if (isCursoredPage && !isWhere && !isOrder)
+                            if (isCursoredPage && !isSelect && !isWhere && !isOrder)
                                 // ORDER BY isn't allowed with cursored pagination
-                                // either, but has a better error message for it
-                                // elsewhere that points out the correct ways to
-                                // specify order
+                                // either, nor is SELECT positioned after WHERE,
+                                // but those patterns have a better error message
+                                // elsewhere that points out the correct usage
                                 throw exc(UnsupportedOperationException.class,
                                           "CWWKD1120.cursor.keyword.mismatch",
                                           method.getName(),
                                           repositoryInterface.getName(),
                                           ql.substring(i, i + l),
                                           ql);
-                            if (countMustOmitSelect) {
-                                countMustOmitSelect = false;
-                                modifyAt.put(-i, // avoid possible collision
-                                             QueryEdit.OMIT_SELECT_IN_COUNT);
+                            if (hasTopLevelSelectClause &&
+                                countReplacesFirstSelectEndingAt < 0) {
+                                countReplacesFirstSelectEndingAt = i;
                             }
                             if (needsConstructorEnd) {
                                 needsConstructorEnd = false;
@@ -4779,7 +4799,7 @@ public class QueryInfo {
                                     throw excCursorPaginationNotAllowed(ql, i, isOrder);
                             }
                             if (addFromAt == null)
-                                addFromAt = i;
+                                addFromAt = isSelect ? 0 : i;
                             i += l;
                             if (isWhere) {
                                 hasWhere = true;
@@ -4787,6 +4807,14 @@ public class QueryInfo {
                                     modifyAt.put(i, QueryEdit.ADD_PARENTHESIS_BEGIN);
                                     needsParenthesesEnd = true;
                                 }
+                            } else if (isSelect) {
+                                hasTopLevelSelectClause = true;
+
+                                if (insertRecordConstructors)
+                                    needsConstructorEnd = parseSelectForConstructor(ql, i, modifyAt);
+
+                                if (countReplacesFirstSelectAt < 0)
+                                    countReplacesFirstSelectAt = i;
                             } else if (isOrder) {
                                 if (countPages)
                                     modifyAt.put(-i, // avoid possible collision
@@ -4821,9 +4849,18 @@ public class QueryInfo {
         if (paramName != null)
             qlParamNames.add(paramName.toString());
 
-        if (countMustOmitSelect)
-            modifyAt.put(-length, // avoid possible collision
-                         QueryEdit.OMIT_SELECT_IN_COUNT);
+        if (countPages && countReplacesFirstSelectAt >= 0) {
+            modifyAt.put(countReplacesFirstSelectAt,
+                         QueryEdit.REPLACE_SELECT_IN_COUNT_BEGIN);
+            if (countReplacesFirstSelectEndingAt < 0)
+                countReplacesFirstSelectEndingAt = length;
+            modifyAt.put(-countReplacesFirstSelectEndingAt, // avoid possible collision
+                         QueryEdit.REPLACE_SELECT_IN_COUNT_END);
+        }
+
+        if (!hasTopLevelSelectClause && findQueryStartsWithSelect == Boolean.FALSE)
+            modifyAt.put(QueryEdit.BEFORE_QUERY,
+                         QueryEdit.ADD_SELECT_IF_NEEDED);
 
         if (addFromAt == null)
             if (findQueryStartsWithSelect == Boolean.TRUE)
@@ -4849,15 +4886,46 @@ public class QueryInfo {
     }
 
     /**
+     * Inspects the beginning of a SELECT clause to determine if constructor
+     * syntax (NEW) is present. If not present, add an instruction to insert it.
+     *
+     * @param ql       the query.
+     * @param i        position in the query after SELECT.
+     * @param modifyAt indices at which to perform modifications.
+     * @return true if this method added the ADD_CONSTRUCTOR_BEGIN instruction
+     *         which needs to be paired with ADD_CONSTRUCTOR_END.
+     */
+    @Trivial
+    private boolean parseSelectForConstructor(String ql,
+                                              int i,
+                                              Map<Integer, QueryEdit> modifyAt) {
+        boolean needsConstructorEnd = false;
+        int length = ql.length();
+
+        while (i < length && Character.isWhitespace(ql.charAt(i)))
+            i++;
+
+        if (i + 3 < length &&
+            !Character.isJavaIdentifierPart(ql.charAt(i + 3)) &&
+            ql.regionMatches(true, i, "NEW", 0, 3)) {
+            // already has constructor syntax
+            i += 3;
+        } else {
+            modifyAt.put(i, QueryEdit.ADD_CONSTRUCTOR_BEGIN);
+            needsConstructorEnd = true;
+        }
+
+        return needsConstructorEnd;
+    }
+
+    /**
      * Replaces the given query with one that includes the requested modifications.
      *
-     * @param ql                 the query.
-     * @param selectItemsStartAt the position after the SELECT keyword. Otherwise -1.
-     * @param modifyAt           indices at which to perform modifications.
+     * @param ql       the query.
+     * @param modifyAt indices at which to perform modifications.
      * @return a query that contains the requested modifications.
      */
     private String replaceQuery(String ql,
-                                int selectItemsStartAt,
                                 TreeMap<Integer, QueryEdit> modifyAt) {
 
         final String recordName = entityInfo.recordClass == null //
@@ -4881,19 +4949,24 @@ public class QueryInfo {
                                            : null;
         int cStartAt = 0; // index into the original query (ql)
         int cEndAt = qlLen;
+        int cSelectClauseEndAt = -1;
 
         for (Entry<Integer, QueryEdit> mod : modifyAt.entrySet()) {
             int m = mod.getKey();
             switch (mod.getValue()) {
-                case OMIT_SELECT_IN_COUNT:
+                case REPLACE_SELECT_IN_COUNT_END:
+                    cSelectClauseEndAt = -m; // position at end of SELECT clause
+                    break;
+                case REPLACE_SELECT_IN_COUNT_BEGIN:
                     if (c != null) {
-                        cStartAt = -m; // position after end of SELECT clause
-                        int selectItemsLength = cStartAt - selectItemsStartAt;
-                        c.append("SELECT COUNT(");
+                        c.append(ql.substring(cStartAt, cStartAt = m)); // SELECT
+                        c.append(" COUNT(");
+                        int selectItemsLength = cSelectClauseEndAt - cStartAt;
                         c.append(inferCountFromSelect(ql,
-                                                      selectItemsStartAt,
+                                                      cStartAt,
                                                       selectItemsLength));
                         c.append(") ");
+                        cStartAt = cSelectClauseEndAt;
                     }
                     break;
                 case OMIT_ORDER_IN_COUNT:
@@ -5088,14 +5161,12 @@ public class QueryInfo {
             int length = Array.getLength(arg);
             for (; entityCount < length; entityCount++)
                 results.add(em.merge(toEntity(Array.get(arg, entityCount))));
-            em.flush();
         } else if (Iterable.class.isAssignableFrom(entityParamType)) {
             results = new ArrayList<>();
             for (Object e : ((Iterable<?>) arg)) {
                 entityCount++;
                 results.add(em.merge(toEntity(e)));
             }
-            em.flush();
         } else {
             entityCount = 1;
             hasSingularEntityParam = true;
@@ -5103,7 +5174,6 @@ public class QueryInfo {
             Object entity = em.merge(toEntity(arg));
             if (results != null)
                 results.add(entity);
-            em.flush();
         }
 
         if (entityCount == 0)
@@ -5112,6 +5182,8 @@ public class QueryInfo {
                       method.getName(),
                       repositoryInterface.getName(),
                       method.getGenericParameterTypes()[0].getTypeName());
+
+        em.flush();
 
         Class<?> returnType = method.getReturnType();
         Object returnValue;
@@ -5307,10 +5379,9 @@ public class QueryInfo {
      *
      * @param query the query
      * @param args  repository method arguments
-     * @throws Exception if an error occurs
      */
     @Trivial // avoid logging customer data
-    void setParameters(jakarta.persistence.Query query, Object... args) throws Exception {
+    void setParameters(jakarta.persistence.Query query, Object... args) {
         final boolean trace = TraceComponent.isAnyTracingEnabled();
 
         DataVersionCompatibility compat = producer.compat();
@@ -5716,6 +5787,8 @@ public class QueryInfo {
             updateCount = updateOne(arg, em);
         }
 
+        em.flush();
+
         if (numExpected == 0)
             throw exc(IllegalArgumentException.class,
                       "CWWKD1092.lifecycle.arg.empty",
@@ -5782,31 +5855,23 @@ public class QueryInfo {
         String jpql = this.jpql;
         Set<String> attrsToUpdate = entityInfo.attributeNamesForEntityUpdate;
 
-        int versionParamIndex = entityInfo.idClassAttributeAccessors == null //
-                        ? (attrsToUpdate.size() + 2) //
-                        : (attrsToUpdate.size() +
-                           entityInfo.idClassAttributeAccessors.size() + 1);
-        Object version = null;
-        if (entityInfo.versionAttributeName != null) {
-            version = getAttribute(e, entityInfo.versionAttributeName);
-            if (version == null)
-                jpql = jpql.replace("=?" + versionParamIndex, " IS NULL");
-        }
-
         Object id = null;
         String idAttributeName = null;
         if (entityInfo.idClassAttributeAccessors == null) {
             idAttributeName = entityInfo.attributeNames.get(ID);
             id = getAttribute(e, idAttributeName);
             if (id == null) {
-                jpql = jpql.replace("=?" + (versionParamIndex - 1), " IS NULL");
-                if (version != null)
-                    jpql = jpql.replace("=?" + versionParamIndex, "=?" + (versionParamIndex - 1));
+                int idParamIndex = entityInfo.idClassAttributeAccessors == null //
+                                ? (attrsToUpdate.size() + 1) //
+                                : (attrsToUpdate.size() +
+                                   entityInfo.idClassAttributeAccessors.size());
+
+                jpql = jpql.replace("=?" + (idParamIndex - 1), " IS NULL");
             }
         }
 
         if (TraceComponent.isAnyTracingEnabled() && jpql != this.jpql)
-            Tr.debug(this, tc, "JPQL adjusted for NULL id or version", jpql);
+            Tr.debug(this, tc, "JPQL adjusted for NULL id", jpql);
 
         jakarta.persistence.Query update = em.createQuery(jpql);
 
@@ -5822,14 +5887,8 @@ public class QueryInfo {
                     Tr.debug(tc, "set ?" + p + ' ' + loggable(id));
                 update.setParameter(p++, id);
             }
-
-            if (entityInfo.versionAttributeName != null && version != null) {
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
-                    Tr.debug(tc, "set ?" + p + ' ' + loggable(version));
-                update.setParameter(p++, version);
-            }
         } else { // has IdClass
-            setParametersFromIdClassAndVersion(p, update, e, version);
+            setParametersFromIdClassAndVersion(p, update, e, null);
         }
 
         int numUpdated = update.executeUpdate();
@@ -5855,7 +5914,7 @@ public class QueryInfo {
             methodParamCount < jpqlParamCount &&
             type != LC_DELETE &&
             type != LC_UPDATE &&
-            type != LC_UPDATE_RET_ENTITY)
+            type != LC_UPDATE_MERGE)
             throw exc(UnsupportedOperationException.class,
                       "CWWKD1021.insufficient.params",
                       method.getName(),

@@ -38,7 +38,7 @@ dependencies {
                'rhino:js:1.6R5',
                'xml-apis:xml-apis:1.4.01',
                project(':com.ibm.ws.com.unboundid'),
-               'com.unboundid:unboundid-ldapsdk:5.1.0'
+               'com.unboundid:unboundid-ldapsdk:7.0.3'
 
   /*
    * Previously we had an uber jar named htmlunit-2.20-OSGi.jar. It appears to have contained all of
@@ -144,12 +144,12 @@ task copySamlFat_rs_server(dependsOn: [':com.ibm.ws.security.fat.common:assemble
       copy {
         from new File(project(':com.ibm.ws.security.saml.sso_fat.common').projectDir, 'securitykeys')
         into new File(autoFvtDir, "publish/servers/${serverName}")
-        include '*.jks', '*.arm'
+        include '*.jks', '*.arm', 'ec_key.p12'
       }
       copy {
         from new File(projectDir, 'securitykeys')
         into new File(autoFvtDir, "publish/servers/${serverName}")
-        include '*.jks', '.arm'
+        include '*.jks', '.arm', 'ec_key.p12'
       }
       // copySecurityDefaultFilesToServer
       copy {
@@ -277,12 +277,12 @@ task copySamlFat_sp_server(dependsOn: [':com.ibm.ws.security.fat.common:assemble
       copy {
         from new File(project(':com.ibm.ws.security.saml.sso_fat.common').projectDir, 'securitykeys')
         into new File(autoFvtDir, "publish/servers/${serverName}")
-        include '*.jks', '*.arm'
+        include '*.jks', '*.arm', 'ec_key.p12'
       }
       copy {
         from new File(projectDir, 'securitykeys')
         into new File(autoFvtDir, "publish/servers/${serverName}")
-        include '*.jks', '.arm'
+        include '*.jks', '.arm', 'ec_key.p12'
       }
       // copySecurityDefaultFilesToServer
       copy {
@@ -421,12 +421,12 @@ task copySamlFat_secondSP_mergedSPRS_server(dependsOn: [':com.ibm.ws.security.fa
       copy {
         from new File(project(':com.ibm.ws.security.saml.sso_fat.common').projectDir, 'securitykeys')
         into new File(autoFvtDir, "publish/servers/${serverName}")
-        include '*.jks', '*.arm'
+        include '*.jks', '*.arm', 'ec_key.p12'
       }
       copy {
         from new File(projectDir, 'securitykeys')
         into new File(autoFvtDir, "publish/servers/${serverName}")
-        include '*.jks', '.arm'
+        include '*.jks', '.arm', 'ec_key.p12'
       }
       // copySecurityDefaultFilesToServer
       copy {

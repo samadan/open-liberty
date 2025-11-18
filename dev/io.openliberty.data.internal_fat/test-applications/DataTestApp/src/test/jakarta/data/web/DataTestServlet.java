@@ -147,6 +147,56 @@ public class DataTestServlet extends FATServlet {
     @Inject
     Vehicles vehicles;
 
+    /**
+     * Indicates if testing with the Hibernate Persistence provider
+     * rather than EclipseLink.
+     *
+     * @return true if testing with the Hibernate Persistence provider.
+     */
+    public static final boolean isHibernate() {
+        return Boolean.valueOf(System.getenv("TEST_HIBERNATE"));
+    }
+
+    /**
+     * Temporary method to allow skipping tests for tests that
+     * fail due to incompatibilities between our Jakarta Data provider
+     * and Hibernate's Jakarta Persistence provider.
+     *
+     * @param issues - the issues that describe why the test must be skipped on Hibernate
+     * @return boolean - true if we need to skip the test, false otherwise.
+     */
+    public static boolean skipForHibernate(String... issues) {
+        if (isHibernate()) {
+            System.out.println("Skipping test because: " + Arrays.asList(issues));
+
+            // FIXME - this is the proper way to skip a test via junit
+            // however, our FATServlet does not support catching an
+            // AssumptionViolatedException and serializing it back to the client.
+//            assumeTrue(!isHibernate());
+        }
+        return isHibernate();
+    }
+
+    /**
+     * Temporary method to allow skipping tests for tests that
+     * fail due to incompatibilities between our Jakarta Data provider
+     * and Hibernate's Jakarta Persistence provider on a specific database.
+     *
+     * @param driver - driver name prefix (i.e. derby)
+     * @param issues - the issues that describe why the test must be skipped on Hibernate
+     * @return boolean - true if we need to skip the test, false otherwise.
+     */
+    public static boolean skipForHibernateByDatabase(String driver, String... issues) {
+        boolean isHibernateAndDatabase = isHibernate() && System.getenv("DB_DRIVER").contains(driver);
+
+        if (isHibernateAndDatabase) {
+            System.out.println("Skipping test because database is " + System.getenv("DB_DRIVER") + " and " + Arrays.asList(issues));
+        }
+
+        return isHibernateAndDatabase;
+
+    }
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         // Do not add or remove from this data in tests.
@@ -590,6 +640,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testConvertLongValue() throws Exception {
+
         assertEquals(47L,
                      primes.numberAsBigDecimal(47).longValue());
 
@@ -611,11 +662,15 @@ public class DataTestServlet extends FATServlet {
                                      .floatValue(),
                      0.01f);
 
-        assertEquals(31,
-                     primes.numberAsInt(31));
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
+            //TODO remove skip when fixed in Hibernate
+        } else {
+            assertEquals(31,
+                         primes.numberAsInt(31));
 
-        assertEquals(29,
-                     primes.numberAsInteger(29L).orElseThrow().intValue());
+            assertEquals(29,
+                         primes.numberAsInteger(29L).orElseThrow().intValue());
+        }
 
         assertEquals(23L,
                      primes.numberAsLong(23));
@@ -623,15 +678,18 @@ public class DataTestServlet extends FATServlet {
         assertEquals(19L,
                      primes.numberAsLongWrapper(19).orElseThrow().longValue());
 
-        assertEquals((short) 4013,
-                     primes.numberAsShort(4013));
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
+            //TODO remove skip when fixed in Hibernate
+        } else {
+            assertEquals((short) 4013,
+                         primes.numberAsShort(4013));
+        }
 
         assertEquals((short) 4007,
                      primes.numberAsShortWrapper(4007).orElseThrow().shortValue());
 
         assertEquals(false,
                      primes.numberAsShortWrapper(27).isPresent());
-
     }
 
     /**
@@ -742,6 +800,10 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testCountPagesWithDistinctValues() {
+        if (skipForHibernateByDatabase("derby", "https://github.com/OpenLiberty/open-liberty/issues/33289")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         Page<String> page1 = primes.romanNumeralsDistinct(30L, 49L,
                                                           4000L, 4009L,
                                                           PageRequest.ofSize(3));
@@ -1903,6 +1965,10 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testFindAndDeleteWithOrderBy() {
+        if (skipForHibernateByDatabase("derby", "https://github.com/OpenLiberty/open-liberty/issues/33287")) {
+            return; //TODO remove skip when fixed in Hibernate or Liberty
+        }
+
         String testName = "TestFindAndDeleteWithOrderByKeyword";
         //                        id   length   width   height  description
         packages.save(new Package(517, 1165.0f, 1044.0f, 517.0f, testName));
@@ -2163,6 +2229,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testFromClauseIdentifiesEntity() {
+
         products.clear();
 
         Product prod1 = new Product();
@@ -2183,7 +2250,11 @@ public class DataTestServlet extends FATServlet {
         prod3.price = 16.99f;
         prod3 = multi.create(prod3);
 
-        assertEquals(3L, multi.countEverything());
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
+            //TODO remove skip when fixed in Hibernate or Liberty
+        } else {
+            assertEquals(3L, multi.countEverything());
+        }
 
         assertEquals(1L, multi.discount("TestFromClauseIdentifiesEntity-Product-3", 0.30f));
         assertEquals(3L, multi.discount("TestFromClauseIdentifiesEntity-Product-_", 0.20f));
@@ -2194,7 +2265,11 @@ public class DataTestServlet extends FATServlet {
 
         assertEquals(3L, multi.destroy("TestFromClauseIdentifiesEntity-%"));
 
-        assertEquals(0L, multi.countEverything());
+        if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33182")) {
+            //TODO remove skip when fixed in Hibernate or Liberty
+        } else {
+            assertEquals(0L, multi.countEverything());
+        }
     }
 
     /**
@@ -2203,6 +2278,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testFunctionWithIdThisArg() {
+
         vehicles.delete();
 
         Vehicle v1 = new Vehicle();
@@ -3778,6 +3854,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testNamedParametersFromMethodParameterNames() {
+
         assertArrayEquals(new long[] { 19, 29, 43, 47 },
                           primes.matchAny(19, "XLVII", "2B", "twenty-nine"));
     }
@@ -3865,6 +3942,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testOrderByIdFunction() {
+
         assertIterableEquals(List.of(19L, 17L, 13L, 11L, 7L, 5L, 3L, 2L),
                              primes.below(20L));
     }
@@ -4161,6 +4239,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testQueryByMethodNameWithoutBy() {
+
         vehicles.delete();
 
         Vehicle v1 = new Vehicle();
@@ -4236,20 +4315,26 @@ public class DataTestServlet extends FATServlet {
                                      .map(v -> v.model)
                                      .collect(Collectors.toList()));
 
-        assertEquals(List.of("Impreza", "HR-V"),
-                     vehicles.deleteFoundOrderByPriceAscVinIdAsc(Limit.of(2))
-                                     .stream()
-                                     .map(v -> v.model)
-                                     .collect(Collectors.toList()));
+        if (skipForHibernateByDatabase("derby", "https://github.com/OpenLiberty/open-liberty/issues/33287")) {
+            //TODO remove skip when fixed in Hibernate or Liberty
+            assertEquals(5L, vehicles.delete());
+            assertEquals(0L, vehicles.countEverything());
+        } else {
+            assertEquals(List.of("Impreza", "HR-V"),
+                         vehicles.deleteFoundOrderByPriceAscVinIdAsc(Limit.of(2))
+                                         .stream()
+                                         .map(v -> v.model)
+                                         .collect(Collectors.toList()));
 
-        assertEquals(3L, vehicles.countEverything());
+            assertEquals(3L, vehicles.countEverything());
 
-        assertEquals(List.of("CR-V", "Explorer", "Outback"),
-                     vehicles.deleteAll()
-                                     .stream()
-                                     .map(v -> v.model)
-                                     .sorted()
-                                     .collect(Collectors.toList()));
+            assertEquals(List.of("CR-V", "Explorer", "Outback"),
+                         vehicles.deleteAll()
+                                         .stream()
+                                         .map(v -> v.model)
+                                         .sorted()
+                                         .collect(Collectors.toList()));
+        }
 
         assertEquals(false, vehicles.existsAny());
         assertEquals(0L, vehicles.findAll().count());
@@ -4915,6 +5000,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testSingularResultPageOfBoolean() {
+
         PageRequest pageReq = PageRequest.ofSize(6);
         Page<Boolean> page = primes.pageOfExists(pageReq);
 
@@ -4931,6 +5017,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testSingularResultPageNumeric() {
+
         Page<Long> page = primes.pageOfCountUpTo(20L, PageRequest.ofSize(4));
 
         assertEquals(List.of(8L), page.content());
@@ -5544,6 +5631,7 @@ public class DataTestServlet extends FATServlet {
     @Test
     public void testTransactional() throws ExecutionException, IllegalStateException, InterruptedException, //
                     NotSupportedException, SecurityException, SystemException, TimeoutException {
+
         personnel.removeAll().get(TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
         Person p1 = new Person();
@@ -5788,6 +5876,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testUpdateMultiple() {
+
         products.clear();
 
         assertEquals(0, products.putOnSale("TestUpdateMultiple-match", .10f));
@@ -5962,6 +6051,7 @@ public class DataTestServlet extends FATServlet {
      */
     @Test
     public void testVersionedUpdateViaQuery() {
+
         Product prod1 = new Product();
         prod1.pk = UUID.nameUUIDFromBytes("Q6008-U8-21001".getBytes());
         prod1.name = "testVersionedUpdateViaQuery Product 1";
