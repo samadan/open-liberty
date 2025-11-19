@@ -11,7 +11,7 @@
  * IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package com.ibm.ws.wssecurity.fat.cxf.samltoken3;
+package com.ibm.ws.wssecurity.fat.cxf.samltoken4;
 
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
@@ -20,8 +20,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import com.ibm.ws.security.fat.common.actions.LargeProjectRepeatActions;
 import com.ibm.ws.security.fat.common.utils.ldaputils.CommonLocalLDAPServerSuite;
-import com.ibm.ws.wssecurity.fat.cxf.samltoken3.LiteAlwaysRunTest.AlwaysRunAndPassTest;
-import com.ibm.ws.wssecurity.fat.cxf.samltoken3.TwoServerTests.CxfSAMLCaller2ServerTests;
+import com.ibm.ws.wssecurity.fat.cxf.samltoken4.LiteAlwaysRunTest.AlwaysRunAndPassTest;
+import com.ibm.ws.wssecurity.fat.cxf.samltoken4.TwoServerTests.CxfSAMLCaller2ServerTests;
 
 import componenttest.rules.repeater.EmptyAction;
 import componenttest.rules.repeater.FeatureReplacementAction;

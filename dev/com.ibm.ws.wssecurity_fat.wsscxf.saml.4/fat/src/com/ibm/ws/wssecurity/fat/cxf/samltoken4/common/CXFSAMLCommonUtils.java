@@ -11,7 +11,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package com.ibm.ws.wssecurity.fat.cxf.samltoken3.common;
+package com.ibm.ws.wssecurity.fat.cxf.samltoken4.common;
 
 import java.io.File;
 

@@ -11,7 +11,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package com.ibm.ws.wssecurity.fat.cxf.samltoken3.TwoServerTests;
+package com.ibm.ws.wssecurity.fat.cxf.samltoken4.TwoServerTests;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ import com.ibm.ws.security.saml20.fat.commonTest.SAMLCommonTestHelpers;
 import com.ibm.ws.security.saml20.fat.commonTest.SAMLConstants;
 import com.ibm.ws.security.saml20.fat.commonTest.SAMLMessageConstants;
 import com.ibm.ws.security.saml20.fat.commonTest.SAMLTestSettings;
-import com.ibm.ws.wssecurity.fat.cxf.samltoken3.common.CxfSAMLCallerTests;
+import com.ibm.ws.wssecurity.fat.cxf.samltoken4.common.CxfSAMLCallerTests;
 
 import componenttest.annotation.ExpectedFFDC;
 import componenttest.annotation.SkipForRepeat;
