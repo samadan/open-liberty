@@ -44,11 +44,11 @@ public interface NettyConstants {
     /** Netty scaler and metrics defaults */
     public static final int SCALER_MIN_THREADS = 1;
     public static final int SCALER_MAX_THREADS = 4;
-    public static final int SCALER_WINDOW = 1500;
+    public static final long SCALER_WINDOW = 1500;
     public static final double SCALER_DOWN_THRESHOLD = 0.15;
     public static final double SCALER_UP_THRESHOLD = 0.85;
     public static final int SCALER_DOWN_STEP = 1;
     public static final int SCALER_UP_STEP = 1;
     public static final int SCALER_CYCLES = 3;
-    public static final int SCALER_METRICS_WINDOW = 0;
+    public static final long SCALER_METRICS_WINDOW = 0;
 }
