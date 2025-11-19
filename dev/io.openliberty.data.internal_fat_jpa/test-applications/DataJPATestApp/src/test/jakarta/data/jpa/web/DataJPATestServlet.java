@@ -4877,21 +4877,9 @@ public class DataJPATestServlet extends FATServlet {
 
         boolean updated;
         try {
-            // TODO enable once #32185 is fixed in EclipseLink
-            // jakarta.persistence.PersistenceException:
-            // Exception [EclipseLink-26] (Eclipse Persistence Services -
-            // 5.0.0-B08.v202505280949-dfc411d38767f696ce9f2741de051aef050cbeba):
-            // org.eclipse.persistence.exceptions.DescriptorException
-            // Exception Description: Trying to get value for instance variable [street]
-            //   of type [test.jakarta.data.jpa.web.Street] from the object
-            //   [test.jakarta.data.jpa.web.Location]. The specified object is not an
-            //   instance of the class or interface declaring the underlying field.
-            // Internal Exception: java.lang.IllegalArgumentException:
-            //   Can not get test.jakarta.data.jpa.web.Street field
-            //   test.jakarta.data.jpa.web.Address.street on test.jakarta.data.jpa.web.Location
-            //Address newAddress = new Address("Rochester", "MN", 55901, 3605, new Street("US 52", "N"));
-            //Location newLocation = new Location(newAddress, 44.05881f, -92.50556f);
-            //assertEquals(true, businesses.updateWithJPQL(newLocation, "IBM", ibm.id));
+            Address newAddress = new Address("Rochester", "MN", 55901, 3605, new Street("US 52", "N"));
+            Location newLocation = new Location(newAddress, 44.05881f, -92.50556f);
+            assertEquals(true, businesses.updateWithJPQL(newLocation, "IBM", ibm.id));
 
             ibm.location.latitude = 44.05881f;
             ibm.location.longitude = -92.50556f;
