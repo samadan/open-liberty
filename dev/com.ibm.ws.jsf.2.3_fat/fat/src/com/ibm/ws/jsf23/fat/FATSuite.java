@@ -35,7 +35,6 @@ import com.ibm.ws.jsf23.fat.tests.JSF23IterableSupportTests;
 import com.ibm.ws.jsf23.fat.tests.JSF23JPA22Test;
 import com.ibm.ws.jsf23.fat.tests.JSF23MapSupportTests;
 import com.ibm.ws.jsf23.fat.tests.JSF23SelectOneRadioGroupTests;
-import com.ibm.ws.jsf23.fat.tests.JSF23SpecIssueTests;
 import com.ibm.ws.jsf23.fat.tests.JSF23UIRepeatConditionTests;
 import com.ibm.ws.jsf23.fat.tests.JSF23UISelectManyTests;
 import com.ibm.ws.jsf23.fat.tests.JSF23ViewParametersTests;
