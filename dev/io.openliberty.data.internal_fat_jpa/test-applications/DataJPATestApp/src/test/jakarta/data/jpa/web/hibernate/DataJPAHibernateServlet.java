@@ -210,12 +210,7 @@ public class DataJPAHibernateServlet extends FATServlet {
             em.setCacheRetrieveMode(CacheRetrieveMode.BYPASS);
             assertEquals(true, em.isJoinedToTransaction());
 
-            SimpleEntity found = (SimpleEntity) em
-                            .createQuery("SELECT this FROM SimpleEntity WHERE id=?1")
-                            .setParameter(1, 1L)
-                            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-                            .getResultList()
-                            .get(0);
+            SimpleEntity found = em.find(SimpleEntity.class, 1, LockModeType.PESSIMISTIC_WRITE);
             //found.value = entity.value; // alternative to merge that doesn't work either
             //entity = found;
 
