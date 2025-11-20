@@ -1996,7 +1996,7 @@ public class DataJPATestServlet extends FATServlet {
         PurchaseOrder o7 = new PurchaseOrder();
         o7.purchasedBy = "testEntitiesAsParameters-Customer7";
         o7.purchasedOn = OffsetDateTime.now();
-        o7.total = 70.99f;
+        o7.total = 70.19f;
 
         // TODO SQLServer throws com.microsoft.sqlserver.jdbc.SQLServerException: Violation of PRIMARY KEY constraint ...
         // which is not a subset of SQLIntegrityConstraintViolationException
@@ -2010,21 +2010,22 @@ public class DataJPATestServlet extends FATServlet {
         if (!jdbcJarName.startsWith("mssql-jdbc") &&
             !jdbcJarName.startsWith("postgresql")) {
             try {
-                // TODO When using Hibernate, o7 insert succeeds,
-                // causing subsequent failure on:
-                // orders.insertAll(List.of(o7, o8))
-                if (skipForHibernate("https://github.com/OpenLiberty/open-liberty/issues/33200")) {
-                    ; //TODO remove skip when fixed in Hibernate or Liberty
-                } else {
-                    orders.insertAll(List.of(o7, o5));
-                    fail("Should not be able insert an entity with an Id that is already present.");
-                }
+                orders.insertAll(List.of(o7, o5));
+                fail("Should not be able insert an entity with an Id that is already present.");
             } catch (EntityExistsException x) {
                 // expected
             }
         }
 
         assertEquals(false, orders.findFirstByPurchasedBy("testEntitiesAsParameters-Customer7").isPresent());
+
+        // Hibernate considers the previous instance of o7 that was rolled back
+        // to be a detached entity that it will not persist. So we need a new
+        // instance:
+        o7 = new PurchaseOrder();
+        o7.purchasedBy = "testEntitiesAsParameters-Customer7";
+        o7.purchasedOn = OffsetDateTime.now();
+        o7.total = 70.99f;
 
         PurchaseOrder o8 = new PurchaseOrder();
         o8.purchasedBy = "testEntitiesAsParameters-Customer8";
