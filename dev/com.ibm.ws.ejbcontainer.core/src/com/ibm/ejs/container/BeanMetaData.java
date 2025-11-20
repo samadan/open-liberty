@@ -2625,26 +2625,4 @@ public class BeanMetaData extends com.ibm.ws.runtime.metadata.MetaDataImpl imple
         return m_syncToOSThreadValue;
     }
 
-    public void initializeSyncToOSThread() {
-    try {
-        // Get the JNDI context for the EJB
-        Context javaComp = getJavaNameSpaceContext();
-        if (javaComp != null) {
-            // Look up the SyncToOSThread environment entry
-            Boolean syncToOSThread = (Boolean) javaComp.lookup("env/com.ibm.websphere.security.SyncToOSThread");
-            if (syncToOSThread != null) {
-                m_syncToOSThreadValue = syncToOSThread.booleanValue();
-                if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-                    Tr.debug(tc, "SyncToOSThread enabled for bean: " + enterpriseBeanName);
-                }
-            }
-        }
-    } catch (NamingException e) {
-        // The environment entry doesn't exist, so leave the default value
-        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "SyncToOSThread environment entry not found for bean: " + enterpriseBeanName);
-        }
-    }
-}
-
 } // BeanMetaData
