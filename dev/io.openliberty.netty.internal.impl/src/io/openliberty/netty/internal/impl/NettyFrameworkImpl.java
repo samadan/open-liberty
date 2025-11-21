@@ -313,14 +313,6 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
         stopEventLoops();
     }
 
-    @Modified
-    protected void modified(ComponentContext context, Map<String, Object> config) {
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-            Tr.event(this, tc, "Processing config", config);
-        }
-        // update any framework-specific config
-    }
-
     /**
      * DS method for setting the required channel framework service. For now
      * this reference is needed for access to EndPointMgr. That code will be split
