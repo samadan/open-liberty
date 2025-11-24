@@ -61,11 +61,6 @@ public class JSF23WebSocketTests extends FATServletClient {
     @Server("jsf.container.2.3_fat.ws")
     public static LibertyServer jsf23CDIWSOCServer;
 
-    @ClassRule
-    public static BrowserWebDriverContainer<?> chrome = new BrowserWebDriverContainer<>(FATSuite.getChromeImage()).withCapabilities(new ChromeOptions())
-                    .withAccessToHost(true)
-                    .withSharedMemorySize(2147483648L); // avoids "message":"Duplicate mount point: /dev/shm"
-
     private static ExtendedWebDriver driver;
 
     @BeforeClass
@@ -82,7 +77,7 @@ public class JSF23WebSocketTests extends FATServletClient {
         
         Testcontainers.exposeHostPorts(jsf23CDIWSOCServer.getHttpDefaultPort(), jsf23CDIWSOCServer.getHttpDefaultSecurePort());
 
-        driver = new CustomDriver(new RemoteWebDriver(chrome.getSeleniumAddress(), new ChromeOptions().setAcceptInsecureCerts(true)));
+        driver = FATSuite.getWebDriver();
     }
 
     @AfterClass
