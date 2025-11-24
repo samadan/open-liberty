@@ -30,6 +30,7 @@ import com.ibm.ws.security.saml20.fat.commonTest.SAMLTestSettings;
 import com.ibm.ws.wssecurity.fat.cxf.samltoken4.common.CxfSAMLCallerTests;
 
 import componenttest.annotation.ExpectedFFDC;
+import componenttest.annotation.MinimumJavaLevel;
 import componenttest.annotation.SkipForRepeat;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.custom.junit.runner.Mode;
@@ -56,6 +57,7 @@ import componenttest.topology.impl.LibertyServerWrapper;
 @LibertyServerWrapper
 @Mode(TestMode.FULL)
 @RunWith(FATRunner.class)
+@MinimumJavaLevel(javaLevel = 11)
 public class CxfSAMLCaller2ServerTests extends CxfSAMLCallerTests {
 
     private static final Class<?> thisClass = CxfSAMLCaller2ServerTests.class;
