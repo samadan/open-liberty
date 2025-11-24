@@ -106,7 +106,7 @@ public class PathUtils {
                 if (caseSensitiveFile != null && (caseSensitiveFile.delete() || !caseSensitiveFile.exists())) {
                     try {
                         if (caseSensitiveFile.createNewFile()) {
-                            // We created "caseSensitive", so check if "CASeSENSITIVE" exists.
+                            // We created "caseSensitive", so check if "CASEsENSITIVE" exists.
                             // new File("A").equals(new File("a")) returns true on Windows, but
                             // OS/400 returns false even though the files are the same, so use
                             // getCanonicalFile() first, which allows the comparison to succeed.
@@ -120,7 +120,7 @@ public class PathUtils {
                     } catch (IOException ioe) {
                         // auto FFDC
                     } finally {
-                        if (caseSensitiveFile != null && caseSensitiveFile.exists()) {
+                        if (caseSensitiveFile != null) {
                             caseSensitiveFile.delete();
                         }
                     }
@@ -128,33 +128,30 @@ public class PathUtils {
             }
         }
 
+        // Fallback: test using temp file
         try {
             // Need to double check, since the above code is intended to be run in an
             // OSGi environment, not a Java SE / JUnit env
             caseSensitiveFile = File.createTempFile("caseSENSITIVEprefix", "TxT");
-            boolean iAmCaseSensitive = !getCanonicalFile(caseSensitiveFile).equals(new File(caseSensitiveFile.getAbsolutePath().toUpperCase()));
-            if (iAmCaseSensitive) {
-                return true;
-            }
+            // Compare canonical files to properly detect case sensitivity
+            boolean iAmCaseSensitive = !getCanonicalFile(caseSensitiveFile).equals(getCanonicalFile(new File(caseSensitiveFile.getAbsolutePath().toUpperCase())));
+            return iAmCaseSensitive;
         } catch (Exception e) {
             // We can't tell if this OS is case sensitive or not.
             // Assume we might not be case sensitive.
-            // Log the exception to help diagnose issues (e.g., temp directory permissions on z/OS)
+            // Generate FFDC to help diagnose issues (e.g., temp directory permissions, security restrictions)
             // Include diagnostic information about the temp directory configuration
             String tmpDir = System.getProperty("java.io.tmpdir", "unknown");
             String osName = System.getProperty("os.name", "unknown");
             String userName = System.getProperty("user.name", "unknown");
             FFDCFilter.processException(e, PathUtils.class.getName(), "isOsCaseSensitive",
-                new Object[] { "java.io.tmpdir=" + tmpDir, "os.name=" + osName, "user.name=" + userName });
+                                       new Object[] { "java.io.tmpdir=" + tmpDir, "os.name=" + osName, "user.name=" + userName });
             return false;
         } finally {
-            // Only delete if the file was successfully created
-            if (caseSensitiveFile != null && caseSensitiveFile.exists()) {
+            if (caseSensitiveFile != null) {
                 caseSensitiveFile.delete();
             }
         }
-        // Something went wrong. Assume we might be not be case sensitive.
-        return false;
     }
 
     /**
