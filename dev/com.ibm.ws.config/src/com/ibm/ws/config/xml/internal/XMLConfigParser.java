@@ -35,7 +35,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.osgi.framework.Bundle;
-import org.xml.sax.ErrorHandler;
 
 import com.ibm.websphere.config.ConfigParserException;
 import com.ibm.websphere.config.ConfigValidationException;
@@ -48,7 +47,6 @@ import com.ibm.ws.config.xml.internal.DefaultConfiguration.DefaultConfigFile;
 import com.ibm.ws.config.xml.internal.variables.ConfigVariable;
 import com.ibm.ws.config.xml.internal.variables.ConfigVariableRegistry;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
-import com.ibm.ws.http.netty.pipeline.HttpPipelineInitializer.ConfigElement;
 import com.ibm.ws.kernel.service.util.DesignatedXMLInputFactory;
 import com.ibm.wsspi.kernel.service.location.MalformedLocationException;
 import com.ibm.wsspi.kernel.service.location.WsLocationAdmin;
@@ -263,6 +261,7 @@ public class XMLConfigParser {
             }
             // If we get here, there is a single element in the file and it is not <server> or <client>
             logError(ThrowBehavior.ALWAYS_THROW_EXCEPTION, "error.root.must.be.server", docLocation, processType);
+            return false; // Dead code because of the always-throw above, but we must please the compiler.
 
         } catch (XMLStreamException e) {
             throw new ConfigParserException(e);
