@@ -65,6 +65,13 @@ public class EntityInfo {
      */
     final SortedSet<String> attributeNamesForEntityUpdate;
 
+    /**
+     * Setter methods for entity attributes that have getter methods.
+     * Null if the workaround to create copies of detached entities
+     * is not needed.
+     */
+    final Map<String, Method> attributeSetters;
+
     // properly cased/qualified JPQL attribute name --> type
     final SortedMap<String, Class<?>> attributeTypes;
 
@@ -77,6 +84,7 @@ public class EntityInfo {
     final Class<?> idType; // type of the id, which could be a JPA IdClass for composite ids
     final SortedMap<String, Member> idClassAttributeAccessors; // null if no IdClass
     final boolean inheritance;
+    final boolean isHibernate;
     final EntityGraph<?> loadGraph; // null if all attributes automatically load eagerly
     final Map<String, Object> loadGraphMap; // null if all attributes automatically load eagerly
     final String name; // entity name to use in query language. If a record, the name will be [RecordName]Entity.
@@ -94,12 +102,14 @@ public class EntityInfo {
                Map<String, List<Member>> attributeAccessors,
                Map<String, String> attributeNames,
                SortedSet<String> attributeNamesForUpdate,
+               Map<String, Method> attributeSetters,
                SortedMap<String, Class<?>> attributeTypes,
                Map<String, Class<?>> collectionElementTypes,
                Map<Class<?>, List<String>> relationAttributeNames,
                EntityGraph<?> loadGraph,
                Class<?> idType,
                SortedMap<String, Member> idClassAttributeAccessors,
+               boolean isHibernate,
                String versionAttributeName,
                EntityManagerBuilder entityManagerBuilder) {
         this.name = entityName;
@@ -108,6 +118,7 @@ public class EntityInfo {
         this.attributeAccessors = attributeAccessors;
         this.attributeNames = attributeNames;
         this.attributeNamesForEntityUpdate = attributeNamesForUpdate;
+        this.attributeSetters = attributeSetters;
         this.attributeTypes = attributeTypes;
         this.collectionElementTypes = collectionElementTypes;
         this.relationAttributeNames = relationAttributeNames;
@@ -117,6 +128,7 @@ public class EntityInfo {
                         : Map.of(Util.LOADGRAPH, loadGraph);
         this.idType = idType;
         this.idClassAttributeAccessors = idClassAttributeAccessors;
+        this.isHibernate = isHibernate;
         this.recordClass = recordClass;
         this.versionAttributeName = versionAttributeName;
 
