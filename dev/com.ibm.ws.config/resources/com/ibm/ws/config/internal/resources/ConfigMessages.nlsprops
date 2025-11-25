@@ -499,7 +499,7 @@ error.config.root.deleted.explanation=The server.xml file was deleted. To cause 
 error.config.root.deleted.useraction=Add the server.xml file back to the server.
 
 error.potential.malformed.element=CWWKG0111E: Potential malformed XML element detected in configuration: [{0}] at line {1} in {2}. This text appears to be an XML element but is missing the opening angle bracket (<). Verify the syntax is correct.
-error.potential.malformed.element.explanation=The configuration parser detected text that looks like it might be a malformed XML element. This typically occurs when an element is missing its opening angle bracket (<).
+error.potential.malformed.element.explanation=The configuration parser detected text that might be a malformed XML element. This error typically occurs when an element is missing its opening angle bracket (<).
 error.potential.malformed.element.useraction=Check the configuration file at the specified line and ensure all XML elements start with an opening angle bracket (<).
 
 # Non-TR message
