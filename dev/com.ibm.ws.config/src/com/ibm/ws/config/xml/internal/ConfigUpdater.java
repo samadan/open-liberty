@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 IBM Corporation and others.
+ * Copyright (c) 2012, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -120,7 +120,7 @@ class ConfigUpdater {
                 if (failOnError) {
                     throw e;
                 } else {
-                    configEvaluator.issueError("error.config.update.exception", new Object[] { nodeName, e.getMessage(), info.configElement.getId() });
+                    issueError("error.config.update.exception", new Object[] { nodeName, e.getMessage(), info.configElement.getId() });
                     warnIfOldConfigExists(info, nodeName);
                 }
             } catch (AttributeValidationException e) {
@@ -128,8 +128,8 @@ class ConfigUpdater {
                 if (failOnError) {
                     throw new ConfigUpdateException(e);
                 } else {
-                    configEvaluator.issueError("error.attribute.validation.exception",
-                                               new Object[] { nodeName, e.getAttributeDefintion().getID(), e.getValue(), e.getMessage() });
+                    issueError("error.attribute.validation.exception",
+                               new Object[] { nodeName, e.getAttributeDefintion().getID(), e.getValue(), e.getMessage() });
                     warnIfOldConfigExists(info, nodeName);
                 }
             } catch (ConfigEvaluatorException e) {
@@ -137,7 +137,7 @@ class ConfigUpdater {
                 if (failOnError) {
                     throw new ConfigUpdateException(e);
                 } else {
-                    configEvaluator.issueError("error.config.update.exception", new Object[] { nodeName, e.getMessage(), info.configElement.getId() });
+                    issueError("error.config.update.exception", new Object[] { nodeName, e.getMessage(), info.configElement.getId() });
                     warnIfOldConfigExists(info, nodeName);
                 }
             }
@@ -185,6 +185,23 @@ class ConfigUpdater {
         }
 
         return configElement.getNodeName();
+    }
+
+    /**
+     * Issue an error by delegating to ConfigEvaluator.issueError() and translating
+     * ConfigEvaluatorException to ConfigUpdateException.
+     *
+     * @param label the error message label
+     * @param args the error message arguments
+     * @throws ConfigUpdateException if the error handler is set to FAIL
+     */
+    @FFDCIgnore(ConfigEvaluatorException.class)
+    private void issueError(String label, Object... args) throws ConfigUpdateException {
+        try {
+            configEvaluator.issueError(label, args);
+        } catch (ConfigEvaluatorException e) {
+            throw new ConfigUpdateException(e);
+        }
     }
 
     private void updateConfiguration(ConfigurationInfo info, Collection<ConfigurationInfo> infos, boolean encourageUpdates) throws ConfigEvaluatorException, ConfigUpdateException {
@@ -598,7 +615,7 @@ class ConfigUpdater {
                 // throw an error
                 if (info != null) {
                     String id = failedUpdateAttrDef.get(value).getID();
-                    configEvaluator.issueError("error.unique.value.conflict", id, value);
+                    issueError("error.unique.value.conflict", id, value);
                     String nodeName = getNodeNameForExceptions(info.configElement);
                     String exceptionMessage = "The value " + value + " for attribute " + id + " is not unique";
 
@@ -608,7 +625,7 @@ class ConfigUpdater {
                     if (failOnError) {
                         throw new ConfigUpdateException(exceptionMessage);
                     } else {
-                        configEvaluator.issueError("error.config.update.exception", new Object[] { nodeName, exceptionMessage, info.configElement.getId() });
+                        issueError("error.config.update.exception", new Object[] { nodeName, exceptionMessage, info.configElement.getId() });
                         warnIfOldConfigExists(info, nodeName);
                     }
                 }
