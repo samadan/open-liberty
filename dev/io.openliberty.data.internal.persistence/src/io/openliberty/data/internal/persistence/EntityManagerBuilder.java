@@ -149,11 +149,14 @@ public abstract class EntityManagerBuilder {
             // build this project and run the test bucket:
             // ./gradlew io.openliberty.data.internal_fat_jpa:buildandrun
             boolean eagerlyFetchAll = false;
+            boolean isHibernate = em.getClass().getName().startsWith("org.hibernate.");
             Set<Class<?>> missingEntityTypes = new HashSet<>(entityTypes);
             Metamodel model = em.getMetamodel();
             for (EntityType<?> entityType : model.getEntities()) {
                 Map<String, String> attributeNames = new HashMap<>();
                 Map<String, List<Member>> attributeAccessors = new HashMap<>();
+                // TODO remove this workaround for #33232 once fixed
+                Map<String, Method> attributeSetters = isHibernate ? new HashMap<>() : null;
                 SortedSet<String> attributeNamesForUpdate = new TreeSet<>();
                 SortedMap<String, Class<?>> attributeTypes = new TreeMap<>();
                 SortedMap<String, Member> idClassAttributeAccessors = null;
@@ -214,6 +217,11 @@ public abstract class EntityManagerBuilder {
 
                         attributeNames.put(attributeName.toLowerCase(), attributeName);
                         attributeAccessors.put(attributeName, Collections.singletonList(accessor));
+                        if (attributeSetters != null && // workaround is only needed for Hibernate
+                            recordClass == null && // Java record entities are always new instances
+                            accessor instanceof Method) // otherwise use the Field
+                            attributeSetters.put(attributeName, getSetMethod(jpaEntityClass,
+                                                                             (Method) accessor));
                         attributeTypes.put(attributeName, attr.getJavaType());
                         if (attr.isCollection()) {
                             if (attr instanceof PluralAttribute) {
@@ -425,12 +433,14 @@ public abstract class EntityManagerBuilder {
                                     attributeAccessors, //
                                     attributeNames, //
                                     attributeNamesForUpdate, //
+                                    attributeSetters, //
                                     attributeTypes, //
                                     collectionElementTypes, //
                                     relationAttributeNames, //
                                     loadGraph, //
                                     idType, //
                                     idClassAttributeAccessors, //
+                                    isHibernate, //
                                     versionAttrName, //
                                     this);
 
@@ -584,6 +594,45 @@ public abstract class EntityManagerBuilder {
     @Trivial
     protected ClassLoader getRepositoryClassLoader() {
         return repositoryClassLoader;
+    }
+
+    /**
+     * Identifies the setter method that corresponds to the given getter method.
+     *
+     * @param entityClass the entity class.
+     * @param getter      the getter method for an entity attribute.
+     * @return the setter method.
+     */
+    @FFDCIgnore(NoSuchMethodException.class)
+    private Method getSetMethod(Class<?> entityClass, Method getter) {
+        String getterName = getter.getName();
+        String setterName;
+        if (getterName.charAt(0) == 'g')
+            setterName = 's' + getterName.substring(1);
+        else if (getterName.startsWith("is"))
+            setterName = "set" + getterName.substring(2);
+        else
+            throw new UnsupportedOperationException("Invalid entity attribute: " +
+                                                    entityClass.getName() + "." + getterName);
+
+        Method setter = null;
+        try {
+            setter = entityClass.getMethod(setterName);
+        } catch (NoSuchMethodException x) {
+            for (Class<?> c = entityClass; setter == null && c != null; c = c.getSuperclass())
+                try {
+                    setter = c.getDeclaredMethod(setterName);
+                } catch (NoSuchMethodException xx) {
+                }
+            if (setter == null)
+                throw new UnsupportedOperationException("Invalid entity attribute: " +
+                                                        entityClass.getName() + "." + getterName, x);
+        } catch (SecurityException x) {
+            throw new UnsupportedOperationException("Invalid entity attribute: " +
+                                                    entityClass.getName() + "." + getterName, x);
+        }
+
+        return setter;
     }
 
     /**
