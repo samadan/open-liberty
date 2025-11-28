@@ -3,6 +3,8 @@ package io.openliberty.security.fips.fat.tests.fips1403.security.utility;
 import com.ibm.websphere.simplicity.Machine;
 import com.ibm.websphere.simplicity.ProgramOutput;
 import com.ibm.websphere.simplicity.log.Log;
+import com.ibm.websphere.simplicity.ShrinkHelper;
+import componenttest.annotation.AllowedFFDC;
 import componenttest.annotation.Server;
 import componenttest.annotation.SkipIfSysProp;
 import componenttest.custom.junit.runner.FATRunner;
@@ -11,6 +13,7 @@ import componenttest.topology.impl.JavaInfo;
 import componenttest.topology.impl.LibertyClient;
 import componenttest.topology.impl.LibertyClientFactory;
 import componenttest.topology.impl.LibertyServer;
+import componenttest.topology.utils.HttpUtils;
 import componenttest.topology.utils.PrivHelper;
 import io.openliberty.security.fips.fat.FIPSTestUtils;
 import io.openliberty.security.fips.fat.tests.fips1403.server.FIPS1403ServerTest;
@@ -22,6 +25,8 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Properties;
@@ -31,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assume.assumeThat;
 
 
@@ -280,8 +286,57 @@ public class FIPS1403SecurityUtilityTests {
 
     }
 
+    @Test
+    @AllowedFFDC({ "java.lang.RuntimeException" })
+    public void fips140_3NoSuchAlgorithmExceptionTest() throws Exception {
+
+        // Enable FIPS at server level without referencing the custom profile
+        ProgramOutput po = runSecurityUtilityCommand(new String[] {SEC_CONF_FIPS_COMMAND, OPT_SERVER + "=" + SERVER_NAME});
+        assertEquals("securityUtility configureFIPS did not result in expected return code.",0, po.getReturnCode());
+        
+        server.startServer();
+        ShrinkHelper.defaultDropinApp(server, "Sha1App.war", "com.example.sha1");
+        assertNotNull("Application Sha1App did not start", server.waitForStringInLog("CWWKZ0001I.*Sha1App"));
+        
+        // Access the SHA-1 servlet to trigger the NoSuchAlgorithmException
+        String urlString = "http://" + server.getHostname() + ":" + server.getHttpDefaultPort() + "/Sha1App";
+        URL url = new URL(urlString);
+
+        HttpURLConnection con = HttpUtils.getHttpConnection(url, HttpURLConnection.HTTP_INTERNAL_ERROR, 10);
+        Log.info(thisClass, "fips140_3SHA1AppTest", "HTTP Response Code: " + con.getResponseCode());
+        assertEquals("Expected HTTP 500 Internal Server Error when FIPS blocks SHA-1", HttpURLConnection.HTTP_INTERNAL_ERROR, con.getResponseCode());
+        assertNotNull("Expected NoSuchAlgorithmException for SHA-1 algorithm in server logs when FIPS is enabled", server.waitForStringInLog("NoSuchAlgorithmException.*SHA-1"));
+        
+        // Shutdown server ignoring NoSuchAlgorithmExceptions in server logs and disable FIPS
+        server.stopServer("SRVE0777E", "SRVE0315E");
+        disableFIPS(FIPS_TARGET.SERVER, SERVER_NAME);
+
+        // Copy the SHA1-Application.properties file to the server's resources/security directory
+        Log.info(thisClass, "fips140_3SHA1AppTest", "Applying custom profile to allow SHA-1 for SHA1Servlet");
+        String sha1CustomProfilePath = server.getServerRoot() + "/resources/security/" + CUSTOM_SHA1_FIPS_PROFILE_FILENAME;
+        server.copyFileToLibertyServerRoot("publish/resources", "resources/security", CUSTOM_SHA1_FIPS_PROFILE_FILENAME);
+        File sha1CustomProfileFile = new File(sha1CustomProfilePath);
+        
+        // Re-enable FIPS with the custom profile
+        po = runSecurityUtilityCommand(new String[] {SEC_CONF_FIPS_COMMAND, OPT_SERVER + "=" + SERVER_NAME, OPT_CUSTOM_PROFILE_FILE_NAME + "=" + sha1CustomProfilePath});
+        assertEquals("securityUtility configureFIPS did not result in expected return code.",0, po.getReturnCode());
+        server.startServer();
+        assertNotNull("Application Sha1App did not restart", server.waitForStringInLog("CWWKZ0001I.*Sha1App"));
+        
+        // Successfully access the SHA-1 servlet
+        con = HttpUtils.getHttpConnection(url, HttpURLConnection.HTTP_OK, 10);
+        Log.info(thisClass, "fips140_3SHA1AppTest", "HTTP Response Code: " + con.getResponseCode());
+        assertEquals("Expected HTTP 200 OK response after applying custom profile", HttpURLConnection.HTTP_OK, con.getResponseCode());
+        assertNull("A NoSuchAlgorithmException for SHA-1 should not be found in the server logs with the referenced custom profile", server.waitForStringInLog("NoSuchAlgorithmException.*SHA-1"));
+        
+        // Shutdown server and cleanup
+        disableFIPS(FIPS_TARGET.SERVER, SERVER_NAME);
+        sha1CustomProfileFile.delete();
+    }
+
     @After
     public void teardown() throws Exception {
+        server.deleteAllDropinApplications();
         server.stopServer();
         // clean up all the potentially created files
         File defaultEnv = new File(installRoot + "/etc/" + DEFAULT_ENV_FILE);
