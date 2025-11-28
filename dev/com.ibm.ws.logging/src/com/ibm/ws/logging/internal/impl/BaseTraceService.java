@@ -82,8 +82,10 @@ import com.ibm.ws.logging.source.LogSource;
 import com.ibm.ws.logging.source.TraceSource;
 import com.ibm.ws.logging.utils.CollectorManagerPipelineUtils;
 import com.ibm.ws.logging.utils.FileLogHolder;
+import com.ibm.ws.logging.utils.LogThrottlingUtils;
 import com.ibm.ws.logging.utils.RecursionCounter;
 import com.ibm.ws.logging.utils.SequenceNumber;
+import com.ibm.ws.logging.utils.ThrottleState;
 import com.ibm.wsspi.collector.manager.SynchronousHandler;
 import com.ibm.wsspi.logging.LogHandler;
 import com.ibm.wsspi.logging.MessageRouter;
@@ -410,6 +412,9 @@ public class BaseTraceService implements TrService {
         captureSystemStreams();
         //Remove EMQ from BufferManager after a certain amount of time has passed
         BufferManagerEMQHelper.removeEMQByTimer();
+
+        LogThrottlingUtils.publish(this);
+
     }
 
     protected void registerLoggerHandlerSingleton() {
@@ -451,6 +456,8 @@ public class BaseTraceService implements TrService {
         checkpoint = trConfig.isCheckpoint();
         restore = trConfig.isRestore();
         if (restore) {
+            throttleWarningPrinted.set(false);
+            resetLogThrottling();
             registerLoggerHandlerSingleton();
             captureSystemStreams();
         }
@@ -1333,14 +1340,13 @@ public class BaseTraceService implements TrService {
     }
 
     /*
-     * Clear and reset the throttling map and variables when checkpoint restore occurs.
+     * Clear and reset the throttling map and variables when checkpoint restore occurs and when messageType changes.
      */
     public void resetLogThrottling() {
         //Empty throttleStates for checkpoint
         throttleStates.clear();
         lastTimeBasedCleanupTime = 0;
         lastSizeBasedCleanupTime = 0;
-        //throttleWarningPrinted.set(false);
     }
 
     /**
@@ -2545,4 +2551,20 @@ public class BaseTraceService implements TrService {
             return name.startsWith("ffdc_") && name.endsWith(".log");
         }
     };
+
+    public Map<String, ThrottleState> getThrottleStates() {
+        return this.throttleStates;
+    }
+
+    public int getThrottleMaxMessagesPerWindow() {
+        return this.throttleMaxMessagesPerWindow;
+    }
+
+    public String getThrottleType() {
+        return this.throttleType;
+    }
+
+    public int getThrottleMapSize() {
+        return this.throttleMapSize;
+    }
 }
