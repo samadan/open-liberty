@@ -30,7 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import com.ibm.websphere.ras.annotation.Trivial;
 
 import jakarta.data.exceptions.MappingException;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.Inheritance;
 
 /**
@@ -85,8 +84,6 @@ public class EntityInfo {
     final SortedMap<String, Member> idClassAttributeAccessors; // null if no IdClass
     final boolean inheritance;
     final boolean isHibernate;
-    final EntityGraph<?> loadGraph; // null if all attributes automatically load eagerly
-    final Map<String, Object> loadGraphMap; // null if all attributes automatically load eagerly
     final String name; // entity name to use in query language. If a record, the name will be [RecordName]Entity.
     final Class<?> recordClass; // null if not a record
     final String versionAttributeName; // null if unversioned
@@ -106,7 +103,6 @@ public class EntityInfo {
                SortedMap<String, Class<?>> attributeTypes,
                Map<String, Class<?>> collectionElementTypes,
                Map<Class<?>, List<String>> relationAttributeNames,
-               EntityGraph<?> loadGraph,
                Class<?> idType,
                SortedMap<String, Member> idClassAttributeAccessors,
                boolean isHibernate,
@@ -122,10 +118,6 @@ public class EntityInfo {
         this.attributeTypes = attributeTypes;
         this.collectionElementTypes = collectionElementTypes;
         this.relationAttributeNames = relationAttributeNames;
-        this.loadGraph = loadGraph;
-        this.loadGraphMap = loadGraph == null //
-                        ? null //
-                        : Map.of(Util.LOADGRAPH, loadGraph);
         this.idType = idType;
         this.idClassAttributeAccessors = idClassAttributeAccessors;
         this.isHibernate = isHibernate;

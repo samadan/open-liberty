@@ -1906,9 +1906,6 @@ public class QueryInfo {
             jakarta.persistence.Query query = em.createQuery(jpql);
             setParameters(query, args);
 
-            if (entityInfo.loadGraph != null)
-                query.setHint(Util.LOADGRAPH, entityInfo.loadGraph);
-
             if (type == FIND_AND_DELETE)
                 query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
 
@@ -2139,16 +2136,6 @@ public class QueryInfo {
         } else if (void.class.equals(returnType) || Void.class.equals(returnType)) {
             returnValue = null;
         } else {
-            for (Object e : results) {
-                if (entityInfo.loadGraphMap == null)
-                    em.refresh(e);
-                else
-                    em.refresh(e, entityInfo.loadGraphMap);
-
-                if (trace && tc.isDebugEnabled())
-                    Tr.debug(this, tc, "refreshed", loggable(e));
-            }
-
             if (entityInfo.recordClass != null)
                 for (int i = 0; i < results.size(); i++)
                     results.set(i, entityInfo.toRecord(results.get(i)));
