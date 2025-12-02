@@ -20,5 +20,4 @@
         <feature>timedexit-1.0</feature>
     </featureManager>
 
-    <logging throttleMaxMessagesPerWindow="5" throttleType="messageID"/>
 </server>

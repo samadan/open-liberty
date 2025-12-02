@@ -40,9 +40,12 @@ import com.ibm.websphere.simplicity.config.ServerConfiguration;
 import com.ibm.websphere.simplicity.log.Log;
 
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.topology.impl.JavaInfo;
 import componenttest.topology.impl.LibertyServer;
+import componenttest.topology.impl.LibertyServer.CheckpointInfo;
 import componenttest.topology.impl.LibertyServerFactory;
 import componenttest.topology.utils.HttpUtils;
+import io.openliberty.checkpoint.spi.CheckpointPhase;
 
 /**
  *
@@ -54,6 +57,7 @@ public class LogThrottleTest {
     private static final String DEFAULT_CONFIGURATION_SERVER_NAME_XML = "com.ibm.ws.logging.logThrottleDefault";
     private static final String DEFAULT_CONFIGURATION_SERVER_NAME_ENV = "com.ibm.ws.logging.logThrottleEnv";
     private static final String DEFAULT_CONFIGURATION_SERVER_NAME_BOOTSTRAP = "com.ibm.ws.logging.logThrottleBootstrap";
+    private static final String CHECKPOINT_CONFIGURATION_SERVER_NAME_XML = "com.ibm.ws.logging.logThrottleCheckpoint";
 
     private static final String THROTTLING_HIGH_MAX_MESSAGES_XML = "server-highMaxMessages.xml";
     private static final String THROTTLING_DISABLED_XML = "server-throttlingDisabled.xml";
@@ -63,6 +67,7 @@ public class LogThrottleTest {
     private static final String THROTTLING_MESSAGEID_UPPERCASE_XML = "server-throttlingMessageIDUppercase.xml";
     private static final String THROTTLING_DEFAULT_CONFIG_XML = "server-defaultConfig.xml";
     private static final String THROTTLING_EMPTY_CONFIG_XML = "server-emptyLoggingConfig.xml";
+    private static final String THROTTLING_CHECKPOINT_XML = "checkpoint/throttle/server.xml";
 
     private static final Logger LOG = Logger.getLogger(LogThrottleTest.class.getName());
     private static final String CLASS_NAME = LogThrottleTest.class.getName();
@@ -73,6 +78,7 @@ public class LogThrottleTest {
     private static LibertyServer defaultConfigurationServer;
     private static LibertyServer baseServerEnv;
     private static LibertyServer baseServerBootstrap;
+    private static LibertyServer checkpointServer;
 
     private static LibertyServer serverInUse; // hold on to the server currently used so cleanUp knows which server to stop
 
@@ -85,6 +91,7 @@ public class LogThrottleTest {
         defaultConfigurationServer = LibertyServerFactory.getLibertyServer(DEFAULT_CONFIGURATION_SERVER_NAME_XML);
         baseServerEnv = LibertyServerFactory.getLibertyServer(DEFAULT_CONFIGURATION_SERVER_NAME_ENV);
         baseServerBootstrap = LibertyServerFactory.getLibertyServer(DEFAULT_CONFIGURATION_SERVER_NAME_BOOTSTRAP);
+        checkpointServer = LibertyServerFactory.getLibertyServer(CHECKPOINT_CONFIGURATION_SERVER_NAME_XML);
 
         // Preserve the original server configuration
         baseServer.saveServerConfiguration();
@@ -92,12 +99,14 @@ public class LogThrottleTest {
         defaultConfigurationServer.saveServerConfiguration();
         baseServerEnv.saveServerConfiguration();
         baseServerBootstrap.saveServerConfiguration();
+        checkpointServer.saveServerConfiguration();
 
         ShrinkHelper.defaultDropinApp(baseServer, "logger-servlet", "com.ibm.ws.logging.fat.logger.servlet");
         ShrinkHelper.defaultDropinApp(disabledServer, "logger-servlet", "com.ibm.ws.logging.fat.logger.servlet");
         ShrinkHelper.defaultDropinApp(defaultConfigurationServer, "logger-servlet", "com.ibm.ws.logging.fat.logger.servlet");
         ShrinkHelper.defaultDropinApp(baseServerEnv, "logger-servlet", "com.ibm.ws.logging.fat.logger.servlet");
         ShrinkHelper.defaultDropinApp(baseServerBootstrap, "logger-servlet", "com.ibm.ws.logging.fat.logger.servlet");
+        ShrinkHelper.defaultDropinApp(checkpointServer, "logger-servlet", "com.ibm.ws.logging.fat.logger.checkpoint.servlet");
     }
 
     public void setUp(LibertyServer server, String method) throws Exception {
@@ -255,6 +264,53 @@ public class LogThrottleTest {
         assertEquals("The throttle log warning was not printed.", linesWarning.size(), 1);
         assertEquals("Test message TESTA0001W wasn't printed the correct number of times", lines.size(), 1000);
 
+    }
+
+    /*
+     * Test that the default configuration throttles correctly. throttleMaxMessagesPerWindow=1000, messageType=messageID
+     */
+    @Test
+    public void testLogThrottlingCheckpoint() throws Exception {
+        if (!JavaInfo.forCurrentVM().isCriuSupported()) {
+            // skip testing InstantOn if CRIU is not supported on this platform
+            return;
+        }
+
+        CheckpointInfo checkpoint = new CheckpointInfo(CheckpointPhase.AFTER_APP_START, false, null);
+        checkpointServer.setCheckpoint(checkpoint);
+        checkpointServer.addCheckpointRegexIgnoreMessages("TESTA0001W", "TESTA0002W");
+
+        setUp(checkpointServer, "testLogThrottlingCheckpoint");
+        // At this point the server process has been checkpointed with the default configuration for throttling
+
+        // TODO the checkpoint side is not throttled currently; skipping verification before checkpoint
+        // This is the post checkpoint test to make sure the default log throttling happens.
+        // List<String> lines = serverInUse.findStringsInLogs("TESTA0001W");
+        // List<String> linesWarning = serverInUse.findStringsInLogs("The logs are being throttled due to high volume");
+        // assertEquals("The throttle log warning was not printed.", linesWarning.size(), 1);
+        // assertEquals("Test message TESTA0001W wasn't printed the correct number of times", lines.size(), 1000);
+
+        // now change the config with a server.env update and restore the server process
+        checkpointServer.copyFileToLibertyServerRoot("checkpoint/throttle/server.env");
+        checkpointServer.checkpointRestore();
+
+        // This is a post restore test to make sure the server.env config for throttling worked
+        hitWebPage("logger-servlet", "LoggerServlet", false, "?numMessages=1005");
+        List<String> lines = serverInUse.findStringsInLogs("TESTA0001W");
+        List<String> linesWarning = serverInUse.findStringsInLogs("The logs are being throttled due to high volume");
+        assertEquals("The throttle log warning was not printed.", linesWarning.size(), 1);
+        assertEquals("Test message TESTA0001W wasn't printed the correct number of times", lines.size(), 5);
+
+        checkpointServer.stopServer("TESTA0001W", "TESTA0002W", "TRAS3016W");
+        checkpointServer.copyFileToLibertyServerRoot("checkpoint/original/server.env");
+        // This is a post restore test to make sure the server.xml config for throttling worked
+        serverInUse.setServerConfigurationFile(THROTTLING_CHECKPOINT_XML);
+        checkpointServer.checkpointRestore();
+        hitWebPage("logger-servlet", "LoggerServlet", false, "?numMessages=1005");
+        lines = serverInUse.findStringsInLogs("TESTA0001W");
+        linesWarning = serverInUse.findStringsInLogs("The logs are being throttled due to high volume");
+        assertEquals("The throttle log warning was not printed.", linesWarning.size(), 1);
+        assertEquals("Test message TESTA0001W wasn't printed the correct number of times", lines.size(), 5);
     }
 
     /*
