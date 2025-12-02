@@ -40,6 +40,7 @@ import componenttest.app.FATServlet;
 import io.openliberty.jpa.persistence.tests.models.AsciiCharacter;
 import io.openliberty.jpa.persistence.tests.models.Book;
 import io.openliberty.jpa.persistence.tests.models.DateTimeEntity;
+import io.openliberty.jpa.persistence.tests.models.DocumentEntity;
 import io.openliberty.jpa.persistence.tests.models.Employee;
 import io.openliberty.jpa.persistence.tests.models.Event;
 import io.openliberty.jpa.persistence.tests.models.Organization;
@@ -1877,6 +1878,38 @@ public class JakartaPersistenceServlet extends FATServlet {
 
         boolean inCache = em.getEntityManagerFactory().getCache().contains(PersistenceUnitEntity.class, id);
         assertFalse(inCache);
+    }
+
+    @Test
+    public void testLobInsertAndRetrieve() throws Exception {
+
+        try {
+            DocumentEntity e1 = new DocumentEntity(1L, "");
+            
+            tx.begin();
+            em.persist(e1);
+            tx.commit();
+            
+        } catch (Exception e) {
+            if (tx.getStatus() == jakarta.transaction.Status.STATUS_ACTIVE) {
+                tx.rollback();
+            }
+            throw e;
+        }
+
+        try {
+            tx.begin();
+
+            DocumentEntity r1 = em.find(DocumentEntity.class, 1L);
+   
+            assertEquals("", r1.getContent());
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.getStatus() == jakarta.transaction.Status.STATUS_ACTIVE) {
+                tx.rollback();
+            }
+            throw e;
+        }
     }
 
 
