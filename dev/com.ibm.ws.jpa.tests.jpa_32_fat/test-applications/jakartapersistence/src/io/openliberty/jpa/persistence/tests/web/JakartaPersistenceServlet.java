@@ -1881,6 +1881,7 @@ public class JakartaPersistenceServlet extends FATServlet {
     }
 
     @Test
+    @SkipIfSysProp(DB_Oracle)  // Reference issue: https://github.com/OpenLiberty/open-liberty/issues/33573
     public void testLobInsertAndRetrieve() throws Exception {
 
         try {
@@ -1911,7 +1912,6 @@ public class JakartaPersistenceServlet extends FATServlet {
             throw e;
         }
     }
-
 
     /**
      * Utility method to drop all entities from table.
