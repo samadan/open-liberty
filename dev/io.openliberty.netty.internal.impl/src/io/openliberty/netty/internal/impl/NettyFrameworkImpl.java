@@ -104,12 +104,10 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
 
     private ScheduledExecutorService scheduledExecutorService = null;
 
-    private static final String EVENTLOOP_THREADS_PROPERTY = "io.openliberty.netty.eventloop.threads";
-
     private ChannelFrameworkConfig channelConfig;
 
     @Activate
-    protected void activate(ComponentContext context) {
+    protected void activate(ComponentContext context, Map<String, Object> config) {
         if (!ProductInfo.getBetaEdition()) {
             // Do nothing if beta isn't enabled
             return;
@@ -293,14 +291,6 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
             // are addressed
             System.setProperty("io.netty.allocator.type", "pooled");
         }
-    }
-
-    @Modified
-    protected void modified(ComponentContext context, Map<String, Object> config) {
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEventEnabled()) {
-            Tr.event(this, tc, "Config updates are not currently implemented! Config will be ignored: ", config);
-        }
-        // update any framework-specific config
     }
 
     @Deactivate
