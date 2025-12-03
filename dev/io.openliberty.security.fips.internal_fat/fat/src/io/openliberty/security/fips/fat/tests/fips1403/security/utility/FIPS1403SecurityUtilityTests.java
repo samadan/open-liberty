@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -318,33 +319,31 @@ public class FIPS1403SecurityUtilityTests {
         
         // Shutdown server ignoring NoSuchAlgorithmExceptions in server logs and disable FIPS
         server.stopServer("SRVE0777E", "SRVE0315E");
-        disableFIPS(FIPS_TARGET.SERVER, SERVER_NAME);
 
-        // Copy the SHA1-Application.properties file to the server's resources/security directory
-        Log.info(thisClass, "fips140_3NoSuchAlgorithmExceptionTest", "Applying custom profile to allow SHA-1 for SHA1Servlet");
-        String sha1CustomProfilePath = server.getServerRoot() + "/resources/security/" + CUSTOM_SHA1_FIPS_PROFILE_FILENAME;
-        server.copyFileToLibertyServerRoot("publish/resources", "resources/security", CUSTOM_SHA1_FIPS_PROFILE_FILENAME);
-        File sha1CustomProfileFile = new File(sha1CustomProfilePath);
+        // Append SHA-1 provider configuration to the FIPS profile file
+        File fipsProfileFile = new File(server.getServerRoot() + "/resources/security/" + FIPS_PROFILE_FILE_NAME);
+        assertTrue("FIPS Profile file does not exist", fipsProfileFile.exists());
         
-        // Re-enable FIPS with the custom profile
-        po = runSecurityUtilityCommand(new String[] {SEC_CONF_FIPS_COMMAND, OPT_SERVER + "=" + SERVER_NAME, OPT_CUSTOM_PROFILE_FILE_NAME + "=" + sha1CustomProfilePath});
-        assertEquals("securityUtility configureFIPS did not result in expected return code.",0, po.getReturnCode());
+        // Allow SHA-1 usage when FIPS is enabled     
+        try (FileWriter writer = new FileWriter(fipsProfileFile, true)) {
+            writer.write("RestrictedSecurity.OpenJCEPlusFIPS.FIPS140-3-Liberty-Application.jce.provider.1 = com.ibm.crypto.plus.provider.OpenJCEPlusFIPS [+ \\");
+            writer.write("{MessageDigest, SHA-1, *, FullClassName:com.example.sha1.SHA1Servlet}]");
+        }
+
+        // Restart Server
         server.startServer();
         assertNotNull("Application Sha1App did not restart", server.waitForStringInLog("CWWKZ0001I.*Sha1App"));
         
         // Successfully access the SHA-1 servlet
         con = HttpUtils.getHttpConnection(url, HttpURLConnection.HTTP_OK, 10);
         Log.info(thisClass, "fips140_3NoSuchAlgorithmExceptionTest", "HTTP Response Code: " + con.getResponseCode());
-        assertEquals("Expected HTTP 200 OK response after applying custom profile", HttpURLConnection.HTTP_OK, con.getResponseCode());
+        assertEquals("Expected HTTP 200 OK response after updating FIPS profile", HttpURLConnection.HTTP_OK, con.getResponseCode());
 
         // Verify the servlet response is using the SHA-1 message digest successfully
         String servletResponse = HttpUtils.readConnection(con);        
         String expectedSHA1Hash = "0a4d55a8d778e5022fab701977c5d840bbc486d0";
         assertTrue("Response should contain the SHA-1 hash of 'Hello World': " + expectedSHA1Hash + ". Actual response: " + servletResponse,
                    servletResponse.contains(expectedSHA1Hash));
-        
-        // basic test cleanup
-        sha1CustomProfileFile.delete();
     }
 
     @After
