@@ -278,26 +278,25 @@ public class LogThrottleTest {
 
         CheckpointInfo checkpoint = new CheckpointInfo(CheckpointPhase.AFTER_APP_START, false, null);
         checkpointServer.setCheckpoint(checkpoint);
-        checkpointServer.addCheckpointRegexIgnoreMessages("TESTA0001W", "TESTA0002W");
+        checkpointServer.addCheckpointRegexIgnoreMessages("TESTA0001W", "TESTA0002W", "TRAS3016W");
 
         setUp(checkpointServer, "testLogThrottlingCheckpoint");
         // At this point the server process has been checkpointed with the default configuration for throttling
 
-        // TODO the checkpoint side is not throttled currently; skipping verification before checkpoint
         // This is the post checkpoint test to make sure the default log throttling happens.
-        // List<String> lines = serverInUse.findStringsInLogs("TESTA0001W");
-        // List<String> linesWarning = serverInUse.findStringsInLogs("The logs are being throttled due to high volume");
-        // assertEquals("The throttle log warning was not printed.", linesWarning.size(), 1);
-        // assertEquals("Test message TESTA0001W wasn't printed the correct number of times", lines.size(), 1000);
+        List<String> lines = serverInUse.findStringsInLogs("TESTA0001W");
+        List<String> linesWarning = serverInUse.findStringsInLogs("The logs are being throttled due to high volume");
+        assertEquals("The throttle log warning was not printed.", linesWarning.size(), 1);
+        assertEquals("Test message TESTA0001W wasn't printed the correct number of times", lines.size(), 1000);
 
         // now change the config with a server.env update and restore the server process
         checkpointServer.copyFileToLibertyServerRoot("checkpoint/throttle/server.env");
         checkpointServer.checkpointRestore();
 
         // This is a post restore test to make sure the server.env config for throttling worked
-        hitWebPage("logger-servlet", "LoggerServlet", false, "?numMessages=1005");
-        List<String> lines = serverInUse.findStringsInLogs("TESTA0001W");
-        List<String> linesWarning = serverInUse.findStringsInLogs("The logs are being throttled due to high volume");
+        hitWebPage("logger-servlet", "CheckpointLoggerServlet", false, "?numMessages=1005");
+        lines = serverInUse.findStringsInLogs("TESTA0001W");
+        linesWarning = serverInUse.findStringsInLogs("The logs are being throttled due to high volume");
         assertEquals("The throttle log warning was not printed.", linesWarning.size(), 1);
         assertEquals("Test message TESTA0001W wasn't printed the correct number of times", lines.size(), 5);
 
@@ -306,7 +305,7 @@ public class LogThrottleTest {
         // This is a post restore test to make sure the server.xml config for throttling worked
         serverInUse.setServerConfigurationFile(THROTTLING_CHECKPOINT_XML);
         checkpointServer.checkpointRestore();
-        hitWebPage("logger-servlet", "LoggerServlet", false, "?numMessages=1005");
+        hitWebPage("logger-servlet", "CheckpointLoggerServlet", false, "?numMessages=1005");
         lines = serverInUse.findStringsInLogs("TESTA0001W");
         linesWarning = serverInUse.findStringsInLogs("The logs are being throttled due to high volume");
         assertEquals("The throttle log warning was not printed.", linesWarning.size(), 1);
