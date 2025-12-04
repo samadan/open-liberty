@@ -60,7 +60,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.AutoScalingEventExecutorChooserFactory;
 import io.netty.util.concurrent.AutoScalingEventExecutorChooserFactory.AutoScalingUtilizationMetric;
 import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GlobalEventExecutor;
+
 import io.openliberty.channel.config.ChannelFrameworkConfig;
 import io.openliberty.netty.internal.BootstrapConfiguration;
 import io.openliberty.netty.internal.BootstrapExtended;
@@ -94,8 +94,7 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
 
     private Map<Channel, ChannelGroup> activeChannelMap = new ConcurrentHashMap<Channel, ChannelGroup>();
 
-    // TODO: Should we use this or maybe the event loop on activate?
-    private ChannelGroup outboundConnections = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    private ChannelGroup outboundConnections;
 
     private EventLoopGroup parentGroup;
     private EventLoopGroup childGroup;
@@ -152,6 +151,7 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
         }
         AutoScalingEventExecutorChooserFactory scaler = createThreadScaler();
         childGroup = new MultiThreadIoEventLoopGroup(maxThreads, null, scaler, NioIoHandler.newFactory());
+        outboundConnections = new DefaultChannelGroup(childGroup.next());
         if (metricsWindow > 0) {
             scheduledExecutorService.scheduleAtFixedRate(() -> {
                 StringBuilder sb = new StringBuilder("Getting metrics from MultiThreadIoEventLoopGroup with active threads " + ((MultiThreadIoEventLoopGroup)childGroup).activeExecutorCount() + " : ");
@@ -440,7 +440,6 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
     private void stopEventLoops() {
         Future<?> parent = null;
         Future<?> child = null;
-        Future<?> global = null;
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "Gracefully shutting down parentGroup Event Loop " + parentGroup);
         }
@@ -453,11 +452,6 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
         if (childGroup != null) {
             child = childGroup.shutdownGracefully();
         }
-
-        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "Gracefully shutting down GlobalEventExecutor " + GlobalEventExecutor.INSTANCE);
-        }
-        global = GlobalEventExecutor.INSTANCE.shutdownGracefully();
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "Waiting for parentGroup Event Loop shutdown...");
         }
@@ -470,13 +464,6 @@ public class NettyFrameworkImpl implements ServerQuiesceListener, NettyFramework
         if (child != null) {
             child.awaitUninterruptibly();
         }
-        if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
-            Tr.debug(tc, "Waiting for GlobalEventExecutor shutdown...");
-        }
-        if (global != null) {
-            global.awaitUninterruptibly();
-        }
-
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
             Tr.debug(tc, "Event loops finished clean up!");
         }
